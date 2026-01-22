@@ -15,11 +15,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // $this->call() array ke andar saare seeders ke naam likhein
+        $this->call([
+            StateSeeder::class,            // 1. Sabse pehle States create honge
+            PermissionTableSeeder::class,  // 2. Fir Permissions aur Roles
+            CreateAdminUserSeeder::class,  // 3. Last me Admin User create hoga
         ]);
     }
 }

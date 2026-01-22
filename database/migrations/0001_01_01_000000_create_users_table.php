@@ -13,10 +13,31 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+
+            // 1. Basic Info
             $table->string('name');
+            $table->enum('gender', ['male', 'female', 'other'])->nullable(); // LMS Field
+            $table->date('dob')->nullable(); // LMS Field
+
+            // 2. Contact Info
             $table->string('email')->unique();
+            $table->string('mobile')->nullable(); // LMS Field
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+
+            // 3. Profile & Address
+            $table->string('profile_picture')->nullable(); // LMS Field
+            $table->text('address')->nullable(); // LMS Field
+            $table->string('city')->nullable(); // LMS Field
+            $table->string('zip_code')->nullable(); // LMS Field
+
+            // 4. Foreign Key (State)
+            // Note: Ensure 'states' table migration runs BEFORE this file
+            $table->unsignedBigInteger('state_id')->nullable(); // Sirf column banayein, foreign key nahi
+
+            // 5. Account Status
+            $table->boolean('is_active')->default(1)->comment('1=Active, 0=Blocked');
+
             $table->rememberToken();
             $table->timestamps();
         });
