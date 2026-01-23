@@ -1,13 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Student\DashboardController;
 
-// Student Routes (Prefix: /student ya normal /dashboard)
 Route::middleware(['auth', 'role:Student'])->group(function () {
 
-    // Student Dashboard (Iska naam 'dashboard' hi rakhenge taaki redirect logic kaam kare)
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 });

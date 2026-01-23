@@ -1,13 +1,13 @@
 <?php
 
+use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
-
-// Note: Dashboard route yahan se hata diya hai kyunki wo ab student.php aur admin.php mein hai
+Route::post('/check-referral', [RegisteredUserController::class, 'checkReferral'])->name('check.referral');
 
 // Common Profile Routes (Sabke liye same)
 Route::middleware('auth')->group(function () {

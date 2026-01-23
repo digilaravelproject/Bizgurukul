@@ -4,12 +4,20 @@
         <p class="text-slate-500 mt-1 text-sm">Join the platform in seconds.</p>
     </div>
 
+    {{-- Global Error Alert --}}
+    @if($errors->has('error'))
+        <div class="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm font-medium">
+            {{ $errors->first('error') }}
+        </div>
+    @endif
+
     <form method="POST" action="{{ route('register') }}" x-data="{ loading: false, showPass: false }"
         @submit="loading = true">
         @csrf
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
+            {{-- Full Name --}}
             <div class="md:col-span-2 space-y-1">
                 <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Full Name</label>
                 <div class="relative">
@@ -26,6 +34,7 @@
                 <x-input-error :messages="$errors->get('name')" class="mt-1" />
             </div>
 
+            {{-- Email --}}
             <div class="space-y-1">
                 <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Email</label>
                 <input type="email" name="email" value="{{ old('email') }}" required
@@ -34,6 +43,7 @@
                 <x-input-error :messages="$errors->get('email')" class="mt-1" />
             </div>
 
+            {{-- Mobile --}}
             <div class="space-y-1">
                 <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Mobile</label>
                 <input type="text" name="mobile" value="{{ old('mobile') }}"
@@ -41,40 +51,111 @@
                     placeholder="98765xxxxx">
             </div>
 
+            {{-- Gender --}}
             <div class="space-y-1">
                 <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Gender</label>
                 <select name="gender"
                     class="w-full bg-white/60 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5">
                     <option value="">Select</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
+                    <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>Male</option>
+                    <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>Female</option>
+                    <option value="other" {{ old('gender') == 'other' ? 'selected' : '' }}>Other</option>
                 </select>
             </div>
 
+            {{-- DOB --}}
             <div class="space-y-1">
                 <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">DOB</label>
-                <input type="date" name="dob"
+                <input type="date" name="dob" value="{{ old('dob') }}"
                     class="w-full bg-white/60 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5">
             </div>
 
+            {{-- State --}}
             <div class="space-y-1">
                 <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">State</label>
                 <select name="state_id"
                     class="w-full bg-white/60 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5">
                     <option value="">Select State</option>
                     @foreach ($states as $state)
-                        <option value="{{ $state->id }}">{{ $state->name }}</option>
+                        <option value="{{ $state->id }}" {{ old('state_id') == $state->id ? 'selected' : '' }}>
+                            {{ $state->name }}
+                        </option>
                     @endforeach
                 </select>
             </div>
 
+            {{-- City --}}
             <div class="space-y-1">
                 <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">City</label>
-                <input type="text" name="city" placeholder="City"
+                <input type="text" name="city" value="{{ old('city') }}" placeholder="City"
                     class="w-full bg-white/60 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5">
             </div>
 
+            {{-- Referral Section --}}
+            <div class="md:col-span-2 mt-2" x-data="{
+                    showInput: {{ request()->has('ref') || \Illuminate\Support\Facades\Cookie::get('referral_code') || old('referral_code') ? 'true' : 'false' }},
+                    refCode: '{{ request()->get('ref') ?? \Illuminate\Support\Facades\Cookie::get('referral_code') ?? old('referral_code') }}',
+                    isReadOnly: {{ request()->has('ref') || \Illuminate\Support\Facades\Cookie::get('referral_code') ? 'true' : 'false' }},
+                    message: '',
+                    status: '',
+                    checkCode() {
+                        if(this.refCode.length > 0 && !this.isReadOnly) {
+                            fetch('{{ route('check.referral') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({ code: this.refCode })
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                this.status = data.status;
+                                this.message = data.message;
+                            });
+                        }
+                    }
+                }" x-init="if(isReadOnly) checkCode()">
+
+                <div x-show="!showInput" class="text-right">
+                    <button type="button" @click="showInput = true"
+                        class="text-sm text-indigo-600 font-semibold hover:underline">
+                        Have a referral code?
+                    </button>
+                </div>
+
+                <div x-show="showInput" x-transition class="space-y-1">
+                    <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Referral Code
+                        (Optional)</label>
+                    <div class="relative">
+                        <input type="text" name="referral_code" x-model="refCode" :readonly="isReadOnly"
+                            @blur="checkCode()"
+                            class="w-full bg-white/60 border text-slate-800 text-sm rounded-xl block p-2.5 transition-all"
+                            :class="status === 'valid' ? 'border-green-500 ring-1 ring-green-500' : (status === 'invalid' ? 'border-red-500 ring-1 ring-red-500' : 'border-slate-200') "
+                            placeholder="Enter Code">
+
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <template x-if="status === 'valid'">
+                                <svg class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7" />
+                                </svg>
+                            </template>
+                            <template x-if="status === 'invalid'">
+                                <svg class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </template>
+                        </div>
+                    </div>
+                    <p x-text="message" x-show="message" class="text-[10px] font-bold mt-1"
+                        :class="status === 'valid' ? 'text-green-600' : 'text-red-600'"></p>
+                </div>
+            </div>
+
+            {{-- Passwords --}}
             <div class="space-y-1">
                 <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Password</label>
                 <div class="relative">
@@ -82,7 +163,7 @@
                         class="w-full bg-white/60 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 pr-10"
                         placeholder="••••••••">
                     <button type="button" @click="showPass = !showPass"
-                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-indigo-600 cursor-pointer">
+                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-indigo-600">
                         <svg x-show="!showPass" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -101,14 +182,13 @@
 
             <div class="space-y-1">
                 <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Confirm</label>
-                <div class="relative">
-                    <input :type="showPass ? 'text' : 'password'" name="password_confirmation" required
-                        class="w-full bg-white/60 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 pr-10"
-                        placeholder="••••••••">
-                </div>
+                <input :type="showPass ? 'text' : 'password'" name="password_confirmation" required
+                    class="w-full bg-white/60 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 pr-10"
+                    placeholder="••••••••">
             </div>
         </div>
 
+        {{-- Submit Button --}}
         <div class="mt-6">
             <button type="submit"
                 class="w-full py-3 px-4 rounded-xl shadow-lg shadow-green-500/30 text-white font-bold text-sm uppercase tracking-wider bg-green-600 hover:bg-green-700 transition-all duration-300 transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
