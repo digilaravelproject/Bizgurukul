@@ -22,15 +22,11 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        // LMS Fields
         'mobile',
-        'profile_picture',
-        'address',
-        'city',
-        'zip_code',
-        'state_id',
         'gender',
         'dob',
+        'state_id',
+        'city',
         'is_active',
     ];
 

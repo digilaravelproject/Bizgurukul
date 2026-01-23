@@ -18,8 +18,7 @@ class DatabaseSeeder extends Seeder
         // $this->call() array ke andar saare seeders ke naam likhein
         $this->call([
             StateSeeder::class,            // 1. Sabse pehle States create honge
-            PermissionTableSeeder::class,  // 2. Fir Permissions aur Roles
-            CreateAdminUserSeeder::class,  // 3. Last me Admin User create hoga
+            RoleAndUserSeeder::class,  // 2. Fir Permissions aur Roles
         ]);
     }
 }

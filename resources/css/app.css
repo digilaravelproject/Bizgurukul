@@ -1,3 +1,57 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+    /* --- BRAND COLORS (RGB values for Tailwind opacity support) --- */
+    /* Primary: Deep Royal Blue (Trust & Professionalism) */
+    --color-primary: 79 70 229; /* #4F46E5 */
+
+    /* Secondary: Vibrant Cyan/Teal (Action & Energy) */
+    --color-secondary: 6 182 212; /* #06B6D4 */
+
+    /* Surface Colors */
+    --color-bg-body: 248 250 252; /* #F8FAFC (Slate-50) */
+    --color-bg-card: 255 255 255; /* White */
+
+    /* Text Colors */
+    --color-text-main: 15 23 42; /* Slate-900 */
+    --color-text-muted: 100 116 139; /* Slate-500 */
+
+    /* Fonts */
+    --font-main: "Plus Jakarta Sans", sans-serif;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: rgb(var(--color-bg-body));
+    color: rgb(var(--color-text-main));
+}
+
+/* Custom Scrollbar for premium feel */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Glass Effect Utility */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.05),
+        0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
