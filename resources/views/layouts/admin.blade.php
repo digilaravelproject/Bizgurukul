@@ -89,9 +89,11 @@
                         <a href="{{ route('admin.courses.index') }}"
                             class="block p-2 text-sm transition-colors {{ request()->routeIs('admin.courses.*') ? 'text-indigo-400 font-bold' : 'text-slate-400 hover:text-white' }}">All
                             Courses</a>
-                        <a href="#"
-                            class="block p-2 text-sm text-slate-400 hover:text-white transition-colors italic">Lessons
-                            (Video HLS)</a>
+                        <a href="{{ route('admin.lessons.all') }}"
+                            class="block p-2 text-sm transition-colors italic
+   {{ request()->routeIs('admin.lessons.*') ? 'text-white font-bold bg-[#0777be]/20 rounded-lg' : 'text-slate-400 hover:text-white' }}">
+                            Lessons (Video HLS)
+                        </a>
                         <a href="#"
                             class="block p-2 text-sm text-slate-400 hover:text-white transition-colors">Certificates</a>
                     </div>

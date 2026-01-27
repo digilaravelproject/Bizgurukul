@@ -15,11 +15,16 @@ class CourseController extends Controller
      */
     public function index(Request $request)
     {
-        // Yahan .get() ki jagah .paginate(10) use karein
-        $courses = Course::withCount('lessons')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10); // 10 results per page
+        $query = Course::withCount('lessons')->orderBy('created_at', 'desc');
 
+        // Filter Logic: Agar search input aaya hai
+        if ($request->has('search') && $request->search != '') {
+            $query->where('title', 'like', '%' . $request->search . '%');
+        }
+
+        $courses = $query->paginate(10);
+
+        // Ajax request identification
         if ($request->ajax()) {
             return view('admin.lms.partials.table', compact('courses'))->render();
         }
@@ -30,31 +35,37 @@ class CourseController extends Controller
     /**
      * Show the form for creating a new course (New Page)
      */
-    public function create()
+    public function create($id = null)
     {
-        return view('admin.lms.create');
+        // Agar $id hai toh model se data lao, nahi toh naya object banao
+        $course = $id ? Course::findOrFail($id) : new Course();
+
+        return view('admin.lms.create', compact('course'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate(['title' => 'required|string|max:255']);
+
+        // Agar hidden ID hai toh Update karega, nahi toh naya banayega
+        Course::updateOrCreate(
+            ['id' => $request->id],
+            [
+                'title' => $request->title,
+                'description' => $request->description
+            ]
+        );
+
+        return redirect()->route('admin.courses.index')->with('success', 'Course saved successfully!');
     }
 
     /**
      * STORE or UPDATE a Course (Redirect after save)
      */
     // storeCourse ko badal kar store kar dein
-    public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-        ]);
 
-        Course::updateOrCreate(
-            ['id' => $request->id],
-            [
-                'title' => $request->title,
-                'description' => $request->description,
-            ]
-        );
 
-        return redirect()->route('admin.courses.index')->with('success', 'Course saved successfully!');
-    }
+
 
     /**
      * FETCH all courses via AJAX (Keeping for table refresh if needed)
@@ -68,13 +79,13 @@ class CourseController extends Controller
     /**
      * DELETE a Course and its thumbnail
      */
-    public function deleteCourse($id)
+    public function delete($id)
     {
         $course = Course::findOrFail($id);
-        // Delete lessons associated with the course will happen via cascade in DB
         $course->delete();
 
-        return response()->json(['success' => 'Course and its lessons deleted!']);
+        // Index page par redirect karein success message ke sath
+        return redirect()->route('admin.courses.index')->with('success', 'Course deleted successfully!');
     }
 
     /**
