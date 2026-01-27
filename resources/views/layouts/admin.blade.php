@@ -154,7 +154,7 @@
                     {{-- Dynamic Header Title/Buttons --}}
                     <div class="w-full">
                         <div class="flex items-center justify-between w-full px-4">
-                            <h2 class="text-xl font-bold text-slate-800">LMS: Course Management</h2>
+                            <h2 class="text-xl font-bold text-slate-800">Admin Control Panel</h2>
 
                         </div>
                     </div>
