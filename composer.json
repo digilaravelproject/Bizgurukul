@@ -13,6 +13,7 @@
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.2",
         "laravel/tinker": "^2.10.1",
+        "pbmedia/laravel-ffmpeg": "^8.7",
         "spatie/laravel-permission": "^6.24"
     },
     "require-dev": {
