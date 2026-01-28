@@ -15,6 +15,12 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')->group(function () {
+    Route::get('/profile', [App\Http\Controllers\Student\ProfileController::class, 'index'])->name('profile');
+    Route::post('/profile/update', [App\Http\Controllers\Student\ProfileController::class, 'updateProfile'])->name('profile.update'); // Custom Update
+    Route::post('/kyc/submit', [App\Http\Controllers\Student\ProfileController::class, 'submitKyc'])->name('kyc.submit');
+    Route::post('/bank/save', [App\Http\Controllers\Student\ProfileController::class, 'saveBank'])->name('bank.save');
+});
 
 // Auth Routes (Login/Register)
 require __DIR__ . '/auth.php';

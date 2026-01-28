@@ -49,7 +49,8 @@
             </div>
 
             {{-- Sidebar Nav Menu --}}
-            <nav class="flex-1 p-4 space-y-2 overflow-y-auto no-scrollbar" x-data="{ lmsOpen: {{ request()->routeIs('admin.courses.*') || request()->routeIs('admin.lessons.*') ? 'true' : 'false' }} }">
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto no-scrollbar"
+                x-data="{ lmsOpen: {{ request()->routeIs('admin.courses.*') || request()->routeIs('admin.lessons.*') ? 'true' : 'false' }} }">
                 <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Main Menu</p>
 
                 {{-- Dashboard --}}
@@ -102,15 +103,15 @@
                 </div>
 
                 {{-- Students --}}
-                <a href="#"
-                    class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition group">
+                <a href="{{ route('admin.users.index') }}"
+                    class="flex items-center p-3 rounded-xl {{ request()->routeIs('admin.users.*') ? 'bg-indigo-500/10 text-indigo-400 font-bold' : 'text-slate-400 hover:text-white' }} hover:bg-slate-800 hover:text-white transition group">
                     <svg class="w-5 h-5 mr-3 group-hover:text-indigo-400" fill="none" stroke="currentColor"
                         viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
                         </path>
                     </svg>
-                    <span class="font-medium">Students</span>
+                    <span class="font-medium">Users</span>
                 </a>
             </nav>
 

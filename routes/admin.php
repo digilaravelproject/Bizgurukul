@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\CommissionController;
 use App\Http\Controllers\Admin\CourseController; // New Controller for LMS
+use App\Http\Controllers\Admin\KycController;
 use App\Http\Controllers\Admin\VideoController;
 use App\Http\Controllers\Admin\LessonController;
 
@@ -69,5 +70,10 @@ Route::middleware(['auth', 'role:Admin'])
             // Trash Routes
             Route::post('/restore/{id}', [UserController::class, 'restore'])->name('restore');
             Route::delete('/force-delete/{id}', [UserController::class, 'forceDelete'])->name('force.delete');
+        });
+        Route::prefix('kyc-requests')->name('kyc.')->group(function () {
+            Route::get('/', [KycController::class, 'index'])->name('index'); // Alag Page
+            Route::get('/{id}', [KycController::class, 'show'])->name('show'); // Modal Data
+            Route::post('/{id}/status', [KycController::class, 'updateStatus'])->name('status'); // Approve/Reject
         });
     });

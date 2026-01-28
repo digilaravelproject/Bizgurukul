@@ -36,10 +36,6 @@ class UserController extends Controller
         // View Modal ke liye Data
         $user = $this->userService->getUserDetails($id);
 
-        // State Name Map (Temporary mapping since we are using IDs in DB but need names for View)
-        // Ideally, you should have a states table and relationship.
-        // For now, returning raw ID or you can map it in frontend.
-
         return response()->json([
             'status' => true,
             'data' => [

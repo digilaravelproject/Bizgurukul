@@ -3,17 +3,18 @@
 namespace App\Services;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class UserService
 {
     public function getUsers($perPage = 15, $search = null, $viewTrash = 'false')
     {
-        $query = User::with('roles');
 
         if ($viewTrash === 'true') {
-            $query->onlyTrashed();
+            $query = User::onlyTrashed()->with('roles');
+        } else {
+            $query = User::whereNull('deleted_at')->with('roles');
         }
 
         if ($search) {
@@ -98,6 +99,7 @@ class UserService
         $user->is_banned = !$user->is_banned;
         $user->banned_at = $user->is_banned ? now() : null;
         $user->save();
+
         return $user;
     }
 
@@ -105,6 +107,7 @@ class UserService
     {
         $user = User::findOrFail($id);
         $user->delete();
+
         return true;
     }
 
@@ -112,6 +115,7 @@ class UserService
     {
         $user = User::withTrashed()->findOrFail($id);
         $user->restore();
+
         return true;
     }
 
@@ -119,6 +123,7 @@ class UserService
     {
         $user = User::withTrashed()->findOrFail($id);
         $user->forceDelete();
+
         return true;
     }
 
@@ -128,6 +133,7 @@ class UserService
         if (!$user) {
             $user = User::withTrashed()->with(['roles', 'referrer'])->find($id);
         }
+
         return $user;
     }
 }

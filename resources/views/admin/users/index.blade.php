@@ -123,11 +123,11 @@
                                     <span
                                         class="px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider border shadow-sm"
                                         :class="{
-                                            'bg-green-50 text-green-700 border-green-200': user.kyc_status === 'verified',
-                                            'bg-amber-50 text-amber-700 border-amber-200': user.kyc_status === 'pending',
-                                            'bg-red-50 text-red-700 border-red-200': user.kyc_status === 'rejected',
-                                            'bg-slate-50 text-slate-600 border-slate-200': user.kyc_status === 'not_submitted'
-                                        }" x-text="user.kyc_status.replace('_', ' ')">
+                                                'bg-green-50 text-green-700 border-green-200': user.kyc_status === 'verified',
+                                                'bg-amber-50 text-amber-700 border-amber-200': user.kyc_status === 'pending',
+                                                'bg-red-50 text-red-700 border-red-200': user.kyc_status === 'rejected',
+                                                'bg-slate-50 text-slate-600 border-slate-200': user.kyc_status === 'not_submitted'
+                                            }" x-text="user.kyc_status.replace('_', ' ')">
                                     </span>
                                 </td>
 
@@ -566,7 +566,7 @@
 
                 fetchUsers(url = "{{ route('admin.users.index') }}") {
                     this.isLoading = true;
-                    axios.get(url, { params: { trash: this.viewTrash, search: this.search } })
+                    axios.get(url, { params: { trash: this.viewTrash.toString(), search: this.search } })
                         .then(res => {
                             this.users = res.data.data.data;
                             this.pagination = res.data.data;

@@ -10,10 +10,11 @@ use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -92,5 +93,14 @@ class User extends Authenticatable
         return $this->profile_picture
             ? asset('storage/' . $this->profile_picture)
             : asset('assets/images/default-avatar.png');
+    }
+    public function kyc()
+    {
+        return $this->hasOne(KycDetail::class);
+    }
+
+    public function bank()
+    {
+        return $this->hasOne(BankDetail::class);
     }
 }
