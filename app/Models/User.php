@@ -30,6 +30,10 @@ class User extends Authenticatable
         'is_active',
         'referral_code',
         'referred_by',
+        'kyc_status',
+        'is_banned',
+        'banned_at',
+        'deleted_at',
     ];
 
     protected $hidden = [
@@ -42,6 +46,10 @@ class User extends Authenticatable
         'password' => 'hashed',
         'is_active' => 'boolean',
         'dob' => 'date',
+        'kyc_status' => 'string',
+        'is_banned' => 'boolean',
+        'banned_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     protected static function boot()

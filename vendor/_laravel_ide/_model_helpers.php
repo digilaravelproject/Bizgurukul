@@ -347,8 +347,24 @@ namespace App\Models {
     /**
      * App\Models\Bundle
      *
+     * @property \Illuminate\Support\Carbon|null $updated_at
+     * @property \Illuminate\Support\Carbon|null $created_at
+     * @property bool $is_published
+     * @property string|null $thumbnail
+     * @property float $price
+     * @property string|null $description
+     * @property string $title
+     * @property int $id
      * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Course> $courses
      * @property-read int|null $courses_count
+     * @method static \Illuminate\Database\Eloquent\Builder<Bundle>|Bundle whereId($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Bundle>|Bundle whereTitle($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Bundle>|Bundle whereDescription($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Bundle>|Bundle wherePrice($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Bundle>|Bundle whereThumbnail($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Bundle>|Bundle whereIsPublished($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Bundle>|Bundle whereCreatedAt($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Bundle>|Bundle whereUpdatedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Bundle>|Bundle newModelQuery()
      * @method static \Illuminate\Database\Eloquent\Builder<Bundle>|Bundle newQuery()
      * @method static \Illuminate\Database\Eloquent\Builder<Bundle>|Bundle query()
@@ -991,7 +1007,10 @@ namespace App\Models {
      * @property \Illuminate\Support\Carbon|null $updated_at
      * @property \Illuminate\Support\Carbon|null $created_at
      * @property string|null $thumbnail
+     * @property string|null $demo_video_url
+     * @property float $price
      * @property string|null $description
+     * @property bool $is_published
      * @property string $title
      * @property int $id
      * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Lesson> $lessons
@@ -1002,7 +1021,10 @@ namespace App\Models {
      * @property-read int|null $bundles_count
      * @method static \Illuminate\Database\Eloquent\Builder<Course>|Course whereId($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Course>|Course whereTitle($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Course>|Course whereIsPublished($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Course>|Course whereDescription($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Course>|Course wherePrice($value)
+     * @method static \Illuminate\Database\Eloquent\Builder<Course>|Course whereDemoVideoUrl($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Course>|Course whereThumbnail($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Course>|Course whereCreatedAt($value)
      * @method static \Illuminate\Database\Eloquent\Builder<Course>|Course whereUpdatedAt($value)
@@ -2302,13 +2324,13 @@ namespace App\Models {
     /**
      * App\Models\User
      *
-     * @property string|null $deleted_at
+     * @property \Illuminate\Support\Carbon|null $deleted_at
      * @property \Illuminate\Support\Carbon|null $updated_at
      * @property \Illuminate\Support\Carbon|null $created_at
      * @property string|null $remember_token
-     * @property string|null $banned_at
-     * @property bool $is_banned
-     * @property mixed $kyc_status
+     * @property \Illuminate\Support\Carbon|null $banned_at
+     * @property boolean $is_banned
+     * @property string $kyc_status
      * @property boolean $is_active
      * @property mixed $state_id
      * @property string|null $zip_code

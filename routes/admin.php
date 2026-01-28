@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\CommissionController;
@@ -28,7 +29,7 @@ Route::middleware(['auth', 'role:Admin'])
         //     Route::post('/{commission}/approve', [CommissionController::class, 'approve'])->name('approve');
         //     Route::post('/{commission}/reject', [CommissionController::class, 'reject'])->name('reject');
         // });
-
+    
         // 3. LMS: Course Management (Ajax CRUD)
         Route::prefix('courses')->name('courses.')->group(function () {
             Route::get('/', [CourseController::class, 'index'])->name('index');         // Table List Page
@@ -56,4 +57,17 @@ Route::middleware(['auth', 'role:Admin'])
         Route::post('/bundles/store', [CourseController::class, 'storeBundle'])->name('bundles.store');
         Route::get('/bundles/{id}/edit', [CourseController::class, 'editBundle'])->name('bundles.edit');
         Route::delete('/bundles/{id}', [CourseController::class, 'deleteBundle'])->name('bundles.delete');
+
+        Route::prefix('users')->name('users.')->group(function () {
+            Route::get('/', [UserController::class, 'index'])->name('index');
+            Route::post('/store', [UserController::class, 'store'])->name('store');
+            Route::get('/{id}/details', [UserController::class, 'show'])->name('show'); // Logic wahi rakhna jo pehle tha JSON wala
+            Route::post('/update/{id}', [UserController::class, 'update'])->name('update');
+            Route::post('/ban/{id}', [UserController::class, 'toggleBan'])->name('ban');
+            Route::delete('/delete/{id}', [UserController::class, 'destroy'])->name('delete');
+
+            // Trash Routes
+            Route::post('/restore/{id}', [UserController::class, 'restore'])->name('restore');
+            Route::delete('/force-delete/{id}', [UserController::class, 'forceDelete'])->name('force.delete');
+        });
     });
