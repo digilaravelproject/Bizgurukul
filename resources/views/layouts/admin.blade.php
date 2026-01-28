@@ -92,9 +92,9 @@
                             All Courses
                         </a>
 
-                        <a href="{{ route('admin.lessons.all') }}"
-                            class="block p-2 text-sm transition-colors rounded-lg {{ request()->routeIs('admin.lessons.*') ? 'bg-indigo-500/10 text-indigo-400 font-bold' : 'text-slate-400 hover:text-white' }}">
-                            Lessons (Video HLS)
+                        <a href="{{ route('admin.coupons.index') }}"
+                            class="block p-2 text-sm transition-colors rounded-lg {{ request()->routeIs('admin.coupons.*') ? 'bg-indigo-500/10 text-indigo-400 font-bold' : 'text-slate-400 hover:text-white' }}">
+                            Coupon Manager
                         </a>
 
                         <a href="#"

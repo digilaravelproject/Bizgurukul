@@ -93,7 +93,7 @@ class LessonController extends Controller
                 Log::info("HLS conversion successful for Lesson ID: " . $lesson->id);
             }
 
-            return redirect()->route('admin.lessons.all')->with('success', 'Lesson saved and processed!');
+            return redirect()->route('admin.courses.index')->with('success', 'Lesson saved and processed!');
         } catch (Exception $e) {
             // Log Error
             Log::error("Lesson Store Error: " . $e->getMessage());
@@ -111,15 +111,32 @@ class LessonController extends Controller
 
     public function destroy($id)
     {
+
         try {
             $lesson = Lesson::findOrFail($id);
-            if ($lesson->video_path) Storage::disk('public')->delete($lesson->video_path);
-            if ($lesson->hls_path) Storage::disk('public')->deleteDirectory(dirname($lesson->hls_path));
+
+            // 1. Delete Original Video File
+            if ($lesson->video_path && Storage::disk('public')->exists($lesson->video_path)) {
+                Storage::disk('public')->delete($lesson->video_path);
+            }
+
+            // 2. Delete HLS Folder (HLS generate hote waqt ek folder banta hai)
+            if ($lesson->hls_path) {
+                $hlsDirectory = dirname($lesson->hls_path);
+                if (Storage::disk('public')->exists($hlsDirectory)) {
+                    Storage::disk('public')->deleteDirectory($hlsDirectory);
+                }
+            }
+
+            // 3. Delete from Database
             $lesson->delete();
 
-            return redirect()->route('admin.lessons.all')->with('success', 'Lesson deleted successfully!');
+            // Redirect back to LMS Index with the 'lessons' tab active
+            return redirect()->route('admin.courses.index', ['tab' => 'lessons'])
+                ->with('success', 'Video lesson and HLS streams removed successfully!');
         } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Delete failed!');
+            Log::error("Lesson Delete Error: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Delete failed: ' . $e->getMessage());
         }
     }
 }

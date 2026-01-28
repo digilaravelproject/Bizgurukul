@@ -39,4 +39,9 @@ class Course extends Model
     {
         return $this->belongsToMany(Bundle::class, 'bundle_course');
     }
+
+    public function coupons()
+    {
+        return $this->morphMany(Coupon::class, 'couponable');
+    }
 }

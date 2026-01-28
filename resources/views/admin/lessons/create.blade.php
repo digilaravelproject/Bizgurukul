@@ -15,7 +15,7 @@
     <div class="max-w-4xl mx-auto space-y-6">
         <div class="flex items-center justify-between">
             <h2 class="text-xl font-bold text-slate-800">{{ isset($lesson) ? 'Edit' : 'Create' }} Lesson</h2>
-            <a href="{{ route('admin.lessons.all') }}"
+            <a href="{{ route('admin.courses.index') }}"
                 class="text-sm font-bold text-slate-500 hover:text-slate-700 transition">← Back to Lessons</a>
         </div>
 

@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\CourseController; // New Controller for LMS
 use App\Http\Controllers\Admin\KycController;
 use App\Http\Controllers\Admin\VideoController;
 use App\Http\Controllers\Admin\LessonController;
+use App\Http\Controllers\Admin\CouponController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,7 +31,7 @@ Route::middleware(['auth', 'role:Admin'])
         //     Route::post('/{commission}/approve', [CommissionController::class, 'approve'])->name('approve');
         //     Route::post('/{commission}/reject', [CommissionController::class, 'reject'])->name('reject');
         // });
-    
+
         // 3. LMS: Course Management (Ajax CRUD)
         Route::prefix('courses')->name('courses.')->group(function () {
             Route::get('/', [CourseController::class, 'index'])->name('index');         // Table List Page
@@ -58,6 +59,15 @@ Route::middleware(['auth', 'role:Admin'])
         Route::post('/bundles/store', [CourseController::class, 'storeBundle'])->name('bundles.store');
         Route::get('/bundles/{id}/edit', [CourseController::class, 'editBundle'])->name('bundles.edit');
         Route::delete('/bundles/{id}', [CourseController::class, 'deleteBundle'])->name('bundles.delete');
+
+        Route::controller(CouponController::class)->group(function () {
+            Route::get('coupons', 'index')->name('coupons.index');
+            Route::get('coupons/create', 'create')->name('coupons.create');
+            Route::post('coupons/store', 'store')->name('coupons.store');
+            Route::get('coupons/{id}/edit', 'edit')->name('coupons.edit');
+            Route::delete('coupons/{id}', 'destroy')->name('coupons.destroy');
+            Route::post('coupons/toggle-status/{id}', 'toggleStatus')->name('coupons.toggle-status');
+        });
 
         Route::prefix('users')->name('users.')->group(function () {
             Route::get('/', [UserController::class, 'index'])->name('index');

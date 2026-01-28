@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\Lesson;
 use App\Models\Bundle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -28,26 +29,43 @@ class CourseController extends Controller
 
     public function index(Request $request)
     {
-        // 1. Search Logic for Single Courses
+        $search = $request->search;
+        $tab = $request->tab; // Alpine.js se tab name aayega
+
+        // 1. Single Courses
         $courseQuery = Course::withCount('lessons')->latest();
-        if ($request->filled('search')) {
-            $courseQuery->where('title', 'like', '%' . $request->search . '%');
+        if ($tab == 'courses' && $request->filled('search')) {
+            $courseQuery->where('title', 'like', "%{$search}%");
         }
         $courses = $courseQuery->paginate(10, ['*'], 'courses_page');
 
-        // 2. Bundles (No search for bundles yet)
-        $bundles = Bundle::with('courses')->latest()->paginate(10, ['*'], 'bundles_page');
+        // 2. Bundles
+        $bundleQuery = Bundle::with('courses')->latest();
+        if ($tab == 'bundles' && $request->filled('search')) {
+            $bundleQuery->where('title', 'like', "%{$search}%");
+        }
+        $bundles = $bundleQuery->paginate(10, ['*'], 'bundles_page');
 
-        // 3. AJAX Response Fix
+        // 3. Lessons (Video HLS)
+        $lessonQuery = Lesson::with('course')->latest();
+        if ($tab == 'lessons' && $request->filled('search')) {
+            $lessonQuery->where('title', 'like', "%{$search}%")
+                ->orWhereHas('course', function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%");
+                });
+        }
+        $lessons = $lessonQuery->paginate(10, ['*'], 'lessons_page');
+
+        // AJAX Response: Sirf wahi partial bhejenge jiski zarurat hai
         if ($request->ajax()) {
             return response()->json([
-                // Yahan render() karke sirf HTML string bhejna hai
                 'courses' => view('admin.lms.partials.table', compact('courses'))->render(),
                 'bundles' => view('admin.lms.partials.bundle_table', compact('bundles'))->render(),
+                'lessons' => view('admin.lessons.partials.all_table', compact('lessons'))->render(),
             ]);
         }
 
-        return view('admin.lms.index', compact('courses', 'bundles'));
+        return view('admin.lms.index', compact('courses', 'bundles', 'lessons'));
     }
 
     /**
@@ -84,11 +102,11 @@ class CourseController extends Controller
             'price' => 'required|numeric',
         ]);
 
-        // Error logic: Agar edit mode mein saare courses hata diye toh error bhejenge
+        // Error logic: Agar edit mode mein saare courses hata diye
         if ($request->id && (!$request->has('course_ids') || count($request->course_ids) == 0)) {
             return back()
-                ->withInput() // Input data wapas bhejta hai
-                ->with('error', 'Selection Required: You cannot remove all courses. Previous selection is retained.');
+                ->withInput()
+                ->with('error', 'Selection Required: You cannot remove all courses.');
         }
 
         DB::beginTransaction();
@@ -107,7 +125,7 @@ class CourseController extends Controller
             return redirect()->route('admin.courses.index')->with('success', 'Bundle updated successfully!');
         } catch (Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'System Error: ' . $e->getMessage());
+            return back()->with('error', 'Error: ' . $e->getMessage());
         }
     }
     public function create()
