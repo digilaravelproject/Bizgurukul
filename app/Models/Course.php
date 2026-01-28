@@ -9,10 +9,12 @@ class Course extends Model
 {
     use HasFactory;
 
-    // Kaun-kaun se columns fill ho sakte hain
     protected $fillable = [
         'title',
         'description',
+        'is_published', // Publish status
+        'demo_video_url', // Demo link
+        'price',
         'thumbnail'
     ];
 
@@ -31,5 +33,10 @@ class Course extends Model
     public function progress()
     {
         return $this->hasManyThrough(VideoProgress::class, Lesson::class);
+    }
+
+    public function bundles()
+    {
+        return $this->belongsToMany(Bundle::class, 'bundle_course');
     }
 }

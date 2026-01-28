@@ -22,6 +22,7 @@
             display: none;
         }
     </style>
+    @stack('styles')
 </head>
 
 <body class="font-sans antialiased bg-slate-50 text-slate-900" x-data="{ sidebarOpen: false }">
@@ -48,12 +49,12 @@
             </div>
 
             {{-- Sidebar Nav Menu --}}
-            <nav class="flex-1 p-4 space-y-2 overflow-y-auto no-scrollbar" x-data="{ lmsOpen: {{ request()->routeIs('admin.courses.*') ? 'true' : 'false' }} }">
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto no-scrollbar" x-data="{ lmsOpen: {{ request()->routeIs('admin.courses.*') || request()->routeIs('admin.lessons.*') ? 'true' : 'false' }} }">
                 <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Main Menu</p>
 
                 {{-- Dashboard --}}
                 <a href="{{ route('admin.dashboard') }}"
-                    class="flex items-center p-3 rounded-xl transition-all duration-200 {{ request()->routeIs('admin.dashboard') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/40' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }} group">
+                    class="flex items-center p-3 rounded-xl transition-all duration-200 {{ request()->routeIs('admin.dashboard') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/40' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
@@ -65,10 +66,10 @@
                 {{-- LMS Management Dropdown --}}
                 <div>
                     <button @click="lmsOpen = !lmsOpen"
-                        class="w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 group {{ request()->routeIs('admin.courses.*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
+                        class="w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 group {{ request()->routeIs('admin.courses.*') || request()->routeIs('admin.lessons.*') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
                         <div class="flex items-center">
-                            <svg class="w-5 h-5 mr-3 group-hover:text-indigo-400 transition" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 mr-3 {{ request()->routeIs('admin.courses.*') || request()->routeIs('admin.lessons.*') ? 'text-indigo-400' : 'group-hover:text-indigo-400' }}"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
                                 </path>
@@ -83,17 +84,18 @@
                     </button>
 
                     <div x-show="lmsOpen" x-cloak x-transition:enter="transition ease-out duration-200"
-                        x-transition:enter-start="opacity-0 -translate-y-2"
-                        x-transition:enter-end="opacity-100 translate-y-0"
                         class="mt-2 ml-4 pl-4 border-l border-slate-800 space-y-1">
+
                         <a href="{{ route('admin.courses.index') }}"
-                            class="block p-2 text-sm transition-colors {{ request()->routeIs('admin.courses.*') ? 'text-indigo-400 font-bold' : 'text-slate-400 hover:text-white' }}">All
-                            Courses</a>
+                            class="block p-2 text-sm transition-colors rounded-lg {{ request()->routeIs('admin.courses.*') ? 'bg-indigo-500/10 text-indigo-400 font-bold' : 'text-slate-400 hover:text-white' }}">
+                            All Courses
+                        </a>
+
                         <a href="{{ route('admin.lessons.all') }}"
-                            class="block p-2 text-sm transition-colors italic
-   {{ request()->routeIs('admin.lessons.*') ? 'text-white font-bold bg-[#0777be]/20 rounded-lg' : 'text-slate-400 hover:text-white' }}">
+                            class="block p-2 text-sm transition-colors rounded-lg {{ request()->routeIs('admin.lessons.*') ? 'bg-indigo-500/10 text-indigo-400 font-bold' : 'text-slate-400 hover:text-white' }}">
                             Lessons (Video HLS)
                         </a>
+
                         <a href="#"
                             class="block p-2 text-sm text-slate-400 hover:text-white transition-colors">Certificates</a>
                     </div>
@@ -102,8 +104,8 @@
                 {{-- Students --}}
                 <a href="#"
                     class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition group">
-                    <svg class="w-5 h-5 mr-3 group-hover:text-indigo-400 transition" fill="none"
-                        stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 mr-3 group-hover:text-indigo-400" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
                         </path>
@@ -127,7 +129,7 @@
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit"
-                            class="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all duration-200">
+                            class="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
@@ -153,17 +155,14 @@
                                 d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
                     </button>
-                    {{-- Dynamic Header Title/Buttons --}}
                     <div class="w-full">
                         <div class="flex items-center justify-between w-full px-4">
                             <h2 class="text-xl font-bold text-slate-800">Admin Control Panel</h2>
-
                         </div>
                     </div>
                 </div>
 
                 <div class="flex items-center space-x-4">
-                    {{-- Notifications --}}
                     <button
                         class="p-2 text-slate-400 hover:text-indigo-600 rounded-full hover:bg-slate-50 transition relative">
                         <span
@@ -202,10 +201,7 @@
 
     {{-- Mobile Overlay --}}
     <div x-show="sidebarOpen" @click="sidebarOpen = false" x-cloak
-        class="fixed inset-0 bg-slate-900/60 z-40 md:hidden backdrop-blur-sm"
-        x-transition:enter="transition opacity-0 ease-out duration-300" x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100" x-transition:leave="transition opacity-100 ease-in duration-200"
-        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"></div>
+        class="fixed inset-0 bg-slate-900/60 z-40 md:hidden backdrop-blur-sm"></div>
 
     @stack('scripts')
 </body>

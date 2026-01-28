@@ -4,136 +4,195 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
-use App\Models\Lesson;
+use App\Models\Bundle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Exception;
 
 class CourseController extends Controller
 {
-    /**
-     * View the main LMS Management page (Index Table)
-     */
+    // public function index(Request $request)
+    // {
+    //     $query = Course::withCount('lessons')->orderBy('created_at', 'desc');
+    //     if ($request->has('search') && $request->search != '') {
+    //         $query->where('title', 'like', '%' . $request->search . '%');
+    //     }
+    //     $courses = $query->paginate(10);
+
+    //     if ($request->ajax()) {
+    //         return view('admin.lms.partials.table', compact('courses'))->render();
+    //     }
+    //     return view('admin.lms.index', compact('courses'));
+    // }
+
     public function index(Request $request)
     {
-        $query = Course::withCount('lessons')->orderBy('created_at', 'desc');
-
-        // Filter Logic: Agar search input aaya hai
-        if ($request->has('search') && $request->search != '') {
-            $query->where('title', 'like', '%' . $request->search . '%');
+        // 1. Search Logic for Single Courses
+        $courseQuery = Course::withCount('lessons')->latest();
+        if ($request->filled('search')) {
+            $courseQuery->where('title', 'like', '%' . $request->search . '%');
         }
+        $courses = $courseQuery->paginate(10, ['*'], 'courses_page');
 
-        $courses = $query->paginate(10);
+        // 2. Bundles (No search for bundles yet)
+        $bundles = Bundle::with('courses')->latest()->paginate(10, ['*'], 'bundles_page');
 
-        // Ajax request identification
+        // 3. AJAX Response Fix
         if ($request->ajax()) {
-            return view('admin.lms.partials.table', compact('courses'))->render();
+            return response()->json([
+                // Yahan render() karke sirf HTML string bhejna hai
+                'courses' => view('admin.lms.partials.table', compact('courses'))->render(),
+                'bundles' => view('admin.lms.partials.bundle_table', compact('bundles'))->render(),
+            ]);
         }
 
-        return view('admin.lms.index', compact('courses'));
+        return view('admin.lms.index', compact('courses', 'bundles'));
     }
 
     /**
-     * Show the form for creating a new course (New Page)
+     * Store or Update Bundle Logic
      */
-    public function create($id = null)
+    /**
+     * Bundle Store Logic with Exclusion Filter
+     */
+    /**
+     * Store or Update Bundle
+     */
+    // Create Page: Sirf wahi courses jo kisi bundle mein nahi hain
+    public function createBundle()
     {
-        // Agar $id hai toh model se data lao, nahi toh naya object banao
-        $course = $id ? Course::findOrFail($id) : new Course();
+        $availableCourses = Course::where('is_published', true)->get();
+        return view('admin.lms.bundle_create', compact('availableCourses'));
+    }
 
+    // Edit Page: Isme bhi saare courses dikhenge
+    public function editBundle($id)
+    {
+        $bundle = Bundle::with('courses')->findOrFail($id);
+        $currentCourseIds = $bundle->courses->pluck('id')->toArray();
+        $availableCourses = Course::where('is_published', true)->get();
+
+        return view('admin.lms.bundle_edit', compact('bundle', 'availableCourses', 'currentCourseIds'));
+    }
+
+    // Store & Update Logic
+    public function storeBundle(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'price' => 'required|numeric',
+        ]);
+
+        // Error logic: Agar edit mode mein saare courses hata diye toh error bhejenge
+        if ($request->id && (!$request->has('course_ids') || count($request->course_ids) == 0)) {
+            return back()
+                ->withInput() // Input data wapas bhejta hai
+                ->with('error', 'Selection Required: You cannot remove all courses. Previous selection is retained.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $bundle = Bundle::updateOrCreate(['id' => $request->id], [
+                'title' => $request->title,
+                'price' => $request->price,
+                'is_published' => $request->has('is_published'),
+            ]);
+
+            if ($request->has('course_ids')) {
+                $bundle->courses()->sync($request->course_ids);
+            }
+
+            DB::commit();
+            return redirect()->route('admin.courses.index')->with('success', 'Bundle updated successfully!');
+        } catch (Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'System Error: ' . $e->getMessage());
+        }
+    }
+    public function create()
+    {
+        $course = new Course();
+        return view('admin.lms.create', compact('course'));
+    }
+
+    public function edit($id)
+    {
+        $course = Course::findOrFail($id);
         return view('admin.lms.create', compact('course'));
     }
 
     public function store(Request $request)
     {
-        $request->validate(['title' => 'required|string|max:255']);
-
-        // Agar hidden ID hai toh Update karega, nahi toh naya banayega
-        Course::updateOrCreate(
-            ['id' => $request->id],
-            [
-                'title' => $request->title,
-                'description' => $request->description
-            ]
-        );
-
-        return redirect()->route('admin.courses.index')->with('success', 'Course saved successfully!');
-    }
-
-    /**
-     * STORE or UPDATE a Course (Redirect after save)
-     */
-    // storeCourse ko badal kar store kar dein
-
-
-
-
-    /**
-     * FETCH all courses via AJAX (Keeping for table refresh if needed)
-     */
-    public function fetchCourses()
-    {
-        $courses = Course::withCount('lessons')->orderBy('created_at', 'desc')->get();
-        return response()->json(['courses' => $courses]);
-    }
-
-    /**
-     * DELETE a Course and its thumbnail
-     */
-    public function delete($id)
-    {
-        $course = Course::findOrFail($id);
-        $course->delete();
-
-        // Index page par redirect karein success message ke sath
-        return redirect()->route('admin.courses.index')->with('success', 'Course deleted successfully!');
-    }
-
-    /**
-     * FETCH Lessons for a specific course
-     */
-    public function fetchLessons($course_id)
-    {
-        $lessons = Lesson::where('course_id', $course_id)
-            ->orderBy('order_column', 'asc')
-            ->get();
-        return response()->json(['lessons' => $lessons]);
-    }
-
-    /**
-     * STORE or UPDATE a Lesson
-     */
-    public function storeLesson(Request $request)
-    {
         $request->validate([
-            'course_id' => 'required|exists:courses,id',
             'title' => 'required|string|max:255',
+            'price' => 'required|numeric',
+            'demo_video' => 'nullable|mimes:mp4,mov,avi|max:102400',
+            'thumbnail' => 'nullable|image|max:2048',
         ]);
 
-        $lesson = Lesson::updateOrCreate(
-            ['id' => $request->id],
-            [
-                'course_id' => $request->course_id,
+        DB::beginTransaction();
+        try {
+            $data = [
                 'title' => $request->title,
-                'order_column' => $request->order_column ?? 0,
-            ]
-        );
+                'description' => $request->description,
+                'price' => $request->price,
+                'is_published' => $request->has('is_published'),
+            ];
 
-        return response()->json(['success' => 'Lesson saved successfully!', 'lesson' => $lesson]);
+            $course = $request->id ? Course::findOrFail($request->id) : new Course();
+
+            if ($request->hasFile('thumbnail')) {
+                if ($course->thumbnail) Storage::disk('public')->delete($course->thumbnail);
+                $data['thumbnail'] = $request->file('thumbnail')->store('courses/thumbnails', 'public');
+            }
+
+            if ($request->hasFile('demo_video')) {
+                if ($course->demo_video_url) Storage::disk('public')->delete($course->demo_video_url);
+                $data['demo_video_url'] = $request->file('demo_video')->store('courses/videos', 'public');
+            }
+
+            $course->fill($data)->save();
+            DB::commit();
+
+            return redirect()->route('admin.courses.index')->with('success', 'Course updated successfully!');
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error("Course Store Error: " . $e->getMessage());
+            return back()->withInput()->with('error', 'System Error: ' . $e->getMessage());
+        }
     }
 
     /**
-     * DELETE a Lesson
+     * Delete a Bundle permanently.
      */
-    public function deleteLesson($id)
+    public function deleteBundle($id)
     {
-        $lesson = Lesson::findOrFail($id);
+        try {
+            // 1. Bundle find karein
+            $bundle = Bundle::findOrFail($id);
 
-        // Delete files from storage if they exist
-        if ($lesson->video_path) Storage::disk('public')->delete($lesson->video_path);
-        if ($lesson->hls_path) Storage::disk('public')->deleteDirectory(dirname($lesson->hls_path));
+            // 2. Pivot table data automatically delete ho jayega (cascade ki wajah se)
+            // Aur bundle delete hote hi courses doosre bundles ke liye available ho jayenge.
+            $bundle->delete();
 
-        $lesson->delete();
+            return redirect()->route('admin.courses.index')->with('success', 'Bundle removed successfully! Courses are now available for other packages.');
+        } catch (\Exception $e) {
+            // Agar koi error aati hai toh back bhejien message ke sath
+            return back()->with('error', 'Delete Failed: ' . $e->getMessage());
+        }
+    }
 
-        return response()->json(['success' => 'Lesson deleted!']);
+    public function delete($id)
+    {
+        try {
+            $course = Course::findOrFail($id);
+            if ($course->thumbnail) Storage::disk('public')->delete($course->thumbnail);
+            if ($course->demo_video_url) Storage::disk('public')->delete($course->demo_video_url);
+            $course->delete();
+            return redirect()->route('admin.courses.index')->with('success', 'Course deleted successfully!');
+        } catch (Exception $e) {
+            return back()->with('error', 'Delete Failed: ' . $e->getMessage());
+        }
     }
 }

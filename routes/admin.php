@@ -50,4 +50,10 @@ Route::middleware(['auth', 'role:Admin'])
         // Video Processing & Heartbeat
         Route::post('/lms/upload', [VideoController::class, 'uploadVideo'])->name('video.upload');
         Route::post('/api/video-progress', [VideoController::class, 'updateHeartbeat'])->name('video.progress');
+
+        // Bundle Management Routes
+        Route::get('/bundles/create', [CourseController::class, 'createBundle'])->name('bundles.create');
+        Route::post('/bundles/store', [CourseController::class, 'storeBundle'])->name('bundles.store');
+        Route::get('/bundles/{id}/edit', [CourseController::class, 'editBundle'])->name('bundles.edit');
+        Route::delete('/bundles/{id}', [CourseController::class, 'deleteBundle'])->name('bundles.delete');
     });

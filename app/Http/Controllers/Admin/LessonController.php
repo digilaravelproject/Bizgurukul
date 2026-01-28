@@ -106,7 +106,7 @@ class LessonController extends Controller
         $lesson = Lesson::findOrFail($id);
         $courses = Course::orderBy('title', 'asc')->get();
         $selected_course = $lesson->course;
-        return view('admin.lms.lessons.create', compact('lesson', 'courses', 'selected_course'));
+        return view('admin.lessons.create', compact('lesson', 'courses', 'selected_course'));
     }
 
     public function destroy($id)
