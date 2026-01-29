@@ -1,14 +1,15 @@
 <?php
 
-use App\Http\Controllers\Admin\UserController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CommissionController;
-use App\Http\Controllers\Admin\CourseController; // New Controller for LMS
-use App\Http\Controllers\Admin\KycController;
-use App\Http\Controllers\Admin\VideoController;
-use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\CouponController;
+use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\Admin\KycController; // New Controller for LMS
+use App\Http\Controllers\Admin\LessonController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\VideoController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,6 +33,20 @@ Route::middleware(['auth', 'role:Admin'])
         //     Route::post('/{commission}/reject', [CommissionController::class, 'reject'])->name('reject');
         // });
 
+        // // 3. Category Management
+        // Route::prefix('categories')->name('categories.')->group(function () {
+        //     Route::get('/', [CategoryController::class, 'index'])->name('index');
+        //     Route::post('/store', [CategoryController::class, 'store'])->name('store');
+        //     Route::get('/sub-categories/{parentId}', [CategoryController::class, 'getSubCategories'])->name('sub');
+        //     Route::put('/update/{id}', [CategoryController::class, 'update'])->name('update');
+        //     Route::delete('/delete/{id}', [CategoryController::class, 'destroy'])->name('delete');
+        // });
+        Route::prefix('categories')->name('categories.')->group(function () {
+    Route::get('/', [CategoryController::class, 'index'])->name('index');
+    Route::post('/store', [CategoryController::class, 'store'])->name('store');
+    Route::put('/update/{id}', [CategoryController::class, 'update'])->name('update'); // PUT method
+    Route::delete('/delete/{id}', [CategoryController::class, 'destroy'])->name('delete'); // DELETE method
+});
         // 3. LMS: Course Management (Ajax CRUD)
         Route::prefix('courses')->name('courses.')->group(function () {
             Route::get('/', [CourseController::class, 'index'])->name('index');         // Table List Page

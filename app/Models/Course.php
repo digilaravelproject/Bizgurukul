@@ -4,44 +4,66 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Storage;
 
 class Course extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'category_id',
+        'sub_category_id',
         'title',
         'description',
-        'is_published', // Publish status
-        'demo_video_url', // Demo link
+        'is_published',
+        'demo_video_url',
         'price',
-        'thumbnail'
+        'thumbnail',
+        'discount_value',
+        'discount_type',
+        'final_price',
+        'certificate_enabled',
+        'certificate_criteria',
+        'completion_threshold'
     ];
+    protected $appends = ['thumbnail_url'];
+    // Storage agnostic Thumbnail URL
+    protected function thumbnail(): Attribute
+    {
+        return Attribute::get(function ($value) {
+            // if (!$value)
+            //     return asset('images/default-course.png');
+            // return Storage::url($value);
+            return $value ? Storage::url($value) : null;
+        });
+    }
 
-    /**
-     * Relationship: Ek Course mein bahut saare Lessons hote hain.
-     */
+    // Storage agnostic Demo Video URL
+    protected function demoVideoUrl(): Attribute
+    {
+        return Attribute::get(function ($value) {
+            if (!$value)
+                return null;
+            return Storage::url($value);
+        });
+    }
+
+    // Relationships
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+    public function subCategory()
+    {
+        return $this->belongsTo(Category::class, 'sub_category_id');
+    }
     public function lessons()
     {
         return $this->hasMany(Lesson::class)->orderBy('order_column', 'asc');
     }
-
-    /**
-     * Relationship: Ek Course mein bahut saare students enrolled ho sakte hain.
-     * (Future use ke liye agar aapne enrollments table banayi)
-     */
-    public function progress()
+    public function resources()
     {
-        return $this->hasManyThrough(VideoProgress::class, Lesson::class);
-    }
-
-    public function bundles()
-    {
-        return $this->belongsToMany(Bundle::class, 'bundle_course');
-    }
-
-    public function coupons()
-    {
-        return $this->morphMany(Coupon::class, 'couponable');
+        return $this->hasMany(CourseResource::class);
     }
 }
