@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
+use Exception;
 
 class UserController extends Controller
 {
@@ -19,12 +20,16 @@ class UserController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $users = $this->userService->getUsers(
-                15,
-                $request->get('search'),
-                $request->get('trash', 'false')
-            );
-            return response()->json(['status' => true, 'data' => $users]);
+            try {
+                $users = $this->userService->getUsers(
+                    15,
+                    $request->get('search'),
+                    $request->get('trash', 'false')
+                );
+                return response()->json(['status' => true, 'data' => $users]);
+            } catch (Exception $e) {
+                return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+            }
         }
 
         $roles = Role::all();
@@ -33,31 +38,34 @@ class UserController extends Controller
 
     public function show($id)
     {
-        // View Modal ke liye Data
-        $user = $this->userService->getUserDetails($id);
+        try {
+            $user = $this->userService->getUserDetails($id);
 
-        return response()->json([
-            'status' => true,
-            'data' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'mobile' => $user->mobile,
-                'gender' => ucfirst($user->gender),
-                'dob' => $user->dob ? $user->dob->format('d M, Y') : 'N/A',
-                'city' => $user->city,
-                'state_id' => $user->state_id, // Pass ID to frontend to map to name
-                'referral_code' => $user->referral_code,
-                'role' => $user->roles->pluck('name')->implode(', '),
-                'kyc_status' => $user->kyc_status,
-                'status' => $user->is_active ? 'Active' : 'Inactive',
-                'is_banned' => $user->is_banned,
-                'joined_at' => $user->created_at->format('d M, Y'),
-                'profile_picture' => $user->profile_picture ? asset('storage/' . $user->profile_picture) : null,
-                'initials' => strtoupper(substr($user->name, 0, 1)),
-                'referred_by' => $user->referrer ? $user->referrer->name : 'Direct'
-            ]
-        ]);
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'mobile' => $user->mobile,
+                    'gender' => ucfirst($user->gender),
+                    'dob' => $user->dob ? $user->dob->format('d M, Y') : 'N/A',
+                    'city' => $user->city,
+                    'state_id' => $user->state_id,
+                    'referral_code' => $user->referral_code,
+                    'role' => $user->roles->pluck('name')->implode(', '),
+                    'kyc_status' => $user->kyc_status,
+                    'status' => $user->is_active ? 'Active' : 'Inactive',
+                    'is_banned' => $user->is_banned,
+                    'joined_at' => $user->created_at->format('d M, Y'),
+                    'profile_picture' => $user->profile_picture ? asset('storage/' . $user->profile_picture) : null,
+                    'initials' => strtoupper(substr($user->name, 0, 1)),
+                    'referred_by' => $user->referrer ? $user->referrer->name : 'Direct'
+                ]
+            ]);
+        } catch (Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 404);
+        }
     }
 
     public function store(Request $request)
@@ -72,8 +80,12 @@ class UserController extends Controller
             'dob' => 'nullable|date',
         ]);
 
-        $this->userService->createUser($request->all());
-        return response()->json(['status' => true, 'message' => 'User created successfully']);
+        try {
+            $this->userService->createUser($request->all());
+            return response()->json(['status' => true, 'message' => 'New user added successfully.']);
+        } catch (Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function update(Request $request, $id)
@@ -85,31 +97,51 @@ class UserController extends Controller
             'mobile' => 'nullable|numeric|digits:10',
         ]);
 
-        $this->userService->updateUser($id, $request->all());
-        return response()->json(['status' => true, 'message' => 'User updated successfully']);
+        try {
+            $this->userService->updateUser($id, $request->all());
+            return response()->json(['status' => true, 'message' => 'User details updated successfully.']);
+        } catch (Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function toggleBan($id)
     {
-        $this->userService->toggleBan($id);
-        return response()->json(['status' => true, 'message' => 'User status updated']);
+        try {
+            $this->userService->toggleBan($id);
+            return response()->json(['status' => true, 'message' => 'User access status updated.']);
+        } catch (Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function destroy($id)
     {
-        $this->userService->deleteUser($id);
-        return response()->json(['status' => true, 'message' => 'User moved to trash']);
+        try {
+            $this->userService->deleteUser($id);
+            return response()->json(['status' => true, 'message' => 'User moved to trash.']);
+        } catch (Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function restore($id)
     {
-        $this->userService->restoreUser($id);
-        return response()->json(['status' => true, 'message' => 'User restored successfully']);
+        try {
+            $this->userService->restoreUser($id);
+            return response()->json(['status' => true, 'message' => 'User restored successfully.']);
+        } catch (Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function forceDelete($id)
     {
-        $this->userService->forceDeleteUser($id);
-        return response()->json(['status' => true, 'message' => 'User permanently deleted']);
+        try {
+            $this->userService->forceDeleteUser($id);
+            return response()->json(['status' => true, 'message' => 'User permanently deleted from database.']);
+        } catch (Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }
