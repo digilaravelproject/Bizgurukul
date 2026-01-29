@@ -41,6 +41,7 @@ class UserController extends Controller
         try {
             $user = $this->userService->getUserDetails($id);
 
+            // Formatting Response as per your original code
             return response()->json([
                 'status' => true,
                 'data' => [
