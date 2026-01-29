@@ -77,7 +77,7 @@
                 </div>
             </div>
 
-            {{-- Multiple Selection: Shown only if Specific is selected --}}
+            {{-- Multiple Selection: Logic Fixed (Removed json_decode) --}}
             <div x-show="couponType === 'specific'" x-transition
                 class="grid grid-cols-1 md:grid-cols-2 gap-8 border-l-4 border-[#0777be] pl-8 py-2">
                 <div class="space-y-3">
@@ -85,8 +85,8 @@
                         Multiple Courses</label>
                     <select name="courses[]" multiple class="js-select2-multiple w-full">
                         @foreach ($courses as $course)
-                            <option value="{{ $course->id }}"
-                                {{ isset($coupon) && in_array($course->id, json_decode($coupon->selected_courses ?? '[]')) ? 'selected' : '' }}>
+                            <option value="{{ $course->id }}" {{-- Direct Array Check because of Model Casting --}}
+                                {{ isset($coupon) && is_array($coupon->selected_courses) && in_array($course->id, $coupon->selected_courses) ? 'selected' : '' }}>
                                 {{ $course->title }}</option>
                         @endforeach
                     </select>
@@ -97,8 +97,8 @@
                         Multiple Bundles</label>
                     <select name="bundles[]" multiple class="js-select2-multiple w-full">
                         @foreach ($bundles as $bundle)
-                            <option value="{{ $bundle->id }}"
-                                {{ isset($coupon) && in_array($bundle->id, json_decode($coupon->selected_bundles ?? '[]')) ? 'selected' : '' }}>
+                            <option value="{{ $bundle->id }}" {{-- Direct Array Check --}}
+                                {{ isset($coupon) && is_array($coupon->selected_bundles) && in_array($bundle->id, $coupon->selected_bundles) ? 'selected' : '' }}>
                                 {{ $bundle->title }}</option>
                         @endforeach
                     </select>
@@ -130,17 +130,18 @@
                 </div>
             </div>
 
-            {{-- Expiry --}}
+            {{-- Expiry (Format Fixed for Browser) --}}
             <div class="space-y-2 max-w-sm">
                 <label class="block text-xs font-black text-slate-700 uppercase ml-1">Expiry Date</label>
-                <input type="date" name="expiry_date" value="{{ old('expiry_date', $coupon->expiry_date ?? '') }}"
-                    class="w-full rounded-2xl border-slate-200 bg-slate-50 px-6 py-4 font-bold text-slate-600 shadow-sm">
+                <input type="date" name="expiry_date"
+                    value="{{ old('expiry_date', isset($coupon) && $coupon->expiry_date ? $coupon->expiry_date->format('Y-m-d') : '') }}"
+                    class="w-full rounded-2xl border-slate-200 bg-slate-50 px-6 py-4 font-bold text-slate-600 shadow-sm focus:bg-white focus:ring-4 focus:ring-[#0777be]/10 transition-all">
             </div>
 
             <div class="flex justify-start pt-8 border-t border-slate-50">
                 <button type="submit"
                     class="bg-[#0777be] text-white px-12 py-5 rounded-2xl font-black shadow-lg shadow-blue-100 uppercase tracking-widest text-xs transition-all hover:bg-[#0666a3] active:scale-95">
-                    {{ isset($coupon) ? 'Update Coupon' : 'Generate & Active Coupon' }}
+                    {{ isset($coupon) ? 'Update Coupon Settings' : 'Generate & Active Coupon' }}
                 </button>
             </div>
         </form>
