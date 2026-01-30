@@ -5,13 +5,13 @@
 @tailwind utilities;
 
 :root {
-    --color-primary: #6366f1;
-    --color-secondary: #fb7185;
-    --color-bg-body: #0f172a;
-    --color-bg-card: #1e293b;
-    --color-text-main: #f8fafc;
-    --color-text-muted: #94a3b8;
-    --color-white: #ffffff;
+    --color-primary: #F7941D;
+    --color-secondary: #D04A02;
+    --color-bg-body: #FFF8F0;
+    --color-bg-card: #FFFFFF;
+    --color-text-main: #2D2D2D;
+    --color-text-muted: #555555;
+    --color-white: #FFFFFF;
     --font-main: "Plus Jakarta Sans", sans-serif;
 }
 
@@ -23,14 +23,18 @@ body {
 }
 
 .glass-panel {
-    background: rgba(30, 41, 59, 0.7);
+    background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(247, 148, 29, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
+.brand-gradient {
+    background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+}
 ::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
 }
 ::-webkit-scrollbar-track {
     background: var(--color-bg-body);
@@ -38,4 +42,7 @@ body {
 ::-webkit-scrollbar-thumb {
     background: var(--color-primary);
     border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-secondary);
 }

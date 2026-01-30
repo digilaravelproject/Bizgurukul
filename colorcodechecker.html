@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skills Pahle - Website Color Palette</title>
+    <style>
+        :root {
+            /* EXACT LOGO COLORS EXTRACTED */
+            --logo-orange-light: #F7941D;
+            --logo-orange-dark: #D04A02;
+            --logo-white: #FFFFFF;
+
+            /* WEBSITE PALETTE SUGGESTIONS */
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #FFF8F0; /* Very light orange for sections */
+            --text-primary: #2D2D2D; /* Dark Grey for readable text */
+            --text-secondary: #555555;
+            --border-color: #E5E7EB;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background-color: #F3F4F6;
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        h1, h2 {
+            color: var(--text-primary);
+        }
+
+        .section-title {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* COLOR CARDS */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .color-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .color-swatch {
+            height: 120px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .color-info {
+            padding: 15px;
+        }
+
+        .hex-code {
+            font-family: monospace;
+            font-size: 1.1rem;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .usage {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* GRADIENT DEMO */
+        .gradient-demo {
+            background: linear-gradient(90deg, var(--logo-orange-light) 0%, var(--logo-orange-dark) 100%);
+            height: 100px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(247, 148, 29, 0.4);
+        }
+
+        /* UI ELEMENTS PREVIEW */
+        .ui-preview {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 30px;
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            /* Using the gradient exactly like the logo */
+            background: linear-gradient(135deg, var(--logo-orange-light), var(--logo-orange-dark));
+            color: white;
+            box-shadow: 0 4px 6px rgba(208, 74, 2, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(208, 74, 2, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--logo-orange-light);
+            color: var(--logo-orange-dark);
+        }
+
+        .card-preview {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-top: 4px solid var(--logo-orange-light);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            width: 200px;
+        }
+
+        .copy-hint {
+            margin-top: 5px;
+            font-size: 0.8rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div style="text-align: center; margin-bottom: 40px;">
+        <h1 style="color: var(--logo-orange-dark);">SKILLS P<span style="color:var(--logo-orange-light)">₹</span>HLE</h1>
+        <p>Official Color Palette & Website Design System</p>
+    </div>
+
+    <!-- LOGO COLORS -->
+    <div class="section-title">1. Exact Logo Colors</div>
+    <div class="color-grid">
+        <!-- Light Orange -->
+        <div class="color-card">
+            <div class="color-swatch" style="background-color: #F7941D;">Light Shade</div>
+            <div class="color-info">
+                <span class="hex-code">#F7941D</span>
+                <span class="usage">Gradient Start (Top/Left)</span>
+            </div>
+        </div>
+
+        <!-- Dark Orange -->
+        <div class="color-card">
+            <div class="color-swatch" style="background-color: #D04A02;">Dark Shade</div>
+            <div class="color-info">
+                <span class="hex-code">#D04A02</span>
+                <span class="usage">Gradient End (Bottom/Right)</span>
+            </div>
+        </div>
+
+        <!-- White -->
+        <div class="color-card">
+            <div class="color-swatch" style="background-color: #FFFFFF; color: #333; border-bottom:1px solid #eee;">White</div>
+            <div class="color-info">
+                <span class="hex-code">#FFFFFF</span>
+                <span class="usage">Logo Text & Background</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- THE GRADIENT -->
+    <div class="section-title">2. Main Brand Gradient</div>
+    <p>Aapke logo mein solid color nahi, yeh gradient use hua hai. Is CSS ko apni website ke header ya main buttons ke liye use karein:</p>
+    <div class="gradient-demo">
+        SKILLS P₹HLE
+    </div>
+    <code style="display:block; background:#333; color:#fff; padding:15px; margin-top:10px; border-radius:6px; overflow-x:auto;">
+        background: linear-gradient(90deg, #F7941D 0%, #D04A02 100%);
+    </code>
+
+    <!-- WEBSITE PALETTE -->
+    <div class="section-title">3. Recommended Website Palette</div>
+    <p>Logo ke hisaab se yeh colors aapki website par best lagenge:</p>
+
+    <div class="ui-preview">
+        <!-- Primary Button -->
+        <div>
+            <button class="btn btn-primary">Sign Up Now</button>
+            <div class="copy-hint">Main CTA Button (Gradient)</div>
+        </div>
+
+        <!-- Secondary Button -->
+        <div>
+            <button class="btn btn-outline">Learn More</button>
+            <div class="copy-hint">Secondary Button</div>
+        </div>
+
+        <!-- Card Design -->
+        <div class="card-preview">
+            <h4 style="margin:0 0 10px 0;">Course Card</h4>
+            <p style="font-size:0.9rem; color:#666;">Ye card design hai jisme top border aapke brand color ka hai.</p>
+        </div>
+    </div>
+
+    <div class="section-title">4. Background Colors</div>
+    <div class="color-grid">
+        <div class="color-card">
+            <div class="color-swatch" style="background-color: #FFF8F0; color: #333;">Light Cream</div>
+            <div class="color-info">
+                <span class="hex-code">#FFF8F0</span>
+                <span class="usage">Section Backgrounds (Soft)</span>
+            </div>
+        </div>
+        <div class="color-card">
+            <div class="color-swatch" style="background-color: #2D2D2D;">Dark Grey</div>
+            <div class="color-info">
+                <span class="hex-code">#2D2D2D</span>
+                <span class="usage">Main Text Color (Not Black)</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
