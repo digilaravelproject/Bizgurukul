@@ -77,11 +77,9 @@ Route::middleware(['auth', 'role:Admin'])
 
         Route::controller(CouponController::class)->group(function () {
             Route::get('coupons', 'index')->name('coupons.index');
-            Route::get('coupons/create', 'create')->name('coupons.create');
             Route::post('coupons/store', 'store')->name('coupons.store');
             Route::get('coupons/{id}/edit', 'edit')->name('coupons.edit');
             Route::delete('coupons/{id}', 'destroy')->name('coupons.destroy');
-            Route::post('coupons/toggle-status/{id}', 'toggleStatus')->name('coupons.toggle-status');
         });
 
         Route::prefix('users')->name('users.')->group(function () {
