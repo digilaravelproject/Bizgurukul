@@ -53,7 +53,11 @@ Route::middleware(['auth', 'role:Admin'])
             Route::get('/create/{id?}', [CourseController::class, 'create'])->name('create');
             Route::post('/store', [CourseController::class, 'store'])->name('store');     // Save & Redirect
             Route::get('/edit/{id}', [CourseController::class, 'edit'])->name('edit');    // Edit Page
+            Route::post('/update/{id}', [CourseController::class, 'update'])->name('update');    // Edit Page
             Route::delete('/delete/{id}', [CourseController::class, 'delete'])->name('delete');
+            Route::post('/lesson/store', [CourseController::class, 'lessonStore'])->name('lesson.store');
+            Route::post('/resource/store', [CourseController::class, 'resourceStore'])->name('resource.store');
+            Route::post('/resource/update', [CourseController::class, 'resourceUpdate'])->name('resource.update');
         });
 
         // 4. LMS: Lesson Management (Ajax CRUD)
