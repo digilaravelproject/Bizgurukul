@@ -1,7 +1,9 @@
-<aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-    class="fixed inset-y-0 left-0 z-50 w-64 bg-customWhite border-r border-primary/10 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 flex flex-col overflow-hidden shadow-sm">
+<aside
+    {{-- Sidebar opens with 0 translation, hides with -full translation on mobile --}}
+    :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+    class="fixed inset-y-0 left-0 z-50 w-64 bg-navy border-r border-primary/10 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 flex flex-col overflow-hidden shadow-xl md:shadow-none ">
 
-    <div class="relative z-10 flex flex-col h-full">
+    <div class="relative z-10 flex flex-col h-full bg-customWhite">
         {{-- Logo Section --}}
         <div class="p-6 flex justify-between items-center h-20 border-b border-navy">
             <div class="flex items-center space-x-3">
@@ -13,7 +15,9 @@
                     <span class="text-[9px] text-mutedText tracking-[0.2em] font-bold uppercase mt-1">Admin Pro</span>
                 </div>
             </div>
-            <button @click="sidebarOpen = false" class="md:hidden text-mutedText hover:text-primary transition">
+
+            {{-- Mobile Close Button --}}
+            <button @click="sidebarOpen = false" class="md:hidden text-mutedText hover:text-primary transition p-2">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         </div>
@@ -61,7 +65,7 @@
 
         {{-- Minimal Footer --}}
         <div class="p-4 mt-auto border-t border-navy bg-navy/30">
-            <div class="flex items-center p-2 rounded-xl border border-primary/5">
+            <div class="flex items-center p-2 rounded-xl border border-primary/5 bg-customWhite">
                 <div class="h-9 w-9 rounded-lg brand-gradient flex items-center justify-center text-white font-bold text-xs shadow-md">
                     {{ substr(Auth::user()->name ?? 'AD', 0, 2) }}
                 </div>

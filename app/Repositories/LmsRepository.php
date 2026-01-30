@@ -10,20 +10,24 @@ use Illuminate\Support\Facades\DB;
 
 class LmsRepository
 {
-    public function getFilteredCourses(array $filters)
-    {
-        return Course::query()
-            ->with(['category:id,name', 'subCategory:id,name'])
-            ->withCount('lessons')
-            ->when($filters['search'] ?? null, function ($query, $search) {
-                $query->where('title', 'like', "%{$search}%");
-            })
-            ->when($filters['category_id'] ?? null, function ($query, $categoryId) {
-                $query->where('category_id', $categoryId);
-            })
-            ->latest()
-            ->paginate(10);
-    }
+public function getFilteredCourses(array $filters)
+{
+    $searchTerm = isset($filters['search']) ? trim($filters['search']) : null;
+    $categoryId = $filters['category_id'] ?? null;
+
+    return Course::query()
+        ->select('id', 'title', 'thumbnail', 'category_id', 'final_price', 'is_published')
+        ->with(['category:id,name', 'subCategory:id,name'])
+        ->withCount('lessons')
+        ->when($searchTerm, function ($query) use ($searchTerm) {
+            $query->where('title', 'like', "%{$searchTerm}%");
+        })
+        ->when($categoryId, function ($query) use ($categoryId) {
+            $query->where('category_id', $categoryId);
+        })
+        ->latest()
+        ->paginate(10);
+}
 
     public function getAllCategories()
     {

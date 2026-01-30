@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Skills Pehle') }} - Admin</title>
+    <link rel="icon" type="image/png" href="{{ asset('storage/site_images/logo.png') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -19,7 +20,7 @@
     @stack('styles')
 </head>
 
-<body class="antialiased bg-navy text-mainText">
+<body class="antialiased bg-navy text-mainText" x-data="{ sidebarOpen: false }">
 
     <div class="min-h-screen flex overflow-hidden">
 
@@ -31,7 +32,8 @@
             <header class="bg-customWhite/80 backdrop-blur-md border-b border-primary/5 h-20 flex items-center px-4 md:px-8 justify-between sticky top-0 z-40">
 
                 <div class="flex items-center">
-                    <button @click="sidebarOpen = true" class="md:hidden mr-4 p-2 bg-primary/5 text-primary rounded-xl">
+                    {{-- Mobile Hamburger Toggle --}}
+                    <button @click="sidebarOpen = true" class="md:hidden mr-4 p-2 bg-primary/5 text-primary rounded-xl hover:bg-primary/10 transition">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     </button>
 
@@ -96,8 +98,18 @@
         </div>
     </div>
 
-    {{-- Mobile Overlay --}}
-    <div x-show="sidebarOpen" @click="sidebarOpen = false" x-cloak class="fixed inset-0 bg-mainText/40 z-40 md:hidden backdrop-blur-sm transition-opacity"></div>
+    {{-- Mobile Overlay Backdrop --}}
+    <div x-show="sidebarOpen"
+         x-transition:enter="transition opacity ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition opacity ease-in duration-300"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="sidebarOpen = false"
+         x-cloak
+         class="fixed inset-0 bg-mainText/60 z-40 md:hidden backdrop-blur-sm">
+    </div>
 
     @stack('scripts')
 </body>

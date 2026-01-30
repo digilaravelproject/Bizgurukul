@@ -18,23 +18,23 @@ class UserController extends Controller
     }
 
     public function index(Request $request)
-    {
-        if ($request->ajax()) {
-            try {
-                $users = $this->userService->getUsers(
-                    15,
-                    $request->get('search'),
-                    $request->get('trash', 'false')
-                );
-                return response()->json(['status' => true, 'data' => $users]);
-            } catch (Exception $e) {
-                return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
-            }
+{
+    if ($request->ajax()) {
+        try {
+            $users = $this->userService->getUsers(
+                15,
+                $request->get('search'),
+                $request->get('trash', 'false')
+            );
+            return response()->json(['status' => true, 'data' => $users]);
+        } catch (Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
         }
-
-        $roles = Role::all();
-        return view('admin.users.index', compact('roles'));
     }
+
+    $roles = Role::all();
+    return view('admin.users.index', compact('roles'));
+}
 
     public function show($id)
     {

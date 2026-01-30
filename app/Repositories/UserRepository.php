@@ -14,25 +14,28 @@ class UserRepository
     }
 
     // List with Pagination, Search & Trash logic
-    public function getPaginatedUsers($perPage, $search, $viewTrash)
-    {
-        $query = $this->model->with('roles');
+public function getPaginatedUsers($perPage, $search, $viewTrash)
+{
+    $searchTerm = trim($search);
 
-        if ($viewTrash === 'true') {
-            $query->onlyTrashed();
-        }
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('mobile', 'like', "%{$search}%")
-                  ->orWhere('referral_code', 'like', "%{$search}%");
+    return $this->model->query()
+        // Optimization: Sirf table ke liye zaroori columns hi fetch karein
+        ->select('id', 'name', 'email', 'profile_picture', 'referral_code', 'kyc_status', 'is_banned')
+        ->with(['roles:id,name'])
+        ->when($viewTrash === 'true', function ($q) {
+            return $q->onlyTrashed();
+        })
+        ->when($searchTerm, function ($q) use ($searchTerm) {
+            $q->where(function ($sub) use ($searchTerm) {
+                $sub->where('name', 'like', "%{$searchTerm}%")
+                  ->orWhere('email', 'like', "%{$searchTerm}%")
+                  ->orWhere('mobile', 'like', "%{$searchTerm}%")
+                  ->orWhere('referral_code', 'like', "%{$searchTerm}%");
             });
-        }
-
-        return $query->latest()->paginate($perPage);
-    }
+        })
+        ->latest()
+        ->paginate($perPage);
+}
 
     // **Aapki Requirement:** Active & Unbanned Users List
     public function getActiveUnbannedUsers()

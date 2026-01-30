@@ -34,7 +34,8 @@ body {
     background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary) 100%);
 }
 ::-webkit-scrollbar {
-    width: 8px;
+    width: 4px;
+    height: 4px;
 }
 ::-webkit-scrollbar-track {
     background: var(--color-bg-body);

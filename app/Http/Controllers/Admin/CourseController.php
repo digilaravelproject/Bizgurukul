@@ -16,21 +16,23 @@ class CourseController extends Controller
         $this->lmsService = $lmsService;
     }
 
-    public function index(Request $request)
-    {
-        try {
-            if ($request->ajax()) {
-                $courses = $this->lmsService->getFilteredCourses($request->all());
-                return view('admin.courses.partials.table', compact('courses'))->render();
-            }
-
-            $courses = $this->lmsService->getFilteredCourses([]);
-            $categories = $this->lmsService->getCategories();
-            return view('admin.courses.index', compact('courses', 'categories'));
-        } catch (Exception $e) {
-            return back()->with('error', $e->getMessage());
+public function index(Request $request)
+{
+    try {
+        if ($request->ajax()) {
+            $courses = $this->lmsService->getFilteredCourses($request->all());
+            return view('admin.courses.partials.table', compact('courses'))->render();
         }
+
+        $courses = $this->lmsService->getFilteredCourses($request->all());
+        $courses->appends($request->all());
+
+        $categories = $this->lmsService->getCategories();
+        return view('admin.courses.index', compact('courses', 'categories'));
+    } catch (Exception $e) {
+        return back()->with('error', "Something went wrong.");
     }
+}
 
     public function create()
     {
