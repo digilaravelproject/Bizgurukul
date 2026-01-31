@@ -49,3 +49,14 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--color-secondary);
 }
+select {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    background-image: none !important;
+}
+
+/* IE ke liye khaas fix */
+select::-ms-expand {
+    display: none !important;
+}

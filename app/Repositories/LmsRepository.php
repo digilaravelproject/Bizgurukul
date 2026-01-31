@@ -4,35 +4,36 @@ namespace App\Repositories;
 
 use App\Models\Category;
 use App\Models\Course;
-use App\Models\Lesson;
 use App\Models\CourseResource;
-use Illuminate\Support\Facades\DB;
+use App\Models\Lesson;
 
 class LmsRepository
 {
-public function getFilteredCourses(array $filters)
-{
-    $searchTerm = isset($filters['search']) ? trim($filters['search']) : null;
-    $categoryId = $filters['category_id'] ?? null;
+    // --- READ OPERATIONS ---
 
-    return Course::query()
-        ->select('id', 'title', 'thumbnail', 'category_id', 'final_price', 'is_published')
-        ->with(['category:id,name', 'subCategory:id,name'])
-        ->withCount('lessons')
-        ->when($searchTerm, function ($query) use ($searchTerm) {
-            $query->where('title', 'like', "%{$searchTerm}%");
-        })
-        ->when($categoryId, function ($query) use ($categoryId) {
-            $query->where('category_id', $categoryId);
-        })
-        ->latest()
-        ->paginate(10);
-}
+    public function getFilteredCourses(array $filters)
+    {
+        $searchTerm = isset($filters['search']) ? trim($filters['search']) : null;
+        $categoryId = $filters['category_id'] ?? null;
+
+        return Course::query()
+            ->select('id', 'title', 'thumbnail', 'category_id', 'final_price', 'is_published')
+            ->with(['category:id,name', 'subCategory:id,name'])
+            ->withCount('lessons')
+            ->when($searchTerm, function ($query) use ($searchTerm) {
+                $query->where('title', 'like', "%{$searchTerm}%");
+            })
+            ->when($categoryId, function ($query) use ($categoryId) {
+                $query->where('category_id', $categoryId);
+            })
+            ->latest()
+            ->paginate(10);
+    }
 
     public function getAllCategories()
     {
         return Category::whereNull('parent_id')
-            ->with(['subCategories' => fn($q) => $q->where('is_active', true)])
+            ->with(['subCategories' => fn ($q) => $q->where('is_active', true)])
             ->where('is_active', true)
             ->get();
     }
@@ -43,6 +44,16 @@ public function getFilteredCourses(array $filters)
             ->where('is_active', true)
             ->get();
     }
+
+    public function getCourse($id)
+    {
+        return Course::with(['category', 'subCategory', 'resources'])
+            ->with(['lessons' => fn ($q) => $q->orderBy('order_column', 'asc')])
+            ->withCount('lessons')
+            ->findOrFail($id);
+    }
+
+    // --- CREATE / UPDATE OPERATIONS ---
 
     public function createCategory(array $data)
     {
@@ -59,17 +70,10 @@ public function getFilteredCourses(array $filters)
         return Course::lockForUpdate()->findOrFail($id);
     }
 
-    public function findCourseWithSyllabus($id)
-    {
-        return Course::with(['category', 'subCategory', 'resources'])
-            ->with(['lessons' => fn($q) => $q->orderBy('order_column', 'asc')])
-            ->withCount('lessons')
-            ->findOrFail($id);
-    }
-
     public function updateCourse(Course $course, array $data)
     {
         $course->update($data);
+
         return $course;
     }
 
@@ -88,8 +92,39 @@ public function getFilteredCourses(array $filters)
         return CourseResource::create($data);
     }
 
+    // --- DELETE OPERATIONS ---
+
+    public function findCourseForDeletion($id)
+    {
+        return Course::with(['lessons', 'resources'])->findOrFail($id);
+    }
+
+    public function deleteCourse($id)
+    {
+        return Course::destroy($id);
+    }
+
+    // New: Find lesson to delete files
+    public function findLesson($id)
+    {
+        return Lesson::findOrFail($id);
+    }
+
+    // New: Delete Lesson from DB
+    public function deleteLesson($id)
+    {
+        return Lesson::destroy($id);
+    }
+
+    // New: Find Resource to delete files
+    public function findResource($id)
+    {
+        return CourseResource::findOrFail($id);
+    }
+
+    // New: Delete Resource from DB
     public function deleteResource($id)
     {
-        return CourseResource::findOrFail($id)->delete();
+        return CourseResource::destroy($id);
     }
 }

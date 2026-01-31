@@ -16,33 +16,26 @@ class CourseController extends Controller
         $this->lmsService = $lmsService;
     }
 
-public function index(Request $request)
-{
-    try {
-        if ($request->ajax()) {
+    public function index(Request $request)
+    {
+        try {
+            if ($request->ajax()) {
+                $courses = $this->lmsService->getFilteredCourses($request->all());
+                return view('admin.courses.partials.table', compact('courses'))->render();
+            }
             $courses = $this->lmsService->getFilteredCourses($request->all());
-            return view('admin.courses.partials.table', compact('courses'))->render();
+            $courses->appends($request->all());
+            $categories = $this->lmsService->getCategories();
+            return view('admin.courses.index', compact('courses', 'categories'));
+        } catch (Exception $e) {
+            return back()->with('error', "Something went wrong.");
         }
-
-        $courses = $this->lmsService->getFilteredCourses($request->all());
-        $courses->appends($request->all());
-
-        $categories = $this->lmsService->getCategories();
-        return view('admin.courses.index', compact('courses', 'categories'));
-    } catch (Exception $e) {
-        return back()->with('error', "Something went wrong.");
     }
-}
 
     public function create()
     {
         $categories = $this->lmsService->getCategories();
         return view('admin.courses.create', compact('categories'));
-    }
-
-    public function getSubCategories($id)
-    {
-        return response()->json($this->lmsService->getSubCategories($id));
     }
 
     public function store(Request $request)
@@ -79,25 +72,51 @@ public function index(Request $request)
     public function update(Request $request, $id)
     {
         $request->validate([
-            'title' => 'sometimes|required|max:255',
-            'price' => 'sometimes|numeric|min:0',
-            'discount_value' => 'nullable|numeric|min:0',
+            'title'           => 'required|string|max:255',
+            'category_id'     => 'required|exists:categories,id',
+            'sub_category_id' => 'nullable|exists:categories,id',
+            'description'     => 'nullable|string',
+            'price'           => 'required|numeric|min:0',
+            'discount_value'  => 'nullable|numeric|min:0',
+            'discount_type'   => 'nullable|in:fixed,percent',
+            'thumbnail'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'demo_video'      => 'nullable|mimes:mp4,mov,avi,wmv|max:51200',
+            'is_published'    => 'nullable|boolean',
         ]);
 
         try {
-            $this->lmsService->updateCourseDetails($id, $request->all());
+            $data = $request->all();
+            $data['is_published'] = $request->has('is_published') ? 1 : 0;
+            $this->lmsService->updateCourseDetails($id, $data);
             return back()->with('success', 'Course updated successfully.');
         } catch (Exception $e) {
             return back()->with('error', $e->getMessage());
         }
     }
 
+    public function destroy($id)
+    {
+        try {
+            $this->lmsService->deleteCourse($id);
+            return back()->with('success', 'Course and all related contents deleted successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', 'Failed to delete course: ' . $e->getMessage());
+        }
+    }
+
+    public function getSubCategories($id)
+    {
+        return response()->json($this->lmsService->getSubCategories($id));
+    }
+
+    // --- LESSON & RESOURCE METHODS ---
+
     public function storeLesson(Request $request, $id)
     {
         $request->validate([
             'title' => 'required|string|max:255',
             'type' => 'required|in:video,document',
-            'video_file' => 'required_if:type,video|mimes:mp4,mov,avi,wmv|max:512000',
+            'video_file' => 'required_if:type,video|mimes:mp4,mov,avi,wmv|max:512000', // 500MB
             'document_file' => 'required_if:type,document|mimes:pdf,docx,zip|max:20480',
             'thumbnail' => 'nullable|image|max:1024',
         ]);
@@ -111,17 +130,39 @@ public function index(Request $request)
         }
     }
 
+    // Added: Destroy Lesson
+    public function destroyLesson($id)
+    {
+        try {
+            $this->lmsService->deleteLesson($id);
+            return back()->with('success', 'Lesson deleted successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
     public function storeResource(Request $request, $id)
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'file' => 'required|file|max:51200',
+            'file' => 'required|file|max:51200', // 50MB
         ]);
 
         try {
             $this->lmsService->addResource($id, $request->all());
             return redirect()->route('admin.courses.edit', ['course' => $id, 'tab' => 'resources'])
                 ->with('success', 'Resource added successfully.');
+        } catch (Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    // Added: Destroy Resource
+    public function destroyResource($id)
+    {
+        try {
+            $this->lmsService->deleteResource($id);
+            return back()->with('success', 'Resource deleted successfully.');
         } catch (Exception $e) {
             return back()->with('error', $e->getMessage());
         }

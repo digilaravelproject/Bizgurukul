@@ -1,169 +1,150 @@
-<div class="animate-fade-in space-y-6">
+<div class="animate-fade-in">
+    @if ($courses->count() > 0)
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            @foreach ($courses as $course)
+                <div
+                    class="group relative bg-surface rounded-[2rem] border border-primary/10 shadow-lg shadow-primary/5 hover:shadow-2xl hover:shadow-primary/20 hover:-translate-y-1.5 transition-all duration-500 ease-out flex flex-col overflow-hidden h-full">
 
-    {{-- A. DESKTOP VIEW --}}
-    <div
-        class="hidden md:block bg-white border border-primary/5 rounded-[2rem] shadow-xl shadow-primary/5 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="bg-primary/5 border-b border-primary/5">
-                        <th class="px-8 py-6 text-[10px] font-black text-primary uppercase tracking-widest">Course Info
-                        </th>
-                        <th class="px-6 py-6 text-[10px] font-black text-primary uppercase tracking-widest">Category</th>
-                        <th class="px-6 py-6 text-[10px] font-black text-primary uppercase tracking-widest">Stats</th>
-                        <th class="px-6 py-5 text-[10px] font-black text-primary uppercase tracking-widest">Price</th>
-                        <th class="px-6 py-5 text-[10px] font-black text-primary uppercase tracking-widest">Status</th>
-                        <th class="px-8 py-6 text-[10px] font-black text-primary uppercase tracking-widest text-right">
-                            Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-primary/5">
-                    @forelse($courses as $course)
-                        <tr class="group hover:bg-primary/[0.02] transition-colors duration-200">
-                            {{-- Course --}}
-                            <td class="px-8 py-5">
-                                <div class="flex items-center gap-4">
-                                    <div
-                                        class="relative h-12 w-16 flex-shrink-0 rounded-xl overflow-hidden shadow-sm border border-primary/10">
-                                        @if ($course->thumbnail)
-                                            <img src="{{ $course->thumbnail }}"
-                                                class="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500">
-                                        @else
-                                            <div
-                                                class="h-full w-full brand-gradient flex items-center justify-center text-white font-black text-xs">
-                                                {{ strtoupper(substr($course->title, 0, 1)) }}
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div>
-                                        <h4 class="text-sm font-bold text-mainText line-clamp-1 max-w-[200px]">
-                                            {{ $course->title }}</h4>
-                                        <span
-                                            class="inline-flex mt-1 items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-gray-100 text-mutedText">ID:
-                                            #{{ $course->id }}</span>
-                                    </div>
-                                </div>
-                            </td>
-
-                            {{-- Category --}}
-                            <td class="px-6 py-5">
-                                <div class="flex flex-col text-xs font-bold text-mainText">
-                                    <span>{{ $course->category?->name ?? '—' }}</span>
-                                    @if ($course->subCategory)
-                                        <span
-                                            class="text-[10px] font-semibold text-mutedText mt-0.5">{{ $course->subCategory->name }}</span>
-                                    @endif
-                                </div>
-                            </td>
-
-                            {{-- Stats --}}
-                            <td class="px-6 py-5">
-                                <div class="flex items-center gap-2 text-xs font-bold text-mutedText">
-                                    <div class="p-1.5 rounded-lg bg-primary/5 text-primary">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
-                                            </path>
-                                        </svg>
-                                    </div>
-                                    {{ $course->lessons_count ?? 0 }} Lessons
-                                </div>
-                            </td>
-
-                            {{-- Price --}}
-                            <td class="px-6 py-5">
-                                <span
-                                    class="text-sm font-black text-mainText">₹{{ number_format($course->final_price ?? 0) }}</span>
-                            </td>
-
-                            {{-- Status --}}
-                            <td class="px-6 py-5">
-                                @if ($course->is_published)
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-green-50 text-green-600 border border-green-200">Published</span>
-                                @else
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-gray-50 text-gray-500 border border-gray-200">Draft</span>
-                                @endif
-                            </td>
-
-                            {{-- Actions --}}
-                            <td class="px-8 py-5 text-right">
-                                <a href="{{ route('admin.courses.edit', $course->id) }}"
-                                    class="inline-flex items-center justify-center p-2.5 rounded-xl text-mutedText hover:text-primary hover:bg-primary/5 border border-transparent transition-all duration-200 group-hover:shadow-sm">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                        </path>
-                                    </svg>
-                                </a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="px-6 py-12 text-center text-mutedText font-bold">No courses found.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    {{-- B. MOBILE CARDS --}}
-    <div class="md:hidden grid grid-cols-1 gap-4">
-        @forelse($courses as $course)
-            <div class="bg-white rounded-[1.5rem] p-5 shadow-sm border border-primary/10 relative overflow-hidden">
-                <div class="flex gap-4">
-                    <div
-                        class="h-20 w-20 rounded-2xl flex-shrink-0 overflow-hidden shadow-inner border border-primary/5">
+                    <div class="relative h-52 w-full overflow-hidden bg-primary/5">
                         @if ($course->thumbnail)
-                            <img src="{{ $course->thumbnail }}" class="h-full w-full object-cover">
+                            <img src="{{ $course->thumbnail }}"
+                                class="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110 will-change-transform">
                         @else
                             <div
-                                class="h-full w-full brand-gradient flex items-center justify-center text-white font-bold text-sm">
-                                {{ strtoupper(substr($course->title, 0, 1)) }}</div>
+                                class="h-full w-full brand-gradient flex items-center justify-center transition-transform duration-700 ease-out group-hover:scale-110">
+                                <span
+                                    class="text-5xl font-black text-white/20">{{ strtoupper(substr($course->title, 0, 1)) }}</span>
+                            </div>
                         @endif
-                    </div>
-                    <div class="flex-1 min-w-0 py-1">
-                        <div class="flex justify-between items-start mb-1">
-                            <span
-                                class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-primary/5 text-primary">{{ $course->category?->name ?? 'Uncategorized' }}</span>
-                            <div class="h-2 w-2 rounded-full"
-                                :class="{{ $course->is_published ? "'bg-green-500'" : "'bg-gray-300'" }}"></div>
+
+                        <div
+                            class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60">
                         </div>
-                        <h3 class="text-sm font-bold text-mainText leading-tight line-clamp-2 mb-1">
-                            {{ $course->title }}</h3>
-                        <p class="text-xs font-black text-mainText">₹{{ number_format($course->final_price) }}</p>
+
+                        <div class="absolute top-4 right-4 z-10">
+                            @if ($course->is_published)
+                                <span
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface/95 backdrop-blur-md border border-white/20 shadow-md">
+                                    <span class="relative flex h-2 w-2">
+                                        <span
+                                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                    </span>
+                                    <span
+                                        class="text-[10px] font-extrabold uppercase tracking-wider text-green-700">Live</span>
+                                </span>
+                            @else
+                                <span
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface/95 backdrop-blur-md border border-white/20 shadow-md">
+                                    <span class="h-2 w-2 rounded-full bg-gray-400"></span>
+                                    <span
+                                        class="text-[10px] font-extrabold uppercase tracking-wider text-gray-600">Draft</span>
+                                </span>
+                            @endif
+                        </div>
+
+                        <div class="absolute bottom-4 left-4 z-10">
+                            <span
+                                class="inline-block px-3 py-1 rounded-lg bg-black/40 backdrop-blur-md text-[11px] font-bold text-customWhite border border-white/10 shadow-sm">
+                                {{ $course->category?->name ?? 'Uncategorized' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="p-6 flex flex-col flex-1 relative">
+                        <h3
+                            class="text-lg font-bold text-mainText leading-snug line-clamp-2 mb-3 group-hover:text-primary transition-colors duration-300">
+                            {{ $course->title }}
+                        </h3>
+
+                        <div class="flex items-center gap-4 mb-6">
+                            <div
+                                class="flex items-center gap-1.5 text-xs font-semibold text-mutedText bg-primary/5 px-2 py-1 rounded-md">
+                                <svg class="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                </svg>
+                                {{ $course->lessons_count }} Lessons
+                            </div>
+                            @if ($course->subCategory)
+                                <span class="text-mutedText/30">|</span>
+                                <div class="text-xs font-semibold text-mutedText truncate max-w-[100px]"
+                                    title="{{ $course->subCategory->name }}">
+                                    {{ $course->subCategory->name }}
+                                </div>
+                            @endif
+                        </div>
+
+                        <div
+                            class="mt-auto pt-4 border-t border-dashed border-primary/10 flex items-center justify-between">
+
+                            <div class="flex flex-col">
+                                <span class="text-[10px] font-bold text-mutedText uppercase tracking-wider">Price</span>
+                                <span
+                                    class="text-xl font-extrabold text-mainText">₹{{ number_format($course->final_price) }}</span>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <a href="{{ route('admin.courses.edit', $course->id) }}" title="Edit Details"
+                                    class="h-10 w-10 flex items-center justify-center rounded-xl bg-primary/5 text-primary hover:bg-primary hover:text-customWhite transition-all duration-300 shadow-sm hover:shadow-lg hover:-translate-y-0.5">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </a>
+
+                                <button onclick="confirmDelete({{ $course->id }})" title="Delete Course"
+                                    class="h-10 w-10 flex items-center justify-center rounded-xl bg-secondary/10 text-secondary hover:bg-secondary hover:text-customWhite transition-all duration-300 shadow-sm hover:shadow-lg hover:-translate-y-0.5">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+
+                                <form id="delete-form-{{ $course->id }}"
+                                    action="{{ route('admin.courses.delete', $course->id) }}" method="POST"
+                                    class="hidden">
+                                    @csrf
+                                    @method('DELETE')
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="mt-4 pt-3 border-t border-dashed border-primary/10 flex items-center justify-between">
-                    <div class="flex items-center text-xs font-medium text-mutedText">
-                        <svg class="w-3.5 h-3.5 mr-1 text-primary" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
-                            </path>
-                        </svg>
-                        {{ $course->lessons_count }} Lessons
-                    </div>
-                    <a href="{{ route('admin.courses.edit', $course->id) }}"
-                        class="text-xs font-bold text-primary flex items-center">Edit Details →</a>
+            @endforeach
+        </div>
+
+        @if ($courses->hasPages())
+            <div
+                class="mt-10 px-6 py-4 bg-surface border border-primary/10 rounded-[1.5rem] shadow-lg shadow-primary/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <span class="text-xs font-bold text-mutedText">
+                    Showing Page <span class="text-primary">{{ $courses->currentPage() }}</span> of
+                    {{ $courses->lastPage() }}
+                </span>
+                <div class="scale-90 origin-center sm:origin-right w-full sm:w-auto flex justify-center">
+                    {{ $courses->links('pagination::simple-tailwind') }}
                 </div>
             </div>
-        @empty
-            <div class="text-center py-10 text-mutedText text-sm">No courses found.</div>
-        @endforelse
-    </div>
-
-    {{-- PAGINATION --}}
-    @if ($courses->hasPages())
+        @endif
+    @else
         <div
-            class="px-6 py-4 bg-white border border-primary/5 rounded-[1.5rem] shadow-sm flex items-center justify-between">
-            <span class="text-xs font-bold text-mutedText">Page <span
-                    class="text-primary">{{ $courses->currentPage() }}</span></span>
-            <div class="scale-90 origin-right">{{ $courses->links('pagination::simple-tailwind') }}</div>
+            class="flex flex-col items-center justify-center py-24 bg-surface border-2 border-dashed border-primary/10 rounded-[2.5rem] text-center animate-fade-in">
+            <div
+                class="h-24 w-24 rounded-full bg-primary/5 flex items-center justify-center mb-6 animate-bounce-slow ring-8 ring-primary/5">
+                <svg class="w-12 h-12 text-primary/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-extrabold text-mainText mb-2">No Courses Found</h3>
+            <p class="text-sm text-mutedText font-medium max-w-xs mx-auto mb-8">
+                Your catalog is empty. Start creating content to share your knowledge.
+            </p>
+            <a href="{{ route('admin.courses.create') }}"
+                class="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-primary text-customWhite text-sm font-bold shadow-lg shadow-primary/30 hover:bg-secondary hover:-translate-y-1 transition-all duration-300">
+                Create First Course →
+            </a>
         </div>
     @endif
 </div>

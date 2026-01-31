@@ -1,3 +1,9 @@
+@php
+    if (auth()->user()->hasRole('Admin')) {
+        echo "<script>window.location.href='" . url('/admin/dashboard') . "';</script>";
+        exit();
+    }
+@endphp
 @extends('layouts.user.app')
 
 @section('content')
