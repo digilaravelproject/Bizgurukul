@@ -34,8 +34,13 @@ class CouponController extends Controller
             }
         }
 
+        // FIX: Disable 'appends' to prevent "Call to undefined method getThumbnailUrlAttribute"
+        // This ensures we only load ID and Title, nothing else.
         $courses = Course::where('is_published', true)->select('id', 'title')->get();
+        $courses->each->setAppends([]);
+
         $bundles = Bundle::where('is_published', true)->select('id', 'title')->get();
+        $bundles->each->setAppends([]);
 
         return view('admin.coupons.index', compact('courses', 'bundles'));
     }

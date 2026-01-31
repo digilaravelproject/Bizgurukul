@@ -66,4 +66,10 @@ class Course extends Model
     {
         return $this->hasMany(CourseResource::class);
     }
+
+    public function getThumbnailUrlAttribute()
+    {
+        // If you have a 'thumbnail' column, return its URL, otherwise return null
+        return $this->thumbnail ? asset('storage/' . $this->thumbnail) : null;
+    }
 }

@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             StateSeeder::class,            // 1. Sabse pehle States create honge
             RoleAndUserSeeder::class,  // 2. Fir Permissions aur Roles
+            CategorySeeder::class,
         ]);
     }
 }
