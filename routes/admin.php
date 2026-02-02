@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\BundleController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CourseController;
@@ -62,13 +63,13 @@ Route::middleware(['auth', 'role:Admin'])
         Route::post('/api/video-progress', [VideoController::class, 'updateHeartbeat'])->name('video.progress');
 
         // 6. Bundle Management
-        Route::prefix('bundles')->name('bundles.')->group(function () {
-            Route::get('/create', [CourseController::class, 'createBundle'])->name('create');
-            Route::post('/store', [CourseController::class, 'storeBundle'])->name('store');
-            Route::get('/{id}/edit', [CourseController::class, 'editBundle'])->name('edit');
-            Route::delete('/{id}', [CourseController::class, 'deleteBundle'])->name('delete');
-        });
-
+        // Route::prefix('bundles')->name('bundles.')->group(function () {
+        //     Route::get('/create', [CourseController::class, 'createBundle'])->name('create');
+        //     Route::post('/store', [CourseController::class, 'storeBundle'])->name('store');
+        //     Route::get('/{id}/edit', [CourseController::class, 'editBundle'])->name('edit');
+        //     Route::delete('/{id}', [CourseController::class, 'deleteBundle'])->name('delete');
+        // });
+   Route::resource('bundles', BundleController::class);
         // 7. Coupons
         Route::controller(CouponController::class)->prefix('coupons')->name('coupons.')->group(function () {
             Route::get('/', 'index')->name('index');

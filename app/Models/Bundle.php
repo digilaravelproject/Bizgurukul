@@ -4,18 +4,56 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Storage;
 
 class Bundle extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'description', 'price', 'thumbnail', 'is_published'];
+    protected $fillable = [
+        'title',
+        'slug',
+        'description',
+        'price',
+        'thumbnail',
+        'is_published'
+    ];
 
-    /**
-     * Relationship: A bundle belongs to many courses.
-     */
+    protected $appends = ['thumbnail_url'];
+
+    protected function thumbnail(): Attribute
+    {
+        return Attribute::get(function ($value) {
+            return $value ? Storage::url($value) : null;
+        });
+    }
+
+    public function getThumbnailUrlAttribute()
+    {
+        return $this->thumbnail ? asset($this->thumbnail) : null; // Logic handled by accessor above actually
+    }
+
     public function courses()
     {
-        return $this->belongsToMany(Course::class, 'bundle_course')->withTimestamps();
+        return $this->morphedByMany(Course::class, 'item', 'bundle_items')
+            ->withPivot('order_column')
+            ->orderBy('bundle_items.order_column');
+    }
+
+    public function childBundles()
+    {
+        return $this->morphedByMany(Bundle::class, 'item', 'bundle_items')
+            ->withPivot('order_column')
+            ->orderBy('bundle_items.order_column');
+    }
+
+    public function getAllCoursesFlat()
+    {
+        $allCourses = $this->courses;
+        foreach ($this->childBundles as $child) {
+            $allCourses = $allCourses->merge($child->getAllCoursesFlat());
+        }
+        return $allCourses->unique('id');
     }
 }

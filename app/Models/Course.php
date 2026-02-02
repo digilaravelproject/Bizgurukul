@@ -66,6 +66,10 @@ class Course extends Model
     {
         return $this->hasMany(CourseResource::class);
     }
+    public function bundles()
+    {
+        return $this->morphToMany(Bundle::class, 'item', 'bundle_items');
+    }
 
     public function getThumbnailUrlAttribute()
     {

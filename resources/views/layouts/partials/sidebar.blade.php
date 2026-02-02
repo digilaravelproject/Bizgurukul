@@ -80,7 +80,7 @@
             <a href="{{ route('admin.coupons.index') }}" class="block py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.coupons.index') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
                 Coupons
             </a>
-            <a href="{{ route('admin.bundles.create') }}" class="block py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.bundles.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+            <a href="{{ route('admin.bundles.index') }}" class="block py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.bundles.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
                 Course Bundles
             </a>
             <a href="#" class="block py-2 px-4 text-xs text-mutedText/50 cursor-not-allowed">Orders (Coming Soon)</a>
@@ -110,14 +110,14 @@
     </div>
 
     {{-- 5. SETTINGS --}}
-    <div class="pt-4">
+    {{-- <div class="pt-4">
         <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">Config</p>
-        <a href="#" {{-- Route::post tha isliye link direct work nahi karega, aapko settings.index banana chahiye --}}
+        <a href="#"
             class="flex items-center px-4 py-3 rounded-2xl transition-all duration-300 group text-mutedText hover:bg-navy hover:text-primary">
             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><circle cx="12" cy="12" r="3"></circle></svg>
             <span class="font-bold text-sm">Platform Settings</span>
         </a>
-    </div>
+    </div> --}}
 
 </nav>
 
