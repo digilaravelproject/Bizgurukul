@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\LmsService;
-use Illuminate\Http\Request;
 use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class CourseController extends Controller
 {
@@ -21,20 +22,23 @@ class CourseController extends Controller
         try {
             if ($request->ajax()) {
                 $courses = $this->lmsService->getFilteredCourses($request->all());
+
                 return view('admin.courses.partials.table', compact('courses'))->render();
             }
             $courses = $this->lmsService->getFilteredCourses($request->all());
             $courses->appends($request->all());
             $categories = $this->lmsService->getCategories();
+
             return view('admin.courses.index', compact('courses', 'categories'));
         } catch (Exception $e) {
-            return back()->with('error', "Something went wrong.");
+            return back()->with('error', 'Something went wrong.');
         }
     }
 
     public function create()
     {
         $categories = $this->lmsService->getCategories();
+
         return view('admin.courses.create', compact('categories'));
     }
 
@@ -50,6 +54,7 @@ class CourseController extends Controller
 
         try {
             $course = $this->lmsService->createCourse($request->all());
+
             return redirect()->route('admin.courses.edit', ['course' => $course->id, 'tab' => 'lessons'])
                 ->with('success', 'Course created successfully. Please add lessons.');
         } catch (Exception $e) {
@@ -63,6 +68,7 @@ class CourseController extends Controller
             $course = $this->lmsService->getCourse($id);
             $categories = $this->lmsService->getCategories();
             $activeTab = $request->get('tab', 'basic');
+
             return view('admin.courses.edit', compact('course', 'categories', 'activeTab'));
         } catch (Exception $e) {
             return redirect()->route('admin.courses.index')->with('error', 'Course not found.');
@@ -72,24 +78,37 @@ class CourseController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'title'           => 'required|string|max:255',
-            'category_id'     => 'required|exists:categories,id',
+            'title' => 'sometimes|string|max:255',
+            'category_id' => 'sometimes|exists:categories,id',
             'sub_category_id' => 'nullable|exists:categories,id',
-            'description'     => 'nullable|string',
-            'price'           => 'required|numeric|min:0',
-            'discount_value'  => 'nullable|numeric|min:0',
-            'discount_type'   => 'nullable|in:fixed,percent',
-            'thumbnail'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'demo_video'      => 'nullable|mimes:mp4,mov,avi,wmv|max:51200',
-            'is_published'    => 'nullable|boolean',
+            'description' => 'nullable|string',
+            'price' => 'sometimes|numeric|min:0',
+            'discount_value' => 'nullable|numeric|min:0',
+            'discount_type' => 'nullable|in:fixed,percent',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'demo_video' => 'nullable|mimes:mp4,mov,avi,wmv|max:51200',
+            'is_published' => 'nullable|boolean',
         ]);
 
         try {
+
             $data = $request->all();
             $data['is_published'] = $request->has('is_published') ? 1 : 0;
+            $data['certificate_enabled'] = $request->has('certificate_enabled') ? 1 : 0;
             $this->lmsService->updateCourseDetails($id, $data);
+           if ($request->redirect_tab === 'settings') {
+            return redirect()->route('admin.courses.index')
+                ->with('success', 'Course updated and finalized successfully!');
+        }
+        if ($request->has('redirect_tab')) {
+            return redirect()->route('admin.courses.edit', ['id' => $id, 'tab' => $request->redirect_tab])
+                ->with('success', 'Information updated.');
+        }
+
             return back()->with('success', 'Course updated successfully.');
         } catch (Exception $e) {
+            Log::info($e->getMessage());
+
             return back()->with('error', $e->getMessage());
         }
     }
@@ -98,9 +117,10 @@ class CourseController extends Controller
     {
         try {
             $this->lmsService->deleteCourse($id);
+
             return back()->with('success', 'Course and all related contents deleted successfully.');
         } catch (Exception $e) {
-            return back()->with('error', 'Failed to delete course: ' . $e->getMessage());
+            return back()->with('error', 'Failed to delete course: '.$e->getMessage());
         }
     }
 
@@ -123,6 +143,7 @@ class CourseController extends Controller
 
         try {
             $this->lmsService->addLesson($id, $request->all());
+
             return redirect()->route('admin.courses.edit', ['course' => $id, 'tab' => 'lessons'])
                 ->with('success', 'Lesson added. Video processing started in background.');
         } catch (Exception $e) {
@@ -135,6 +156,7 @@ class CourseController extends Controller
     {
         try {
             $this->lmsService->deleteLesson($id);
+
             return back()->with('success', 'Lesson deleted successfully.');
         } catch (Exception $e) {
             return back()->with('error', $e->getMessage());
@@ -150,6 +172,7 @@ class CourseController extends Controller
 
         try {
             $this->lmsService->addResource($id, $request->all());
+
             return redirect()->route('admin.courses.edit', ['course' => $id, 'tab' => 'resources'])
                 ->with('success', 'Resource added successfully.');
         } catch (Exception $e) {
@@ -162,6 +185,7 @@ class CourseController extends Controller
     {
         try {
             $this->lmsService->deleteResource($id);
+
             return back()->with('success', 'Resource deleted successfully.');
         } catch (Exception $e) {
             return back()->with('error', $e->getMessage());

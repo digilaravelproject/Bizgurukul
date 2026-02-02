@@ -84,7 +84,7 @@
                 <div x-data="imageUploader()">
                     <label class="block text-xs font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Thumbnail</label>
 
-                    <div class="relative w-full h-64 rounded-2xl border-2 border-dashed border-primary bg-primary hover:bg-primary hover:border-primary transition-all flex flex-col items-center justify-center cursor-pointer overflow-hidden group"
+                    <div class="relative w-full h-64 rounded-2xl border-2 border-dashed border-primary bg-primary/20 hover:bg-navy hover:border-primary transition-all flex flex-col items-center justify-center cursor-pointer overflow-hidden group"
                          @dragover.prevent="dragover = true"
                          @dragleave.prevent="dragover = false"
                          @drop.prevent="handleDrop($event)"
@@ -114,7 +114,7 @@
                 </div>
             </div>
         </div>
-
+<input type="hidden" name="redirect_tab" value="lessons">
         {{-- Footer Actions --}}
         <div class="pt-6 border-t border-primary/5 flex justify-end">
             <button type="submit" class="brand-gradient px-10 py-4 rounded-xl text-customWhite text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-1 transition-all transform active:scale-95">

@@ -23,45 +23,103 @@
         </div>
 
         {{-- Nav Menu --}}
-        <nav class="flex-1 p-4 space-y-1 overflow-y-auto no-scrollbar" x-data="{ lmsOpen: {{ request()->routeIs('admin.courses.*') ? 'true' : 'false' }} }">
+       {{-- Nav Menu --}}
+<nav class="flex-1 p-4 space-y-1 overflow-y-auto no-scrollbar"
+     x-data="{
+        lmsOpen: {{ request()->routeIs('admin.courses.*', 'admin.categories.*', 'admin.lessons.*') ? 'true' : 'false' }},
+        userOpen: {{ request()->routeIs('admin.users.*', 'admin.kyc.*') ? 'true' : 'false' }},
+        promoOpen: {{ request()->routeIs('admin.coupons.*', 'admin.bundles.*') ? 'true' : 'false' }}
+     }">
 
-            <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-4 mt-2">Main Dashboard</p>
+    {{-- 1. ANALYTICS & DASHBOARD --}}
+    <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">Main Menu</p>
+    <a href="{{ route('admin.dashboard') }}"
+        class="flex items-center px-4 py-3 rounded-2xl transition-all duration-300 group {{ request()->routeIs('admin.dashboard') ? 'bg-primary/10 text-primary shadow-sm' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
+        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+        <span class="font-bold text-sm">Dashboard</span>
+    </a>
 
-            <a href="{{ route('admin.dashboard') }}"
-                class="flex items-center px-4 py-3 rounded-2xl transition-all duration-300 group {{ request()->routeIs('admin.dashboard') ? 'bg-primary/10 text-primary shadow-sm' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
-                <svg class="w-5 h-5 mr-3 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                <span class="font-bold text-sm">Dashboard</span>
+    {{-- 2. LMS ENGINE (Dropdown) --}}
+    <div class="pt-4">
+        <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">Academic Content</p>
+        <button @click="lmsOpen = !lmsOpen"
+            class="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group {{ request()->routeIs('admin.courses.*', 'admin.categories.*') ? 'bg-navy text-primary' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                <span class="font-bold text-sm">Course Manager</span>
+            </div>
+            <svg class="w-4 h-4 transition-transform duration-300" :class="lmsOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+
+        <div x-show="lmsOpen" x-cloak x-transition class="ml-4 pl-4 mt-2 space-y-1 border-l-2 border-primary/20">
+            <a href="{{ route('admin.courses.index') }}" class="block py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.courses.index') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                All Courses
             </a>
+            <a href="{{ route('admin.categories.index') }}" class="block py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.categories.index') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                Categories
+            </a>
+            {{-- <a href="{{ route('admin.lessons.all') }}" class="block py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.lessons.all') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                Manage Lessons
+            </a> --}}
+        </div>
+    </div>
 
-            <div class="pt-4">
-                <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-4">LMS Engine</p>
-
-                <button @click="lmsOpen = !lmsOpen"
-                    class="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group {{ request()->routeIs('admin.courses.*') ? 'bg-navy text-primary' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 mr-3 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                        <span class="font-bold text-sm">Courses</span>
-                    </div>
-                    <svg class="w-4 h-4 transition-transform duration-300" :class="lmsOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                </button>
-
-                <div x-show="lmsOpen" x-cloak x-transition:enter="transition ease-out duration-200" class="ml-4 pl-4 mt-2 space-y-1 border-l-2 border-primary/20">
-                    <a href="{{ route('admin.courses.index') }}" class="block py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.courses.index') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
-                        All Courses
-                    </a>
-                    <a href="#" class="block py-2 px-4 text-xs text-mutedText hover:text-primary transition-colors">Course Bundles</a>
-                </div>
+    {{-- 3. MARKETING & SALES (Dropdown) --}}
+    <div class="pt-4">
+        <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">Sales & Growth</p>
+        <button @click="promoOpen = !promoOpen"
+            class="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group {{ request()->routeIs('admin.coupons.*', 'admin.bundles.*') ? 'bg-navy text-primary' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="font-bold text-sm">Promotions</span>
             </div>
+            <svg class="w-4 h-4 transition-transform duration-300" :class="promoOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
 
-            <div class="pt-4">
-                <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-4">User Management</p>
-                <a href="{{ route('admin.users.index') }}"
-                    class="flex items-center px-4 py-3 rounded-2xl transition-all duration-300 group {{ request()->routeIs('admin.users.*') ? 'bg-primary/10 text-primary shadow-sm' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
-                    <svg class="w-5 h-5 mr-3 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                    <span class="font-bold text-sm">Students List</span>
-                </a>
+        <div x-show="promoOpen" x-cloak x-transition class="ml-4 pl-4 mt-2 space-y-1 border-l-2 border-primary/20">
+            <a href="{{ route('admin.coupons.index') }}" class="block py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.coupons.index') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                Coupons
+            </a>
+            <a href="{{ route('admin.bundles.create') }}" class="block py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.bundles.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                Course Bundles
+            </a>
+            <a href="#" class="block py-2 px-4 text-xs text-mutedText/50 cursor-not-allowed">Orders (Coming Soon)</a>
+        </div>
+    </div>
+
+    {{-- 4. USER MANAGEMENT (Dropdown) --}}
+    <div class="pt-4">
+        <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">Identity</p>
+        <button @click="userOpen = !userOpen"
+            class="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group {{ request()->routeIs('admin.users.*', 'admin.kyc.*') ? 'bg-navy text-primary' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <span class="font-bold text-sm">User Control</span>
             </div>
-        </nav>
+            <svg class="w-4 h-4 transition-transform duration-300" :class="userOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+
+        <div x-show="userOpen" x-cloak x-transition class="ml-4 pl-4 mt-2 space-y-1 border-l-2 border-primary/20">
+            <a href="{{ route('admin.users.index') }}" class="block py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.users.index') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                Students List
+            </a>
+            <a href="{{ route('admin.kyc.index') }}" class="block py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.kyc.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                KYC Requests
+            </a>
+        </div>
+    </div>
+
+    {{-- 5. SETTINGS --}}
+    <div class="pt-4">
+        <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">Config</p>
+        <a href="#" {{-- Route::post tha isliye link direct work nahi karega, aapko settings.index banana chahiye --}}
+            class="flex items-center px-4 py-3 rounded-2xl transition-all duration-300 group text-mutedText hover:bg-navy hover:text-primary">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            <span class="font-bold text-sm">Platform Settings</span>
+        </a>
+    </div>
+
+</nav>
 
         {{-- Minimal Footer --}}
         <div class="p-4 mt-auto border-t border-navy bg-navy/30">

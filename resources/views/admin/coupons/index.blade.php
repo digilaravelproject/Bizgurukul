@@ -1,284 +1,208 @@
 @extends('layouts.admin')
-
 @section('title', 'Coupon Manager')
 
 @section('content')
-    <!-- Main Wrapper with Alpine Component -->
-    <div x-data="couponManager()" x-init="init()" class="max-w-7xl mx-auto py-8 px-4 font-sans text-mainText">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-        {{-- Top Header & Actions --}}
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    {{-- Main Container with Alpine Data --}}
+    <div x-data="couponManager()" x-init="init()" class="container-fluid font-sans p-4 md:p-6 bg-navy min-h-screen text-mainText">
+
+        {{-- 1. HEADER & ACTIONS --}}
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 animate-fade-in">
             <div>
-                <h1 class="text-3xl font-bold text-navy tracking-tight">Coupon Manager</h1>
-                <p class="text-mutedText text-sm mt-1">Manage discounts, offers, and promo codes.</p>
+                <h2 class="text-2xl font-bold text-mainText tracking-tight">Coupon Manager</h2>
+                <p class="text-xs text-mutedText mt-1 font-medium uppercase tracking-wider">Manage discounts and promo codes</p>
             </div>
-            <button @click="openModal()"
-                class="bg-primary text-customWhite hover:bg-navy px-6 py-3 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 transition-all active:scale-95 flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+
+            <button @click="openModal('create')"
+                class="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-xs font-bold text-customWhite shadow-lg shadow-primary/20 hover:bg-secondary transition-all duration-300 active:scale-95">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path d="M12 4v16m8-8H4" />
                 </svg>
-                Create New Coupon
+                CREATE COUPON
             </button>
         </div>
 
-        {{-- Search & Filters --}}
-        <div class="bg-surface rounded-2xl p-2 mb-6 border border-slate-200 shadow-sm flex items-center">
-            <div class="relative w-full md:w-96">
-                <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-mutedText" fill="none"
-                    stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        {{-- 2. AJAX SEARCH BAR --}}
+        <div class="mb-8 relative w-full md:max-w-sm">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-mutedText">
+                <svg x-show="!isLoading" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
-                {{-- SEARCH FIX: @input added ensures clearing triggers fetch immediately --}}
-                <input type="text" x-model.debounce.300ms="search" @input.debounce.300ms="fetchCoupons()"
-                    placeholder="Search by code..."
-                    class="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:ring-0 text-navy font-medium placeholder-slate-400">
-            </div>
+                <svg x-show="isLoading" class="animate-spin w-4 h-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </span>
+            <input type="text"
+                x-model="search"
+                @input.debounce.500ms="fetchCoupons()"
+                placeholder="Search by code..."
+                class="w-full pl-10 pr-4 py-2.5 bg-surface border border-primary/10 text-mainText placeholder-mutedText/50 rounded-xl focus:ring-1 focus:ring-primary focus:border-primary outline-none transition text-sm shadow-sm">
         </div>
 
-        {{-- Data Table --}}
-        <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="bg-surface border-b border-slate-200">
-                        <tr>
-                            <th class="px-6 py-4 text-xs font-bold text-mutedText uppercase tracking-wider">Code</th>
-                            <th class="px-6 py-4 text-xs font-bold text-mutedText uppercase tracking-wider">Scope</th>
-                            <th class="px-6 py-4 text-xs font-bold text-mutedText uppercase tracking-wider">Discount</th>
-                            <th class="px-6 py-4 text-xs font-bold text-mutedText uppercase tracking-wider">Usage</th>
-                            <th class="px-6 py-4 text-xs font-bold text-mutedText uppercase tracking-wider text-right">
-                                Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        <template x-if="isLoading">
-                            @for ($i = 0; $i < 5; $i++)
-                                <tr class="animate-pulse">
-                                    <td class="px-6 py-4">
-                                        <div class="h-4 bg-surface rounded w-24"></div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="h-4 bg-surface rounded w-32"></div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="h-4 bg-surface rounded w-16"></div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="h-4 bg-surface rounded w-20"></div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="h-8 bg-surface rounded w-8 ml-auto"></div>
-                                    </td>
-                                </tr>
-                            @endfor
-                        </template>
-                    <tbody x-show="!isLoading" x-html="tableHtml"></tbody>
-                    </tbody>
-                </table>
-            </div>
-            <div x-show="!isLoading && (!tableHtml || tableHtml.trim() === '')" class="p-12 text-center"
-                style="display: none;">
-                <p class="text-mutedText font-medium">No coupons found.</p>
-            </div>
+        {{-- 3. CONTENT AREA (Loaded via Partial) --}}
+        <div id="coupons-container" class="animate-fade-in">
+            @include('admin.coupons.partials.table_rows')
         </div>
 
-        <!-- Pagination -->
-        <div class="mt-6" x-html="paginationHtml"></div>
+        {{-- MODAL --}}
+        <div x-show="showModal" style="display: none;" class="fixed inset-0 z-[60]" x-cloak>
+            {{-- Backdrop --}}
+            <div class="fixed inset-0 bg-mainText/40 backdrop-blur-sm" x-show="showModal" x-transition.opacity @click="showModal = false"></div>
 
-        {{-- Slide-Over Modal --}}
-        <div x-show="showModal" style="display: none;" class="fixed inset-0 z-50 overflow-hidden"
-            aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
-            <div class="absolute inset-0 overflow-hidden">
-                <div class="absolute inset-0 bg-navy/40 backdrop-blur-sm transition-opacity" x-show="showModal"
-                    x-transition.opacity @click="showModal = false"></div>
+            {{-- Modal Content --}}
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="relative w-full max-w-2xl rounded-2xl bg-surface border border-primary/10 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
 
-                <div class="fixed inset-y-0 right-0 pl-10 max-w-full flex">
-                    <div class="w-screen max-w-2xl transform transition ease-in-out duration-300 sm:duration-500"
-                        x-show="showModal" x-transition:enter="translate-x-full" x-transition:enter-end="translate-x-0"
-                        x-transition:leave="translate-x-0" x-transition:leave-end="translate-x-full">
+                    {{-- Modal Header --}}
+                    <div class="px-6 py-4 border-b border-primary/5 bg-primary/5 flex items-center justify-between shrink-0">
+                        <h3 class="text-sm font-bold text-mainText uppercase tracking-wider" x-text="isEdit ? 'Edit Coupon' : 'Create New Coupon'"></h3>
+                        <button @click="showModal = false" class="text-mutedText hover:text-secondary transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
 
-                        <form @submit.prevent="submitForm"
-                            class="h-full flex flex-col bg-white shadow-2xl overflow-y-scroll">
-                            <div class="px-8 py-6 bg-surface border-b border-slate-200 flex items-center justify-between">
-                                <h2 class="text-xl font-bold text-navy" x-text="isEdit ? 'Edit Coupon' : 'New Coupon'"></h2>
-                                <button type="button" @click="showModal = false" class="text-mutedText hover:text-navy">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
+                    {{-- Scrollable Form Area --}}
+                    <div class="overflow-y-auto p-6">
+                        <form @submit.prevent="submitForm" class="space-y-6">
+
+                            {{-- Row 1: Code & Generate --}}
+                            <div>
+                                <label class="block text-[10px] font-bold text-mutedText uppercase mb-2 tracking-widest">Coupon Code</label>
+                                <div class="relative">
+                                    <input type="text" x-model="form.code" required class="w-full rounded-xl bg-navy border border-primary/10 px-4 py-3 text-sm font-bold text-primary uppercase tracking-widest focus:border-primary focus:ring-1 focus:ring-primary outline-none transition placeholder-mutedText/30" placeholder="e.g. SUMMER2024">
+                                    <button type="button" @click="generateCode()" class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-mutedText hover:text-primary bg-surface border border-primary/10 px-2 py-1 rounded-md transition uppercase">
+                                        Generate
+                                    </button>
+                                </div>
                             </div>
 
-                            <div class="flex-1 px-8 py-8 space-y-8">
-                                <div x-show="errorMessage" x-transition
-                                    class="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-medium border border-red-100">
-                                    <span x-text="errorMessage"></span>
+                            {{-- Row 2: Type Selection (Radio) --}}
+                            <div class="bg-navy p-4 rounded-xl border border-primary/5">
+                                <label class="block text-[10px] font-bold text-mutedText uppercase mb-3 tracking-widest">Application Scope</label>
+                                <div class="flex gap-6">
+                                    <label class="flex items-center gap-2 cursor-pointer group">
+                                        <input type="radio" value="general" x-model="form.coupon_type" class="text-primary focus:ring-primary bg-surface border-primary/20">
+                                        <span class="text-xs font-bold text-mainText group-hover:text-primary transition">Store-wide (General)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer group">
+                                        <input type="radio" value="specific" x-model="form.coupon_type" class="text-primary focus:ring-primary bg-surface border-primary/20">
+                                        <span class="text-xs font-bold text-mainText group-hover:text-primary transition">Specific (Courses/Bundles)</span>
+                                    </label>
                                 </div>
-
-                                <div class="space-y-2">
-                                    <label class="text-xs font-bold text-navy uppercase tracking-wider">Coupon Code</label>
-                                    <div class="relative">
-                                        <input type="text" x-model="formData.code" required
-                                            class="w-full bg-surface border-slate-200 rounded-xl px-4 py-3 text-navy font-bold uppercase tracking-widest focus:border-primary focus:ring-primary">
-                                        <button type="button" @click="generateCode()" x-show="!isEdit"
-                                            class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded hover:bg-primary/20">
-                                            GENERATE
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="p-4 bg-surface rounded-2xl border border-slate-200">
-                                    <label
-                                        class="text-xs font-bold text-navy uppercase tracking-wider block mb-3">Application
-                                        Scope</label>
-                                    <div class="flex gap-6">
-                                        <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="radio" value="general" x-model="formData.coupon_type"
-                                                class="text-primary focus:ring-primary">
-                                            <span class="text-sm font-medium text-navy">General (Store-wide)</span>
-                                        </label>
-                                        <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="radio" value="specific" x-model="formData.coupon_type"
-                                                class="text-primary focus:ring-primary">
-                                            <span class="text-sm font-medium text-navy">Specific (Courses/Bundles)</span>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <!-- Specific Selection Area -->
-                                <div x-show="formData.coupon_type === 'specific'" x-transition
-                                    class="space-y-6 pl-4 border-l-2 border-primary">
-
-                                    {{-- Course Multi Select --}}
-                                    <div class="relative" x-data="{
-                                        search: '',
-                                        open: false,
-                                        options: {{ $courses->toJson() }},
-                                        get selectedItems() { return this.options.filter(opt => formData.courses.includes(opt.id)) },
-                                        get filteredOptions() { return this.search === '' ? this.options : this.options.filter(opt => opt.title.toLowerCase().includes(this.search.toLowerCase())) }
-                                    }">
-                                        <label
-                                            class="text-xs font-bold text-navy uppercase tracking-wider block mb-2">Courses</label>
-
-                                        {{-- Selected Tags Area --}}
-                                        <div @click="open = !open" @click.away="open = false"
-                                            class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 min-h-[50px] cursor-text flex flex-wrap gap-2 items-center">
-                                            <template x-for="item in selectedItems" :key="item.id">
-                                                <span
-                                                    class="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1">
-                                                    <span x-text="item.title"></span>
-                                                    <button type="button"
-                                                        @click.stop="formData.courses = formData.courses.filter(id => id !== item.id)"
-                                                        class="hover:text-red-500">&times;</button>
-                                                </span>
-                                            </template>
-                                            <input type="text" x-model="search" placeholder="Select courses..."
-                                                class="border-none p-0 focus:ring-0 text-sm flex-1 min-w-[100px]">
-                                        </div>
-
-                                        {{-- Dropdown List --}}
-                                        <div x-show="open"
-                                            class="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto">
-                                            <template x-for="option in filteredOptions" :key="option.id">
-                                                <div @click="if(formData.courses.includes(option.id)) { formData.courses = formData.courses.filter(id => id !== option.id) } else { formData.courses.push(option.id) }"
-                                                    class="px-4 py-2 hover:bg-surface cursor-pointer text-sm text-navy font-medium transition-colors flex justify-between items-center"
-                                                    :class="formData.courses.includes(option.id) ? 'bg-primary/5 text-primary' :
-                                                        ''">
-                                                    <span x-text="option.title"></span>
-                                                    <span x-show="formData.courses.includes(option.id)">✓</span>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-
-                                    {{-- Bundle Multi Select --}}
-                                    <div class="relative" x-data="{
-                                        search: '',
-                                        open: false,
-                                        options: {{ $bundles->toJson() }},
-                                        get selectedItems() { return this.options.filter(opt => formData.bundles.includes(opt.id)) },
-                                        get filteredOptions() { return this.search === '' ? this.options : this.options.filter(opt => opt.title.toLowerCase().includes(this.search.toLowerCase())) }
-                                    }">
-                                        <label
-                                            class="text-xs font-bold text-navy uppercase tracking-wider block mb-2">Bundles</label>
-
-                                        <div @click="open = !open" @click.away="open = false"
-                                            class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 min-h-[50px] cursor-text flex flex-wrap gap-2 items-center">
-                                            <template x-for="item in selectedItems" :key="item.id">
-                                                <span
-                                                    class="bg-secondary/20 text-navy text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1">
-                                                    <span x-text="item.title"></span>
-                                                    <button type="button"
-                                                        @click.stop="formData.bundles = formData.bundles.filter(id => id !== item.id)"
-                                                        class="hover:text-red-500">&times;</button>
-                                                </span>
-                                            </template>
-                                            <input type="text" x-model="search" placeholder="Select bundles..."
-                                                class="border-none p-0 focus:ring-0 text-sm flex-1 min-w-[100px]">
-                                        </div>
-
-                                        <div x-show="open"
-                                            class="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto">
-                                            <template x-for="option in filteredOptions" :key="option.id">
-                                                <div @click="if(formData.bundles.includes(option.id)) { formData.bundles = formData.bundles.filter(id => id !== option.id) } else { formData.bundles.push(option.id) }"
-                                                    class="px-4 py-2 hover:bg-surface cursor-pointer text-sm text-navy font-medium transition-colors flex justify-between items-center"
-                                                    :class="formData.bundles.includes(option.id) ? 'bg-secondary/10' : ''">
-                                                    <span x-text="option.title"></span>
-                                                    <span x-show="formData.bundles.includes(option.id)">✓</span>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-6">
-                                    <div>
-                                        <label
-                                            class="text-xs font-bold text-navy uppercase tracking-wider block mb-2">Type</label>
-                                        <select x-model="formData.type"
-                                            class="w-full bg-surface border-slate-200 rounded-xl px-4 py-3 text-navy font-medium focus:border-primary focus:ring-primary">
-                                            <option value="fixed">Fixed Amount (₹)</option>
-                                            <option value="percentage">Percentage (%)</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label
-                                            class="text-xs font-bold text-navy uppercase tracking-wider block mb-2">Value</label>
-                                        <input type="number" x-model="formData.value" step="0.01"
-                                            class="w-full bg-surface border-slate-200 rounded-xl px-4 py-3 text-navy font-bold focus:border-primary focus:ring-primary">
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-6">
-                                    <div>
-                                        <label
-                                            class="text-xs font-bold text-navy uppercase tracking-wider block mb-2">Usage
-                                            Limit</label>
-                                        <input type="number" x-model="formData.usage_limit"
-                                            class="w-full bg-surface border-slate-200 rounded-xl px-4 py-3 text-navy font-medium focus:border-primary focus:ring-primary">
-                                    </div>
-                                    <div>
-                                        <label
-                                            class="text-xs font-bold text-navy uppercase tracking-wider block mb-2">Expiry
-                                            Date</label>
-                                        <input type="date" x-model="formData.expiry_date"
-                                            class="w-full bg-surface border-slate-200 rounded-xl px-4 py-3 text-navy font-medium focus:border-primary focus:ring-primary">
-                                    </div>
-                                </div>
-
                             </div>
 
-                            <div
-                                class="px-8 py-6 bg-surface border-t border-slate-200 flex items-center justify-end gap-4">
-                                <button type="button" @click="showModal = false"
-                                    class="px-6 py-3 rounded-xl font-bold text-mutedText hover:bg-slate-200 transition-colors">Cancel</button>
-                                <button type="submit" :disabled="isSaving"
-                                    class="bg-primary text-customWhite hover:bg-navy px-8 py-3 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all flex items-center gap-2 disabled:opacity-50">
-                                    <span x-show="isSaving"
-                                        class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
-                                    <span
-                                        x-text="isSaving ? 'Saving...' : (isEdit ? 'Update Coupon' : 'Create Coupon')"></span>
+                            {{-- Conditional: Specific Selectors --}}
+                            <div x-show="form.coupon_type === 'specific'" x-collapse class="space-y-4 pl-4 border-l-2 border-primary/20">
+                                {{-- Custom Multi-Select for Courses --}}
+                                <div x-data="multiSelect({
+                                    options: {{ $courses->map(fn($c) => ['value' => $c->id, 'label' => $c->title])->toJson() }},
+                                    selected: form.courses,
+                                    onChange: (vals) => form.courses = vals
+                                })" class="relative">
+                                    <label class="block text-[10px] font-bold text-mutedText uppercase mb-2 tracking-widest">Select Courses</label>
+
+                                    {{-- Trigger --}}
+                                    <div @click="open = !open" @click.away="open = false" class="w-full min-h-[42px] rounded-xl bg-navy border border-primary/10 px-3 py-2 flex flex-wrap gap-2 cursor-pointer items-center">
+                                        <template x-if="selected.length === 0">
+                                            <span class="text-sm text-mutedText/50">Select courses...</span>
+                                        </template>
+                                        <template x-for="val in selected" :key="val">
+                                            <span class="bg-primary/10 text-primary text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1">
+                                                <span x-text="getLabel(val)"></span>
+                                                <button type="button" @click.stop="remove(val)" class="hover:text-customWhite">&times;</button>
+                                            </span>
+                                        </template>
+                                    </div>
+
+                                    {{-- Dropdown --}}
+                                    <div x-show="open" class="absolute z-10 w-full mt-1 bg-surface border border-primary/10 rounded-xl shadow-xl max-h-48 overflow-y-auto p-1">
+                                        <input type="text" x-model="search" placeholder="Search..." class="w-full bg-navy border-none text-xs text-mainText rounded-lg mb-1 focus:ring-0 px-3 py-2">
+                                        <template x-for="opt in filteredOptions" :key="opt.value">
+                                            <div @click="toggle(opt.value)" class="px-3 py-2 rounded-lg hover:bg-primary/10 cursor-pointer flex items-center justify-between group">
+                                                <span class="text-xs font-medium text-mainText group-hover:text-primary" x-text="opt.label"></span>
+                                                <span x-show="selected.includes(opt.value)" class="text-primary text-xs">✓</span>
+                                            </div>
+                                        </template>
+                                        <div x-show="filteredOptions.length === 0" class="px-3 py-2 text-xs text-mutedText italic">No results</div>
+                                    </div>
+                                </div>
+
+                                {{-- Custom Multi-Select for Bundles --}}
+                                <div x-data="multiSelect({
+                                    options: {{ $bundles->map(fn($b) => ['value' => $b->id, 'label' => $b->title])->toJson() }},
+                                    selected: form.bundles,
+                                    onChange: (vals) => form.bundles = vals
+                                })" class="relative">
+                                    <label class="block text-[10px] font-bold text-mutedText uppercase mb-2 tracking-widest">Select Bundles</label>
+
+                                    <div @click="open = !open" @click.away="open = false" class="w-full min-h-[42px] rounded-xl bg-navy border border-primary/10 px-3 py-2 flex flex-wrap gap-2 cursor-pointer items-center">
+                                        <template x-if="selected.length === 0">
+                                            <span class="text-sm text-mutedText/50">Select bundles...</span>
+                                        </template>
+                                        <template x-for="val in selected" :key="val">
+                                            <span class="bg-secondary/10 text-secondary text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1">
+                                                <span x-text="getLabel(val)"></span>
+                                                <button type="button" @click.stop="remove(val)" class="hover:text-customWhite">&times;</button>
+                                            </span>
+                                        </template>
+                                    </div>
+
+                                    <div x-show="open" class="absolute z-10 w-full mt-1 bg-surface border border-primary/10 rounded-xl shadow-xl max-h-48 overflow-y-auto p-1">
+                                        <input type="text" x-model="search" placeholder="Search..." class="w-full bg-navy border-none text-xs text-mainText rounded-lg mb-1 focus:ring-0 px-3 py-2">
+                                        <template x-for="opt in filteredOptions" :key="opt.value">
+                                            <div @click="toggle(opt.value)" class="px-3 py-2 rounded-lg hover:bg-secondary/10 cursor-pointer flex items-center justify-between group">
+                                                <span class="text-xs font-medium text-mainText group-hover:text-secondary" x-text="opt.label"></span>
+                                                <span x-show="selected.includes(opt.value)" class="text-secondary text-xs">✓</span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Row 3: Value & Usage --}}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-mutedText uppercase mb-2 tracking-widest">Discount Type</label>
+                                    <select x-model="form.type" class="w-full rounded-xl bg-navy border border-primary/10 px-4 py-2.5 text-sm text-mainText focus:border-primary focus:ring-1 focus:ring-primary outline-none transition appearance-none">
+                                        <option value="fixed">Fixed Amount (₹)</option>
+                                        <option value="percentage">Percentage (%)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-mutedText uppercase mb-2 tracking-widest">Discount Value</label>
+                                    <input type="number" step="0.01" x-model="form.value" class="w-full rounded-xl bg-navy border border-primary/10 px-4 py-2.5 text-sm text-mainText focus:border-primary focus:ring-1 focus:ring-primary outline-none transition">
+                                </div>
+                            </div>
+
+                            {{-- Row 4: Limits & Expiry --}}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-mutedText uppercase mb-2 tracking-widest">Usage Limit</label>
+                                    <input type="number" x-model="form.usage_limit" class="w-full rounded-xl bg-navy border border-primary/10 px-4 py-2.5 text-sm text-mainText focus:border-primary focus:ring-1 focus:ring-primary outline-none transition">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-mutedText uppercase mb-2 tracking-widest">Expiry Date</label>
+                                    <input type="date" x-model="form.expiry_date" class="w-full rounded-xl bg-navy border border-primary/10 px-4 py-2.5 text-sm text-mainText focus:border-primary focus:ring-1 focus:ring-primary outline-none transition [color-scheme:dark]">
+                                </div>
+                            </div>
+
+                            {{-- Active Toggle --}}
+                            <div class="flex items-center gap-3 pt-2">
+                                <label class="flex items-center cursor-pointer relative">
+                                    <input type="checkbox" x-model="form.is_active" class="sr-only peer">
+                                    <div class="w-10 h-5 bg-mutedText/20 rounded-full peer peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-customWhite after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+                                    <span class="ml-3 text-[11px] font-bold text-mainText uppercase tracking-widest">Activate Coupon</span>
+                                </label>
+                            </div>
+
+                            {{-- Footer Actions --}}
+                            <div class="flex items-center justify-end gap-3 pt-6 border-t border-primary/5">
+                                <button type="button" @click="showModal = false" class="px-4 py-2 text-[10px] font-bold text-mutedText uppercase tracking-widest hover:text-mainText transition">Cancel</button>
+                                <button type="submit" :disabled="isSubmitting" class="px-6 py-2.5 bg-primary text-customWhite text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-secondary transition shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center gap-2">
+                                    <span x-show="isSubmitting" class="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full"></span>
+                                    <span x-text="isSubmitting ? 'Saving...' : (isEdit ? 'Update Coupon' : 'Create Coupon')"></span>
                                 </button>
                             </div>
                         </form>
@@ -289,60 +213,92 @@
     </div>
 
     <script>
+        // Multi-Select Logic Component
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('multiSelect', (config) => ({
+                options: config.options,
+                selected: config.selected || [], // Array of IDs
+                open: false,
+                search: '',
+
+                get filteredOptions() {
+                    if(this.search === '') return this.options;
+                    return this.options.filter(opt => opt.label.toLowerCase().includes(this.search.toLowerCase()));
+                },
+
+                getLabel(value) {
+                    let opt = this.options.find(o => o.value == value);
+                    return opt ? opt.label : value;
+                },
+
+                toggle(value) {
+                    if (this.selected.includes(value)) {
+                        this.selected = this.selected.filter(v => v !== value);
+                    } else {
+                        this.selected.push(value);
+                    }
+                    config.onChange(this.selected); // Update parent form data
+                },
+
+                remove(value) {
+                    this.selected = this.selected.filter(v => v !== value);
+                    config.onChange(this.selected);
+                },
+
+                // Watch for external changes (like resetting form)
+                init() {
+                    this.$watch('config.selected', (val) => {
+                        this.selected = val;
+                    });
+                }
+            }));
+        });
+
         function couponManager() {
             return {
-                coupons: [],
-                tableHtml: '',
-                paginationHtml: '',
-                isLoading: true,
-                search: '',
                 showModal: false,
                 isEdit: false,
-                isSaving: false,
-                errorMessage: null,
-
-                // Parent Form Data
-                formData: {
+                isSubmitting: false,
+                isLoading: false,
+                search: '{{ request('search') }}',
+                form: {
                     id: null,
                     code: '',
                     coupon_type: 'general',
                     type: 'fixed',
                     value: '',
+                    usage_limit: 100,
                     expiry_date: '',
-                    usage_limit: 1,
-                    courses: [], // Stores IDs directly
-                    bundles: [] // Stores IDs directly
+                    courses: [],
+                    bundles: [],
+                    is_active: true
                 },
 
                 init() {
+                    this.Toast = Swal.mixin({
+                        toast: true, position: 'top-end', showConfirmButton: false, timer: 2000,
+                        background: '#FFFFFF', color: '#2D2D2D',
+                        customClass: { popup: 'rounded-xl border border-primary/10 shadow-lg' }
+                    });
                     this.fetchCoupons();
                 },
 
                 async fetchCoupons(url = "{{ route('admin.coupons.index') }}") {
                     this.isLoading = true;
-                    const urlObj = new URL(url);
-
-                    // Clear search if empty to reset backend logic
-                    if (this.search && this.search.trim() !== '') {
-                        urlObj.searchParams.set('search', this.search);
-                    } else {
-                        urlObj.searchParams.delete('search');
-                    }
-
                     try {
-                        const res = await fetch(urlObj.toString(), {
-                            headers: {
-                                "X-Requested-With": "XMLHttpRequest"
-                            }
-                        });
-                        const data = await res.json();
+                        const urlObj = new URL(url);
+                        if(this.search) urlObj.searchParams.set('search', this.search);
 
-                        if (data.status === 'success') {
-                            this.tableHtml = data.html;
-                            this.paginationHtml = data.pagination;
+                        const response = await fetch(urlObj.toString(), {
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        });
+                        const data = await response.json();
+
+                        if(data.status === 'success') {
+                            document.getElementById('coupons-container').innerHTML = data.html;
+                            // Re-bind pagination links
                             this.$nextTick(() => {
-                                const links = document.querySelectorAll('.pagination a');
-                                links.forEach(link => {
+                                document.querySelectorAll('.pagination a').forEach(link => {
                                     link.addEventListener('click', (e) => {
                                         e.preventDefault();
                                         this.fetchCoupons(link.href);
@@ -351,123 +307,122 @@
                             });
                         }
                     } catch (e) {
-                        console.error(e);
+                        console.error("Fetch error", e);
                     } finally {
                         this.isLoading = false;
                     }
                 },
 
-                openModal(id = null) {
-                    this.errorMessage = null;
-                    if (id) {
-                        this.isEdit = true;
-                        this.loadCouponData(id);
+                openModal(mode, id = null) {
+                    this.isEdit = (mode === 'edit');
+
+                    if (this.isEdit && id) {
+                        // Fetch specific coupon data
+                        fetch(`/admin/coupons/${id}/edit`)
+                            .then(res => res.json())
+                            .then(json => {
+                                if(json.status === 'success') {
+                                    const data = json.data;
+                                    this.form = {
+                                        id: data.id,
+                                        code: data.code,
+                                        coupon_type: data.coupon_type,
+                                        type: data.type,
+                                        value: data.value,
+                                        usage_limit: data.usage_limit,
+                                        expiry_date: data.expiry_date ? data.expiry_date.substring(0, 10) : '',
+                                        courses: Array.isArray(data.selected_courses) ? data.selected_courses.map(Number) : [],
+                                        bundles: Array.isArray(data.selected_bundles) ? data.selected_bundles.map(Number) : [],
+                                        is_active: Boolean(data.is_active)
+                                    };
+                                    this.showModal = true;
+                                }
+                            });
                     } else {
-                        this.isEdit = false;
-                        this.resetForm();
+                        // Reset Form
+                        this.form = {
+                            id: null,
+                            code: '',
+                            coupon_type: 'general',
+                            type: 'fixed',
+                            value: '',
+                            usage_limit: 100,
+                            expiry_date: '',
+                            courses: [],
+                            bundles: [],
+                            is_active: true
+                        };
                         this.generateCode();
                         this.showModal = true;
                     }
-                },
-
-                async loadCouponData(id) {
-                    try {
-                        const res = await fetch(`/admin/coupons/${id}/edit`);
-                        const json = await res.json();
-
-                        if (json.status === 'success') {
-                            const data = json.data;
-                            this.formData = {
-                                id: data.id,
-                                code: data.code,
-                                coupon_type: data.coupon_type,
-                                type: data.type,
-                                value: data.value,
-                                usage_limit: data.usage_limit,
-                                expiry_date: data.expiry_date ? data.expiry_date.substring(0, 10) : '',
-
-                                // Ensure these are arrays of IDs for x-model/includes checking
-                                courses: Array.isArray(data.selected_courses) ?
-                                    data.selected_courses.map(Number) // Convert to numbers if strings
-                                    :
-                                    [],
-                                bundles: Array.isArray(data.selected_bundles) ?
-                                    data.selected_bundles.map(Number) :
-                                    []
-                            };
-                            this.showModal = true;
-                        }
-                    } catch (e) {
-                        alert('Error loading coupon');
-                    }
-                },
-
-                resetForm() {
-                    this.formData = {
-                        id: null,
-                        code: '',
-                        coupon_type: 'general',
-                        type: 'fixed',
-                        value: '',
-                        expiry_date: '',
-                        usage_limit: 1,
-                        courses: [],
-                        bundles: []
-                    };
                 },
 
                 generateCode() {
                     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
                     let result = '';
                     for (let i = 0; i < 8; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
-                    this.formData.code = result;
+                    this.form.code = result;
                 },
 
                 async submitForm() {
-                    this.isSaving = true;
-                    this.errorMessage = null;
-
+                    this.isSubmitting = true;
                     try {
-                        const res = await fetch("{{ route('admin.coupons.store') }}", {
+                        const response = await fetch("{{ route('admin.coupons.store') }}", {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'X-CSRF-TOKEN': "{{ csrf_token() }}",
                                 'Accept': 'application/json'
                             },
-                            body: JSON.stringify(this.formData)
+                            body: JSON.stringify(this.form)
                         });
 
-                        const json = await res.json();
+                        const result = await response.json();
 
-                        if (res.ok) {
+                        if (response.ok) {
                             this.showModal = false;
+                            this.Toast.fire({ icon: 'success', title: result.message });
                             this.fetchCoupons();
                         } else {
-                            this.errorMessage = json.message || 'Validation failed. Please check inputs.';
+                            throw new Error(result.message || 'Validation failed');
                         }
-                    } catch (e) {
-                        this.errorMessage = "Network error occurred.";
+                    } catch (error) {
+                        Swal.fire({ title: 'Error', text: error.message, icon: 'error', confirmButtonColor: '#F7941D' });
                     } finally {
-                        this.isSaving = false;
+                        this.isSubmitting = false;
                     }
                 },
 
-                async deleteItem(id) {
-                    if (!confirm('Delete this coupon?')) return;
-                    try {
-                        const res = await fetch(`/admin/coupons/${id}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                async deleteCoupon(id) {
+                    const check = await Swal.fire({
+                        title: 'Delete Coupon?',
+                        text: "This action cannot be undone.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, Delete',
+                        confirmButtonColor: '#D04A02',
+                        cancelButtonColor: '#555555'
+                    });
+
+                    if (check.isConfirmed) {
+                        try {
+                            const response = await fetch(`/admin/coupons/${id}`, {
+                                method: 'DELETE',
+                                headers: { 'X-CSRF-TOKEN': "{{ csrf_token() }}" }
+                            });
+
+                            if (response.ok) {
+                                this.Toast.fire({ icon: 'success', title: 'Coupon deleted successfully' });
+                                this.fetchCoupons();
+                            } else {
+                                throw new Error('Delete failed');
                             }
-                        });
-                        if (res.ok) this.fetchCoupons();
-                    } catch (e) {
-                        alert('Delete failed');
+                        } catch (e) {
+                            Swal.fire({ title: 'Error', text: e.message, icon: 'error' });
+                        }
                     }
                 }
-            }
+            };
         }
     </script>
 @endsection

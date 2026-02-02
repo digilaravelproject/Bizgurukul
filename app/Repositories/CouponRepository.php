@@ -41,6 +41,7 @@ class CouponRepository
 
     /**
      * Create or Update
+     * Service layer se jo formatted array aayega, wo seedha yahan save hoga.
      */
     public function updateOrCreate(array $attributes, array $values): Coupon
     {
@@ -52,19 +53,30 @@ class CouponRepository
      */
     public function delete(int $id): bool
     {
-        return Coupon::destroy($id);
+        return Coupon::destroy($id) > 0;
     }
 
     /**
      * Toggle Status
+     * Returns true if status changed, false otherwise
      */
     public function toggleStatus(int $id): bool
     {
         $coupon = $this->findById($id);
+
         if ($coupon) {
             $coupon->is_active = !$coupon->is_active;
             return $coupon->save();
         }
+
         return false;
+    }
+
+    /**
+     * Find Valid Coupon by Code (For User/Frontend Side)
+     */
+    public function findByCode(string $code): ?Coupon
+    {
+        return Coupon::where('code', $code)->active()->first();
     }
 }

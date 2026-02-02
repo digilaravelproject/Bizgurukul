@@ -15,7 +15,7 @@
 
     {{-- LESSONS GRID --}}
     @if(count($course->lessons) > 0)
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div id="lessons-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach($course->lessons as $lesson)
             <div class="group relative bg-surface rounded-[1.5rem] border border-primary hover:border-primary/30 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full">
 
@@ -150,18 +150,18 @@
                 {{-- Thumbnail Upload --}}
                 <div x-show="lType === 'video'" class="animate-fade-in">
                     <label class="block text-xs font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Thumbnail (Optional)</label>
-                    <input type="file" name="thumbnail" accept="image/*" class="w-full text-xs text-mutedText file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary file:text-primary hover:file:bg-primary hover:file:text-customWhite cursor-pointer transition-all">
+                    <input type="file" name="thumbnail" accept="image/*" class="w-full text-xs text-mutedText file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary/20 file:text-primary hover:file:bg-primary hover:file:text-customWhite cursor-pointer transition-all">
                     <p class="text-[10px] text-mutedText mt-1 ml-1">If empty, a frame will be auto-selected from the video.</p>
                 </div>
 
                 {{-- File Inputs --}}
                 <div x-show="lType === 'video'" class="animate-fade-in">
                     <label class="block text-xs font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Video File (MP4)</label>
-                    <input type="file" name="video_file" accept="video/*" class="w-full text-xs text-mutedText file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary file:text-primary hover:file:bg-primary hover:file:text-customWhite cursor-pointer transition-all">
+                    <input type="file" name="video_file" accept="video/*" class="w-full text-xs text-mutedText file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary/20 file:text-primary hover:file:bg-primary hover:file:text-customWhite cursor-pointer transition-all">
                 </div>
                 <div x-show="lType === 'document'" class="animate-fade-in">
                     <label class="block text-xs font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Document (PDF/DOCX)</label>
-                    <input type="file" name="document_file" accept=".pdf,.doc,.docx" class="w-full text-xs text-mutedText file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary file:text-primary hover:file:bg-primary hover:file:text-customWhite cursor-pointer transition-all">
+                    <input type="file" name="document_file" accept=".pdf,.doc,.docx" class="w-full text-xs text-mutedText file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary/20 file:text-primary hover:file:bg-primary hover:file:text-customWhite cursor-pointer transition-all">
                 </div>
 
                 <button type="submit" class="w-full brand-gradient py-3.5 rounded-xl font-black text-xs uppercase text-customWhite shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">Add Lesson</button>
@@ -193,4 +193,24 @@ function deleteLesson(id) {
         if (result.isConfirmed) document.getElementById('delete-lesson-'+id).submit();
     });
 }
+</script>
+<script>
+    function checkProcessingStatus() {
+        // Check if any 'Processing' badge exists
+        if (document.querySelectorAll('.animate-pulse').length > 0) {
+            fetch(window.location.href)
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newGrid = doc.getElementById('lessons-grid-container');
+                    if (newGrid) {
+                        document.getElementById('lessons-grid-container').innerHTML = newGrid.innerHTML;
+                    }
+                });
+        }
+    }
+
+    // Har 10 second mein check karega
+    setInterval(checkProcessingStatus, 10000);
 </script>
