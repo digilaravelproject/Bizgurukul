@@ -76,4 +76,15 @@ class Course extends Model
         // If you have a 'thumbnail' column, return its URL, otherwise return null
         return $this->thumbnail ? asset('storage/' . $this->thumbnail) : null;
     }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    // Check karne ke liye ki current user ne course kharida hai ya nahi
+    public function isPurchasedBy($userId)
+    {
+        return $this->payments()->where('user_id', $userId)->where('status', 'success')->exists();
+    }
 }

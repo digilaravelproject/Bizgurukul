@@ -18,15 +18,14 @@
 
                     {{-- Thumbnail: Tall Portrait Height --}}
                     <div class="relative h-64 overflow-hidden bg-slate-100">
-                        <img src="{{ asset('storage/' . $course->thumbnail) }}"
+                        <img src="{{ $course->thumbnail }}"
                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
 
                         {{-- Play Overlay --}}
                         <div
                             class="absolute inset-0 bg-slate-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             {{-- FFmpeg converted MP4 URLs work better with direct asset() links --}}
-                            <button
-                                @click="videoModal = true; activeVideo = '{{ asset('storage/' . $course->demo_video_url) }}'"
+                            <button @click="videoModal = true; activeVideo = '{{ $course->demo_video_url }}'"
                                 class="bg-white text-indigo-600 p-5 rounded-full shadow-2xl transform scale-75 group-hover:scale-100 transition-all duration-500">
                                 <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
                                     <path

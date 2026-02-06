@@ -10,15 +10,17 @@ class CourseController extends Controller
 {
     public function index()
     {
-        // Published courses fetch karein
+        // Fetch only published courses
         $courses = Course::where('is_published', 1)->latest()->get();
         return view('student.courses.index', compact('courses'));
     }
 
-    public function show($id) // Slug ki jagah ID
+    public function show($id)
     {
-        // ID se course find karein
-        $course = Course::with('lessons')
+        // Eager load lessons to show curriculum
+        $course = Course::with(['lessons' => function ($query) {
+            $query->orderBy('order_column', 'asc');
+        }])
             ->where('is_published', 1)
             ->findOrFail($id);
 

@@ -193,7 +193,7 @@
                             {{-- Course Thumbnail --}}
                             <div class="h-48 flex items-center justify-center overflow-hidden bg-gray-100">
                                 @if ($course->thumbnail)
-                                    <img src="{{ asset('storage/' . $course->thumbnail) }}" alt="{{ $course->title }}"
+                                    <img src="{{ $course->thumbnail }}" alt="{{ $course->title }}"
                                         class="w-full h-full object-cover">
                                 @else
                                     {{-- Fallback Gradient if no image --}}
@@ -232,7 +232,7 @@
                                     </span>
                                 </div>
 
-                                <a href="{{ route('courses.show', $course->id) }}"
+                                <a href="{{ route('course.show', $course->id) }}"
                                     class="block text-center bg-primary hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold w-full transition duration-300">
                                     Enroll Now
                                 </a>

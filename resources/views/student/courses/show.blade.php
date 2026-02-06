@@ -24,22 +24,30 @@
                 <p class="text-4xl font-black text-slate-900 italic tracking-tighter">
                     ₹{{ number_format($course->price, 2) }}
                 </p>
-                <button
-                    class="w-full bg-indigo-600 text-white py-4 rounded-2xl text-[11px] font-black uppercase italic tracking-widest shadow-lg shadow-indigo-200 active:scale-95 transition-all">
-                    Buy This Course
-                </button>
+
+                {{-- Payment Button Logic --}}
+                @if (Auth::check() && $course->isPurchasedBy(Auth::id()))
+                    <button
+                        class="w-full bg-emerald-500 text-white py-4 rounded-2xl text-[11px] font-black uppercase italic tracking-widest shadow-lg shadow-emerald-200 cursor-default"
+                        disabled>
+                        Already Enrolled
+                    </button>
+                @else
+                    <button id="pay-button"
+                        class="w-full bg-indigo-600 text-white py-4 rounded-2xl text-[11px] font-black uppercase italic tracking-widest shadow-lg shadow-indigo-200 active:scale-95 transition-all">
+                        Buy This Course
+                    </button>
+                @endif
             </div>
         </div>
 
         {{-- 2. Course Content & Curriculum --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            {{-- Video Player / Preview Area --}}
             <div class="lg:col-span-2 space-y-8">
-                {{-- Updated for Local FFmpeg Videos --}}
                 <div
                     class="relative aspect-video bg-black rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white group">
-                    <video src="{{ asset('storage/' . $course->demo_video_url) }}" class="w-full h-full object-contain"
-                        controls controlsList="nodownload" poster="{{ asset('storage/' . $course->thumbnail) }}">
+                    <video src="{{ $course->demo_video_url }}" class="w-full h-full object-contain" controls
+                        controlsList="nodownload" poster="{{ $course->thumbnail }}">
                         Your browser does not support the video tag.
                     </video>
                 </div>
@@ -63,13 +71,12 @@
                 </div>
             </div>
 
-            {{-- 3. Lesson Sidebar (Accordion) --}}
+            {{-- 3. Lesson Sidebar --}}
             <div class="space-y-6">
                 <div class="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-xl">
                     <h3 class="text-sm font-black uppercase italic tracking-widest mb-6 border-b border-slate-800 pb-4">
                         Course Curriculum
                     </h3>
-
                     <div class="space-y-4">
                         @forelse($course->lessons as $index => $lesson)
                             <div
@@ -91,17 +98,86 @@
                         @endforelse
                     </div>
                 </div>
-
-                {{-- Support Card --}}
-                <div class="bg-indigo-50 border border-indigo-100 rounded-[2.5rem] p-8">
-                    <h4 class="text-[11px] font-black text-indigo-600 uppercase tracking-widest italic mb-2">Need Help?</h4>
-                    <p class="text-[10px] text-slate-500 font-bold uppercase italic leading-relaxed">Contact our support
-                        team for enrollment queries.</p>
-                    <a href="#"
-                        class="mt-4 inline-block text-[10px] font-black text-indigo-600 uppercase underline decoration-indigo-200 underline-offset-4">Chat
-                        with us</a>
-                </div>
             </div>
         </div>
     </div>
+
+    {{-- Razorpay Script & Logic --}}
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        const payButton = document.getElementById('pay-button');
+        if (payButton) {
+            payButton.onclick = function(e) {
+                payButton.innerText = "Processing...";
+                payButton.disabled = true;
+
+                // 1. Create Order
+                fetch("{{ route('razorpay.create', $course->id) }}", {
+                        method: "POST",
+                        headers: {
+                            "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                            "Accept": "application/json"
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.error) {
+                            alert('Error: ' + data.error);
+                            payButton.innerText = "Buy This Course";
+                            payButton.disabled = false;
+                            return;
+                        }
+
+                        var options = {
+                            "key": data.key,
+                            "amount": data.amount,
+                            "currency": "INR",
+                            "name": "Course Payment",
+                            "description": data.course_name,
+                            "order_id": data.order_id,
+                            "handler": function(response) {
+                                // 2. Verify Payment
+                                fetch("{{ route('razorpay.verify') }}", {
+                                        method: "POST",
+                                        headers: {
+                                            "Content-Type": "application/json",
+                                            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                                        },
+                                        body: JSON.stringify(response)
+                                    })
+                                    .then(res => res.json())
+                                    .then(verification => {
+                                        if (verification.status === 'success') {
+                                            alert('Welcome! Payment Successful.');
+                                            window.location.reload();
+                                        } else {
+                                            alert('Verification Failed');
+                                        }
+                                    });
+                            },
+                            "modal": {
+                                "ondismiss": function() {
+                                    payButton.innerText = "Buy This Course";
+                                    payButton.disabled = false;
+                                }
+                            },
+                            "prefill": {
+                                "name": "{{ Auth::user()->name ?? '' }}",
+                                "email": "{{ Auth::user()->email ?? '' }}"
+                            },
+                            "theme": {
+                                "color": "#4F46E5"
+                            }
+                        };
+                        var rzp1 = new Razorpay(options);
+                        rzp1.open();
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        payButton.innerText = "Buy This Course";
+                        payButton.disabled = false;
+                    });
+            }
+        }
+    </script>
 @endsection

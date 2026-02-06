@@ -13,9 +13,9 @@ Route::get('/login', function () {
 });
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/courses/{course}', [HomeController::class, 'courses'])
-    ->name('courses.show');
-Route::get('/courses/{course}', [HomeController::class, 'courses'])
+Route::get('/course/{course}', [HomeController::class, 'courses'])
+    ->name('course.show');
+Route::get('/coursesp/{course}', [HomeController::class, 'courses'])
     ->name('bundles.show');
 Route::post('/check-referral', [RegisteredUserController::class, 'checkReferral'])->name('check.referral');
 

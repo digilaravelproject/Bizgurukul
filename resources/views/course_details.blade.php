@@ -105,7 +105,7 @@
                     <div class="bg-white/10 backdrop-blur-sm rounded-lg p-8 max-w-xs w-full">
                         <div class="bg-gradient-to-b from-pink-200 to-pink-300 rounded-lg p-6 text-center">
                             @if ($course->thumbnail)
-                                <img src="{{ asset('storage/' . $course->thumbnail) }}"
+                                <img src="{{ $course->thumbnail }}"
                                     class="w-24 h-24 mx-auto mb-4 rounded-lg object-cover shadow-md">
                             @endif
                             <h3 class="text-xl font-bold text-pink-600 mb-4 uppercase">{{ $course->title }}</h3>
@@ -195,11 +195,11 @@
                 <div class="relative">
                     <div class="rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
                         @if ($course->demo_video_url)
-                            <video controls class="w-full" poster="{{ asset('storage/' . $course->thumbnail) }}">
-                                <source src="{{ asset('storage/' . $course->demo_video_url) }}" type="video/mp4">
+                            <video controls class="w-full" poster="{{ $course->thumbnail }}">
+                                <source src="{{ $course->demo_video_url }}" type="video/mp4">
                             </video>
                         @else
-                            <img src="{{ asset('storage/' . $course->thumbnail) }}" class="w-full">
+                            <img src="{{ $course->thumbnail }}" class="w-full">
                         @endif
                     </div>
                 </div>
