@@ -2,14 +2,21 @@
 
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
 // Route::get('/', function () {
 //     return view('welcome');
 // });
-Route::get('/', function () {
+Route::get('/login', function () {
     return redirect()->route('login');
 });
+
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/courses/{course}', [HomeController::class, 'courses'])
+    ->name('courses.show');
+Route::get('/courses/{course}', [HomeController::class, 'courses'])
+    ->name('bundles.show');
 Route::post('/check-referral', [RegisteredUserController::class, 'checkReferral'])->name('check.referral');
 
 // Common Profile Routes (Sabke liye same)
