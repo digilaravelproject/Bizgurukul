@@ -53,9 +53,9 @@
             <div class="flex justify-between items-center py-4">
                 <!-- Logo -->
                 <div class="flex items-center space-x-2">
-                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23f7941d' width='100' height='100' rx='10'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white' font-family='Arial, sans-serif' font-weight='bold'%3EB%3C/text%3E%3C/svg%3E"
-                        alt="Logo" class="w-10 h-10">
-                    <span class="text-2xl font-bold text-secondary">Bizgurukul</span>
+                    <img src="{{ asset('storage/site_images/logo1.png') }}"
+                        alt="Logo" class="w-20 h-auto" loading="lazy">
+                    {{-- <span class="text-2xl font-bold text-secondary">Skills Pehle</span> --}}
                 </div>
 
                 <!-- Desktop Menu -->
@@ -112,7 +112,7 @@
                 <div class="md:w-1/2 mb-8 md:mb-0">
                     <h1 class="text-4xl md:text-6xl font-bold text-secondary mb-4">
                         Think Freelance<br>
-                        Think <span class="text-primary">Bizgurukul</span>
+                        Think <span class="text-primary">Skills Pehle</span>
                     </h1>
                     <p class="text-gray-600 text-lg mb-6">
                         Master digital skills, build your freelancing career, and earn from anywhere in the world.
@@ -149,7 +149,7 @@
                 <div class="flex flex-col md:flex-row items-center">
                     <div class="md:w-1/2 p-8 md:p-12">
                         <h2 class="text-3xl md:text-4xl font-bold text-secondary mb-4">
-                            Bizgurukul has just launched<br>
+                            Skills Pehle has just launched<br>
                             Mastering Personal <span class="text-green-500">Finance!</span>
                         </h2>
                         <button
@@ -380,7 +380,7 @@
     <!-- Stats Section -->
     <section class="py-16 bg-white">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center text-secondary mb-12">Why Choose Bizgurukul?</h2>
+            <h2 class="text-3xl font-bold text-center text-secondary mb-12">Why Choose Skills Pehle?</h2>
             <div class="grid md:grid-cols-3 gap-8 text-center">
                 <div x-data="{ count: 0 }" x-init="setTimeout(() => {
                     let interval = setInterval(() => {
@@ -470,7 +470,7 @@
     <section class="py-16 bg-primary">
         <div class="container mx-auto px-4 text-center">
             <h2 class="text-4xl font-bold text-white mb-4">Ready to Start Your Journey?</h2>
-            <p class="text-white text-lg mb-8">Join thousands of students already learning on Bizgurukul</p>
+            <p class="text-white text-lg mb-8">Join thousands of students already learning on Skills Pehle</p>
             <button
                 class="bg-white hover:bg-gray-100 text-primary px-8 py-3 rounded-lg font-semibold text-lg transition hover-scale">
                 Get Started Today
@@ -483,7 +483,7 @@
         <div class="container mx-auto px-4">
             <div class="grid md:grid-cols-4 gap-8">
                 <div>
-                    <h3 class="text-xl font-bold mb-4">Bizgurukul</h3>
+                    <h3 class="text-xl font-bold mb-4">Skills Pehle</h3>
                     <p class="text-gray-400">Empowering learners with digital skills for the future.</p>
                     <div class="flex space-x-4 mt-4">
                         <a href="#" class="text-primary hover:text-orange-600 transition"><i
@@ -534,7 +534,7 @@
             </div>
 
             <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
-                <p>&copy; 2024 Bizgurukul. All rights reserved.</p>
+                <p>&copy; {{ date('Y') }} Skills Pehle. All rights reserved.</p>
             </div>
         </div>
     </footer>

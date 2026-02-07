@@ -4,11 +4,12 @@
      {{-- Sidebar Logo --}}
      <div class="p-6 text-xl font-bold border-b border-slate-800 flex justify-between items-center bg-slate-900">
          <div class="flex items-center space-x-2">
-             <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center shadow-lg">
-                 <span class="text-white text-lg font-black italic">B</span>
+             <div class="w-auto h-8 flex items-center justify-center p-1 rounded-lg">
+                <img src="{{ asset('storage/site_images/logo1.png') }}"
+                        alt="Logo" class="h-full w-auto object-contain" loading="lazy">
              </div>
-             <span class="tracking-tight italic uppercase text-sm">Bizgurukul <span
-                     class="text-indigo-400">Pro</span></span>
+             {{-- <span class="tracking-tight italic uppercase text-sm">Skills <span
+                     class="text-indigo-400">Pehle</span></span> --}}
          </div>
          <button @click="sidebarOpen = false" class="md:hidden text-slate-400 hover:text-white">
              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

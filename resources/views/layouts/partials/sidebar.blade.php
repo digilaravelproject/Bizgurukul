@@ -7,13 +7,14 @@
         {{-- Logo Section --}}
         <div class="p-6 flex justify-between items-center h-20 border-b border-navy">
             <div class="flex items-center space-x-3">
-                <div class="w-9 h-9 brand-gradient rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group">
-                    <span class="text-white text-xl font-black italic group-hover:scale-110 transition-transform">S</span>
+                <div class="w-auto h-9 flex items-center justify-center">
+                     <img src="{{ asset('storage/site_images/logo1.png') }}"
+                        alt="Logo" class="h-full w-auto object-contain group-hover:scale-110 transition-transform" loading="lazy">
                 </div>
-                <div class="flex flex-col">
+                {{-- <div class="flex flex-col">
                     <span class="text-lg font-extrabold tracking-tight text-mainText leading-none">Skills<span class="text-primary">Pehle</span></span>
                     <span class="text-[9px] text-mutedText tracking-[0.2em] font-bold uppercase mt-1">Admin Pro</span>
-                </div>
+                </div> --}}
             </div>
 
             {{-- Mobile Close Button --}}
