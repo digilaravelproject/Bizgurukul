@@ -25,14 +25,14 @@
     @stack('styles')
 </head>
 
-<body class="font-sans antialiased bg-slate-50 text-slate-900" x-data="{ sidebarOpen: false }">
+<body class="font-sans antialiased bg-navy text-mainText" x-data="{ sidebarOpen: false }">
     <div class="min-h-screen flex overflow-hidden">
 
         {{-- 1. SIDEBAR SECTION --}}
 
         @include('layouts.user.sidebar')
         {{-- 2. MAIN CONTENT AREA --}}
-        <div class="flex-1 flex flex-col min-w-0 bg-slate-50 relative">
+        <div class="flex-1 flex flex-col min-w-0 bg-navy relative">
 
             {{-- Navbar / Header --}}
             @include('layouts.user.header')
@@ -51,7 +51,7 @@
 
     {{-- Mobile Overlay --}}
     <div x-show="sidebarOpen" @click="sidebarOpen = false" x-cloak
-        class="fixed inset-0 bg-slate-900/60 z-40 md:hidden backdrop-blur-sm"></div>
+        class="fixed inset-0 bg-mainText/60 z-40 md:hidden backdrop-blur-sm"></div>
 
     @stack('scripts')
 </body>

@@ -9,37 +9,37 @@
 @section('content')
     <div class="space-y-6">
         {{-- 1. Dashboard Title Section --}}
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+        <div class="flex flex-col md:flex-row md::items-center justify-between gap-4 mb-2">
             <div>
-                <h2 class="text-2xl font-black text-slate-800 uppercase italic tracking-tighter">
+                <h2 class="text-2xl font-bold text-mainText">
                     {{ __('Student Dashboard') }}
                 </h2>
-                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 italic">
+                <p class="text-xs text-mutedText font-medium mt-1">
                     Manage your affiliate network & real-time earnings
                 </p>
             </div>
-            <div class="bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                <span class="text-[10px] font-black text-slate-500 uppercase italic">Live Business Status</span>
+            <div class="bg-customWhite px-4 py-2 rounded-2xl border border-primary/10 shadow-sm flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-xs font-bold text-mutedText">Live Business Status</span>
             </div>
         </div>
 
         {{-- 2. Error/Success Messages --}}
         @if (session('error'))
-            <div class="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-2xl relative shadow-sm animate-bounce"
+            <div class="bg-red-500/10 border border-red-500/20 text-red-500 px-6 py-4 rounded-2xl relative shadow-sm"
                 role="alert">
-                <span class="text-xs font-black uppercase italic">{{ session('error') }}</span>
+                <span class="text-sm font-medium">{{ session('error') }}</span>
             </div>
         @endif
 
         {{-- 3. Affiliate Link Section (Full Logic Ke Saath) --}}
         <div
-            class="bg-white overflow-hidden shadow-sm rounded-[2.5rem] border border-slate-100 p-8 transition-all hover:shadow-md">
-            <h3 class="text-lg font-black text-slate-800 mb-2 uppercase italic tracking-tight">Your Affiliate Business Link
+            class="bg-customWhite overflow-hidden shadow-sm rounded-2xl border border-primary/5 p-8 transition-all hover:shadow-md">
+            <h3 class="text-lg font-bold text-mainText mb-2">Your Affiliate Business Link
             </h3>
-            <p class="text-slate-500 text-xs font-medium mb-6 italic leading-relaxed">
+            <p class="text-mutedText text-sm font-medium mb-6 leading-relaxed">
                 Share this unique link to earn
-                <span class="text-indigo-600 font-black italic underline decoration-indigo-200 underline-offset-4">
+                <span class="text-primary font-bold">
                     ₹{{ number_format($commissionAmount, 2) }}
                 </span> per referral enrollment.
             </p>
@@ -63,10 +63,10 @@
                 }
             }">
                 <input type="text" readonly :value="shareLink"
-                    class="w-full bg-slate-50 border-2 border-slate-100 text-slate-600 text-sm rounded-2xl focus:ring-indigo-500 focus:border-indigo-500 block p-4 font-bold select-all tracking-tight">
+                    class="w-full bg-navy border border-primary/10 text-mainText text-sm rounded-xl focus:ring-primary focus:border-primary block p-3 font-medium select-all placeholder-mutedText">
 
                 <button @click="copyToClipboard()"
-                    class="inline-flex items-center justify-center px-10 py-4 border border-transparent text-xs font-black rounded-2xl shadow-lg shadow-indigo-100 text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none transition-all active:scale-95 uppercase tracking-widest min-w-[160px]">
+                    class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-sm font-bold rounded-xl shadow-lg shadow-primary/20 text-white brand-gradient hover:opacity-90 focus:outline-none transition-all active:scale-95 min-w-[140px]">
                     <span x-show="!copied">Copy Link</span>
                     <span x-show="copied" class="flex items-center" style="display: none;">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,17 +77,17 @@
                 </button>
             </div>
 
-            <div class="mt-4 text-[10px] text-slate-400 flex items-center gap-2 font-black uppercase tracking-widest">
+            <div class="mt-4 text-xs text-mutedText flex items-center gap-2 font-bold uppercase tracking-wider">
                 Referral Code:
                 <span
-                    class="font-mono font-black text-indigo-700 bg-indigo-50 px-3 py-1 rounded-xl border border-indigo-100 italic tracking-tighter">
+                    class="font-mono font-bold text-primary bg-primary/5 px-2 py-1 rounded-lg border border-primary/10">
                     {{ $user->referral_code ?? 'N/A' }}
                 </span>
             </div>
         </div>
 
         {{-- 3.5 Specific Link Generator --}}
-        <div class="bg-white overflow-hidden shadow-sm rounded-[2.5rem] border border-slate-100 p-8 transition-all hover:shadow-md"
+        <div class="bg-customWhite overflow-hidden shadow-sm rounded-2xl border border-primary/5 p-8 transition-all hover:shadow-md"
              x-data="{
                 type: 'course',
                 selectedId: '',
@@ -104,24 +104,24 @@
                     alert('Link Copied!');
                 }
              }">
-            <h3 class="text-lg font-black text-slate-800 mb-2 uppercase italic tracking-tight">Generate Product Link</h3>
-            <p class="text-slate-500 text-xs font-medium mb-6 italic leading-relaxed">
+            <h3 class="text-lg font-bold text-mainText mb-2">Generate Product Link</h3>
+            <p class="text-mutedText text-sm font-medium mb-6 leading-relaxed">
                 Promote a specific Course or Bundle directly.
             </p>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
-                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Type</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-mutedText mb-1">Type</label>
                     <select x-model="type" @change="selectedId = ''; generatedLink = ''"
-                        class="w-full bg-slate-50 border-2 border-slate-100 text-slate-600 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block p-3 font-bold">
+                        class="w-full bg-navy border border-primary/10 text-mainText text-sm rounded-xl focus:ring-primary focus:border-primary block p-2.5 font-medium">
                         <option value="course">Course</option>
                         <option value="bundle">Bundle</option>
                     </select>
                 </div>
                 <div class="md:col-span-2">
-                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Select Product</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-mutedText mb-1">Select Product</label>
                     <select x-model="selectedId" @change="generate()"
-                        class="w-full bg-slate-50 border-2 border-slate-100 text-slate-600 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block p-3 font-bold">
+                        class="w-full bg-navy border border-primary/10 text-mainText text-sm rounded-xl focus:ring-primary focus:border-primary block p-2.5 font-medium">
                         <option value="">-- Select --</option>
                         <template x-if="type === 'course'">
                             <optgroup label="Courses">
@@ -142,12 +142,12 @@
             </div>
 
             <div x-show="generatedLink" class="relative" style="display: none;">
-                <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Your Unique Link</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-mutedText mb-1">Your Unique Link</label>
                 <div class="flex gap-2">
                     <input type="text" readonly :value="generatedLink"
-                        class="w-full bg-indigo-50 border-2 border-indigo-100 text-indigo-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block p-3 font-bold select-all">
+                        class="w-full bg-primary/5 border border-primary/20 text-primary text-sm rounded-xl focus:ring-primary focus:border-primary block p-3 font-medium select-all">
                     <button @click="copySpecific()"
-                        class="px-6 py-3 bg-indigo-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200">
+                        class="px-6 py-3 bg-primary text-white rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
                         Copy
                     </button>
                 </div>
@@ -155,10 +155,10 @@
         </div>
 
         {{-- 4. Stats Grid (Earnings Data) --}}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             {{-- Total Earnings --}}
             <div
-                class="bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-[2rem] p-8 text-white shadow-xl shadow-indigo-100 relative overflow-hidden group">
+                class="brand-gradient rounded-2xl p-6 text-white shadow-xl shadow-primary/20 relative overflow-hidden group">
                 <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
                     <svg class="w-24 h-24" fill="currentColor" viewBox="0 0 24 24">
                         <path
@@ -167,93 +167,91 @@
                     </svg>
                 </div>
                 <div class="relative z-10">
-                    <div class="text-indigo-100 text-[10px] font-black uppercase tracking-[0.2em] mb-2 italic">Total
-                        Earnings</div>
-                    <div class="text-4xl font-black italic tracking-tighter">₹{{ number_format($totalEarnings, 2) }}</div>
+                    <div class="text-white/80 text-xs font-bold uppercase tracking-wider mb-2">Total Earnings</div>
+                    <div class="text-3xl font-extrabold">₹{{ number_format($totalEarnings, 2) }}</div>
                 </div>
             </div>
 
             {{-- Pending --}}
             <div
-                class="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm hover:border-indigo-100 transition-all group">
+                class="bg-customWhite rounded-2xl p-6 border border-primary/10 shadow-sm hover:border-primary/20 transition-all group">
                 <div
-                    class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2 group-hover:text-indigo-600 transition-colors italic">
+                    class="text-mutedText text-xs font-bold uppercase tracking-wider mb-2 group-hover:text-primary transition-colors">
                     Pending Payout</div>
-                <div class="text-4xl font-black text-slate-800 italic tracking-tighter">
+                <div class="text-3xl font-extrabold text-mainText">
                     ₹{{ number_format($pendingEarnings, 2) }}</div>
             </div>
 
             {{-- Total Referrals --}}
             <div
-                class="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm hover:border-indigo-100 transition-all group">
+                class="bg-customWhite rounded-2xl p-6 border border-primary/10 shadow-sm hover:border-primary/20 transition-all group">
                 <div
-                    class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2 group-hover:text-indigo-600 transition-colors italic">
+                    class="text-mutedText text-xs font-bold uppercase tracking-wider mb-2 group-hover:text-primary transition-colors">
                     Network Size</div>
-                <div class="text-4xl font-black text-slate-800 italic tracking-tighter">{{ number_format($totalReferrals) }}
+                <div class="text-3xl font-extrabold text-mainText">{{ number_format($totalReferrals) }}
                 </div>
             </div>
         </div>
 
         {{-- 5. Recent Referrals Table --}}
-        <div class="bg-white overflow-hidden shadow-sm rounded-[2.5rem] border border-slate-100">
-            <div class="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
-                <h3 class="text-sm font-black text-slate-800 uppercase italic tracking-widest">Recent Network Growth</h3>
+        <div class="bg-customWhite overflow-hidden shadow-sm rounded-2xl border border-primary/10">
+            <div class="p-6 border-b border-navy/5 flex justify-between items-center bg-navy/5">
+                <h3 class="text-sm font-bold text-mainText uppercase tracking-wider">Recent Network Growth</h3>
                 <a href="#"
-                    class="text-[10px] font-black text-indigo-600 hover:text-indigo-800 uppercase tracking-[0.2em] italic underline decoration-indigo-100 underline-offset-4 transition-all">
+                    class="text-xs font-bold text-primary hover:text-primary/80 uppercase tracking-wider">
                     View Complete History
                 </a>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-slate-600">
-                    <thead class="bg-slate-50/50 text-[10px] uppercase font-black text-slate-400 tracking-widest">
+                <table class="w-full text-left text-sm text-mutedText">
+                    <thead class="bg-navy/5 text-xs uppercase font-bold text-mutedText/70 tracking-wider">
                         <tr>
-                            <th class="px-8 py-5">Student Identity</th>
-                            <th class="px-8 py-5">Date Joined</th>
-                            <th class="px-8 py-5 text-right">Verification Status</th>
+                            <th class="px-6 py-4">Student Identity</th>
+                            <th class="px-6 py-4">Date Joined</th>
+                            <th class="px-6 py-4 text-right">Verification Status</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
+                    <tbody class="divide-y divide-navy/5">
                         @forelse($recentReferrals as $ref)
-                            <tr class="hover:bg-slate-50/80 transition-all group">
-                                <td class="px-8 py-5">
+                            <tr class="hover:bg-navy/5 transition-all group">
+                                <td class="px-6 py-4">
                                     <div class="flex items-center">
                                         <div
-                                            class="h-9 w-9 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-black mr-4 text-[11px] border border-indigo-100 uppercase group-hover:scale-110 transition-transform shadow-inner">
+                                            class="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold mr-3 border border-primary/10 uppercase group-hover:scale-110 transition-transform shadow-inner text-xs">
                                             {{ substr($ref->name, 0, 2) }}
                                         </div>
                                         <div>
                                             <div
-                                                class="font-black text-slate-800 uppercase text-xs italic tracking-tighter">
+                                                class="font-bold text-mainText text-sm">
                                                 {{ $ref->name }}</div>
-                                            <p class="text-[9px] text-slate-400 font-bold uppercase italic mt-0.5">Enrolled
-                                                Partner</p>
+                                            <p class="text-xs text-mutedText mt-0.5">Enrolled Partner</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-8 py-5 text-xs font-bold text-slate-500 italic lowercase tracking-tight">
+                                <td class="px-6 py-4 text-sm font-medium text-mutedText">
                                     {{ $ref->created_at->format('d M, Y') }}
                                 </td>
-                                <td class="px-8 py-5 text-right">
+                                <td class="px-6 py-4 text-right">
                                     @if ($ref->is_active)
                                         <span
-                                            class="inline-flex items-center px-4 py-1.5 rounded-full text-[9px] font-black uppercase italic tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span> Active Member
+                                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span> Active
                                         </span>
                                     @else
                                         <span
-                                            class="inline-flex items-center px-4 py-1.5 rounded-full text-[9px] font-black uppercase italic tracking-widest bg-slate-50 text-slate-400 border border-slate-100">
-                                            Verification Pending
+                                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-navy/5 text-mutedText border border-primary/10">
+                                            Pending
                                         </span>
                                     @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="3" class="px-8 py-20 text-center">
+                                <td colspan="3" class="px-6 py-12 text-center">
                                     <div class="flex flex-col items-center max-w-xs mx-auto">
                                         <div
-                                            class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100">
-                                            <svg class="w-8 h-8 text-slate-200" fill="none" stroke="currentColor"
+                                            class="w-12 h-12 bg-navy/5 rounded-full flex items-center justify-center mb-3 border border-primary/10">
+                                            <svg class="w-6 h-6 text-mutedText/50" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
@@ -261,10 +259,8 @@
                                             </svg>
                                         </div>
                                         <p
-                                            class="text-slate-400 font-black uppercase text-[10px] tracking-widest italic opacity-60">
+                                            class="text-mutedText font-bold text-sm opacity-80">
                                             No referrals found yet</p>
-                                        <p class="text-slate-300 text-[9px] mt-1 font-bold italic tracking-tight">Share your
-                                            business link to build your team!</p>
                                     </div>
                                 </td>
                             </tr>
