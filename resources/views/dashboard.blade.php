@@ -86,6 +86,74 @@
             </div>
         </div>
 
+        {{-- 3.5 Specific Link Generator --}}
+        <div class="bg-white overflow-hidden shadow-sm rounded-[2.5rem] border border-slate-100 p-8 transition-all hover:shadow-md"
+             x-data="{
+                type: 'course',
+                selectedId: '',
+                generatedLink: '',
+                baseUrl: '{{ url('/') }}',
+                refCode: '{{ $user->referral_code }}',
+                generate() {
+                    if(!this.selectedId) return;
+                    let path = this.type === 'course' ? '/course/' : '/coursesp/';
+                    this.generatedLink = this.baseUrl + path + this.selectedId + '?ref=' + this.refCode;
+                },
+                copySpecific() {
+                    navigator.clipboard.writeText(this.generatedLink);
+                    alert('Link Copied!');
+                }
+             }">
+            <h3 class="text-lg font-black text-slate-800 mb-2 uppercase italic tracking-tight">Generate Product Link</h3>
+            <p class="text-slate-500 text-xs font-medium mb-6 italic leading-relaxed">
+                Promote a specific Course or Bundle directly.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Type</label>
+                    <select x-model="type" @change="selectedId = ''; generatedLink = ''"
+                        class="w-full bg-slate-50 border-2 border-slate-100 text-slate-600 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block p-3 font-bold">
+                        <option value="course">Course</option>
+                        <option value="bundle">Bundle</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Select Product</label>
+                    <select x-model="selectedId" @change="generate()"
+                        class="w-full bg-slate-50 border-2 border-slate-100 text-slate-600 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block p-3 font-bold">
+                        <option value="">-- Select --</option>
+                        <template x-if="type === 'course'">
+                            <optgroup label="Courses">
+                                @foreach($courses as $course)
+                                    <option value="{{ $course->id }}">{{ $course->title }}</option>
+                                @endforeach
+                            </optgroup>
+                        </template>
+                        <template x-if="type === 'bundle'">
+                            <optgroup label="Bundles">
+                                @foreach($bundles as $bundle)
+                                    <option value="{{ $bundle->id }}">{{ $bundle->title }}</option>
+                                @endforeach
+                            </optgroup>
+                        </template>
+                    </select>
+                </div>
+            </div>
+
+            <div x-show="generatedLink" class="relative" style="display: none;">
+                <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Your Unique Link</label>
+                <div class="flex gap-2">
+                    <input type="text" readonly :value="generatedLink"
+                        class="w-full bg-indigo-50 border-2 border-indigo-100 text-indigo-700 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block p-3 font-bold select-all">
+                    <button @click="copySpecific()"
+                        class="px-6 py-3 bg-indigo-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200">
+                        Copy
+                    </button>
+                </div>
+            </div>
+        </div>
+
         {{-- 4. Stats Grid (Earnings Data) --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             {{-- Total Earnings --}}

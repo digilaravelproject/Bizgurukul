@@ -24,6 +24,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Onboarding Routes
+    Route::get('/onboarding/referral', [App\Http\Controllers\OnboardingController::class, 'showReferralStep'])->name('onboarding.referral');
+    Route::post('/onboarding/referral', [App\Http\Controllers\OnboardingController::class, 'storeReferrer'])->name('onboarding.referral.store');
+    Route::get('/onboarding/skip', [App\Http\Controllers\OnboardingController::class, 'skip'])->name('onboarding.skip');
 });
 Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')->group(function () {
     Route::get('/profile', [App\Http\Controllers\Student\ProfileController::class, 'index'])->name('profile');

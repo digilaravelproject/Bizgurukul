@@ -96,4 +96,16 @@ Route::middleware(['auth', 'role:Admin'])
             Route::get('/{id}', [KycController::class, 'show'])->name('show');
             Route::post('/{id}/status', [KycController::class, 'updateStatus'])->name('status');
         });
+
+        // 10. Affiliate Management
+        Route::prefix('affiliate')->name('affiliate.')->group(function () {
+            // Rules Management
+            Route::get('/rules', [App\Http\Controllers\Admin\CommissionRuleController::class, 'index'])->name('rules.index');
+            Route::post('/rules/store', [App\Http\Controllers\Admin\CommissionRuleController::class, 'store'])->name('rules.store');
+            Route::delete('/rules/delete/{id}', [App\Http\Controllers\Admin\CommissionRuleController::class, 'destroy'])->name('rules.delete');
+
+            // History / Reports
+            Route::get('/history', [App\Http\Controllers\Admin\AffiliateController::class, 'history'])->name('history');
+            Route::post('/commission/{id}/pay', [App\Http\Controllers\Admin\AffiliateController::class, 'markAsPaid'])->name('commission.pay');
+        });
     });

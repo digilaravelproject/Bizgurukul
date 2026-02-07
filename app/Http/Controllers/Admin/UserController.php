@@ -61,7 +61,14 @@ class UserController extends Controller
                     'joined_at' => $user->created_at->format('d M, Y'),
                     'profile_picture' => $user->profile_picture ? asset('storage/' . $user->profile_picture) : null,
                     'initials' => strtoupper(substr($user->name, 0, 1)),
-                    'referred_by' => $user->referrer ? $user->referrer->name : 'Direct'
+                    'referred_by' => $user->referrer ? $user->referrer->name : 'Direct',
+
+                    // Affiliate Stats
+                    'referral_count' => $user->referrals()->count(),
+                    'total_earnings' => $user->commissions()->where('status', 'paid')->sum('amount'),
+                    'pending_earnings' => $user->commissions()->where('status', 'pending')->sum('amount'),
+                    // Using the accessor we added earlier
+                    'wallet_balance' => $user->wallet_balance,
                 ]
             ]);
         } catch (Exception $e) {

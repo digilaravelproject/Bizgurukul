@@ -15,7 +15,19 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('register') }}" x-data="{ loading: false, showPass: false }" @submit="loading = true" class="space-y-5">
+    <form method="POST" action="{{ route('register') }}"
+          x-data="{
+              loading: false,
+              showPass: false,
+              form: { email: '{{ old('email') }}', email_confirmation: '', password: '', password_confirmation: '' },
+              matchEmail: true,
+              matchPassword: true,
+              checkMatch() {
+                  this.matchEmail = !this.form.email_confirmation || (this.form.email === this.form.email_confirmation);
+                  this.matchPassword = !this.form.password_confirmation || (this.form.password === this.form.password_confirmation);
+              }
+          }"
+          @submit="loading = true" class="space-y-5">
         @csrf
 
         <!-- Grid Layout for Inputs -->
@@ -33,10 +45,29 @@
             <!-- Email -->
             <div>
                 <label class="block text-sm font-medium text-mainText mb-1.5">Email Address</label>
-                <input type="email" name="email" value="{{ old('email') }}" required
+                <input type="email" name="email" x-model="form.email" @input="checkMatch()" required
                     class="w-full px-4 py-3 bg-navy/30 border border-slate-200 rounded-lg text-mainText placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition duration-200"
                     placeholder="you@example.com">
                 <x-input-error :messages="$errors->get('email')" class="mt-1" />
+            </div>
+
+             <!-- Confirm Email -->
+             <div>
+                <label class="block text-sm font-medium text-mainText mb-1.5">Confirm Email</label>
+                <div class="relative">
+                    <input type="email" name="email_confirmation" x-model="form.email_confirmation" @input="checkMatch()" required
+                        class="w-full px-4 py-3 bg-navy/30 border rounded-lg text-mainText placeholder-slate-400 focus:outline-none focus:ring-1 transition duration-200"
+                        :class="matchEmail ? 'border-slate-200 focus:border-primary focus:ring-primary' : 'border-red-500 focus:border-red-500 focus:ring-red-500'"
+                        placeholder="Re-enter email">
+
+                    <div x-show="form.email_confirmation && matchEmail" class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-green-500">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <div x-show="!matchEmail" class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-red-500">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </div>
+                </div>
+                <p x-show="!matchEmail" class="text-xs text-red-500 mt-1">Emails do not match.</p>
             </div>
 
             <!-- Mobile -->
@@ -95,74 +126,13 @@
                     class="w-full px-4 py-3 bg-navy/30 border border-slate-200 rounded-lg text-mainText placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition duration-200">
             </div>
 
-            <!-- Referral Logic (Updated for Real-time Check) -->
-            <div class="md:col-span-2" x-data="{
-                showInput: {{ request()->has('ref') || \Illuminate\Support\Facades\Cookie::get('referral_code') || old('referral_code') ? 'true' : 'false' }},
-                refCode: '{{ request()->get('ref') ?? \Illuminate\Support\Facades\Cookie::get('referral_code') ?? old('referral_code') }}',
-                isReadOnly: {{ request()->has('ref') || \Illuminate\Support\Facades\Cookie::get('referral_code') ? 'true' : 'false' }},
-                message: '',
-                status: '',
-                checkCode() {
-                    if (this.isReadOnly) return;
 
-                    if(this.refCode.length > 0) {
-                        fetch('{{ route('check.referral') }}', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                            body: JSON.stringify({ code: this.refCode })
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            this.status = data.status;
-                            this.message = data.message;
-                        });
-                    } else {
-                        // Reset if empty
-                        this.status = '';
-                        this.message = '';
-                    }
-                }
-            }" x-init="if(isReadOnly) checkCode()">
-
-                <div x-show="!showInput" class="flex justify-end">
-                    <button type="button" @click="showInput = true" class="text-sm font-semibold text-primary hover:text-secondary transition underline">
-                        Have a referral code?
-                    </button>
-                </div>
-
-                <div x-show="showInput" x-transition.opacity class="bg-navy/50 p-4 rounded-lg border border-dashed border-slate-300">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-mutedText mb-1">Referral Code (Optional)</label>
-                    <div class="relative">
-                        <input type="text" name="referral_code" x-model="refCode" :readonly="isReadOnly"
-                            @input.debounce.500ms="checkCode()"
-                            class="w-full px-4 py-3 bg-white border rounded-lg text-mainText placeholder-slate-400 focus:outline-none transition-colors duration-200"
-                            :class="status === 'valid' ? 'border-green-500 focus:ring-1 focus:ring-green-500' : (status === 'invalid' ? 'border-red-500 focus:ring-1 focus:ring-red-500' : 'border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary') "
-                            placeholder="Enter Code">
-
-                        <!-- Status Icons -->
-                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                            <template x-if="status === 'valid'">
-                                <svg class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                            </template>
-                            <template x-if="status === 'invalid'">
-                                <svg class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </template>
-                        </div>
-                    </div>
-                    <p x-text="message" x-show="message" class="text-xs font-bold mt-1.5"
-                        :class="status === 'valid' ? 'text-green-600' : 'text-red-600'"></p>
-                </div>
-            </div>
 
             <!-- Password -->
             <div>
                 <label class="block text-sm font-medium text-mainText mb-1.5">Password</label>
                 <div class="relative">
-                    <input :type="showPass ? 'text' : 'password'" name="password" required
+                    <input :type="showPass ? 'text' : 'password'" name="password" x-model="form.password" @input="checkMatch()" required
                         class="w-full px-4 py-3 bg-navy/30 border border-slate-200 rounded-lg text-mainText placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition duration-200"
                         placeholder="••••••••">
                     <button type="button" @click="showPass = !showPass" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-primary transition focus:outline-none">
@@ -181,9 +151,17 @@
             <!-- Confirm Password -->
             <div>
                 <label class="block text-sm font-medium text-mainText mb-1.5">Confirm Password</label>
-                <input :type="showPass ? 'text' : 'password'" name="password_confirmation" required
-                    class="w-full px-4 py-3 bg-navy/30 border border-slate-200 rounded-lg text-mainText placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition duration-200"
-                    placeholder="••••••••">
+                <div class="relative">
+                    <input :type="showPass ? 'text' : 'password'" name="password_confirmation" x-model="form.password_confirmation" @input="checkMatch()" required
+                        class="w-full px-4 py-3 bg-navy/30 border rounded-lg text-mainText placeholder-slate-400 focus:outline-none focus:ring-1 transition duration-200"
+                        :class="matchPassword ? 'border-slate-200 focus:border-primary focus:ring-primary' : 'border-red-500 focus:border-red-500 focus:ring-red-500'"
+                        placeholder="••••••••">
+
+                    <div x-show="form.password_confirmation && matchPassword" class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-green-500">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                </div>
+                <p x-show="!matchPassword" class="text-xs text-red-500 mt-1">Passwords do not match.</p>
             </div>
 
         </div> <!-- End Grid -->
@@ -191,8 +169,8 @@
         <!-- Submit Button -->
         <div class="mt-6">
             <button type="submit"
-                :disabled="loading"
-                class="w-full flex justify-center items-center py-3.5 px-4 rounded-lg text-white font-bold bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-all duration-300 shadow-lg shadow-primary/20 transform active:scale-[0.98]">
+                :disabled="loading || !matchEmail || !matchPassword"
+                class="w-full flex justify-center items-center py-3.5 px-4 rounded-lg text-white font-bold bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-all duration-300 shadow-lg shadow-primary/20 transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
 
                 <span x-show="!loading">Create Premium Account</span>
 

@@ -119,8 +119,8 @@ class RegisteredUserController extends Controller
             event(new Registered($user));
             Auth::login($user);
 
-            return redirect(route('dashboard', absolute: false))
-                ->with('success', 'Registration successful!');
+            return redirect(route('onboarding.referral', absolute: false))
+                ->with('success', 'Registration successful! Please complete the last step.');
 
         } catch (\Exception $e) {
             DB::rollBack();

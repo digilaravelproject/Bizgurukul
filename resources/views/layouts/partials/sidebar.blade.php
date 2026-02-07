@@ -110,6 +110,28 @@
         </div>
     </div>
 
+    {{-- 5. AFFILIATE SYSTEM (Dropdown) --}}
+    <div class="pt-4" x-data="{ affiliateOpen: {{ request()->routeIs('admin.affiliate.*') ? 'true' : 'false' }} }">
+        <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">Partners</p>
+        <button @click="affiliateOpen = !affiliateOpen"
+            class="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group {{ request()->routeIs('admin.affiliate.*') ? 'bg-navy text-primary' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <span class="font-bold text-sm">Affiliate System</span>
+            </div>
+            <svg class="w-4 h-4 transition-transform duration-300" :class="affiliateOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+
+        <div x-show="affiliateOpen" x-cloak x-transition class="ml-4 pl-4 mt-2 space-y-1 border-l-2 border-primary/20">
+            <a href="{{ route('admin.affiliate.rules.index') }}" class="block py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.affiliate.rules.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                Commission Rules
+            </a>
+            <a href="{{ route('admin.affiliate.history') }}" class="block py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.affiliate.history') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                Payout History
+            </a>
+        </div>
+    </div>
+
     {{-- 5. SETTINGS --}}
     {{-- <div class="pt-4">
         <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">Config</p>

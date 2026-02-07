@@ -103,4 +103,30 @@ class User extends Authenticatable
     {
         return $this->hasOne(BankDetail::class);
     }
+
+    public function walletTransactions(): HasMany
+    {
+        return $this->hasMany(WalletTransaction::class);
+    }
+
+    public function referralVisits(): HasMany
+    {
+        return $this->hasMany(ReferralVisit::class, 'affiliate_id');
+    }
+
+    public function commissionRules(): HasMany
+    {
+        return $this->hasMany(CommissionRule::class, 'affiliate_id');
+    }
+
+    public function getWalletBalanceAttribute(): float
+    {
+        // Ideally cache this or have a separate balance column updated via transactions
+        // For now, summing transactions is safest for accuracy until scale requires optimization
+        // But wait, the wallet_transactions table has balance_after.
+        // So we can just get the last transaction's balance_after.
+
+        $lastTransaction = $this->walletTransactions()->latest('id')->first();
+        return $lastTransaction ? $lastTransaction->balance_after : 0.00;
+    }
 }

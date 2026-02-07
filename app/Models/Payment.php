@@ -13,6 +13,7 @@ class Payment extends Model
     protected $fillable = [
         'user_id',
         'course_id',
+        'bundle_id',
         'razorpay_order_id',
         'razorpay_payment_id',
         'amount',
@@ -33,5 +34,10 @@ class Payment extends Model
     public function course()
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function bundle()
+    {
+        return $this->belongsTo(Bundle::class);
     }
 }

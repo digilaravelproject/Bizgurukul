@@ -57,7 +57,15 @@
                 </svg>
             </span>
             <input type="text" x-model.debounce.300ms="search" placeholder="Search name, email, mobile..."
-                class="w-full pl-12 pr-4 py-4 bg-white border border-primary/10 text-mainText placeholder-mutedText/40 rounded-2xl focus:ring-2 focus:ring-primary/5 focus:border-primary outline-none transition shadow-sm font-bold text-sm">
+                class="w-full pl-12 pr-10 py-4 bg-white border border-primary/10 text-mainText placeholder-mutedText/40 rounded-2xl focus:ring-2 focus:ring-primary/5 focus:border-primary outline-none transition shadow-sm font-bold text-sm">
+
+            <button x-show="search.length > 0" @click="search = ''; fetchUsers()"
+                class="absolute inset-y-0 right-0 flex items-center pr-4 text-mutedText hover:text-secondary transition"
+                style="display: none;">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
         </div>
 
         {{-- 3. CONTENT AREA --}}
@@ -433,6 +441,25 @@
                                 <p class="text-xs font-black text-mainText" x-text="viewData.referral_code"></p>
                             </div>
                         </div>
+
+                         {{-- Affiliate Stats Section --}}
+                         <div class="mt-6 pt-6 border-t border-primary/5">
+                            <h3 class="text-sm font-black text-mainText mb-4">Affiliate Performance</h3>
+                            <div class="grid grid-cols-3 gap-4 text-center">
+                                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                                    <p class="text-[9px] font-black uppercase tracking-widest text-indigo-400 mb-1">Referrals</p>
+                                    <p class="text-xl font-black text-indigo-700" x-text="viewData.referral_count"></p>
+                                </div>
+                                <div class="bg-green-50 p-4 rounded-xl border border-green-100">
+                                    <p class="text-[9px] font-black uppercase tracking-widest text-green-400 mb-1">Total Earned</p>
+                                    <p class="text-lg font-black text-green-700">₹<span x-text="viewData.total_earnings"></span></p>
+                                </div>
+                                <div class="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                                    <p class="text-[9px] font-black uppercase tracking-widest text-orange-400 mb-1">Pending</p>
+                                    <p class="text-lg font-black text-orange-700">₹<span x-text="viewData.pending_earnings"></span></p>
+                                </div>
+                            </div>
+                         </div>
                     </div>
                 </div>
             </div>
@@ -503,7 +530,11 @@
                     try {
                         let targetUrl = new URL(url.includes('http') ? url : window.location.origin + url);
                         targetUrl.searchParams.set('trash', this.viewTrash);
-                        if (this.search) targetUrl.searchParams.set('search', this.search);
+                        if (this.search) {
+                            targetUrl.searchParams.set('search', this.search);
+                        }
+                        // Cache bursting
+                        targetUrl.searchParams.set('_t', new Date().getTime());
 
                         let response = await fetch(targetUrl, {
                             headers: {

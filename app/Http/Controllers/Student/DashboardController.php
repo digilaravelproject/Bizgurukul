@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Log;
 use App\Models\AffiliateCommission;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\Course;
+use App\Models\Bundle;
 use Exception;
 
 class DashboardController extends Controller
@@ -42,7 +44,12 @@ class DashboardController extends Controller
             $referralLink = $user->referral_code
                 ? route('register', ['ref' => $user->referral_code])
                 : 'Referral code not generated. Please contact support.';
+
             $commissionAmount = Setting::get('referral_commission_amount', 0);
+
+            // Fetch Products for Link Generator
+            $courses = Course::where('is_published', true)->select('id', 'title')->get();
+            $bundles = Bundle::where('is_published', true)->select('id', 'title')->get();
 
             return view('dashboard', compact(
                 'totalEarnings',
@@ -51,7 +58,9 @@ class DashboardController extends Controller
                 'recentReferrals',
                 'referralLink',
                 'commissionAmount',
-                'user'
+                'user',
+                'courses',
+                'bundles'
             ));
 
         } catch (Exception $e) {
