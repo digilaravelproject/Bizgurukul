@@ -6,152 +6,141 @@
         {{-- Main Grid Layout --}}
         <div class="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
 
-            {{-- LEFT COLUMN: Video Player & Details (Span 8/12 = 66% width) --}}
+            {{-- LEFT COLUMN: Video Player & Details --}}
             <div class="lg:col-span-8 space-y-6">
+
+                {{-- Tab Navigation (Design as per your image) --}}
+                <div class="flex items-center gap-2 mb-4">
+                    <button class="px-6 py-2 bg-[#ff6b35] text-white font-bold rounded-md">Course</button>
+                    <button
+                        class="px-6 py-2 bg-white text-slate-800 font-bold rounded-md border border-slate-200">Session</button>
+                </div>
 
                 {{-- 1. Video Player Container --}}
                 <div
-                    class="relative w-full rounded-[2rem] overflow-hidden shadow-2xl bg-black border border-slate-700/50 group aspect-video">
+                    class="relative w-full rounded-lg overflow-hidden shadow-2xl bg-black border border-slate-700/50 aspect-video">
                     <video id="courseVideo" src="{{ $currentLesson->lesson_file_url }}" class="w-full h-full object-contain"
-                        controls autoplay controlsList="nodownload" data-lesson="{{ $currentLesson->id }}"
+                        controls playsinline controlsList="nodownload" data-lesson="{{ $currentLesson->id }}"
                         data-start="{{ $progress->last_watched_second ?? 0 }}"
                         data-completed="{{ $progress->is_completed ?? 0 }}">
                     </video>
                 </div>
 
                 {{-- 2. Lesson Info Card --}}
-                <div class="bg-slate-800/40 backdrop-blur-md rounded-[2rem] p-6 border border-slate-700/30">
-                    <div class="flex items-start justify-between gap-4">
-                        <div>
-                            <div class="flex items-center gap-3 mb-2">
-                                <span
-                                    class="px-3 py-1 bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-indigo-500/30">
-                                    Lesson {{ $loop->iteration ?? '01' }}
-                                </span>
-                                <span class="text-slate-400 text-[11px] font-bold uppercase tracking-wider">
-                                    {{ $course->title }}
-                                </span>
-                            </div>
-                            <h1 class="text-2xl md:text-3xl font-black italic uppercase tracking-tight text-white">
-                                {{ $currentLesson->title }}
-                            </h1>
-                        </div>
+                <div class="bg-slate-800/40 backdrop-blur-md rounded-xl p-6 border border-slate-700/30">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="px-3 py-1 bg-indigo-500 text-white text-[10px] font-black uppercase rounded-full">
+                            Lesson {{ $loop->iteration ?? '01' }}
+                        </span>
+                        <span class="text-slate-400 text-[11px] font-bold uppercase">{{ $course->title }}</span>
                     </div>
-                    <div class="mt-4 pt-4 border-t border-slate-700/50">
-                        <p class="text-slate-300 text-sm leading-relaxed font-medium">
-                            {{ $currentLesson->description }}
-                        </p>
-                    </div>
+                    <h1 class="text-2xl font-black italic uppercase text-white">{{ $currentLesson->title }}</h1>
+                    <p class="mt-4 text-slate-300 text-sm leading-relaxed">{{ $currentLesson->description }}</p>
                 </div>
             </div>
 
-            {{-- RIGHT COLUMN: Playlist (Span 4/12 = 33% width) --}}
+            {{-- RIGHT COLUMN: Playlist --}}
             <div class="lg:col-span-4">
-
-                {{-- Sticky Sidebar Container --}}
                 <div
-                    class="bg-slate-900 rounded-[2rem] border border-slate-800 overflow-hidden shadow-xl flex flex-col h-[calc(100vh-3rem)] sticky top-6">
+                    class="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-xl flex flex-col h-[calc(100vh-3rem)] sticky top-6">
 
-                    {{-- Sidebar Header --}}
-                    <div class="p-6 bg-slate-900 border-b border-slate-800 z-10">
-                        <h3 class="text-sm font-black text-white italic tracking-widest uppercase">
-                            Course Curriculum
+                    {{-- Playlist Header --}}
+                    <div class="p-5 bg-[#fff0e6] border-l-4 border-[#ff6b35]">
+                        <h3 class="text-lg font-bold text-slate-800 leading-tight">
+                            {{ $course->title }}
                         </h3>
-                        <div class="flex items-center justify-between mt-2">
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                {{ $course->lessons->count() }} Lessons
-                            </p>
-                            <div class="h-1 w-20 bg-slate-800 rounded-full overflow-hidden">
-                                <div class="h-full bg-indigo-500 w-1/3"></div>
-                            </div>
-                        </div>
                     </div>
 
                     {{-- Scrollable List --}}
-                    <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
+                    <div class="flex-1 overflow-y-auto custom-scrollbar">
                         @foreach ($course->lessons as $lesson)
                             <a href="{{ route('student.watch', [$course->id, $lesson->id]) }}"
-                                class="relative group flex items-center gap-4 p-4 rounded-xl transition-all duration-300 border
-                           {{ $currentLesson->id == $lesson->id
-                               ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 border-indigo-500 shadow-lg shadow-indigo-900/50 translate-x-1'
-                               : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800 hover:border-slate-600' }}">
+                                class="flex items-center gap-4 p-4 border-b border-slate-100 transition-all
+                                {{ $currentLesson->id == $lesson->id ? 'bg-slate-50' : 'bg-white hover:bg-slate-50' }}">
 
-                                <div class="flex-shrink-0">
-                                    @if ($currentLesson->id == $lesson->id)
+                                <div class="flex-shrink-0 flex items-center gap-3">
+                                    {{-- Lesson Number --}}
+                                    <span class="text-slate-500 font-medium text-sm w-4">{{ $loop->iteration }}.</span>
+
+                                    {{-- Play Icon Circle with CSS Triangle --}}
+                                    <div
+                                        class="relative w-8 h-8 rounded-full flex items-center justify-center border-2 {{ $currentLesson->id == $lesson->id ? 'border-[#ff6b35] bg-[#ff6b35]' : 'border-[#ff6b35] bg-white' }}">
                                         <div
-                                            class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white text-[10px] font-black italic">
-                                            <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                                            class="play-triangle {{ $currentLesson->id == $lesson->id ? 'play-white' : 'play-orange' }}">
                                         </div>
-                                    @elseif($lesson->is_completed)
-                                        <div
-                                            class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 border border-emerald-500/30">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                                    d="M5 13l4 4L19 7"></path>
-                                            </svg>
-                                        </div>
-                                    @else
-                                        <div
-                                            class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-400">
-                                            {{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}
-                                        </div>
-                                    @endif
+                                    </div>
                                 </div>
 
                                 <div class="flex-1 min-w-0">
-                                    <h4
-                                        class="text-[11px] font-black uppercase italic tracking-tight truncate
-                                    {{ $currentLesson->id == $lesson->id ? 'text-white' : 'text-slate-300 group-hover:text-white' }}">
+                                    <h4 class="text-sm font-semibold text-slate-700 truncate">
                                         {{ $lesson->title }}
                                     </h4>
-                                    <span
-                                        class="text-[9px] font-bold uppercase tracking-wider block mt-0.5
-                                    {{ $currentLesson->id == $lesson->id ? 'text-indigo-200' : 'text-slate-500' }}">
-                                        {{ $lesson->type }}
-                                    </span>
                                 </div>
+
+                                {{-- Completion Checkmark --}}
+                                @php
+                                    $isCompleted = false;
+                                    if (isset($lesson->progress) && $lesson->progress->is_completed) {
+                                        $isCompleted = true;
+                                    }
+                                @endphp
+
+                                @if ($isCompleted)
+                                    <div class="text-emerald-500 flex-shrink-0">
+                                        <span class="text-xl">✓</span>
+                                    </div>
+                                @endif
                             </a>
                         @endforeach
                     </div>
-
-                    <div
-                        class="h-6 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none absolute bottom-0 w-full">
-                    </div>
                 </div>
             </div>
-
         </div>
     </div>
 
     <style>
         .custom-scrollbar::-webkit-scrollbar {
-            width: 5px;
+            width: 6px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
+            background: #f1f1f1;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 20px;
+            background: #ccc;
+            border-radius: 10px;
         }
 
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #475569;
+        /* CSS Play Triangle */
+        .play-triangle {
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 5px 0 5px 8px;
+            margin-left: 2px;
+        }
+
+        .play-orange {
+            border-color: transparent transparent transparent #ff6b35;
+        }
+
+        .play-white {
+            border-color: transparent transparent transparent white;
         }
     </style>
 
     <script>
         const video = document.getElementById('courseVideo');
         const lessonId = video.dataset.lesson;
-        const startPos = video.dataset.start;
-        // 1 or 0 handling
+        const startPos = parseFloat(video.dataset.start);
         let isAlreadyCompleted = parseInt(video.dataset.completed) === 1;
 
+        // Resume logic (without autoplay)
         video.onloadedmetadata = function() {
-            if (startPos > 0) video.currentTime = startPos;
+            if (startPos > 0) {
+                video.currentTime = startPos;
+            }
         };
 
         let lastSaved = 0;
