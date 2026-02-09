@@ -23,7 +23,9 @@ Route::middleware(['auth', 'role:Admin'])
     ->group(function () {
 
         // 1. Dashboard & Settings
-        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+        // 1. Dashboard & Settings
+        Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/stats', [App\Http\Controllers\Admin\DashboardController::class, 'stats'])->name('dashboard.stats');
         Route::post('/settings/update', [AdminController::class, 'updateSettings'])->name('settings.update');
 
         // 2. Category Management

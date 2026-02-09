@@ -2,79 +2,98 @@
 @section('title', 'KYC Requests')
 
 @section('content')
+    {{-- SweetAlert loading handle karne ke liye --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <div x-data="kycManager()" x-init="init()" class="container-fluid px-4 py-4 font-sans">
+    <div x-data="kycManager()" class="space-y-8 font-sans text-mainText">
 
-        <h2 class="text-2xl font-bold text-slate-800 mb-6">KYC Verifications</h2>
-
-        {{-- Request Table --}}
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <table class="w-full text-left text-sm text-slate-600">
-                <thead class="bg-slate-50 uppercase font-bold text-slate-500 border-b">
-                    <tr>
-                        <th class="px-6 py-4">User</th>
-                        <th class="px-6 py-4">Submitted Date</th>
-                        <th class="px-6 py-4">Status</th>
-                        <th class="px-6 py-4 text-right">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @foreach($kycUsers as $user)
-                        <tr class="hover:bg-slate-50 transition">
-                            <td class="px-6 py-4">
-                                <p class="font-bold text-slate-800">{{ $user->name }}</p>
-                                <p class="text-xs text-slate-500">{{ $user->email }}</p>
-                            </td>
-                            <td class="px-6 py-4">{{ $user->kyc->updated_at->format('d M, Y') }}</td>
-                            <td class="px-6 py-4">
-                                <span class="px-2 py-1 rounded text-xs font-bold uppercase
-                                    {{ $user->kyc->status == 'pending' ? 'bg-amber-100 text-amber-700' : '' }}
-                                    {{ $user->kyc->status == 'verified' ? 'bg-green-100 text-green-700' : '' }}
-                                    {{ $user->kyc->status == 'rejected' ? 'bg-red-100 text-red-700' : '' }}">
-                                    {{ $user->kyc->status }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-right">
-                                <button @click="openModal({{ $user->id }})"
-                                    class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 transition shadow-sm text-xs">
-                                    Review Details
-                                </button>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-            <div class="p-4">{{ $kycUsers->links() }}</div>
+        {{-- Header Section --}}
+        <div class="flex flex-col md:flex-row justify-between items-end gap-4">
+            <div>
+                <h1 class="text-3xl font-extrabold tracking-tight text-mainText">KYC Verifications</h1>
+                <p class="text-mutedText mt-1 text-sm font-medium">Review and approve affiliate identity documents.</p>
+            </div>
         </div>
 
-        {{-- IMPROVED REVIEW MODAL --}}
-        <div x-show="showModal" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto" x-transition.opacity>
-            <div class="fixed inset-0 bg-black/80 backdrop-blur-sm"></div>
-            <div class="flex min-h-full items-center justify-center p-4">
+        {{-- Request Table --}}
+        <div class="bg-surface rounded-2xl shadow-sm border border-primary/10 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-primary/5 text-[11px] uppercase font-black text-primary tracking-widest border-b border-primary/5">
+                        <tr>
+                            <th class="px-6 py-5">User Details</th>
+                            <th class="px-6 py-5">Submitted Date</th>
+                            <th class="px-6 py-5">Status</th>
+                            <th class="px-6 py-5 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-primary/5">
+                        @foreach($kycUsers as $user)
+                            <tr class="hover:bg-primary/5 transition-colors group">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-navy/30 flex items-center justify-center text-primary font-black border border-primary/10">
+                                            {{ substr($user->name, 0, 1) }}
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-mainText">{{ $user->name }}</p>
+                                            <p class="text-[10px] text-mutedText font-medium tracking-tight">{{ $user->email }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 font-bold text-mutedText">
+                                    {{ $user->kyc->updated_at->format('d M, Y') }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border
+                                        {{ $user->kyc->status == 'pending' ? 'bg-amber-100 text-amber-700 border-amber-200' : '' }}
+                                        {{ $user->kyc->status == 'verified' ? 'bg-primary/10 text-primary border-primary/20' : '' }}
+                                        {{ $user->kyc->status == 'rejected' ? 'bg-secondary/10 text-secondary border-secondary/20' : '' }}">
+                                        {{ $user->kyc->status }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button @click="openModal({{ $user->id }})"
+                                        class="bg-surface border border-primary/20 text-primary px-4 py-2 rounded-xl font-black hover:bg-primary hover:text-white transition-all shadow-sm text-[10px] uppercase tracking-widest">
+                                        Review Details
+                                    </button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-4 bg-primary/5 border-t border-primary/5">
+                {{ $kycUsers->links() }}
+            </div>
+        </div>
 
+        {{-- MODERN REVIEW MODAL --}}
+        <div x-show="showModal"
+             style="display: none;"
+             class="fixed inset-0 z-50 overflow-y-auto"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100">
+
+            <div class="fixed inset-0 bg-navy/80 backdrop-blur-md"></div>
+
+            <div class="flex min-h-full items-center justify-center p-4">
                 {{-- Modal Container --}}
                 <div @click.away="showModal = false"
-                    class="bg-white w-full max-w-6xl h-[85vh] rounded-2xl flex flex-col md:flex-row overflow-hidden shadow-2xl relative">
+                    class="bg-surface w-full max-w-6xl h-[85vh] rounded-3xl flex flex-col md:flex-row overflow-hidden shadow-2xl relative border border-primary/10">
 
                     {{-- Close Button --}}
                     <button @click="showModal = false"
-                        class="absolute top-4 right-4 z-10 bg-white/20 hover:bg-white/40 text-slate-800 md:text-white p-2 rounded-full transition">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                            </path>
-                        </svg>
+                        class="absolute top-4 right-4 z-10 bg-white/10 hover:bg-secondary text-mainText md:text-white p-2 rounded-full transition-all">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
 
-                    {{-- LEFT SIDE: Document Preview (Controlled Size) --}}
-                    <div
-                        class="w-full md:w-1/2 bg-slate-900 flex flex-col items-center justify-center relative p-6 border-r border-slate-700">
-                        <h4 class="absolute top-4 left-4 text-white/50 text-xs font-bold uppercase tracking-widest">Document
-                            Preview</h4>
+                    {{-- LEFT SIDE: Document Preview --}}
+                    <div class="w-full md:w-1/2 bg-black flex flex-col items-center justify-center relative p-8 border-r border-primary/5">
+                        <h4 class="absolute top-6 left-6 text-primary text-[10px] font-black uppercase tracking-[2px]">Document Preview</h4>
 
-                        {{-- Container for Image/PDF with Max Height --}}
-                        <div
-                            class="w-full h-full max-h-[500px] flex items-center justify-center bg-black/30 rounded-lg overflow-hidden border border-white/10">
+                        <div class="w-full h-full max-h-[500px] flex items-center justify-center rounded-2xl overflow-hidden border border-white/5 shadow-2xl bg-navy/20">
                             <template x-if="data.doc_type === 'pdf'">
                                 <iframe :src="data.doc_url" class="w-full h-full border-0"></iframe>
                             </template>
@@ -83,143 +102,105 @@
                             </template>
                         </div>
 
-                        {{-- Open Original Button --}}
                         <a :href="data.doc_url" target="_blank"
-                            class="mt-4 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 transition shadow-lg">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                            </svg>
-                            View Original / Zoom
+                            class="mt-6 brand-gradient text-white px-6 py-3 rounded-full text-xs font-black flex items-center gap-2 transition-all shadow-xl shadow-primary/20 uppercase tracking-widest">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                            View Full Resolution
                         </a>
                     </div>
 
                     {{-- RIGHT SIDE: Data Verification --}}
-                    <div class="w-full md:w-1/2 flex flex-col bg-slate-50">
-
-                        {{-- Header --}}
-                        <div class="p-6 border-b border-slate-200 bg-white">
-                            <h3 class="text-xl font-bold text-slate-800">Verification Details</h3>
-                            <p class="text-sm text-slate-500">Compare registered details with submitted document.</p>
+                    <div class="w-full md:w-1/2 flex flex-col bg-surface">
+                        <div class="p-8 border-b border-primary/5">
+                            <h3 class="text-2xl font-black text-mainText tracking-tight">Identity Check</h3>
+                            <p class="text-sm text-mutedText font-medium">Cross-verify profile info with the document below.</p>
                         </div>
 
-                        {{-- Comparison Grid --}}
-                        <div class="p-6 flex-1 overflow-y-auto">
-                            <div class="grid grid-cols-2 gap-6">
-
+                        <div class="p-8 flex-1 overflow-y-auto space-y-8">
+                            <div class="grid grid-cols-2 gap-8">
                                 {{-- SYSTEM DATA --}}
-                                <div class="col-span-1 space-y-4">
-                                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wide border-b pb-1">
-                                        System Profile Data</h4>
+                                <div class="space-y-5">
+                                    <h4 class="text-[10px] font-black text-mutedText uppercase tracking-widest border-b border-primary/5 pb-2">Internal Profile</h4>
                                     <div>
-                                        <p class="text-xs text-slate-500">Registered Name</p>
-                                        <p class="text-base font-bold text-slate-800" x-text="data.user_name"></p>
+                                        <p class="text-[10px] text-mutedText uppercase font-bold mb-1">Registered Name</p>
+                                        <p class="text-base font-black text-mainText" x-text="data.user_name"></p>
                                     </div>
                                     <div>
-                                        <p class="text-xs text-slate-500">Date of Birth</p>
-                                        <p class="text-base font-bold text-slate-800" x-text="data.user_dob"></p>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs text-slate-500">Email</p>
-                                        <p class="text-sm font-medium text-slate-800" x-text="data.user_email"></p>
+                                        <p class="text-[10px] text-mutedText uppercase font-bold mb-1">System DOB</p>
+                                        <p class="text-sm font-bold text-mainText" x-text="data.user_dob"></p>
                                     </div>
                                 </div>
 
                                 {{-- SUBMITTED KYC DATA --}}
-                                <div class="col-span-1 space-y-4">
-                                    <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-wide border-b pb-1">
-                                        Submitted KYC Data</h4>
+                                <div class="space-y-5">
+                                    <h4 class="text-[10px] font-black text-primary uppercase tracking-widest border-b border-primary/5 pb-2">Submitted Data</h4>
                                     <div>
-                                        <p class="text-xs text-slate-500">Name on PAN/Doc</p>
-                                        <p class="text-base font-bold text-indigo-700" x-text="data.pan_name"></p>
+                                        <p class="text-[10px] text-primary uppercase font-bold mb-1">Name on Document</p>
+                                        <p class="text-base font-black text-primary" x-text="data.pan_name"></p>
                                     </div>
                                     <div>
-                                        <p class="text-xs text-slate-500">Document Type</p>
-                                        <p class="text-sm font-medium text-slate-800 uppercase" x-text="data.doc_type"></p>
+                                        <p class="text-[10px] text-primary uppercase font-bold mb-1">ID Type</p>
+                                        <p class="text-sm font-bold text-mainText uppercase" x-text="data.doc_type"></p>
                                     </div>
                                 </div>
-
                             </div>
 
                             {{-- Name Mismatch Alert --}}
                             <div x-show="data.user_name && data.pan_name && data.user_name.toLowerCase() !== data.pan_name.toLowerCase()"
-                                class="mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
-                                <div class="flex">
-                                    <div class="flex-shrink-0">
-                                        <svg class="h-5 w-5 text-yellow-400" fill="none" viewBox="0 0 24 24"
-                                            stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                        </svg>
-                                    </div>
-                                    <div class="ml-3">
-                                        <p class="text-sm text-yellow-700 font-bold">Name Mismatch Detected</p>
-                                        <p class="text-xs text-yellow-600">Profile name and document name differ. Verify
-                                            carefully.</p>
-                                    </div>
+                                class="bg-secondary/5 border border-secondary/20 p-5 rounded-2xl flex gap-4 animate-fade-in-down">
+                                <div class="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
+                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-secondary font-black uppercase tracking-tight">Name Mismatch Detected</p>
+                                    <p class="text-xs text-mutedText font-medium mt-1">The name on the document does not match the system profile. Please check for spelling errors.</p>
                                 </div>
                             </div>
                         </div>
 
                         {{-- Actions Footer --}}
-                        <div class="p-6 bg-white border-t border-slate-200">
-
-                            {{-- IF PENDING --}}
+                        <div class="p-8 bg-navy/10 border-t border-primary/5">
                             <template x-if="data.kyc_status === 'pending'">
                                 <div class="space-y-4">
-                                    <div class="flex gap-4">
-                                        {{-- Approve Button --}}
+                                    <div class="flex gap-4" x-show="!showReject">
                                         <button @click="updateStatus('verified')"
-                                            class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold shadow-md transition flex justify-center items-center gap-2">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M5 13l4 4L19 7"></path>
-                                            </svg>
-                                            Verify & Approve
+                                            class="flex-1 brand-gradient text-white py-4 rounded-2xl font-black shadow-xl shadow-primary/20 hover:opacity-90 transition-all flex justify-center items-center gap-2 uppercase tracking-widest text-xs">
+                                            Approve & Verify
                                         </button>
-
-                                        {{-- Reject Button Toggle --}}
-                                        <button @click="showReject = !showReject" x-show="!showReject"
-                                            class="flex-1 bg-white border-2 border-red-100 text-red-600 hover:bg-red-50 py-3 rounded-lg font-bold transition">
+                                        <button @click="showReject = true"
+                                            class="flex-1 bg-surface border border-secondary/30 text-secondary py-4 rounded-2xl font-black hover:bg-secondary/5 transition-all uppercase tracking-widest text-xs">
                                             Reject
                                         </button>
                                     </div>
 
                                     {{-- Reject Input --}}
-                                    <div x-show="showReject"
-                                        class="bg-red-50 p-4 rounded-lg border border-red-100 animate-fade-in-down">
-                                        <label class="text-xs font-bold text-red-700 uppercase mb-1 block">Reason for
-                                            Rejection</label>
+                                    <div x-show="showReject" x-transition class="bg-surface p-6 rounded-2xl border border-secondary/20 shadow-inner">
+                                        <label class="text-[10px] font-black text-secondary uppercase mb-2 block tracking-widest">Rejection Reason</label>
                                         <textarea x-model="rejectReason"
-                                            class="w-full border-red-200 rounded-md text-sm p-2 focus:ring-red-500 mb-3"
-                                            rows="2" placeholder="e.g. Image blurry, Name mismatch..."></textarea>
-                                        <div class="flex justify-end gap-2">
-                                            <button @click="showReject = false"
-                                                class="px-3 py-1.5 bg-white text-slate-600 text-xs font-bold rounded border border-slate-200">Cancel</button>
-                                            <button @click="updateStatus('rejected')"
-                                                class="px-3 py-1.5 bg-red-600 text-white text-xs font-bold rounded hover:bg-red-700 shadow-sm">Confirm
-                                                Reject</button>
+                                            class="w-full border-primary/10 bg-navy/5 rounded-xl text-sm p-4 focus:ring-secondary focus:border-secondary mb-4 font-medium"
+                                            rows="3" placeholder="Explain why the KYC was rejected..."></textarea>
+                                        <div class="flex justify-end gap-3">
+                                            <button @click="showReject = false" class="px-5 py-2 text-xs font-bold text-mutedText uppercase">Cancel</button>
+                                            <button @click="updateStatus('rejected')" class="px-6 py-2 bg-secondary text-white text-xs font-black rounded-xl shadow-lg shadow-secondary/20 uppercase tracking-widest">Confirm Rejection</button>
                                         </div>
                                     </div>
                                 </div>
                             </template>
 
-                            {{-- IF ALREADY PROCESSED --}}
                             <template x-if="data.kyc_status !== 'pending'">
-                                <div class="text-center">
-                                    <p class="text-sm text-slate-500 mb-2">Current Status</p>
-                                    <span class="px-6 py-2 rounded-full font-bold text-sm uppercase tracking-wide border"
-                                        :class="data.kyc_status === 'verified' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200'"
+                                <div class="text-center p-4 rounded-2xl border border-primary/5 bg-surface shadow-sm">
+                                    <p class="text-[10px] text-mutedText font-black uppercase tracking-[2px] mb-3">Verification Complete</p>
+                                    <span class="px-8 py-2 rounded-full font-black text-xs uppercase tracking-[3px] border"
+                                        :class="data.kyc_status === 'verified' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-secondary/10 text-secondary border-secondary/20'"
                                         x-text="data.kyc_status">
                                     </span>
-                                    {{-- Allow Re-action --}}
                                     <button @click="data.kyc_status = 'pending'"
-                                        class="block mx-auto mt-4 text-xs text-indigo-600 hover:underline">Change
-                                        Status</button>
+                                        class="block mx-auto mt-6 text-[10px] font-black text-primary hover:underline uppercase tracking-widest">
+                                        Reset Status
+                                    </button>
                                 </div>
                             </template>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -234,12 +215,10 @@
                 data: {},
                 rejectReason: '',
 
-                init() { },
-
                 openModal(id) {
                     this.rejectReason = '';
                     this.showReject = false;
-                    this.data = {}; // clear old data
+                    this.data = {};
 
                     axios.get(`/admin/kyc-requests/${id}`).then(res => {
                         this.data = res.data.data;
@@ -251,24 +230,23 @@
 
                 updateStatus(status) {
                     if (status == 'rejected' && !this.rejectReason) {
-                        return Swal.fire('Missing Information', 'Please provide a reason for rejection.', 'warning');
+                        return Swal.fire('Reason Required', 'Please provide a reason for rejection.', 'warning');
                     }
 
                     axios.post(`/admin/kyc-requests/${this.data.id}/status`, {
                         status: status,
                         note: this.rejectReason
                     })
-                        .then(res => {
-                            this.showModal = false;
-                            Swal.fire({
-                                title: status === 'verified' ? 'Verified!' : 'Rejected!',
-                                text: res.data.message,
-                                icon: 'success',
-                                timer: 2000,
-                                showConfirmButton: false
-                            }).then(() => location.reload());
-                        })
-                        .catch(err => Swal.fire('Error', 'Something went wrong', 'error'));
+                    .then(res => {
+                        this.showModal = false;
+                        Swal.fire({
+                            title: status === 'verified' ? 'Approved!' : 'Rejected!',
+                            text: res.data.message,
+                            icon: 'success',
+                            confirmButtonColor: '#F7941D'
+                        }).then(() => location.reload());
+                    })
+                    .catch(err => Swal.fire('Error', 'Something went wrong', 'error'));
                 }
             }
         }

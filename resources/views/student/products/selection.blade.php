@@ -1,130 +1,159 @@
 @extends('layouts.user.app')
 
 @section('content')
-<div class="space-y-8" x-data="{ referralCode: '{{ $referrer->referral_code ?? '' }}', message: '', status: '' }">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+    /* Custom Utility for glass effect using your variables */
+    .glass-card {
+        background: rgb(var(--color-bg-card) / 0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgb(var(--color-primary) / 0.2);
+    }
+    [x-cloak] { display: none !important; }
+</style>
 
-    {{-- Welcome Header --}}
-    <div class="relative overflow-hidden rounded-3xl bg-navy p-8 text-center text-white border border-primary/20 shadow-2xl">
-        <div class="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-primary/10 blur-3xl"></div>
-        <div class="absolute bottom-0 left-0 -ml-16 -mb-16 h-64 w-64 rounded-full bg-secondary/10 blur-3xl"></div>
+<div class="space-y-10 pb-20 max-w-7xl mx-auto px-4" x-data="productSelection()">
 
-        <h1 class="relative text-3xl font-extrabold tracking-tight sm:text-4xl font-main">
-            Welcome, <span class="text-primary">{{ Auth::user()->name }}</span>
-        </h1>
-        <p class="relative mt-2 text-lg text-mutedText max-w-2xl mx-auto">
-            Select a learning path to begin your journey. Unlock premium skills and earning potential.
-        </p>
-    </div>
+    {{-- 1. Hero & Referral Spotlight Section --}}
+    <div class="relative overflow-hidden rounded-[2rem] bg-surface border border-primary/10 shadow-2xl shadow-primary/5">
+        {{-- Decorative Gradient Background --}}
+        <div class="absolute top-0 right-0 w-full h-full opacity-5 pointer-events-none brand-gradient"></div>
 
-    {{-- Referral Section --}}
-    <div class="bg-customWhite rounded-2xl shadow-lg border border-primary/5 p-6 md:p-8">
-        <div class="max-w-md mx-auto">
-            <h3 class="text-sm font-bold text-mutedText uppercase tracking-widest mb-4 text-center">Have a Referral Code?</h3>
-
-            <div class="relative flex items-center">
-                <input type="text" x-model="referralCode"
-                    placeholder="Enter Code (e.g. ABC12345)"
-                    class="w-full pl-5 pr-20 py-3 rounded-xl bg-navy/5 border border-primary/10 text-mainText font-bold focus:ring-2 focus:ring-primary focus:border-transparent transition-all uppercase placeholder-mutedText/50">
-
-                <button @click="applyReferral()"
-                    class="absolute right-2 top-1.5 bottom-1.5 px-4 bg-primary hover:bg-secondary text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors shadow-lg">
-                    Apply
-                </button>
-            </div>
-
-            {{-- Status Message --}}
-            <div x-show="message" x-transition class="mt-3 text-center text-xs font-bold"
-                :class="status === 'success' ? 'text-emerald-500' : 'text-red-500'">
-                <span x-text="message"></span>
-            </div>
-
-            @if($referrer)
-                <div class="mt-3 text-center text-xs font-bold text-emerald-500 bg-emerald-500/10 py-2 rounded-lg border border-emerald-500/20">
-                    Applied: {{ $referrer->name }} ({{ $referrer->referral_code }})
+        <div class="relative z-10 p-8 md:p-12 flex flex-col lg:flex-row lg:items-center justify-between gap-10">
+            {{-- Text Content --}}
+            <div class="max-w-2xl">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary mb-4">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                    </span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest">Premium Learning</span>
                 </div>
-            @endif
+                <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight text-mainText mb-4">
+                    Unlock Your <span class="text-primary italic">Potential</span>
+                </h1>
+                <p class="text-base text-mutedText font-medium leading-relaxed">
+                    Welcome back, <span class="text-mainText font-bold underline decoration-primary/30">{{ Auth::user()->name }}</span>.
+                    Browse our high-ticket programs or use a referral code to unlock exclusive partner benefits.
+                </p>
+            </div>
+
+            {{-- HIGHLIGHTED REFERRAL BOX --}}
+            <div class="w-full lg:w-96">
+                <div class="p-6 rounded-2xl bg-navy border-2 border-primary/20 shadow-inner relative overflow-hidden group">
+                    {{-- Shine Effect --}}
+                    <div class="absolute -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent via-customWhite/10 to-transparent group-hover:animate-[shine_3s_ease-in-out_infinite]"></div>
+
+                    <label class="block text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-4 text-center">
+                        Have a Partner Code?
+                    </label>
+
+                    <div class="flex flex-col gap-3">
+                        <div class="relative">
+                            <input type="text" x-model="referralCode"
+                                placeholder="ENTER CODE HERE"
+                                class="w-full px-5 py-4 bg-surface border-0 rounded-xl text-sm font-bold tracking-widest uppercase focus:ring-2 focus:ring-primary outline-none transition-all placeholder-mutedText/40 text-mainText shadow-lg">
+                        </div>
+
+                        <button @click="applyReferral()" :disabled="loading"
+                            class="w-full py-4 brand-gradient text-customWhite text-xs font-black uppercase rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-primary/20 hover:shadow-primary/40 flex items-center justify-center gap-2">
+                            <span x-show="!loading">Apply & Activate Benefits</span>
+                            <span x-show="loading" x-cloak class="flex items-center">
+                                <i class="fas fa-circle-notch animate-spin mr-2"></i> PROCESSING...
+                            </span>
+                        </button>
+                    </div>
+
+                    <div x-show="message" x-cloak x-transition class="mt-4 text-center">
+                        <div :class="status === 'success' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'"
+                             class="py-2 px-4 rounded-lg text-[11px] font-bold uppercase tracking-wider">
+                            <span x-text="message"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    {{-- Products Grid --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        @if($filteredCourses->isEmpty() && $filteredBundles->isEmpty())
-             <div class="col-span-full text-center py-20">
-                <p class="text-mutedText font-bold text-lg">No products found for this link.</p>
-             </div>
+    {{-- 2. Partner / Promo Status Bars --}}
+    <div class="flex flex-wrap gap-4">
+        @if($referrer && !$link)
+            <div class="glass-card px-5 py-3 rounded-xl flex items-center gap-3 border-l-4 border-l-primary">
+                <i class="fas fa-user-tie text-primary"></i>
+                <p class="text-[11px] font-bold text-mutedText uppercase tracking-widest">
+                    Active Partner: <span class="text-mainText">{{ $referrer->name }}</span>
+                </p>
+            </div>
         @endif
 
-        {{-- Courses --}}
-        @foreach($filteredCourses as $course)
-        <div class="group relative flex flex-col overflow-hidden rounded-3xl bg-customWhite shadow-xl border border-primary/5 hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
-            <div class="aspect-video w-full overflow-hidden bg-navy/10 relative">
-                @if($course->thumbnail_url)
-                    <img src="{{ $course->thumbnail_url }}" alt="{{ $course->title }}" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110">
-                @else
-                    <div class="flex h-full items-center justify-center text-mutedText font-bold">No Image</div>
-                @endif
-                <div class="absolute top-4 right-4 bg-primary text-white text-[10px] font-bold uppercase px-3 py-1 rounded-full shadow-lg">
-                    Course
+        @if($link)
+            <div class="bg-secondary/10 border border-secondary/20 px-5 py-3 rounded-xl flex items-center justify-between gap-6 animate-fade-in">
+                <div class="flex items-center gap-3 text-secondary">
+                    <i class="fas fa-tag"></i>
+                    <p class="text-[11px] font-bold uppercase tracking-tight">
+                        Promo Applied: <span class="font-black">{{ $link->name }}</span>
+                    </p>
                 </div>
+                <a href="{{ route('student.product_selection') }}" class="text-[10px] font-black uppercase text-mutedText hover:text-secondary underline">Remove</a>
+            </div>
+        @endif
+    </div>
+
+    {{-- 3. Content Grid --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+        {{-- BUNDLES --}}
+        @foreach($filteredBundles as $bundle)
+        <div class="group flex flex-col rounded-[2rem] bg-surface shadow-sm border border-primary/5 overflow-hidden hover:border-secondary/40 transition-all duration-500 hover:-translate-y-2">
+            <div class="aspect-[4/3] w-full relative overflow-hidden bg-navy">
+                @php
+                    $src = $bundle->thumbnail ? (str_starts_with($bundle->thumbnail, 'http') ? $bundle->thumbnail : asset('storage/'.$bundle->thumbnail)) : 'https://via.placeholder.com/600x450';
+                @endphp
+                <img src="{{ $src }}" class="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700">
+                <div class="absolute inset-0 bg-gradient-to-t from-navy/80 to-transparent opacity-60"></div>
+                <span class="absolute top-6 left-6 bg-secondary text-customWhite text-[10px] font-black uppercase px-4 py-1.5 rounded-full tracking-widest shadow-xl">Bundle</span>
             </div>
 
-            <div class="flex flex-1 flex-col p-6">
-                <h3 class="text-xl font-bold text-mainText leading-tight group-hover:text-primary transition-colors">
-                    {{ $course->title }}
-                </h3>
+            <div class="p-8 flex flex-col flex-1">
+                <h3 class="text-xl font-bold text-mainText tracking-tight uppercase mb-3 leading-tight">{{ $bundle->title ?? $bundle->name }}</h3>
+                <p class="text-mutedText font-medium text-sm line-clamp-2 mb-8 leading-relaxed">{{ strip_tags($bundle->description) }}</p>
 
-                <div class="mt-4 flex items-center justify-between">
+                <div class="mt-auto pt-6 border-t border-primary/10 flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] uppercase font-bold text-mutedText tracking-wider">Price</p>
-                        <p class="text-2xl font-black text-primary">₹{{ number_format($course->price, 2) }}</p>
+                        <p class="text-[10px] font-bold text-mutedText uppercase mb-1 tracking-widest">Investment</p>
+                        <p class="text-3xl font-black text-secondary tracking-tighter">₹{{ number_format($bundle->price, 0) }}</p>
                     </div>
-                </div>
-
-                <div class="mt-6 mt-auto">
-                    <a href="{{ route('student.courses.show', $course->id) }}" class="flex w-full items-center justify-center rounded-xl bg-navy py-3 px-4 text-sm font-bold text-white transition-all hover:bg-primary shadow-lg shadow-primary/20 hover:shadow-primary/40">
-                        View Details & Buy
-                        <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                    </a>
+                    <button class="brand-gradient text-customWhite w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-secondary/30 transition-all group/btn">
+                        <i class="fas fa-plus transition-transform group-hover/btn:rotate-90"></i>
+                    </button>
                 </div>
             </div>
         </div>
         @endforeach
 
-        {{-- Bundles --}}
-        @foreach($filteredBundles as $bundle)
-        <div class="group relative flex flex-col overflow-hidden rounded-3xl bg-customWhite shadow-xl border border-secondary/20 hover:border-secondary/50 transition-all duration-300 hover:-translate-y-1">
-             <div class="aspect-video w-full overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20 relative flex items-center justify-center">
-                 {{-- Placeholder for Bundle Image --}}
-                 <svg class="w-16 h-16 text-secondary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-
-                 <div class="absolute top-4 right-4 bg-secondary text-white text-[10px] font-bold uppercase px-3 py-1 rounded-full shadow-lg">
-                    Bundle
-                </div>
+        {{-- COURSES --}}
+        @foreach($filteredCourses as $course)
+        <div class="group flex flex-col rounded-[2rem] bg-surface shadow-sm border border-primary/5 overflow-hidden hover:border-primary/40 transition-all duration-500 hover:-translate-y-2">
+            <div class="aspect-[4/3] w-full relative overflow-hidden bg-navy">
+                @php
+                    $src = $course->thumbnail ? (str_starts_with($course->thumbnail, 'http') ? $course->thumbnail : asset('storage/'.$course->thumbnail)) : 'https://via.placeholder.com/600x450';
+                @endphp
+                <img src="{{ $src }}" class="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700">
+                <div class="absolute inset-0 bg-gradient-to-t from-navy/80 to-transparent opacity-60"></div>
+                <span class="absolute top-6 left-6 bg-primary text-customWhite text-[10px] font-black uppercase px-4 py-1.5 rounded-full tracking-widest shadow-xl">Course</span>
             </div>
 
-            <div class="flex flex-1 flex-col p-6">
-                <h3 class="text-xl font-bold text-mainText leading-tight group-hover:text-secondary transition-colors">
-                    {{ $bundle->name }}
-                </h3>
-                <p class="mt-2 text-xs text-mutedText line-clamp-2">{{ $bundle->description }}</p>
+            <div class="p-8 flex flex-col flex-1">
+                <h3 class="text-xl font-bold text-mainText tracking-tight uppercase mb-8 group-hover:text-primary transition-colors leading-tight">{{ $course->title }}</h3>
 
-                <div class="mt-4 flex items-center justify-between">
-                     <div>
-                        <p class="text-[10px] uppercase font-bold text-mutedText tracking-wider">Bundle Price</p>
-                        <p class="text-2xl font-black text-secondary">₹{{ number_format($bundle->price, 2) }}</p>
+                <div class="mt-auto pt-6 border-t border-primary/10 flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-mutedText uppercase mb-1 tracking-widest">Investment</p>
+                        <p class="text-3xl font-black text-primary tracking-tighter">₹{{ number_format($course->final_price ?? $course->price, 0) }}</p>
                     </div>
-                </div>
-
-                <div class="mt-6 mt-auto">
-                    {{-- Assuming bundles also have a show/buy route? If not, maybe direct buy? --}}
-                    {{-- For now, using a placeholder link or course show if bundles are treated as courses structure-wise --}}
-                    {{-- Wait, bundles usually have their own show page. If not, I'll link to first course or generic buy? --}}
-                    {{-- I'll Assume there is a route 'student.bundles.show' or similar, OR just disable if not ready. --}}
-                    {{-- For this task, I focus on Courses mostly, but user said "bundle wise". --}}
-                    {{-- I'll check routes list later. For now, button triggers nothing or alerts. --}}
-                    <button class="flex w-full items-center justify-center rounded-xl bg-navy py-3 px-4 text-sm font-bold text-white transition-all hover:bg-secondary shadow-lg shadow-secondary/20 hover:shadow-secondary/40">
-                        Buy Bundle (Coming Soon)
-                    </button>
+                    <a href="{{ route('student.courses.show', $course->id) }}" class="w-14 h-14 rounded-2xl bg-navy flex items-center justify-center text-customWhite shadow-lg hover:brand-gradient transition-all group/btn">
+                        <i class="fas fa-arrow-right transition-transform group-hover/btn:translate-x-1"></i>
+                    </a>
                 </div>
             </div>
         </div>
@@ -133,34 +162,52 @@
 </div>
 
 <script>
-    function applyReferral() {
-        let code = this.referralCode;
-        if(!code) return;
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('productSelection', () => ({
+            referralCode: '{{ $referrer->referral_code ?? "" }}',
+            message: '',
+            status: '',
+            loading: false,
 
-        fetch('{{ route('student.apply_referral') }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({ referral_code: code })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if(data.success) {
-                this.message = data.message;
-                this.status = 'success';
-                // Reload to reflect changes if needed
-                setTimeout(() => window.location.reload(), 1000);
-            } else {
-                this.message = data.message || 'Invalid Request';
-                this.status = 'error';
+            async applyReferral() {
+                if(!this.referralCode.trim()) {
+                    this.status = 'error';
+                    this.message = 'Please enter a code';
+                    return;
+                }
+
+                this.loading = true;
+                this.message = '';
+
+                try {
+                    const response = await fetch("{{ route('student.apply_referral') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ referral_code: this.referralCode })
+                    });
+
+                    const data = await response.json();
+
+                    if(response.ok && data.success) {
+                        this.status = 'success';
+                        this.message = `Code Applied Successfully!`;
+                        setTimeout(() => window.location.reload(), 800);
+                    } else {
+                        this.status = 'error';
+                        this.message = data.message || 'Invalid Referral Code';
+                    }
+                } catch (error) {
+                    this.status = 'error';
+                    this.message = 'Connection Error';
+                } finally {
+                    this.loading = false;
+                }
             }
-        })
-        .catch(error => {
-            this.message = 'Invalid Referral Code';
-            this.status = 'error';
-        });
-    }
+        }));
+    });
 </script>
 @endsection

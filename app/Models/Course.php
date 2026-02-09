@@ -71,6 +71,16 @@ class Course extends Model
         return $this->morphToMany(Bundle::class, 'item', 'bundle_items');
     }
 
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'course_user')->withTimestamps();
+    }
+
+
+    public function students()
+    {
+        return $this->belongsToMany(User::class, 'course_user')->withTimestamps();
+    }
     public function getThumbnailUrlAttribute()
     {
         // If you have a 'thumbnail' column, return its URL, otherwise return null
