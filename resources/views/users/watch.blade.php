@@ -14,7 +14,8 @@
                     class="relative w-full rounded-[2rem] overflow-hidden shadow-2xl bg-black border border-slate-700/50 group aspect-video">
                     <video id="courseVideo" src="{{ $currentLesson->lesson_file_url }}" class="w-full h-full object-contain"
                         controls autoplay controlsList="nodownload" data-lesson="{{ $currentLesson->id }}"
-                        data-start="{{ $progress->last_watched_second ?? 0 }}">
+                        data-start="{{ $progress->last_watched_second ?? 0 }}"
+                        data-completed="{{ $progress->is_completed ?? 0 }}">
                     </video>
                 </div>
 
@@ -61,7 +62,7 @@
                                 {{ $course->lessons->count() }} Lessons
                             </p>
                             <div class="h-1 w-20 bg-slate-800 rounded-full overflow-hidden">
-                                <div class="h-full bg-indigo-500 w-1/3"></div> {{-- Dynamic Progress Bar --}}
+                                <div class="h-full bg-indigo-500 w-1/3"></div>
                             </div>
                         </div>
                     </div>
@@ -75,7 +76,6 @@
                                ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 border-indigo-500 shadow-lg shadow-indigo-900/50 translate-x-1'
                                : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800 hover:border-slate-600' }}">
 
-                                {{-- Number / Status Icon --}}
                                 <div class="flex-shrink-0">
                                     @if ($currentLesson->id == $lesson->id)
                                         <div
@@ -99,7 +99,6 @@
                                     @endif
                                 </div>
 
-                                {{-- Text --}}
                                 <div class="flex-1 min-w-0">
                                     <h4
                                         class="text-[11px] font-black uppercase italic tracking-tight truncate
@@ -116,7 +115,6 @@
                         @endforeach
                     </div>
 
-                    {{-- Bottom Fade (Optional visual polish) --}}
                     <div
                         class="h-6 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none absolute bottom-0 w-full">
                     </div>
@@ -127,7 +125,6 @@
     </div>
 
     <style>
-        /* Custom Scrollbar for the Playlist */
         .custom-scrollbar::-webkit-scrollbar {
             width: 5px;
         }
@@ -150,15 +147,17 @@
         const video = document.getElementById('courseVideo');
         const lessonId = video.dataset.lesson;
         const startPos = video.dataset.start;
+        // 1 or 0 handling
+        let isAlreadyCompleted = parseInt(video.dataset.completed) === 1;
 
-        // 1. Resume from last watched position
         video.onloadedmetadata = function() {
             if (startPos > 0) video.currentTime = startPos;
         };
 
-        // 2. Save progress every 5 seconds
         let lastSaved = 0;
         video.ontimeupdate = function() {
+            if (isAlreadyCompleted) return;
+
             const now = Math.floor(video.currentTime);
             if (now % 5 === 0 && now !== lastSaved) {
                 lastSaved = now;
@@ -166,24 +165,28 @@
             }
         };
 
-        // 3. Mark as completed
         video.onended = function() {
+            if (isAlreadyCompleted) return;
             saveProgress(video.duration, true);
         };
 
         function saveProgress(seconds, completed) {
             fetch("{{ route('student.progress.update') }}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                },
-                body: JSON.stringify({
-                    lesson_id: lessonId,
-                    seconds: seconds,
-                    completed: completed
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify({
+                        lesson_id: lessonId,
+                        seconds: seconds,
+                        completed: completed
+                    })
                 })
-            }).catch(err => console.error(err));
+                .then(response => {
+                    if (completed) isAlreadyCompleted = true;
+                })
+                .catch(err => console.error(err));
         }
     </script>
 @endsection
