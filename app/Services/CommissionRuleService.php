@@ -59,4 +59,55 @@ class CommissionRuleService
             throw new Exception("Failed to delete rule.");
         }
     }
+
+    /**
+     * Calculate Commission for a specific affiliate and product.
+     * Hierarchy:
+     * 1. Specific User + Specific Product
+     * 2. Specific User + All Products
+     * 3. Specific Product + Any User
+     * 4. Global Settings (Fallback)
+     */
+    public function calculateCommission($affiliateId, $product)
+    {
+        // 1. Specific User + Specific Product
+        $rule = \App\Models\CommissionRule::where('affiliate_id', $affiliateId)
+            ->where('product_type', get_class($product))
+            ->where('product_id', $product->id)
+            ->first();
+
+        // 2. Specific User + All Products
+        if (!$rule) {
+            $rule = \App\Models\CommissionRule::where('affiliate_id', $affiliateId)
+                ->whereNull('product_id')
+                ->first();
+        }
+
+        // 3. Specific Product + Any User
+        if (!$rule) {
+            $rule = \App\Models\CommissionRule::whereNull('affiliate_id')
+                ->where('product_type', get_class($product))
+                ->where('product_id', $product->id)
+                ->first();
+        }
+
+        // Return calculated amount if rule found
+        if ($rule) {
+            if ($rule->commission_type === 'percentage') {
+                return ($product->price * $rule->amount) / 100;
+            } else {
+                return $rule->amount;
+            }
+        }
+
+        // 4. Fallback to Global Settings
+        $globalType = \App\Models\Setting::get('referral_commission_type', 'fixed');
+        $globalAmount = (float) \App\Models\Setting::get('referral_commission_amount', 0);
+
+        if ($globalType === 'percentage') {
+            return ($product->price * $globalAmount) / 100;
+        }
+
+        return $globalAmount;
+    }
 }

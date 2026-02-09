@@ -12,6 +12,9 @@ Route::get('/login', function () {
     return redirect()->route('login');
 });
 
+// NEW: Affiliate Link Redirect
+Route::get('/u/{slug}', [App\Http\Controllers\Student\AffiliateLinkController::class, 'handleRedirect'])->name('affiliate.redirect');
+
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/course/{course}', [HomeController::class, 'courses'])
     ->name('course.show');

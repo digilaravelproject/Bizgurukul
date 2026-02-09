@@ -12,10 +12,12 @@ use Illuminate\Support\Facades\Auth;
 class RazorpayController extends Controller
 {
     private $api;
+    private $commissionService;
 
-    public function __construct()
+    public function __construct(\App\Services\CommissionRuleService $commissionService)
     {
         $this->api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+        $this->commissionService = $commissionService;
     }
 
     public function createOrder(Request $request, $courseId)
@@ -65,11 +67,33 @@ class RazorpayController extends Controller
             $this->api->utility->verifyPaymentSignature($attributes);
 
             // Update Database
-            $payment = Payment::where('razorpay_order_id', $orderId)->first();
-            $payment->update([
-                'status' => 'success',
-                'razorpay_payment_id' => $paymentId
-            ]);
+            $payment = Payment::with('course')->where('razorpay_order_id', $orderId)->firstOrFail();
+
+            if ($payment->status !== 'success') {
+                $payment->update([
+                    'status' => 'success',
+                    'razorpay_payment_id' => $paymentId
+                ]);
+
+                // Commission Logic
+                $user = Auth::user();
+                if ($user && $user->referred_by) {
+                    $commissionAmount = $this->commissionService->calculateCommission($user->referred_by, $payment->course);
+
+                    if ($commissionAmount > 0) {
+                        \App\Models\AffiliateCommission::create([
+                            'affiliate_id' => $user->referred_by,
+                            'referred_user_id' => $user->id,
+                            'amount' => $commissionAmount,
+                            'status' => 'pending', // Or 'approved' based on policy
+                            'commission_type' => 'sale',
+                            'product_id' => $payment->course_id,
+                            'product_type' => get_class($payment->course),
+                            'notes' => 'Commission for Course Sale: ' . $payment->course->title,
+                        ]);
+                    }
+                }
+            }
 
             return response()->json(['status' => 'success', 'message' => 'Payment Verified']);
         } catch (\Exception $e) {

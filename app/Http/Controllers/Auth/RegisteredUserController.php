@@ -119,8 +119,8 @@ class RegisteredUserController extends Controller
             event(new Registered($user));
             Auth::login($user);
 
-            return redirect(route('onboarding.referral', absolute: false))
-                ->with('success', 'Registration successful! Please complete the last step.');
+            // Redirect to Product Selection instead of Onboarding
+            return redirect()->route('student.product_selection');
 
         } catch (\Exception $e) {
             DB::rollBack();
