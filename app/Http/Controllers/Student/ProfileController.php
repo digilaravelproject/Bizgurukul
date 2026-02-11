@@ -27,13 +27,11 @@ class ProfileController extends Controller
         $user = Auth::user();
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,'.$user->id,
+            'email' => 'required|email|unique:users,email,' . $user->id,
             'mobile' => 'required|numeric|digits:10',
             'gender' => 'required|in:male,female,other',
             'dob' => 'required|date',
-            'state_id' => 'required',
-            'city' => 'required|string',
-            'password' => 'nullable|min:6'
+            'state_id' => 'required'
         ]);
 
         try {
@@ -44,16 +42,35 @@ class ProfileController extends Controller
         }
     }
 
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:6|confirmed'
+        ]);
+
+        try {
+            $this->profileService->changePassword(
+                Auth::id(),
+                $request->current_password,
+                $request->new_password
+            );
+            return response()->json(['status' => true, 'message' => 'Password changed successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 422);
+        }
+    }
+
     public function submitKyc(Request $request)
     {
         $request->validate([
             'pan_name' => 'required|string',
-            'document' => 'nullable|mimes:jpg,jpeg,png,pdf|max:2048', // Nullable only if re-submitting without file change logic is handled
+            'document' => 'nullable|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
         // Ensure file is present if new submission
-        if(!Auth::user()->kyc && !$request->hasFile('document')) {
-             return response()->json(['status' => false, 'message' => 'Document is required'], 422);
+        if (!Auth::user()->kyc && !$request->hasFile('document')) {
+            return response()->json(['status' => false, 'message' => 'Document is required'], 422);
         }
 
         try {

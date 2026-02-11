@@ -38,6 +38,7 @@ Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')
     Route::post('/profile/update', [App\Http\Controllers\Student\ProfileController::class, 'updateProfile'])->name('profile.update'); // Custom Update
     Route::post('/kyc/submit', [App\Http\Controllers\Student\ProfileController::class, 'submitKyc'])->name('kyc.submit');
     Route::post('/bank/save', [App\Http\Controllers\Student\ProfileController::class, 'saveBank'])->name('bank.save');
+    Route::post('/update/password', [App\Http\Controllers\Student\ProfileController::class, 'changePassword'])->name('password.change');
 });
 
 // Auth Routes (Login/Register)

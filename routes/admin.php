@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\KycController;
 use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VideoController;
+use App\Http\Controllers\Admin\CouponPackageController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,6 +25,7 @@ Route::middleware(['auth', 'role:Admin'])
 
         // 1. Dashboard & Settings
         // 1. Dashboard & Settings
+        Route::resource('coupon-packages', CouponPackageController::class);
         Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard/stats', [App\Http\Controllers\Admin\DashboardController::class, 'stats'])->name('dashboard.stats');
         Route::post('/settings/update', [AdminController::class, 'updateSettings'])->name('settings.update');
@@ -71,7 +73,7 @@ Route::middleware(['auth', 'role:Admin'])
         //     Route::get('/{id}/edit', [CourseController::class, 'editBundle'])->name('edit');
         //     Route::delete('/{id}', [CourseController::class, 'deleteBundle'])->name('delete');
         // });
-   Route::resource('bundles', BundleController::class);
+        Route::resource('bundles', BundleController::class);
         // 7. Coupons
         Route::controller(CouponController::class)->prefix('coupons')->name('coupons.')->group(function () {
             Route::get('/', 'index')->name('index');

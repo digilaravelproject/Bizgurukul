@@ -22,18 +22,30 @@ class ProfileService
             'mobile' => $data['mobile'],
             'gender' => $data['gender'],
             'dob' => $data['dob'],
-            'state_id' => $data['state_id'], // Store ID (Map in frontend)
-            'city' => $data['city'],
+            'state_id' => $data['state_id'],
             'zip_code' => $data['zip_code'] ?? $user->zip_code,
             'address' => $data['address'] ?? $user->address,
         ];
 
-        // Optional: Password Update
-        if (!empty($data['password'])) {
-            $updateData['password'] = Hash::make($data['password']);
+        $user->update($updateData);
+        return $user;
+    }
+
+    // --- STUDENT: Change Password ---
+    public function changePassword($userId, $currentPassword, $newPassword)
+    {
+        $user = User::findOrFail($userId);
+
+        // Verify current password
+        if (!Hash::check($currentPassword, $user->password)) {
+            throw new \Exception('Current password is incorrect');
         }
 
-        $user->update($updateData);
+        // Update to new password
+        $user->update([
+            'password' => Hash::make($newPassword)
+        ]);
+
         return $user;
     }
 
