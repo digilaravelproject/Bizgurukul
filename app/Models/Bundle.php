@@ -15,9 +15,23 @@ class Bundle extends Model
         'title',
         'slug',
         'description',
-        'price',
+        'website_price',
+        'affiliate_price',
+        'discount_type',
+        'discount_value',
+        'commission_type',
+        'commission_value',
+        'final_price',
         'thumbnail',
         'is_published'
+    ];
+
+    protected $casts = [
+        'website_price' => 'decimal:2',
+        'affiliate_price' => 'decimal:2',
+        'discount_value' => 'decimal:2',
+        'commission_value' => 'decimal:2',
+        'is_published' => 'boolean',
     ];
 
     protected $appends = ['thumbnail_url'];

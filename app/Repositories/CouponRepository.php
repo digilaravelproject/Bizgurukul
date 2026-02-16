@@ -13,7 +13,7 @@ class CouponRepository
      */
     public function findAll(int $perPage = 10, ?string $search = null): LengthAwarePaginator
     {
-        $query = Coupon::latest();
+        $query = Coupon::latest()->with(['owner', 'package']);
 
         if ($search) {
             $query->where('code', 'like', "%{$search}%");
@@ -27,7 +27,7 @@ class CouponRepository
      */
     public function findById(int $id): ?Coupon
     {
-        return Coupon::find($id);
+        return Coupon::with(['owner', 'package'])->find($id);
     }
 
     /**
@@ -78,5 +78,52 @@ class CouponRepository
     public function findByCode(string $code): ?Coupon
     {
         return Coupon::where('code', $code)->active()->first();
+    }
+    /**
+     * Get Coupons by User
+     * With optional status filter (active, used, expired)
+     */
+    public function getCouponsByUser(int $userId, ?string $status = null, int $perPage = 10): LengthAwarePaginator
+    {
+        $query = Coupon::where('user_id', $userId)->with('package');
+
+        if ($status) {
+            if ($status === 'active') {
+                $query->active();
+            } elseif ($status === 'expired') {
+                $query->where(function ($q) {
+                    $q->whereNotNull('expiry_date')->where('expiry_date', '<', now());
+                });
+            } elseif ($status === 'used') {
+                $query->whereColumn('used_count', '>=', 'usage_limit');
+            }
+        }
+
+        return $query->latest()->paginate($perPage);
+    }
+
+    /**
+     * Log Transfer details
+     */
+    public function logTransfer(int $couponId, int $fromUserId, int $toUserId): void
+    {
+        \App\Models\CouponTransfer::create([
+            'coupon_id' => $couponId,
+            'from_user_id' => $fromUserId,
+            'to_user_id' => $toUserId,
+            'transferred_at' => now(),
+        ]);
+    }
+
+    /**
+     * Check if user reached limit for a specific package
+     * (Assuming limit: 1 active coupon per package per user)
+     */
+    public function hasActiveCouponForPackage(int $userId, int $packageId): bool
+    {
+        return Coupon::where('user_id', $userId)
+            ->where('package_id', $packageId)
+            ->active()
+            ->exists();
     }
 }

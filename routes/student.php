@@ -35,5 +35,11 @@ Route::middleware(['auth', 'role:Student|Admin'])->group(function () {
 
         // Affiliate Links
         Route::resource('/affiliate/links', AffiliateLinkController::class)->names('student.affiliate.links');
+
+        // Coupon Module (Affiliate)
+        Route::get('/coupons', [App\Http\Controllers\Student\CouponController::class, 'index'])->name('student.coupons.index');
+        Route::get('/coupons/store', [App\Http\Controllers\Student\CouponController::class, 'store'])->name('student.coupons.store');
+        Route::post('/coupons/purchase', [App\Http\Controllers\Student\CouponController::class, 'purchase'])->name('student.coupons.purchase');
+        Route::post('/coupons/transfer', [App\Http\Controllers\Student\CouponController::class, 'transfer'])->name('student.coupons.transfer');
     });
 });

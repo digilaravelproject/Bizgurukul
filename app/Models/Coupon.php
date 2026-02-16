@@ -11,6 +11,11 @@ class Coupon extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
+        'package_id',
+        'transferred_from',
+        'purchased_at',
+        'status',
         'code',
         'type',
         'value',
@@ -33,6 +38,7 @@ class Coupon extends Model
         'value'            => 'float',
         'usage_limit'      => 'integer',
         'used_count'       => 'integer',
+        'purchased_at'     => 'datetime',
     ];
 
     /**
@@ -101,5 +107,20 @@ class Coupon extends Model
         }
 
         return min($this->value, $totalAmount);
+    }
+
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function package()
+    {
+        return $this->belongsTo(CouponPackage::class, 'package_id');
+    }
+
+    public function transfers()
+    {
+        return $this->hasMany(CouponTransfer::class);
     }
 }

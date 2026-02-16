@@ -13,8 +13,8 @@ class CouponPackage extends Model
         'name',
         'description',
         'type',
-        'price',
-        'discount_price',
+        'selling_price',
+        'discount_value',
         'used_count',
         'is_active',
         'couponable_type',
@@ -27,7 +27,7 @@ class CouponPackage extends Model
         'selected_courses' => 'array',
         'selected_bundles' => 'array',
         'is_active' => 'boolean',
-        'price' => 'float',
-        'discount_price' => 'float',
+        'selling_price' => 'float',
+        'discount_value' => 'float',
     ];
 }

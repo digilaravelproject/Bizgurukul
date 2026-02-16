@@ -65,8 +65,33 @@
 
                         <div class="mt-auto pt-4 border-t border-dashed border-primary/10 flex items-center justify-between">
                             <div class="flex flex-col">
-                                <span class="text-[10px] font-bold text-mutedText uppercase tracking-wider">Price</span>
-                                <span class="text-xl font-extrabold text-mainText">₹{{ number_format($bundle->price) }}</span>
+                                @php
+                                    $discountAmount = 0;
+                                    if ($bundle->discount_type == 'percent' || $bundle->discount_type == 'percentage') {
+                                        $discountAmount = ($bundle->website_price * $bundle->discount_value) / 100;
+                                    } else {
+                                        $discountAmount = $bundle->discount_value;
+                                    }
+                                    $bundleFinalPrice = $bundle->website_price - $discountAmount;
+                                @endphp
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xl font-extrabold text-primary">₹{{ number_format($bundleFinalPrice) }}</span>
+                                    @if ($discountAmount > 0)
+                                        <span class="px-1.5 py-0.5 rounded-lg bg-green-500/10 text-[9px] font-black text-green-600 uppercase tracking-tighter">
+                                            -₹{{ number_format($discountAmount) }} OFF
+                                        </span>
+                                    @endif
+                                </div>
+                                <div class="flex flex-col mt-1">
+                                    <span class="text-[10px] font-bold text-mutedText flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-mutedText/20"></span>
+                                        Web: ₹{{ number_format($bundle->website_price) }}
+                                    </span>
+                                    <span class="text-[10px] font-bold text-mutedText flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-mutedText/20"></span>
+                                        Aff: ₹{{ number_format($bundle->affiliate_price) }}
+                                    </span>
+                                </div>
                             </div>
 
                             <div class="flex items-center gap-2">

@@ -2,108 +2,199 @@
 
 namespace App\Services;
 
+use App\Models\Coupon;
+use App\Models\CouponPackage;
+use App\Models\User;
 use App\Repositories\CouponRepository;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use App\Repositories\CouponPackageRepository;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class CouponService
 {
-    protected $repository;
+    protected $couponRepo;
+    protected $packageRepo;
 
-    public function __construct(CouponRepository $repository)
+    public function __construct(CouponRepository $couponRepo, CouponPackageRepository $packageRepo)
     {
-        $this->repository = $repository;
+        $this->couponRepo = $couponRepo;
+        $this->packageRepo = $packageRepo;
     }
 
     /**
-     * Handle Create or Update Logic with Transaction
+     * Create Coupon Package
+     */
+    public function createPackage(array $data)
+    {
+        // Validation can be handled in Controller or FormRequest
+        return $this->packageRepo->create($data);
+    }
+
+    /**
+     * Update Coupon Package
+     */
+    public function updatePackage(int $id, array $data)
+    {
+        $package = $this->packageRepo->find($id);
+        if (!$package) {
+            throw new Exception('Package not found');
+        }
+        return $this->packageRepo->update($package, $data);
+    }
+
+    /**
+     * Purchase Package
+     * Handles payment (mocked here), usage tracking, and coupon generation
+     */
+    public function purchasePackage(User $user, int $packageId)
+    {
+        return DB::transaction(function () use ($user, $packageId) {
+            $package = $this->packageRepo->find($packageId);
+
+            if (!$package || !$package->is_active) {
+                throw new Exception('Package is not available.');
+            }
+
+            // TODO: Integrate Wallet/Payment logic here.
+            // For now, assume payment is successful.
+
+            // Generate Coupon
+            $code = $this->generateUniqueCode();
+
+            $couponData = [
+                'user_id' => $user->id,
+                'package_id' => $package->id,
+                'code' => $code,
+                'type' => $package->type,
+                'value' => $package->discount_value,
+                'expiry_date' => Carbon::today()->addMonths(3), // 3 Months Validity
+                'usage_limit' => 1,
+                'used_count' => 0,
+                'is_active' => true,
+                'status' => 'active',
+                'purchased_at' => now(),
+                'coupon_type' => 'general', // Or specific based on package
+                'selected_courses' => $package->selected_courses,
+                'selected_bundles' => $package->selected_bundles,
+                'couponable_type' => $package->couponable_type,
+                'couponable_id' => $package->couponable_id,
+            ];
+
+            $coupon = $this->couponRepo->updateOrCreate(['code' => $code], $couponData);
+
+            // Update Package Usage Link (Optional tracking)
+            $package->increment('used_count'); // Tracks how many times package was sold
+
+            return $coupon;
+        });
+    }
+
+    /**
+     * Transfer Coupon
+     */
+    public function transferCoupon(User $sender, int $couponId, int $recipientId)
+    {
+        return DB::transaction(function () use ($sender, $couponId, $recipientId) {
+            $coupon = $this->couponRepo->findByIdLocked($couponId);
+
+            if (!$coupon) {
+                throw new Exception('Coupon not found.');
+            }
+
+            if ($coupon->user_id !== $sender->id) {
+                throw new Exception('You do not own this coupon.');
+            }
+
+            if ($coupon->status !== 'active' || $coupon->isExpired() || $coupon->isLimitReached()) {
+                throw new Exception('Coupon is not valid for transfer.');
+            }
+
+            if ($sender->id === $recipientId) {
+                throw new Exception('Cannot transfer coupon to yourself.');
+            }
+
+            $recipient = User::find($recipientId);
+            if (!$recipient) {
+                throw new Exception('Recipient not found.');
+            }
+
+            // Perform Transfer
+            $coupon->user_id = $recipientId;
+            $coupon->transferred_from = $sender->id;
+            $coupon->save();
+
+            // Log Transfer
+            $this->couponRepo->logTransfer($coupon->id, $sender->id, $recipientId);
+
+            return $coupon;
+        });
+    }
+
+    /**
+     * Generate Unique Code
+     * Format: ALPHANUMERIC (8-14 chars)
+     */
+    private function generateUniqueCode()
+    {
+        do {
+            $code = strtoupper(Str::random(12));
+        } while ($this->couponRepo->findByCode($code));
+
+        return $code;
+    }
+
+    /**
+     * Get All Coupons (Admin)
+     */
+    public function getPaginatedCoupons($request)
+    {
+        return $this->couponRepo->findAll(10, $request->search);
+    }
+
+    /**
+     * Create/Update Coupon (Admin Manual)
      */
     public function handleSave(array $data, ?int $id = null)
     {
-        DB::beginTransaction();
-
-        try {
-            // 1. Data Formatting
-            $formattedData = [
-                'code'           => strtoupper(trim($data['code'])),
-                'coupon_type'    => $data['coupon_type'], // general or specific
-                'type'           => $data['type'],        // fixed or percentage
-                'value'          => $data['value'],
-                'expiry_date'    => $data['expiry_date'],
-                'usage_limit'    => $data['usage_limit'] ?? 1,
-                'is_active'      => isset($data['is_active']) ? (bool)$data['is_active'] : true,
-            ];
-
-            // 2. Logic for Specific Coupons
-            // Agar General hai to arrays null hone chahiye, agar Specific hai to data aana chahiye
-            if ($data['coupon_type'] === 'specific') {
-                $formattedData['selected_courses'] = $data['courses'] ?? [];
-                $formattedData['selected_bundles'] = $data['bundles'] ?? [];
-            } else {
-                $formattedData['selected_courses'] = null;
-                $formattedData['selected_bundles'] = null;
-            }
-
-            // 3. Save to Repo
-            $coupon = $this->repository->updateOrCreate(
-                ['id' => $id],
-                $formattedData
-            );
-
-            DB::commit();
-            return $coupon;
-
-        } catch (Exception $e) {
-            DB::rollBack();
-            // Log the error for debugging
-            Log::error("Coupon Save Error: " . $e->getMessage());
-            throw $e; // Re-throw to controller
+        // Add defaults for manual creation
+        if (!$id && empty($data['code'])) {
+            $data['code'] = $this->generateUniqueCode();
         }
+
+        // Manual creation by admin usually means no package, so package_id null
+        $data['status'] = $data['status'] ?? 'active';
+        $data['is_active'] = isset($data['is_active']) ? filter_var($data['is_active'], FILTER_VALIDATE_BOOLEAN) : true;
+
+        if (isset($data['expiry_date'])) {
+             $data['expiry_date'] = Carbon::parse($data['expiry_date']);
+        }
+
+        return $this->couponRepo->updateOrCreate(['id' => $id], $data);
     }
 
     /**
      * Get Coupon for Edit
-     * Note: No need for json_decode because Model $casts handles it.
      */
-    public function getCouponForEdit(int $id)
+    public function getCouponForEdit($id)
     {
-        $coupon = $this->repository->findById($id);
-
-        if (!$coupon) {
-            throw new Exception("Coupon not found.");
-        }
-
-        return $coupon;
+        return $this->couponRepo->findById($id);
     }
 
-    public function toggleStatus(int $id)
+    /**
+     * Delete Coupon
+     */
+    public function deleteCoupon($id)
     {
-        try {
-            return $this->repository->toggleStatus($id);
-        } catch (Exception $e) {
-            Log::error("Coupon Toggle Error: " . $e->getMessage());
-            throw new Exception("Unable to change status.");
-        }
+        return $this->couponRepo->delete($id);
     }
 
-    public function deleteCoupon(int $id)
+    /**
+     * Toggle Status
+     */
+    public function toggleStatus($id)
     {
-        DB::beginTransaction();
-        try {
-            $deleted = $this->repository->delete($id);
-            DB::commit();
-            return $deleted;
-        } catch (Exception $e) {
-            DB::rollBack();
-            Log::error("Coupon Delete Error: " . $e->getMessage());
-            throw new Exception("Unable to delete coupon.");
-        }
-    }
-
-    public function getPaginatedCoupons($request)
-    {
-        $search = $request->search ? trim($request->search) : null;
-        return $this->repository->findAll(10, $search);
+        return $this->couponRepo->toggleStatus($id);
     }
 }

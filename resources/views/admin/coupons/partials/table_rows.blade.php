@@ -3,11 +3,12 @@
     <table class="w-full text-left text-sm">
         <thead class="bg-primary/5 text-[10px] uppercase font-bold text-mutedText border-b border-primary/5 tracking-widest">
             <tr>
-                <th class="px-6 py-4">Coupon Details</th>
-                <th class="px-6 py-4">Scope</th>
-                <th class="px-6 py-4">Discount</th>
-                <th class="px-6 py-4">Usage</th>
-                <th class="px-6 py-4 text-right">Actions</th>
+                <th class="px-6 py-4">Promo Code</th>
+                <th class="px-6 py-4">Owned By</th>
+                <th class="px-6 py-4">Valid For</th>
+                <th class="px-6 py-4">Discount Value</th>
+                <th class="px-6 py-4">Usage Track</th>
+                <th class="px-6 py-4 text-right">Manage</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-primary/5">
@@ -29,9 +30,30 @@
                         </div>
                     </td>
 
+                    {{-- Owner Column --}}
+                    <td class="px-6 py-4">
+                        @if($coupon->owner)
+                            <div class="flex items-center gap-2">
+                                <div class="h-6 w-6 rounded-full bg-secondary/10 flex items-center justify-center text-secondary text-[10px] font-bold">
+                                    {{ substr($coupon->owner->name, 0, 1) }}
+                                </div>
+                                <div>
+                                    <div class="text-xs font-bold text-mainText">{{ $coupon->owner->name }}</div>
+                                    <div class="text-[9px] text-mutedText">{{ $coupon->owner->email }}</div>
+                                </div>
+                            </div>
+                        @else
+                            <span class="text-[10px] text-mutedText font-medium italic">Unassigned</span>
+                        @endif
+                    </td>
+
                     {{-- Scope Column --}}
                     <td class="px-6 py-4">
-                        @if($coupon->coupon_type === 'general')
+                        @if($coupon->package)
+                            <span class="inline-flex items-center rounded-md bg-secondary/10 border border-secondary/20 px-2 py-1 text-[10px] font-bold text-secondary">
+                                PACKAGE: {{ $coupon->package->name }}
+                            </span>
+                        @elseif($coupon->coupon_type === 'general')
                             <span class="inline-flex items-center rounded-md bg-navy border border-primary/10 px-2 py-1 text-[10px] font-bold text-mutedText">STORE-WIDE</span>
                         @else
                             <div class="flex flex-col gap-1">
@@ -52,7 +74,7 @@
                     {{-- Discount Column --}}
                     <td class="px-6 py-4">
                         <span class="text-green-600 font-black text-sm">
-                            {{ $coupon->type == 'percentage' ? $coupon->value . '%' : '₹' . number_format($coupon->value) }} OFF
+                            {{ $coupon->type == 'percentage' ? $coupon->value . '%' : '₹' . number_format($coupon->value, 2) }} OFF
                         </span>
                     </td>
 
@@ -75,20 +97,24 @@
 
                     {{-- Actions Column --}}
                     <td class="px-6 py-4 text-right">
-                        <div class="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button @click="openModal('edit', {{ $coupon->id }})" class="p-2 text-mutedText hover:text-primary hover:bg-primary/5 rounded-lg transition-all">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        <div class="flex justify-end gap-2 px-2">
+                            <button @click="openModal('edit', {{ $coupon->id }})"
+                                class="p-2 text-mutedText hover:text-primary hover:bg-primary/10 rounded-xl transition-all border border-transparent hover:border-primary/20 shadow-sm"
+                                title="Edit Coupon">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                             </button>
-                            <button @click="deleteCoupon({{ $coupon->id }})" class="p-2 text-mutedText hover:text-red-600 hover:bg-red-500/5 rounded-lg transition-all">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            <button @click="deleteCoupon({{ $coupon->id }})"
+                                class="p-2 text-mutedText hover:text-red-600 hover:bg-red-500/10 rounded-xl transition-all border border-transparent hover:border-red-500/20 shadow-sm"
+                                title="Delete Coupon">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             </button>
                         </div>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="px-6 py-12 text-center text-mutedText text-xs italic">
-                        No coupons found. Click "Create Coupon" to add one.
+                    <td colspan="6" class="px-6 py-12 text-center text-mutedText text-xs italic">
+                        No coupons found. Coupons are generated when users purchase packages.
                     </td>
                 </tr>
             @endforelse
@@ -113,7 +139,13 @@
                         <span class="text-[10px] font-bold {{ $coupon->is_active ? 'text-green-600' : 'text-red-500' }}">{{ $coupon->is_active ? 'ACTIVE' : 'INACTIVE' }}</span>
                     </div>
                 </div>
-                <div class="flex gap-1">
+                <div class="flex items-center gap-3">
+                    @if($coupon->owner)
+                        <div class="h-6 w-6 rounded-full bg-secondary/10 flex items-center justify-center text-secondary text-[10px] font-bold" title="{{ $coupon->owner->name }}">
+                            {{ substr($coupon->owner->name, 0, 1) }}
+                        </div>
+                    @endif
+                    <div class="flex gap-1">
                     <button @click="openModal('edit', {{ $coupon->id }})" class="text-mutedText p-1.5 bg-navy rounded-lg border border-primary/10"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
                     <button @click="deleteCoupon({{ $coupon->id }})" class="text-red-500 p-1.5 bg-navy rounded-lg border border-primary/10"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                 </div>
@@ -122,7 +154,7 @@
             <div class="space-y-3 pl-3">
                 <div class="bg-navy p-3 rounded-xl border border-primary/5 flex justify-between items-center">
                     <span class="text-[10px] font-bold text-mutedText uppercase tracking-wider">Discount</span>
-                    <span class="text-green-500 font-black text-sm">{{ $coupon->type == 'percentage' ? $coupon->value . '%' : '₹' . number_format($coupon->value) }} OFF</span>
+                    <span class="text-green-500 font-black text-sm">{{ $coupon->type == 'percentage' ? $coupon->value . '%' : '₹' . number_format($coupon->value, 2) }} OFF</span>
                 </div>
 
                 <div class="flex justify-between items-center text-[10px] text-mutedText">

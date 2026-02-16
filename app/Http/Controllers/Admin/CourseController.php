@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\LmsService;
+use App\Services\CourseService; // Added
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -11,21 +12,23 @@ use Illuminate\Support\Facades\Log;
 class CourseController extends Controller
 {
     protected $lmsService;
+    protected $courseService;
 
-    public function __construct(LmsService $lmsService)
+    public function __construct(LmsService $lmsService, CourseService $courseService)
     {
         $this->lmsService = $lmsService;
+        $this->courseService = $courseService;
     }
 
     public function index(Request $request)
     {
         try {
             if ($request->ajax()) {
-                $courses = $this->lmsService->getFilteredCourses($request->all());
+                $courses = $this->courseService->getFilteredCourses($request->all());
 
                 return view('admin.courses.partials.table', compact('courses'))->render();
             }
-            $courses = $this->lmsService->getFilteredCourses($request->all());
+            $courses = $this->courseService->getFilteredCourses($request->all());
             $courses->appends($request->all());
             $categories = $this->lmsService->getCategories();
 
@@ -48,12 +51,14 @@ class CourseController extends Controller
             'title' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'sub_category_id' => 'nullable|exists:categories,id',
-            'price' => 'required|numeric|min:0',
-            'thumbnail' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'website_price' => 'required|numeric|min:0',
+            'affiliate_price' => 'required|numeric|lte:website_price',
+            'thumbnail' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB
         ]);
 
         try {
-            $course = $this->lmsService->createCourse($request->all());
+            // Using CourseService
+            $course = $this->courseService->createCourse($request->all());
 
             return redirect()->route('admin.courses.edit', ['course' => $course->id, 'tab' => 'lessons'])
                 ->with('success', 'Course created successfully. Please add lessons.');
@@ -65,7 +70,7 @@ class CourseController extends Controller
     public function edit(Request $request, $id)
     {
         try {
-            $course = $this->lmsService->getCourse($id);
+            $course = $this->courseService->getCourse($id);
             $categories = $this->lmsService->getCategories();
             $activeTab = $request->get('tab', 'basic');
 
@@ -82,12 +87,19 @@ class CourseController extends Controller
             'category_id' => 'sometimes|exists:categories,id',
             'sub_category_id' => 'nullable|exists:categories,id',
             'description' => 'nullable|string',
-            'price' => 'sometimes|numeric|min:0',
+            'website_price' => 'sometimes|numeric|min:0',
+            'affiliate_price' => 'required|numeric|lte:website_price',
             'discount_value' => 'nullable|numeric|min:0',
             'discount_type' => 'nullable|in:fixed,percent',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'commission_value' => 'nullable|numeric|min:0',
+            'commission_type' => 'nullable|in:fixed,percent',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB
             'demo_video' => 'nullable|mimes:mp4,mov,avi,wmv|max:51200',
             'is_published' => 'nullable|boolean',
+            'certificate_enabled' => 'nullable|boolean',
+            'certificate_type' => 'nullable|in:completion,quiz',
+            'completion_percentage' => 'nullable|integer|min:0|max:100',
+            'quiz_required' => 'nullable|boolean',
         ]);
 
         try {
@@ -95,7 +107,10 @@ class CourseController extends Controller
             $data = $request->all();
             $data['is_published'] = $request->has('is_published') ? 1 : 0;
             $data['certificate_enabled'] = $request->has('certificate_enabled') ? 1 : 0;
-            $this->lmsService->updateCourseDetails($id, $data);
+            $data['quiz_required'] = $request->has('quiz_required') ? 1 : 0;
+
+            $this->courseService->updateCourseDetails($id, $data);
+
            if ($request->redirect_tab === 'settings') {
             return redirect()->route('admin.courses.index')
                 ->with('success', 'Course updated and finalized successfully!');
@@ -116,7 +131,7 @@ class CourseController extends Controller
     public function destroy($id)
     {
         try {
-            $this->lmsService->deleteCourse($id);
+            $this->courseService->deleteCourse($id);
 
             return back()->with('success', 'Course and all related contents deleted successfully.');
         } catch (Exception $e) {
@@ -138,11 +153,11 @@ class CourseController extends Controller
             'type' => 'required|in:video,document',
             'video_file' => 'required_if:type,video|mimes:mp4,mov,avi,wmv|max:512000', // 500MB
             'document_file' => 'required_if:type,document|mimes:pdf,docx,zip|max:20480',
-            'thumbnail' => 'nullable|image|max:1024',
+            'thumbnail' => 'nullable|image|max:5120',
         ]);
 
         try {
-            $this->lmsService->addLesson($id, $request->all());
+            $this->courseService->addLesson($id, $request->all());
 
             return redirect()->route('admin.courses.edit', ['course' => $id, 'tab' => 'lessons'])
                 ->with('success', 'Lesson added. Video processing started in background.');
@@ -155,7 +170,7 @@ class CourseController extends Controller
     public function destroyLesson($id)
     {
         try {
-            $this->lmsService->deleteLesson($id);
+            $this->courseService->deleteLesson($id);
 
             return back()->with('success', 'Lesson deleted successfully.');
         } catch (Exception $e) {
@@ -171,7 +186,7 @@ class CourseController extends Controller
         ]);
 
         try {
-            $this->lmsService->addResource($id, $request->all());
+            $this->courseService->addResource($id, $request->all());
 
             return redirect()->route('admin.courses.edit', ['course' => $id, 'tab' => 'resources'])
                 ->with('success', 'Resource added successfully.');
@@ -184,7 +199,7 @@ class CourseController extends Controller
     public function destroyResource($id)
     {
         try {
-            $this->lmsService->deleteResource($id);
+            $this->courseService->deleteResource($id);
 
             return back()->with('success', 'Resource deleted successfully.');
         } catch (Exception $e) {

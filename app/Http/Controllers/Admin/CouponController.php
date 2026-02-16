@@ -43,8 +43,15 @@ public function index(Request $request)
     $courses->each->setAppends([]);
     $bundles->each->setAppends([]);
 
-    // 3. Pass $coupons to the view
-    return view('admin.coupons.index', compact('courses', 'bundles', 'coupons'));
+    // 3. Calculate Stats
+    $stats = [
+        'total' => \App\Models\Coupon::count(),
+        'active' => \App\Models\Coupon::where('is_active', true)->count(),
+        'used' => \App\Models\Coupon::where('used_count', '>', 0)->count(),
+    ];
+
+    // 4. Pass $coupons and $stats to the view
+    return view('admin.coupons.index', compact('courses', 'bundles', 'coupons', 'stats'));
 }
 
     public function store(StoreCouponRequest $request)

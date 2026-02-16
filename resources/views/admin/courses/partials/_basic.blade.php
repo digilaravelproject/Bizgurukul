@@ -15,7 +15,7 @@
                 <div class="group">
                     <label class="block text-xs font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Course Title</label>
                     <input type="text" name="title" value="{{ old('title', $course->title ?? '') }}" required
-                        class="w-full h-14 rounded-2xl bg-primary/5 px-5 text-sm font-bold text-mainText border focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary transition-all outline-none placeholder-mutedText/40"
+                        class="w-full h-14 rounded-2xl bg-white px-5 text-sm font-bold text-mainText border border-gray-300 focus:border-primary focus:ring-0 transition-all outline-none placeholder-mutedText/40"
                         placeholder="e.g. Master Full Stack Development">
                 </div>
 
@@ -26,8 +26,7 @@
                         <label class="block text-xs font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Category</label>
                         <div class="relative">
                             <select name="category_id" id="cat_selector" required @change="fetchSubCategories($event.target.value)"
-
-                                class="w-full h-12 rounded-xl bg-primary/5 px-4 text-sm font-bold text-mainText border focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary transition-all outline-none cursor-pointer">
+                                class="w-full h-12 rounded-xl bg-white px-4 text-sm font-bold text-mainText border border-gray-300 focus:border-primary focus:ring-0 transition-all outline-none cursor-pointer">
                                 <option value="">Select Category</option>
                                 @foreach($categories as $c)
                                     <option value="{{$c->id}}" {{ (old('category_id', $course->category_id ?? '') == $c->id) ? 'selected' : '' }}>{{$c->name}}</option>
@@ -45,8 +44,7 @@
                         <label class="block text-xs font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Sub Category</label>
                         <div class="relative">
                             <select name="sub_category_id" id="sub_selector"
-
-                                class="w-full h-12 rounded-xl bg-primary/5 px-4 text-sm font-bold text-mainText border focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary transition-all outline-none cursor-pointer">
+                                class="w-full h-12 rounded-xl bg-white px-4 text-sm font-bold text-mainText border border-gray-300 focus:border-primary focus:ring-0 transition-all outline-none cursor-pointer">
                                 <option value="">Select Sub Category</option>
                                 @if(isset($course) && $course->subCategory)
                                     <option value="{{ $course->sub_category_id }}" selected>{{ $course->subCategory->name }}</option>
@@ -64,21 +62,13 @@
                 <div>
                     <label class="block text-xs font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Description</label>
                     <textarea name="description" rows="5"
-                        class="w-full rounded-2xl bg-primary/5 px-5 py-4 text-sm font-medium text-mainText border focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary transition-all outline-none placeholder-mutedText/40 resize-none"
+                        class="w-full rounded-2xl bg-white px-5 py-4 text-sm font-medium text-mainText border border-gray-300 focus:border-primary focus:ring-0 transition-all outline-none placeholder-mutedText/40 resize-none"
                         placeholder="What will students learn in this course?">{{ old('description', $course->description ?? '') }}</textarea>
                 </div>
             </div>
 
-            {{-- RIGHT COLUMN: Media & Price --}}
+            {{-- RIGHT COLUMN: Media Only (Price moved to Publish) --}}
             <div class="lg:col-span-1 space-y-6">
-
-                {{-- Price --}}
-                <div>
-                    <label class="block text-xs font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Base Price (₹)</label>
-                    <input type="number" name="price" value="{{ old('price', $course->price ?? '') }}" required
-                        class="w-full h-14 rounded-2xl bg-primary/5 px-5 text-lg font-black text-mainText border focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary transition-all outline-none"
-                        placeholder="4999">
-                </div>
 
                 {{-- Thumbnail Upload --}}
                 <div x-data="imageUploader()">
@@ -106,10 +96,14 @@
                                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             </div>
                             <p class="text-sm font-bold text-mainText">Click or Drag image</p>
-                            <p class="text-[10px] text-mutedText mt-1">1200x800 recommended</p>
+                            <p class="text-[10px] text-mutedText/60 mt-1">Supported: PNG, JPG, WebP | Max 5MB</p>
                         </div>
 
                         <input type="file" name="thumbnail" x-ref="fileInput" class="hidden" @change="handleFileSelect" accept="image/*" {{ isset($course) ? '' : 'required' }}>
+                    </div>
+                    <div class="mt-2 flex items-center justify-between px-1">
+                        <p class="text-[10px] text-mutedText/60 font-medium">Supported: PNG, JPG, WebP</p>
+                        <p class="text-[10px] text-mutedText/60 font-medium">Max Size: 5MB</p>
                     </div>
                 </div>
             </div>

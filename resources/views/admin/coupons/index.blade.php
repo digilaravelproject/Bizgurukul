@@ -8,37 +8,73 @@
     <div x-data="couponManager()" x-init="init()" class="container-fluid font-sans p-4 md:p-6 bg-navy min-h-screen text-mainText">
 
         {{-- 1. HEADER & ACTIONS --}}
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 animate-fade-in">
-            <div>
-                <h2 class="text-2xl font-bold text-mainText tracking-tight">Coupon Manager</h2>
-                <p class="text-xs text-mutedText mt-1 font-medium uppercase tracking-wider">Manage discounts and promo codes</p>
-            </div>
-
-            <button @click="openModal('create')"
-                class="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-xs font-bold text-customWhite shadow-lg shadow-primary/20 hover:bg-secondary transition-all duration-300 active:scale-95">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path d="M12 4v16m8-8H4" />
-                </svg>
-                CREATE COUPON
-            </button>
+        <div class="mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-mutedText">
+            <a href="{{ route('admin.dashboard') }}" class="hover:text-primary transition-colors">Admin</a>
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg>
+            <span class="text-primary/60">Coupon Manager</span>
         </div>
 
-        {{-- 2. AJAX SEARCH BAR --}}
-        <div class="mb-8 relative w-full md:max-w-sm">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-mutedText">
-                <svg x-show="!isLoading" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-                <svg x-show="isLoading" class="animate-spin w-4 h-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-            </span>
-            <input type="text"
-                x-model="search"
-                @input.debounce.500ms="fetchCoupons()"
-                placeholder="Search by code..."
-                class="w-full pl-10 pr-4 py-2.5 bg-surface border border-primary/10 text-mainText placeholder-mutedText/50 rounded-xl focus:ring-1 focus:ring-primary focus:border-primary outline-none transition text-sm shadow-sm">
+        {{-- 1. HEADER & ACTIONS --}}
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
+            <div class="relative">
+                <div class="absolute -left-4 top-0 bottom-0 w-1 bg-primary rounded-full shadow-[0_0_15px_rgba(247,148,29,0.5)]"></div>
+                <h2 class="text-3xl font-black text-mainText tracking-tight uppercase">Coupon Manager</h2>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="h-1.5 w-1.5 rounded-full bg-secondary animate-pulse"></span>
+                    <p class="text-[10px] text-mutedText font-black uppercase tracking-[0.2em]">Promo Distribution Hub</p>
+                </div>
+            </div>
+
+        </div>
+
+        {{-- 2. STATS GRID --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-surface border-2 border-primary/5 rounded-[2rem] p-6 shadow-xl relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                    <svg class="w-12 h-12 text-primary" fill="currentColor" viewBox="0 0 24 24"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
+                </div>
+                <div class="text-[10px] font-black text-mutedText uppercase tracking-widest mb-1">Total Issued</div>
+                <div class="text-4xl font-black text-mainText">{{ number_format($stats['total']) }}</div>
+                <div class="mt-2 text-[9px] font-bold text-green-500 uppercase tracking-widest">Active Pool</div>
+            </div>
+
+            <div class="bg-surface border-2 border-primary/5 rounded-[2rem] p-6 shadow-xl relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                    <svg class="w-12 h-12 text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+                <div class="text-[10px] font-black text-mutedText uppercase tracking-widest mb-1">Live Coupons</div>
+                <div class="text-4xl font-black text-secondary">{{ number_format($stats['active']) }}</div>
+                <div class="mt-2 text-[9px] font-bold text-primary uppercase tracking-widest">Ready for Use</div>
+            </div>
+
+            <div class="bg-surface border-2 border-primary/5 rounded-[2rem] p-6 shadow-xl relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                    <svg class="w-12 h-12 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                </div>
+                <div class="text-[10px] font-black text-mutedText uppercase tracking-widest mb-1">Redemption Rate</div>
+                <div class="text-4xl font-black text-green-500">{{ $stats['total'] > 0 ? round(($stats['used'] / $stats['total']) * 100) : 0 }}%</div>
+                <div class="mt-2 text-[9px] font-bold text-mutedText uppercase tracking-widest">{{ $stats['used'] }} Claims Logged</div>
+            </div>
+        </div>
+
+        {{-- 3. AJAX SEARCH BAR --}}
+        <div class="mb-10 w-full md:max-w-md group">
+            <div class="relative flex items-center">
+                <span class="absolute left-5 text-mutedText group-focus-within:text-primary transition-colors">
+                    <svg x-show="!isLoading" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <svg x-show="isLoading" class="animate-spin w-5 h-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </span>
+                <input type="text"
+                    x-model="search"
+                    @input.debounce.500ms="fetchCoupons()"
+                    placeholder="ENTER COUPON CODE TO SEARCH..."
+                    class="w-full pl-14 pr-6 py-4 bg-surface border-2 border-primary/5 text-mainText placeholder-mutedText/30 rounded-[1.5rem] focus:ring-4 focus:ring-primary/5 focus:border-primary outline-none transition-all text-xs font-black tracking-widest uppercase shadow-xl">
+            </div>
         </div>
 
         {{-- 3. CONTENT AREA (Loaded via Partial) --}}
@@ -337,6 +373,10 @@
                                     };
                                     this.showModal = true;
                                 }
+                            })
+                            .catch(err => {
+                                console.error("Edit fetch error:", err);
+                                Swal.fire('Error', 'Failed to load coupon data. Please try again.', 'error');
                             });
                     } else {
                         // Reset Form

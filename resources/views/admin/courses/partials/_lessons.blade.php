@@ -3,7 +3,7 @@
     {{-- Header --}}
     <div class="bg-surface rounded-[2rem] border border-primary shadow-lg shadow-primary/5 p-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-            <h3 class="text-lg font-black text-mainText">Curriculum</h3>
+            <h3 class="text-lg font-black text-mainText">Lessons</h3>
             <p class="text-xs text-mutedText font-medium mt-1">Manage lessons, videos, and documents.</p>
         </div>
         <button @click="$dispatch('open-lesson-modal')"
@@ -130,7 +130,7 @@
                 @csrf
                 <div>
                     <label class="block text-xs font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Title</label>
-                    <input type="text" name="title" required class="w-full h-12 rounded-xl bg-primary/5 px-4 text-sm font-bold text-mainText border border-transparent focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Lesson Name">
+                    <input type="text" name="title" required class="w-full h-12 rounded-xl bg-white px-4 text-sm font-bold text-mainText border border-gray-300 focus:border-primary focus:ring-0 transition-all outline-none" placeholder="Lesson Name">
                 </div>
 
                 <div>
@@ -151,7 +151,7 @@
                 <div x-show="lType === 'video'" class="animate-fade-in">
                     <label class="block text-xs font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Thumbnail (Optional)</label>
                     <input type="file" name="thumbnail" accept="image/*" class="w-full text-xs text-mutedText file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary/20 file:text-primary hover:file:bg-primary hover:file:text-customWhite cursor-pointer transition-all">
-                    <p class="text-[10px] text-mutedText mt-1 ml-1">If empty, a frame will be auto-selected from the video.</p>
+                    <p class="text-[10px] text-mutedText mt-1 ml-1">If empty, a frame will be auto-selected. Max 5MB (Auto-compressed).</p>
                 </div>
 
                 {{-- File Inputs --}}

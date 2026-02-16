@@ -12,7 +12,7 @@
                 <div>
                     <label class="block text-xs font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Title</label>
                     <input type="text" name="title" required
-                        class="w-full h-12 rounded-xl bg-primary/5 px-4 text-sm font-bold text-mainText border focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary transition-all outline-none"
+                        class="w-full h-12 rounded-xl bg-white px-4 text-sm font-bold text-mainText border border-gray-300 focus:border-primary focus:ring-0 transition-all outline-none"
                         placeholder="e.g. Source Code">
                 </div>
 

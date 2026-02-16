@@ -42,8 +42,8 @@ class CouponPackageController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            'price' => 'required|numeric',
-            'discount_price' => 'required|numeric',
+            'selling_price' => 'required|numeric',
+            'discount_value' => 'required|numeric',
             'type' => 'required|in:fixed,percentage'
         ]);
 

@@ -7,15 +7,50 @@
     <div x-data="packageManager()" x-init="init()"
         class="container-fluid font-sans p-4 md:p-6 bg-navy min-h-screen text-mainText">
 
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-            <div>
-                <h2 class="text-2xl font-black text-mainText tracking-tight uppercase">Package Manager</h2>
-                <p class="text-xs text-mutedText mt-1 font-medium uppercase tracking-wider">Premium Bundle Control Panel</p>
+        <div class="mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-mutedText">
+            <a href="{{ route('admin.dashboard') }}" class="hover:text-primary transition-colors">Admin</a>
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg>
+            <span class="text-primary/60">Package Manager</span>
+        </div>
+
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
+            <div class="relative">
+                <div class="absolute -left-4 top-0 bottom-0 w-1 bg-secondary rounded-full shadow-[0_0_15px_rgba(247,148,29,0.5)]"></div>
+                <h2 class="text-3xl font-black text-mainText tracking-tight uppercase">Package Manager</h2>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="h-1.5 w-1.5 rounded-full bg-primary animate-pulse"></span>
+                    <p class="text-[10px] text-mutedText font-black uppercase tracking-[0.2em]">Bundle Control Panel</p>
+                </div>
             </div>
+
             <button @click="openModal('create')"
-                class="bg-primary px-10 py-4 text-xs font-black text-customWhite rounded-2xl shadow-xl shadow-primary/20 hover:bg-secondary transition-all active:scale-95">
-                CREATE PACKAGE
+                class="group relative inline-flex items-center gap-3 rounded-2xl bg-primary px-8 py-4 text-[11px] font-black text-customWhite shadow-2xl shadow-primary/30 hover:bg-secondary transition-all duration-300 active:scale-95 overflow-hidden">
+                <div class="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                <svg class="h-4 w-4 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path d="M12 4v16m8-8H4" />
+                </svg>
+                <span class="relative z-10 tracking-[0.1em]">CREATE PACKAGE</span>
             </button>
+        </div>
+
+        {{-- STATS GRID --}}
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+            <div class="bg-surface border-2 border-primary/5 rounded-[2rem] p-6 shadow-xl relative overflow-hidden group">
+                <div class="text-[10px] font-black text-mutedText uppercase tracking-widest mb-1">Total Packages</div>
+                <div class="text-4xl font-black text-mainText">{{ $packages->total() }}</div>
+            </div>
+            <div class="bg-surface border-2 border-primary/5 rounded-[2rem] p-6 shadow-xl relative overflow-hidden group">
+                <div class="text-[10px] font-black text-mutedText uppercase tracking-widest mb-1">Active Now</div>
+                <div class="text-4xl font-black text-green-500">{{ $packages->where('is_active', true)->count() }}</div>
+            </div>
+            <div class="bg-surface border-2 border-primary/5 rounded-[2rem] p-6 shadow-xl relative overflow-hidden group">
+                <div class="text-[10px] font-black text-mutedText uppercase tracking-widest mb-1">Market Reach</div>
+                <div class="text-4xl font-black text-secondary">{{ $packages->sum('used_count') }}</div>
+            </div>
+            <div class="bg-surface border-2 border-primary/5 rounded-[2rem] p-6 shadow-xl relative overflow-hidden group">
+                <div class="text-[10px] font-black text-mutedText uppercase tracking-widest mb-1">Total Savings</div>
+                <div class="text-4xl font-black text-primary">High</div>
+            </div>
         </div>
 
         <div class="mb-8 w-full md:max-w-sm">
@@ -45,12 +80,10 @@
                             <div>
                                 <label
                                     class="block text-[10px] font-black text-mutedText uppercase mb-2 tracking-widest">Package
-                                    Code</label>
+                                    Name</label>
                                 <div class="relative flex items-center">
-                                    <input type="text" x-model="form.name" required
-                                        class="w-full rounded-2xl bg-[#FFF9F2] border border-[#FFE8CC] px-6 py-4 text-sm font-bold text-primary uppercase tracking-widest outline-none transition-all pr-24">
-                                    <button type="button" @click="generateCode()"
-                                        class="absolute right-3 px-3 py-1.5 bg-white border border-[#FFE8CC] rounded-xl text-[9px] font-black text-primary hover:bg-primary hover:text-white transition-all">GENERATE</button>
+                                    <input type="text" x-model="form.name" required placeholder="e.g. Silver Pack, 10% Discount Pack"
+                                        class="w-full rounded-2xl bg-[#FFF9F2] border border-[#FFE8CC] px-6 py-4 text-sm font-bold text-primary uppercase tracking-widest outline-none transition-all">
                                 </div>
                             </div>
 
@@ -78,7 +111,11 @@
 
                             <div x-show="form.package_type === 'specific'" x-collapse
                                 class="space-y-4 border-l-4 border-primary/20 pl-4 py-2">
-                                <div x-data="multiSelect({ options: {{ $courses->map(fn($c) => ['value' => $c->id, 'label' => $c->title])->toJson() }}, selected: form.courses, onChange: (v) => form.courses = v })" class="relative">
+                                <div x-data="multiSelect({
+                                    options: {{ $courses->map(fn($c) => ['value' => (int)$c->id, 'label' => $c->title])->toJson() }},
+                                    selected: form.courses,
+                                    onChange: (v) => { form.courses = v; }
+                                })" @courses-updated.window="if($event.detail.id === form.id) sync($event.detail.values)" class="relative">
                                     <label
                                         class="block text-[10px] font-black text-mutedText uppercase mb-2 tracking-widest">Select
                                         Courses</label>
@@ -108,7 +145,11 @@
                                     </div>
                                 </div>
 
-                                <div x-data="multiSelect({ options: {{ $bundles->map(fn($b) => ['value' => $b->id, 'label' => $b->title])->toJson() }}, selected: form.bundles, onChange: (v) => form.bundles = v })" class="relative">
+                                <div x-data="multiSelect({
+                                    options: {{ $bundles->map(fn($b) => ['value' => (int)$b->id, 'label' => $b->title])->toJson() }},
+                                    selected: form.bundles,
+                                    onChange: (v) => { form.bundles = v; }
+                                })" @bundles-updated.window="if($event.detail.id === form.id) sync($event.detail.values)" class="relative">
                                     <label
                                         class="block text-[10px] font-black text-mutedText uppercase mb-2 tracking-widest">Select
                                         Bundles</label>
@@ -152,16 +193,16 @@
                                 </div>
                                 <div>
                                     <label
-                                        class="block text-[10px] font-black text-mutedText uppercase mb-2 tracking-widest">Original
-                                        Price (MRP)</label>
-                                    <input type="number" x-model="form.price" required
+                                        class="block text-[10px] font-black text-mutedText uppercase mb-2 tracking-widest">Selling
+                                        Price (₹)</label>
+                                    <input type="number" x-model="form.selling_price" required
                                         class="w-full rounded-2xl bg-[#FFF9F2] border border-[#FFE8CC] px-6 py-4 text-sm font-bold text-red-400 outline-none">
                                 </div>
                                 <div>
                                     <label
                                         class="block text-[10px] font-black text-mutedText uppercase mb-2 tracking-widest">Discount
-                                        Value / Price</label>
-                                    <input type="number" x-model="form.discount_price" required
+                                        Value (Flat/%)</label>
+                                    <input type="number" x-model="form.discount_value" required
                                         class="w-full rounded-2xl bg-[#FFF9F2] border border-[#FFE8CC] px-6 py-4 text-sm font-bold text-green-500 outline-none">
                                 </div>
                                 <div>
@@ -213,7 +254,7 @@
                     if (this.selected.includes(val)) {
                         this.selected = this.selected.filter(i => i !== val);
                     } else {
-                        this.selected.push(val);
+                        if(!this.selected.includes(val)) this.selected.push(val);
                     }
                     config.onChange(this.selected);
                 },
@@ -222,8 +263,8 @@
                     this.selected = this.selected.filter(i => i !== val);
                     config.onChange(this.selected);
                 },
-                init() {
-                    this.$watch('config.selected', val => this.selected = val);
+                sync(values) {
+                    this.selected = Array.isArray(values) ? values.map(Number) : [];
                 }
             }));
         });
@@ -240,8 +281,8 @@
                     name: '',
                     description: '',
                     type: 'fixed',
-                    price: '',
-                    discount_price: '',
+                    selling_price: '',
+                    discount_value: '',
                     package_type: 'general',
                     courses: [],
                     bundles: [],
@@ -302,8 +343,8 @@
                                     name: d.name,
                                     description: d.description || '',
                                     type: d.type || 'fixed',
-                                    price: d.price,
-                                    discount_price: d.discount_price,
+                                    selling_price: d.selling_price,
+                                    discount_value: d.discount_value,
                                     package_type: (sCourses.length > 0 || sBundles.length > 0) ? 'specific' :
                                         'general',
                                     courses: sCourses,
@@ -311,6 +352,16 @@
                                     is_active: !!d.is_active
                                 };
                                 this.showModal = true;
+
+                                // Trigger manual sync for multi-selects after form is set
+                                this.$nextTick(() => {
+                                    window.dispatchEvent(new CustomEvent('courses-updated', { detail: { id: d.id, values: sCourses } }));
+                                    window.dispatchEvent(new CustomEvent('bundles-updated', { detail: { id: d.id, values: sBundles } }));
+                                });
+                            })
+                            .catch(err => {
+                                console.error("Edit fetch error:", err);
+                                Swal.fire('Error', 'Failed to load package data.', 'error');
                             });
                     } else {
                         this.form = {
@@ -318,28 +369,37 @@
                             name: '',
                             description: '',
                             type: 'fixed',
-                            price: '',
-                            discount_price: '',
+                            selling_price: '',
+                            discount_value: '',
                             package_type: 'general',
                             courses: [],
                             bundles: [],
                             is_active: true
                         };
-                        this.generateCode();
                         this.showModal = true;
                     }
                 }, // FIXED: Removed the extra comma here
                 async submitForm() {
                     this.isSubmitting = true;
+
+                    // Data Hygiene: If package_type is general, clear specific selections
+                    if (this.form.package_type === 'general') {
+                        this.form.courses = [];
+                        this.form.bundles = [];
+                    }
+
                     try {
                         const res = await fetch("{{ route('admin.coupon-packages.store') }}", {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}",
+                                'Accept': 'application/json'
                             },
                             body: JSON.stringify(this.form)
                         });
+
+                        const result = await res.json();
                         if (res.ok) {
                             this.showModal = false;
                             this.Toast.fire({
