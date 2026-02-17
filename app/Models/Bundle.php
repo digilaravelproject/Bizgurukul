@@ -21,9 +21,12 @@ class Bundle extends Model
         'discount_value',
         'commission_type',
         'commission_value',
+        'commission_amount', // Standard commission for this bundle
+        'preference_index', // For Capped Logic
         'final_price',
         'thumbnail',
-        'is_published'
+        'is_published',
+        'is_active'
     ];
 
     protected $casts = [

@@ -129,4 +129,16 @@ class User extends Authenticatable
         $lastTransaction = $this->walletTransactions()->latest('id')->first();
         return $lastTransaction ? $lastTransaction->balance_after : 0.00;
     }
+
+    public function affiliateSettings()
+    {
+        return $this->hasOne(UserAffiliateSetting::class);
+    }
+
+    public function bundles()
+    {
+        return $this->belongsToMany(Bundle::class, 'payments', 'user_id', 'bundle_id')
+                    ->wherePivot('status', 'success')
+                    ->withTimestamps();
+    }
 }

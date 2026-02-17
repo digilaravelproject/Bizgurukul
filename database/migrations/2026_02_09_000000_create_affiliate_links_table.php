@@ -15,15 +15,15 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('slug')->unique(); // The 'ref' code, e.g., 'u/Prrojects' or 'u/xyz123'
-            $table->string('type')->default('general'); // general, specific_course, specific_bundle
+            $table->string('target_type')->default('all'); // bundle, course, all
             $table->string('target_id')->nullable(); // ID of the course/bundle if specific
-            $table->timestamp('expiry_date')->nullable();
+            $table->timestamp('expires_at')->nullable();
             $table->string('description')->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->unsignedBigInteger('click_count')->default(0);
+            $table->boolean('is_deleted')->default(false);
+            $table->unsignedBigInteger('clicks')->default(0);
             $table->timestamps();
 
-            $table->index(['user_id', 'type']);
+            $table->index(['user_id', 'target_type']);
         });
     }
 

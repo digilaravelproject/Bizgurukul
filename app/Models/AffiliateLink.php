@@ -12,17 +12,19 @@ class AffiliateLink extends Model
     protected $fillable = [
         'user_id',
         'slug',
-        'type',
+        'target_type', // bundle, course, all. Was 'type'
         'target_id',
-        'expiry_date',
+        'expires_at', // Was 'expiry_date'
         'description',
-        'is_active',
-        'click_count',
+        'is_deleted',
+        'clicks', // Was 'click_count'
     ];
 
     protected $casts = [
-        'expiry_date' => 'datetime',
-        'is_active' => 'boolean',
+        'expires_at' => 'datetime',
+        'is_deleted' => 'boolean',
+        'clicks' => 'integer',
+        'target_id' => 'integer',
     ];
 
     public function user()

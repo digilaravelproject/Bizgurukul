@@ -9,6 +9,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         [x-cloak] { display: none !important; }
@@ -83,6 +84,53 @@
             {{-- Main Content --}}
             <main class="flex-1 overflow-y-auto p-4 md:p-8 bg-navy">
                 <div class="max-w-7xl mx-auto">
+                    {{-- Flash Messages --}}
+                    @if(session('success'))
+                        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
+                             class="mb-6 p-4 rounded-2xl bg-green-500/10 border border-green-500/20 text-green-600 flex items-center justify-between animate-fade-in">
+                            <div class="flex items-center gap-3 font-bold text-sm">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                <span>{{ session('success') }}</span>
+                            </div>
+                            <button @click="show = false" class="text-green-600 hover:text-green-700">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                    @endif
+
+                    @if(session('error'))
+                        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 8000)"
+                             class="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-600 flex items-center justify-between animate-fade-in">
+                            <div class="flex items-center gap-3 font-bold text-sm">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span>{{ session('error') }}</span>
+                            </div>
+                            <button @click="show = false" class="text-red-600 hover:text-red-700">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                    @endif
+
+                    @if($errors->any())
+                        <div x-data="{ show: true }" x-show="show"
+                             class="mb-6 p-4 rounded-2xl bg-orange-500/10 border border-orange-500/20 text-orange-600 animate-fade-in">
+                            <div class="flex items-start gap-3 font-bold text-sm">
+                                <svg class="w-5 h-5 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                <div class="flex-1">
+                                    <p class="mb-2 uppercase tracking-wider text-xs">Please fix the following errors:</p>
+                                    <ul class="list-disc list-inside space-y-1 font-medium">
+                                        @foreach($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                                <button @click="show = false" class="text-orange-600 hover:text-orange-700">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                    @endif
+
                     @yield('content')
                 </div>
             </main>

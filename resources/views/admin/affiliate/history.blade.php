@@ -11,12 +11,13 @@
             <h1 class="text-3xl font-extrabold tracking-tight text-mainText">Referral & Commission History</h1>
             <p class="text-mutedText mt-1 text-sm">Track affiliate performance and manage commission payouts.</p>
         </div>
-        <div class="flex gap-3">
+        <form action="{{ route('admin.affiliate.history') }}" method="GET" class="flex gap-3">
              <div class="relative">
-                <input type="text" placeholder="Search affiliates..." class="pl-10 pr-4 py-2 bg-surface border border-primary/10 rounded-xl text-sm focus:ring-primary focus:border-primary w-64 shadow-sm">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search affiliates..." class="pl-10 pr-4 py-2 bg-surface border border-primary/10 rounded-xl text-sm focus:ring-primary focus:border-primary w-64 shadow-sm text-mainText">
                 <svg class="w-4 h-4 text-mutedText absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
-        </div>
+            <button type="submit" class="bg-primary hover:bg-secondary text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md transition-colors">Search</button>
+        </form>
     </div>
 
     {{-- Main Content Card --}}

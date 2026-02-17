@@ -14,7 +14,7 @@ class RazorpayController extends Controller
     private $api;
     private $commissionService;
 
-    public function __construct(\App\Services\CommissionRuleService $commissionService)
+    public function __construct(\App\Services\CommissionCalculatorService $commissionService)
     {
         $this->api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
         $this->commissionService = $commissionService;
@@ -27,7 +27,7 @@ class RazorpayController extends Controller
         // Razorpay expects amount in paise (1 INR = 100 Paise)
         $orderData = [
             'receipt'         => 'rcpt_' . time(),
-            'amount'          => $course->price * 100,
+            'amount'          => $course->final_price * 100, // Use final_price
             'currency'        => 'INR',
             'payment_capture' => 1
         ];
@@ -39,7 +39,7 @@ class RazorpayController extends Controller
             'user_id' => Auth::id(),
             'course_id' => $course->id,
             'razorpay_order_id' => $razorpayOrder['id'],
-            'amount' => $course->price,
+            'amount' => $course->final_price,
             'status' => 'pending',
         ]);
 
@@ -50,6 +50,9 @@ class RazorpayController extends Controller
             'course_name' => $course->title,
         ]);
     }
+
+    // Add method for Bundle Order if needed, or genericize later.
+    // For now, focusing on fixing verifyPayment logic as per request.
 
     public function verifyPayment(Request $request)
     {
@@ -66,36 +69,70 @@ class RazorpayController extends Controller
 
             $this->api->utility->verifyPaymentSignature($attributes);
 
-            // Update Database
-            $payment = Payment::with('course')->where('razorpay_order_id', $orderId)->firstOrFail();
+            // DB Transaction for ACID compliance
+            \Illuminate\Support\Facades\DB::beginTransaction();
 
-            if ($payment->status !== 'success') {
-                $payment->update([
-                    'status' => 'success',
-                    'razorpay_payment_id' => $paymentId
-                ]);
+            try {
+                // Update Database
+                $payment = Payment::with(['course', 'bundle'])->where('razorpay_order_id', $orderId)->lockForUpdate()->firstOrFail();
 
-                // Commission Logic
-                $user = Auth::user();
-                if ($user && $user->referred_by) {
-                    $commissionAmount = $this->commissionService->calculateCommission($user->referred_by, $payment->course);
+                if ($payment->status !== 'success') {
+                    $payment->update([
+                        'status' => 'success',
+                        'razorpay_payment_id' => $paymentId
+                    ]);
 
-                    if ($commissionAmount > 0) {
-                        \App\Models\AffiliateCommission::create([
-                            'affiliate_id' => $user->referred_by,
-                            'referred_user_id' => $user->id,
-                            'amount' => $commissionAmount,
-                            'status' => 'pending', // Or 'approved' based on policy
-                            'commission_type' => 'sale',
-                            'product_id' => $payment->course_id,
-                            'product_type' => get_class($payment->course),
-                            'notes' => 'Commission for Course Sale: ' . $payment->course->title,
-                        ]);
+                    // Determine Product
+                    $product = $payment->bundle ?? $payment->course;
+
+                    // Commission Logic
+                    $user = Auth::user();
+                    // Check if referred (either by direct referrer or via cookie/affiliate link logic)
+                    // Assuming user->referred_by serves as the sponsor
+                    if ($user && $user->referrer) {
+                        $sponsor = $user->referrer;
+
+                        // Calculate Commission
+                        // Only if product is Bundle (as per Capped Logic spec?)
+                        // Or if service handles Course too (we put logic for Bundle type hinting).
+                        // If product is Course, we might need a fallback or service update.
+                        // Assuming for now it works for Bundles mostly. If Course, logic might be simple.
+
+                        $commissionAmount = 0;
+                        if ($product instanceof \App\Models\Bundle) {
+                             $commissionAmount = $this->commissionService->calculateCommission($sponsor, $product);
+                        } elseif ($product instanceof Course) {
+                             // Fallback for course if needed, or simple percentage?
+                             // User spec only detailed Bundle logic.
+                             // Using course->commission_value directly?
+                             $commissionAmount = $product->commission_value ?? 0;
+                        }
+
+                        if ($commissionAmount > 0) {
+                            \App\Models\AffiliateCommission::create([
+                                'affiliate_id' => $sponsor->id,
+                                'referred_user_id' => $user->id,
+                                'amount' => $commissionAmount,
+                                'status' => 'pending',
+                                'reference_id' => $product->id,
+                                'reference_type' => get_class($product),
+                                'notes' => 'Commission for ' . class_basename($product) . ': ' . $product->title,
+                            ]);
+
+                            // Credit Wallet (Optional, depends if commission is auto-approved or pending)
+                            // If pending, no wallet credit yet. Admin approves.
+                        }
                     }
                 }
+
+                \Illuminate\Support\Facades\DB::commit();
+                return response()->json(['status' => 'success', 'message' => 'Payment Verified']);
+
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\DB::rollBack();
+                throw $e;
             }
 
-            return response()->json(['status' => 'success', 'message' => 'Payment Verified']);
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 400);
         }

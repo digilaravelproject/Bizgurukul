@@ -66,7 +66,6 @@ class MediaProcessingService
 
             // Move from temp to final destination
             rename($tempPath, $fullPath);
-            imagedestroy($sourceImage);
 
             return $directory . '/' . $filename;
 

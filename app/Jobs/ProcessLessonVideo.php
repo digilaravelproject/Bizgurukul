@@ -28,7 +28,7 @@ class ProcessLessonVideo implements ShouldQueue
     public function handle()
     {
         try {
-            $disk = config('filesystems.default');
+            $disk = 'public'; // Fixed: Files are stored in public disk
             $originalPath = $this->lesson->video_path;
             $hlsFolder = 'lessons/hls/' . $this->lesson->id;
 

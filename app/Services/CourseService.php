@@ -7,16 +7,20 @@ use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use App\Jobs\ProcessLessonVideo;
 
 class CourseService
 {
     protected $repo;
     protected $mediaService;
+    protected $disk;
 
     public function __construct(CourseRepository $repo, MediaProcessingService $mediaService)
     {
         $this->repo = $repo;
         $this->mediaService = $mediaService;
+        $this->disk = config('filesystems.default', 'public');
     }
 
     public function getFilteredCourses(array $filters)
@@ -37,7 +41,7 @@ class CourseService
                 $data['thumbnail'] = $this->mediaService->compressAndConvertToWebP($data['thumbnail'], 'courses/thumbnails');
             }
             if (isset($data['demo_video']) && $data['demo_video'] instanceof UploadedFile) {
-                $data['demo_video_url'] = $data['demo_video']->store('courses/demos', 'public');
+                $data['demo_video_url'] = $data['demo_video']->store('courses/demos', $this->disk);
             }
 
             // Pricing Logic
@@ -62,7 +66,7 @@ class CourseService
 
             // 2. Handle Demo Video
             if (isset($data['demo_video']) && $data['demo_video'] instanceof UploadedFile) {
-                $data['demo_video_url'] = $data['demo_video']->store('courses/demos', 'public');
+                $data['demo_video_url'] = $data['demo_video']->store('courses/demos', $this->disk);
             } else {
                 unset($data['demo_video_url']);
             }
@@ -124,20 +128,42 @@ class CourseService
             }
 
             if ($data['type'] === 'document' && isset($data['document_file'])) {
-                $lessonData['document_path'] = $data['document_file']->store('lessons/docs', 'public');
+                $lessonData['document_path'] = $data['document_file']->store('lessons/docs', $this->disk);
             }
 
             if ($data['type'] === 'video' && isset($data['video_file'])) {
-                $lessonData['video_path'] = $data['video_file']->store('lessons/raw', 'public');
-                // ProcessLessonVideo::dispatch($lesson);
+                $lessonData['video_path'] = $data['video_file']->store('lessons/raw', $this->disk);
             }
 
-            return $this->repo->createLesson($lessonData);
+            $lesson = $this->repo->createLesson($lessonData);
+
+            if ($lesson->type === 'video' && $lesson->video_path) {
+                ProcessLessonVideo::dispatch($lesson);
+            }
+
+            return $lesson;
         });
     }
 
     public function deleteLesson($id)
     {
+        $lesson = $this->repo->findLesson($id);
+
+        // 1. Delete Files
+        if ($lesson->thumbnail) {
+            Storage::disk($this->disk)->delete($lesson->thumbnail);
+        }
+        if ($lesson->document_path) {
+            Storage::disk($this->disk)->delete($lesson->document_path);
+        }
+        if ($lesson->video_path) {
+            Storage::disk($this->disk)->delete($lesson->video_path);
+        }
+        if ($lesson->hls_path) {
+            $hlsFolder = dirname($lesson->hls_path);
+            Storage::disk($this->disk)->deleteDirectory($hlsFolder);
+        }
+
         return $this->repo->deleteLesson($id);
     }
 
@@ -148,7 +174,7 @@ class CourseService
              throw new Exception('File is required');
         }
 
-        $path = $data['file']->store('courses/resources', 'public');
+        $path = $data['file']->store('courses/resources', $this->disk);
 
         return $this->repo->createResource([
             'course_id' => $courseId,

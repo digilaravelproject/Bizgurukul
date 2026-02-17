@@ -51,8 +51,8 @@ class CourseController extends Controller
             'title' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'sub_category_id' => 'nullable|exists:categories,id',
-            'website_price' => 'required|numeric|min:0',
-            'affiliate_price' => 'required|numeric|lte:website_price',
+            'website_price' => 'nullable|numeric|min:0',
+            'affiliate_price' => 'nullable|numeric|lte:website_price',
             'thumbnail' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB
         ]);
 
@@ -60,7 +60,7 @@ class CourseController extends Controller
             // Using CourseService
             $course = $this->courseService->createCourse($request->all());
 
-            return redirect()->route('admin.courses.edit', ['course' => $course->id, 'tab' => 'lessons'])
+            return redirect()->route('admin.courses.edit', ['id' => $course->id, 'tab' => 'lessons'])
                 ->with('success', 'Course created successfully. Please add lessons.');
         } catch (Exception $e) {
             return back()->with('error', $e->getMessage())->withInput();
@@ -88,7 +88,7 @@ class CourseController extends Controller
             'sub_category_id' => 'nullable|exists:categories,id',
             'description' => 'nullable|string',
             'website_price' => 'sometimes|numeric|min:0',
-            'affiliate_price' => 'required|numeric|lte:website_price',
+            'affiliate_price' => 'sometimes|numeric|lte:website_price',
             'discount_value' => 'nullable|numeric|min:0',
             'discount_type' => 'nullable|in:fixed,percent',
             'commission_value' => 'nullable|numeric|min:0',
@@ -105,9 +105,27 @@ class CourseController extends Controller
         try {
 
             $data = $request->all();
-            $data['is_published'] = $request->has('is_published') ? 1 : 0;
-            $data['certificate_enabled'] = $request->has('certificate_enabled') ? 1 : 0;
-            $data['quiz_required'] = $request->has('quiz_required') ? 1 : 0;
+
+            // Only update these if they are present in the request (coming from settings tab)
+            if ($request->has('is_published_trigger')) { // We can add a hidden trigger in the settings tab
+                $data['is_published'] = $request->has('is_published') ? 1 : 0;
+            }
+            if ($request->has('certificate_trigger')) {
+                $data['certificate_enabled'] = $request->has('certificate_enabled') ? 1 : 0;
+            }
+            if ($request->has('quiz_trigger')) {
+                $data['quiz_required'] = $request->has('quiz_required') ? 1 : 0;
+            }
+
+            // Alternatively, use the redirect_tab as a hint
+            if ($request->redirect_tab === 'settings') {
+                $data['is_published'] = $request->has('is_published') ? 1 : 0;
+                $data['certificate_enabled'] = $request->has('certificate_enabled') ? 1 : 0;
+                $data['quiz_required'] = $request->has('quiz_required') ? 1 : 0;
+            } else {
+                // Remove them from data if not on settings tab to prevent overwriting
+                unset($data['is_published'], $data['certificate_enabled'], $data['quiz_required']);
+            }
 
             $this->courseService->updateCourseDetails($id, $data);
 
@@ -159,7 +177,7 @@ class CourseController extends Controller
         try {
             $this->courseService->addLesson($id, $request->all());
 
-            return redirect()->route('admin.courses.edit', ['course' => $id, 'tab' => 'lessons'])
+            return redirect()->route('admin.courses.edit', ['id' => $id, 'tab' => 'lessons'])
                 ->with('success', 'Lesson added. Video processing started in background.');
         } catch (Exception $e) {
             return back()->with('error', $e->getMessage());
@@ -188,7 +206,7 @@ class CourseController extends Controller
         try {
             $this->courseService->addResource($id, $request->all());
 
-            return redirect()->route('admin.courses.edit', ['course' => $id, 'tab' => 'resources'])
+            return redirect()->route('admin.courses.edit', ['id' => $id, 'tab' => 'resources'])
                 ->with('success', 'Resource added successfully.');
         } catch (Exception $e) {
             return back()->with('error', $e->getMessage());

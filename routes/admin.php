@@ -111,5 +111,18 @@ Route::middleware(['auth', 'role:Admin'])
             // History / Reports
             Route::get('/history', [App\Http\Controllers\Admin\AffiliateController::class, 'history'])->name('history');
             Route::post('/commission/{id}/pay', [App\Http\Controllers\Admin\AffiliateController::class, 'markAsPaid'])->name('commission.pay');
+
+            // Settings
+            Route::get('/settings', [App\Http\Controllers\Admin\AffiliateController::class, 'settings'])->name('settings');
+            Route::post('/settings', [App\Http\Controllers\Admin\AffiliateController::class, 'updateSettings'])->name('settings.update');
+
+            // User Manager
+            Route::get('/users', [App\Http\Controllers\Admin\AffiliateController::class, 'index'])->name('users.index');
+            Route::get('/users/{id}/edit', [App\Http\Controllers\Admin\AffiliateController::class, 'edit'])->name('users.edit');
+            Route::put('/users/{id}/update', [App\Http\Controllers\Admin\AffiliateController::class, 'update'])->name('users.update');
+
+            // User Specific Rules (New)
+            Route::post('/users/{id}/rules', [App\Http\Controllers\Admin\AffiliateController::class, 'storeRule'])->name('users.rules.store');
+            Route::delete('/users/rules/{id}', [App\Http\Controllers\Admin\AffiliateController::class, 'deleteRule'])->name('users.rules.delete');
         });
     });

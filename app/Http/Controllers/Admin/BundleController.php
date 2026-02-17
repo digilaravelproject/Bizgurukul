@@ -143,6 +143,7 @@ class BundleController extends Controller
         ]);
 
         try {
+
             $this->bundleService->updateBundle($id, $request->all());
             return redirect()->route('admin.bundles.index')->with('success', 'Bundle updated successfully');
         } catch (Exception $e) {

@@ -32,6 +32,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/onboarding/referral', [App\Http\Controllers\OnboardingController::class, 'showReferralStep'])->name('onboarding.referral');
     Route::post('/onboarding/referral', [App\Http\Controllers\OnboardingController::class, 'storeReferrer'])->name('onboarding.referral.store');
     Route::get('/onboarding/skip', [App\Http\Controllers\OnboardingController::class, 'skip'])->name('onboarding.skip');
+
+    // Affiliate Dashboard & Tools
+    Route::prefix('affiliate')->name('affiliate.')->group(function () {
+        Route::get('/dashboard', [App\Http\Controllers\AffiliateController::class, 'index'])->name('dashboard');
+        Route::post('/generate-link', [App\Http\Controllers\AffiliateController::class, 'generateLink'])->name('link.generate');
+        Route::delete('/link/{id}', [App\Http\Controllers\AffiliateController::class, 'deleteLink'])->name('link.delete');
+    });
 });
 Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')->group(function () {
     Route::get('/profile', [App\Http\Controllers\Student\ProfileController::class, 'index'])->name('profile');

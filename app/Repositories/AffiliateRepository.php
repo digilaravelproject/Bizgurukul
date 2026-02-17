@@ -37,4 +37,40 @@ class AffiliateRepository
     {
         return $this->walletModel->create($data);
     }
+
+    // --- Link Management ---
+
+    public function createLink(array $data)
+    {
+        return \App\Models\AffiliateLink::create($data);
+    }
+
+    public function findLinkBySlug($slug)
+    {
+        return \App\Models\AffiliateLink::where('slug', $slug)
+            ->where('is_deleted', false)
+            ->first();
+    }
+
+    public function softDeleteLink($id)
+    {
+        /** @var \App\Models\AffiliateLink|null $link */
+        $link = \App\Models\AffiliateLink::find($id);
+
+        if ($link) {
+            /** @var \App\Models\AffiliateLink $link */
+            $link->is_deleted = true;
+            $link->save();
+            return true;
+        }
+        return false;
+    }
+
+    public function getAffiliateLinks($userId, $perPage = 10)
+    {
+        return \App\Models\AffiliateLink::where('user_id', $userId)
+            ->where('is_deleted', false)
+            ->latest()
+            ->paginate($perPage);
+    }
 }

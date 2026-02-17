@@ -35,47 +35,66 @@ class BundleService
     public function createBundle(array $data)
     {
         return DB::transaction(function () use ($data) {
-            if (isset($data['thumbnail']) && $data['thumbnail'] instanceof UploadedFile) {
-                $data['thumbnail'] = $this->mediaService->compressAndConvertToWebP($data['thumbnail'], 'bundles/thumbnails');
-            }
-            $data['slug'] = Str::slug($data['title']) . '-' . time();
-            $data = $this->calculatePricing($data);
-            $bundle = $this->repo->createBundle($data);
-            $courses = $data['courses'] ?? [];
-            $childBundles = $data['bundles'] ?? [];
-            $this->repo->syncItems($bundle, $courses, $childBundles);
+            try {
+                if (isset($data['thumbnail']) && $data['thumbnail'] instanceof UploadedFile) {
+                    $data['thumbnail'] = $this->mediaService->compressAndConvertToWebP($data['thumbnail'], 'bundles/thumbnails');
+                }
+                $data['slug'] = Str::slug($data['title']) . '-' . time();
+                $data = $this->calculatePricing($data);
+                $bundle = $this->repo->createBundle($data);
+                $courses = $data['courses'] ?? [];
+                $childBundles = $data['bundles'] ?? [];
+                $this->repo->syncItems($bundle, $courses, $childBundles);
 
-            return $bundle;
+                return $bundle;
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Bundle Creation Failed: " . $e->getMessage(), [
+                    'data' => $data,
+                    'trace' => $e->getTraceAsString()
+                ]);
+                throw $e;
+            }
         });
     }
 
     public function updateBundle($id, array $data)
     {
         return DB::transaction(function () use ($id, $data) {
-            $bundle = $this->repo->getBundleById($id);
+            try {
+                $bundle = $this->repo->getBundleById($id);
 
-            if (isset($data['thumbnail']) && $data['thumbnail'] instanceof UploadedFile) {
-                if ($old = $bundle->getRawOriginal('thumbnail')) {
-                    Storage::disk($this->disk)->delete($old);
+                if (isset($data['thumbnail']) && $data['thumbnail'] instanceof UploadedFile) {
+                    if ($old = $bundle->getRawOriginal('thumbnail')) {
+                        Storage::disk($this->disk)->delete($old);
+                    }
+                    $data['thumbnail'] = $this->mediaService->compressAndConvertToWebP($data['thumbnail'], 'bundles/thumbnails');
+                } else {
+                    unset($data['thumbnail']);
                 }
-                $data['thumbnail'] = $this->mediaService->compressAndConvertToWebP($data['thumbnail'], 'bundles/thumbnails');
-            } else {
-                unset($data['thumbnail']);
-            }
-            // 3. Price Calculation
-            $mergedData = array_merge($bundle->toArray(), $data);
-            $calculatedData = $this->calculatePricing($mergedData);
 
-            $data['final_price'] = $calculatedData['final_price'] ?? $bundle->final_price;
+                // 3. Price Calculation
+                // Use getRawOriginal for prices to avoid accessor interference if any
+                $mergedData = array_merge($bundle->getAttributes(), $data);
+                $calculatedData = $this->calculatePricing($mergedData);
 
-            $this->repo->updateBundle($bundle, $data);
-            if (isset($data['courses']) || isset($data['bundles'])) {
+                $data['final_price'] = $calculatedData['final_price'] ?? $bundle->final_price;
+
+                $this->repo->updateBundle($bundle, $data);
+
+                // Always sync, even if keys are missing (handles detaching all)
                 $courses = $data['courses'] ?? [];
                 $childBundles = $data['bundles'] ?? [];
                 $this->repo->syncItems($bundle, $courses, $childBundles);
-            }
 
-            return $bundle;
+                return $bundle;
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Bundle Update Failed: " . $e->getMessage(), [
+                    'id' => $id,
+                    'data' => $data,
+                    'trace' => $e->getTraceAsString()
+                ]);
+                throw $e;
+            }
         });
     }
 
@@ -96,14 +115,17 @@ class BundleService
     {
         $price = (float) ($data['website_price'] ?? 0);
         $discountValue = (float) ($data['discount_value'] ?? 0);
-        $discountType = $data['discount_type'] ?? 'flat';
+        $discountType = $data['discount_type'] ?? '';
 
         $finalPrice = $price;
 
         if ($discountType === 'percentage') {
             $finalPrice = $price - ($price * ($discountValue / 100));
-        } else {
+        } elseif ($discountType === 'flat') {
             $finalPrice = $price - $discountValue;
+        } else {
+            // No discount or unknown type, final price is website price
+            $finalPrice = $price;
         }
 
         $data['final_price'] = max(0, round($finalPrice, 2));

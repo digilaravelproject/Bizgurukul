@@ -41,7 +41,7 @@ class DashboardService
                     $topCourses = Course::withCount('students')
                         ->orderBy('students_count', 'desc')
                         ->take(4)
-                        ->get(['id', 'title', 'price', 'thumbnail']); // removed users_count from select, it is added automatically by withCount
+                        ->get(['id', 'title', 'website_price', 'thumbnail']); // changed 'price' to 'website_price'
                 } catch (\Exception $e) {
                     Log::error('Dashboard Top Courses Error: ' . $e->getMessage());
                     $topCourses = []; // Return empty array if relation fails

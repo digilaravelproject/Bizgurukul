@@ -10,18 +10,16 @@ class SettingsSeeder extends Seeder
     public function run(): void
     {
         $settings = [
-            'site_name' => 'BizGurukul',
-            'referral_system_active' => '1',
-            'referral_commission_amount' => '500',
-            'referral_cookie_expiry_days' => '30',
-            'min_payout_amount' => '1000',
+            'site_name' => 'Skills Pahle',
+            'site_description' => 'Learn and Earn',
+            'affiliate_module_enabled' => true,
+            'course_selling_enabled' => true,
             'currency_symbol' => '₹',
+            'currency_code' => 'INR',
         ];
 
         foreach ($settings as $key => $value) {
             Setting::set($key, $value);
         }
-
-        $this->command->info('Settings seeded and cache cleared successfully!');
     }
 }
