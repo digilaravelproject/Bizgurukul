@@ -8,28 +8,98 @@
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
     <!-- Form -->
-    <form method="POST" action="{{ route('login') }}" class="mt-8 space-y-6" x-data="{ loading: false, showPassword: false }" @submit="loading = true">
+    <form method="POST" action="{{ route('login') }}" class="mt-8 space-y-6"
+          x-data="{
+              loading: false,
+              showPassword: false,
+              emailChecked: false,
+              email: '{{ old('email') }}',
+              maskedEmail: '',
+              checkEmail() {
+                  if (!this.email) return;
+                  this.loading = true;
+                  fetch('{{ route('login.check-email') }}', {
+                      method: 'POST',
+                      headers: {
+                          'Content-Type': 'application/json',
+                          'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                      },
+                      body: JSON.stringify({ email: this.email })
+                  })
+                  .then(response => response.json())
+                  .then(data => {
+                      this.loading = false;
+                      if (data.status === 'user' || data.status === 'lead') {
+                          // Mask Email
+                          let parts = this.email.split('@');
+                          if (parts.length === 2) {
+                              let name = parts[0];
+                              let domainFull = parts[1];
+                              let maskedName = name.length > 1 ? name[0] + '********' + name[name.length - 1] : name + '********';
+                              let dParts = domainFull.split('.');
+                              let dName = dParts[0];
+                              let tld = dParts.slice(1).join('.');
+                              let maskedD = dName.length > 1 ? dName[0] + '****' + dName[dName.length - 1] : dName + '****';
+                              this.maskedEmail = maskedName + '@' + maskedD + (tld ? '.' + tld : '');
+                          } else {
+                              this.maskedEmail = this.email;
+                          }
+
+                          if (data.status === 'user') {
+                              this.emailChecked = true;
+                              this.$nextTick(() => {
+                                  if(document.getElementById('password')) document.getElementById('password').focus();
+                              });
+                          } else {
+                              // It's a lead, redirect to Phase 2
+                              window.location.href = data.redirect_url;
+                          }
+                      } else if (data.redirect_url) {
+                          window.location.href = data.redirect_url;
+                      }
+                  })
+                  .catch(error => {
+                      this.loading = false;
+                      console.error('Error:', error);
+                  });
+              }
+          }"
+          @submit.prevent="if(!emailChecked) checkEmail(); else $el.submit()">
         @csrf
 
         <div class="space-y-5">
             <!-- Email -->
             <div>
-                <label for="email" class="block text-sm font-medium text-mainText mb-1.5">Email Address</label>
+                <label for="email_display" class="block text-sm font-medium text-mainText mb-1.5">Email Address</label>
                 <div class="relative">
-                    <input id="email" type="email" name="email" :value="old('email')" required autofocus autocomplete="username"
+                    <!-- Real Email for submission -->
+                    <input type="hidden" name="email" :value="email">
+
+                    <input id="email_display" type="email"
+                        :value="emailChecked ? maskedEmail : email"
+                        @input="email = $event.target.value"
+                        :required="!emailChecked" autofocus autocomplete="username"
                         placeholder="name@example.com"
-                        class="w-full px-4 py-3 bg-navy/30 border border-slate-200 rounded-lg text-mainText placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition duration-200">
+                        :readonly="emailChecked"
+                        class="w-full px-4 py-3 bg-navy/30 border border-slate-200 rounded-lg text-mainText placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition duration-200"
+                        :class="{'opacity-75 cursor-not-allowed': emailChecked}">
                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                         <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                         </svg>
                     </div>
                 </div>
+                <!-- Reset Email Link -->
+                <div x-show="emailChecked" x-cloak class="mt-1 text-right">
+                    <button type="button" @click="emailChecked = false; $nextTick(() => document.getElementById('email').focus())" class="text-xs text-primary hover:underline">Change Email</button>
+                </div>
                 <x-input-error :messages="$errors->get('email')" class="mt-1" />
             </div>
 
             <!-- Password -->
-            <div>
+            <div x-show="emailChecked" x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100">
                 <div class="flex items-center justify-between mb-1.5">
                     <label for="password" class="block text-sm font-medium text-mainText">Password</label>
                     @if (Route::has('password.request'))
@@ -39,7 +109,7 @@
                     @endif
                 </div>
                 <div class="relative">
-                    <input id="password" :type="showPassword ? 'text' : 'password'" name="password" required autocomplete="current-password"
+                    <input id="password" :type="showPassword ? 'text' : 'password'" name="password" :required="emailChecked" autocomplete="current-password"
                         placeholder="Enter your password"
                         class="w-full px-4 py-3 bg-navy/30 border border-slate-200 rounded-lg text-mainText placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition duration-200">
 
@@ -60,7 +130,7 @@
         </div>
 
         <!-- Remember Me -->
-        <div class="flex items-center">
+        <div class="flex items-center" x-show="emailChecked" x-transition>
             <input id="remember_me" type="checkbox" name="remember" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
             <label for="remember_me" class="ml-2 block text-sm text-mutedText">Remember me for 30 days</label>
         </div>
@@ -70,7 +140,7 @@
             :disabled="loading"
             class="w-full flex justify-center items-center py-3.5 px-4 rounded-lg text-white font-bold bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-all duration-300 shadow-lg shadow-primary/20 transform active:scale-[0.98]">
 
-            <span x-show="!loading">Log In</span>
+            <span x-show="!loading" x-text="emailChecked ? 'Log In' : 'Next'"></span>
 
             <span x-show="loading" x-cloak class="flex items-center">
                 <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -84,7 +154,7 @@
         <!-- Footer -->
         <p class="text-center text-sm text-mutedText">
             Don't have an account?
-            <a href="{{ route('register') }}" class="font-bold text-primary hover:text-secondary transition">Create an account</a>
+            <a href="{{ route('register.phase1') }}" class="font-bold text-primary hover:text-secondary transition">Create an account</a>
         </p>
     </form>
 </x-guest-layout>

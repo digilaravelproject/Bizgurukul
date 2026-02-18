@@ -13,6 +13,7 @@ class BundleRepository
             ->when(isset($filters['search']), function ($q) use ($filters) {
                 $q->where('title', 'like', '%' . $filters['search'] . '%');
             })
+            ->orderByDesc('preference_index')
             ->latest()
             ->paginate(10);
     }

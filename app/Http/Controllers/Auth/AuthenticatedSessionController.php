@@ -20,6 +20,38 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
+     * Handle the "Smart Login" email check.
+     */
+    public function checkEmail(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $email = $request->email;
+
+        // Scenario A: Registered User
+        if (\App\Models\User::where('email', $email)->exists()) {
+            return response()->json(['status' => 'user']);
+        }
+
+        // Scenario C: Lead (Drop-off)
+        $lead = \App\Models\Lead::where('email', $email)->first();
+        if ($lead) {
+            // Logic to restore session/context will be handled in Phase 2 controller
+            // For now, redirect to Phase 2
+            return response()->json([
+                'status' => 'lead',
+                'redirect_url' => route('register.phase2', ['lead_id' => $lead->id])
+            ]);
+        }
+
+        // Scenario B: New User
+        return response()->json([
+            'status' => 'new',
+            'redirect_url' => route('register', ['email' => $email])
+        ]);
+    }
+
+    /**
      * Handle an incoming authentication request.
      */
     public function store(LoginRequest $request): RedirectResponse

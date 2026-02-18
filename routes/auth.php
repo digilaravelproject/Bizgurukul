@@ -22,6 +22,36 @@ Route::middleware('guest')->group(function () {
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
+    Route::post('check-email', [AuthenticatedSessionController::class, 'checkEmail'])
+        ->name('login.check-email');
+
+    // Phase 1: Lead Capture
+    Route::get('register/step-1', [\App\Http\Controllers\Auth\RegistrationFlowController::class, 'showPhase1'])
+        ->name('register.phase1');
+    Route::post('register/step-1', [\App\Http\Controllers\Auth\RegistrationFlowController::class, 'storePhase1'])
+        ->name('register.phase1.store');
+
+    // Phase 2: Product Selection
+    Route::get('register/step-2', [\App\Http\Controllers\Auth\RegistrationFlowController::class, 'showPhase2'])
+        ->name('register.phase2');
+    Route::post('register/step-2', [\App\Http\Controllers\Auth\RegistrationFlowController::class, 'storePhase2'])
+        ->name('register.phase2.store');
+
+    Route::post('register/check-referral', [\App\Http\Controllers\Auth\RegistrationFlowController::class, 'checkReferralPhase2'])
+        ->name('register.check-referral');
+
+    Route::get('register/step-3', [\App\Http\Controllers\Auth\RegistrationFlowController::class, 'showPhase3'])
+        ->name('register.phase3');
+
+    Route::post('register/check-coupon', [\App\Http\Controllers\Auth\RegistrationFlowController::class, 'checkCoupon'])
+        ->name('register.check-coupon');
+
+    Route::post('payment/initiate', [\App\Http\Controllers\Auth\RegistrationFlowController::class, 'initiatePayment'])
+        ->name('payment.initiate');
+
+    Route::post('payment/verify', [\App\Http\Controllers\Auth\RegistrationFlowController::class, 'verifyPayment'])
+        ->name('payment.verify');
+
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');
 

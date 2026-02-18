@@ -79,6 +79,7 @@ class BundleController extends Controller
             'bundles' => 'nullable|array',
             'bundles.*' => 'exists:bundles,id',
             'is_published' => 'boolean',
+            'preference_index' => 'nullable|integer|min:0',
         ]);
 
         try {
@@ -140,6 +141,7 @@ class BundleController extends Controller
             'courses' => 'nullable|array',
             'bundles' => 'nullable|array',
             'is_published' => 'boolean',
+            'preference_index' => 'nullable|integer|min:0',
         ]);
 
         try {

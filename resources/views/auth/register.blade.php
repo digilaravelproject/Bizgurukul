@@ -106,12 +106,6 @@
                 </div>
             </div>
 
-            <div class="md:col-span-2">
-                <label class="block text-[10px] font-black text-mutedText uppercase tracking-widest mb-2 ml-1">Current City</label>
-                <input type="text" name="city" value="{{ old('city') }}" placeholder="Enter city name"
-                    class="w-full px-5 py-4 bg-navy/10 border border-primary/10 rounded-2xl text-mainText font-bold placeholder-mutedText/30 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-300">
-            </div>
-
             <div>
                 <label class="block text-[10px] font-black text-mutedText uppercase tracking-widest mb-2 ml-1">Security Password</label>
                 <div class="relative">

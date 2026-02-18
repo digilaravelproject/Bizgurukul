@@ -24,7 +24,6 @@ class User extends Authenticatable
         'gender',
         'dob',
         'state_id',
-        'city',
         'zip_code',
         'address',
         'profile_picture',

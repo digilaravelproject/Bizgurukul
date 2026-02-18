@@ -170,8 +170,21 @@
 
         {{-- Right Column: Settings & Media --}}
         <div class="lg:col-span-4 space-y-6">
-            {{-- Publish Status --}}
-            <div class="bg-surface rounded-3xl p-6 border border-primary/5 shadow-lg shadow-primary/5">
+            {{-- Preference Index & Publish Status --}}
+            <div class="bg-surface rounded-3xl p-6 border border-primary/5 shadow-lg shadow-primary/5 space-y-4">
+                {{-- Preference Index --}}
+                <div>
+                    <label class="block text-sm font-bold text-mainText">Preference Index</label>
+                    <p class="text-[10px] text-mutedText mt-1 mb-3">Order/Rank for capped logic or sorting (Higher = Priority)</p>
+                    <input type="number" name="preference_index" value="{{ old('preference_index', $bundle->preference_index ?? 0) }}"
+                           class="w-full h-11 px-4 bg-white border border-gray-300 rounded-xl focus:border-primary focus:ring-0 transition-all font-bold text-mainText placeholder-gray-400" placeholder="0">
+                    @error('preference_index')
+                        <p class="text-red-500 text-xs mt-1 font-bold">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="h-px bg-gray-100"></div>
+
                 <div class="flex items-center justify-between">
                     <div>
                         <label class="block text-sm font-bold text-mainText">Publish Bundle</label>

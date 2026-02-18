@@ -63,7 +63,6 @@ class RegisteredUserController extends Controller
             'gender' => ['nullable', 'in:male,female,other'],
             'dob' => ['nullable', 'date'],
             'state_id' => ['nullable', 'exists:states,id'],
-            'city' => ['nullable', 'string', 'max:255'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'referral_code' => ['nullable', 'string', 'exists:users,referral_code'],
         ]);
@@ -88,7 +87,6 @@ class RegisteredUserController extends Controller
                 'gender' => $request->gender,
                 'dob' => $request->dob,
                 'state_id' => $request->state_id,
-                'city' => $request->city,
                 'password' => Hash::make($request->password),
                 'is_active' => true,
                 'referred_by' => $referredBy,
