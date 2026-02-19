@@ -70,7 +70,32 @@ class AffiliateRepository
     {
         return \App\Models\AffiliateLink::where('user_id', $userId)
             ->where('is_deleted', false)
+            ->with(['course', 'bundle'])
             ->latest()
             ->paginate($perPage);
+    }
+
+    public function getAvailableBundles()
+    {
+        return \App\Models\Bundle::where('is_active', true)
+            ->where('is_published', true)
+            ->get();
+    }
+
+    public function getAvailableCourses()
+    {
+        return \App\Models\Course::where('is_published', true)->get();
+    }
+
+    public function findLink($id, $userId)
+    {
+        return \App\Models\AffiliateLink::where('user_id', $userId)
+            ->where('id', $id)
+            ->first();
+    }
+
+    public function countLinksBySlug($slug)
+    {
+        return \App\Models\AffiliateLink::where('slug', $slug)->count();
     }
 }

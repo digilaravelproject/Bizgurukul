@@ -104,9 +104,11 @@ class Coupon extends Model
     {
         if ($this->type === 'percentage') {
             return ($totalAmount * $this->value) / 100;
+        } elseif ($this->type === 'flat') {
+            return min($this->value, $totalAmount);
         }
 
-        return min($this->value, $totalAmount);
+        return 0;
     }
 
     public function owner()

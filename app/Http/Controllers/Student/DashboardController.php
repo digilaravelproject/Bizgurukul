@@ -3,20 +3,20 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use App\Models\User;
-use App\Models\Course;
-use App\Models\Bundle;
-use App\Models\Payment;
-use App\Models\VideoProgress;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use App\Models\{User, Course, Bundle, Payment, VideoProgress};
 use Exception;
 
 class DashboardController extends Controller
 {
+    protected $affiliateService;
+
+    public function __construct(\App\Services\AffiliateService $affiliateService)
+    {
+        $this->affiliateService = $affiliateService;
+    }
+
     public function index()
     {
         try {
@@ -27,59 +27,59 @@ class DashboardController extends Controller
                 return redirect()->route('login')->with('error', 'Please login first.');
             }
 
-            // --- LEARNING DATA ---
+            // Fetch completed lesson IDs for calculation
             $completedLessonIds = VideoProgress::where('user_id', $user->id)
                 ->where('is_completed', true)
                 ->pluck('lesson_id')
                 ->toArray();
 
+            // Fetch and calculate course progress efficiently using withCount
             $myCourses = Payment::where('user_id', $user->id)
                 ->where('status', 'success')
                 ->whereNotNull('course_id')
-                ->with(['course.lessons', 'course.category'])
+                ->with(['course' => function($q) {
+                    $q->withCount('lessons')->with('category');
+                }])
                 ->latest()
                 ->get()
-                ->map(function ($payment) use ($completedLessonIds) {
-                    $course = $payment->course;
-                    if ($course) {
-                        $total = $course->lessons->count();
-                        $completed = $course->lessons->whereIn('id', $completedLessonIds)->count();
-                        $course->progress_percent = $total > 0 ? round(($completed / $total) * 100) : 0;
-                        $course->completed_lessons = $completed;
-                        $course->total_lessons = $total;
-                        return $course;
-                    }
-                })->filter();
+                ->pluck('course')
+                ->filter()
+                ->map(function ($course) use ($completedLessonIds) {
+                    $completed = $course->lessons->pluck('id')->intersect($completedLessonIds)->count();
 
-            $myBundles = collect([]); // Placeholder
+                    $course->progress_percent = $course->lessons_count > 0
+                        ? round(($completed / $course->lessons_count) * 100)
+                        : 0;
+                    $course->completed_lessons = $completed;
+                    $course->total_lessons = $course->lessons_count;
 
-            // --- AFFILIATE DATA ---
-            $totalEarnings = $user->commissions()->where('status', 'paid')->sum('amount') ?? 0;
-            $pendingEarnings = $user->commissions()->where('status', 'pending')->sum('amount') ?? 0;
+                    return $course;
+                });
+
+            // Fetch purchased bundles
+            $myBundles = Payment::where('user_id', $user->id)
+                ->where('status', 'success')
+                ->whereNotNull('bundle_id')
+                ->with('bundle')
+                ->latest()
+                ->get()
+                ->pluck('bundle')
+                ->filter();
+
             $referralLink = $user->referral_code ? url('/register?ref=' . $user->referral_code) : '';
 
-            // 7 Days Performance Chart
-            $chartLabels = [];
-            $chartData = [];
-            $earningsData = $user->commissions()
-                ->where('created_at', '>=', Carbon::now()->subDays(6))
-                ->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(amount) as total'))
-                ->groupBy('date')
-                ->pluck('total', 'date')->toArray();
+            $affiliateData = $this->affiliateService->getDashboardData($user);
 
-            for ($i = 6; $i >= 0; $i--) {
-                $date = Carbon::now()->subDays($i)->format('Y-m-d');
-                $chartLabels[] = Carbon::now()->subDays($i)->format('d M');
-                $chartData[] = (float)($earningsData[$date] ?? 0);
-            }
-
-            $allCourses = Course::where('is_published', true)->select('id', 'title')->get();
-            $allBundles = Bundle::where('is_published', true)->select('id', 'title')->get();
-
-            return view('student.dashboard', compact(
-                'user', 'myCourses', 'myBundles', 'totalEarnings', 'pendingEarnings',
-                'referralLink', 'chartLabels', 'chartData', 'allCourses', 'allBundles'
-            ));
+            return view('student.dashboard', array_merge([
+                'user'                => $user,
+                'myCourses'           => $myCourses,
+                'myBundles'           => $myBundles,
+                'referralLink'        => $referralLink,
+                'earningsStats'       => $this->affiliateService->getEarningsStats($user),
+                'secondaryStats'      => $this->affiliateService->getSecondaryStats($user),
+                'graphData'           => $this->affiliateService->getGraphData($user, 7),
+                'categoryPerformance' => $this->affiliateService->getCategoryPerformance($user),
+            ], $affiliateData));
 
         } catch (Exception $e) {
             Log::error("Dashboard Error: " . $e->getMessage());

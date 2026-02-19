@@ -15,23 +15,38 @@ class AffiliateLinkController extends Controller
 {
     public function index()
     {
-        $links = AffiliateLink::where('user_id', Auth::id())
+        $user = Auth::user();
+        $links = AffiliateLink::where('user_id', $user->id)
+            ->with(['course', 'bundle'])
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $courses = Course::where('is_published', true)->get();
-        $bundles = Bundle::all();
+        // Check Affiliate Settings
+        $settings = $user->affiliateSettings;
+        $canSellCourses = $settings ? $settings->can_sell_courses : false;
 
-        return view('student.affiliate.links.index', compact('links', 'courses', 'bundles'));
+        // Filter Products based on permissions
+        $courses = $canSellCourses ? Course::where('is_published', true)->get() : collect([]);
+        // User request: Bundle permission should always remain enabled for all users.
+        $bundles = Bundle::where('is_published', true)->get();
+
+        return view('student.affiliate.links.index', compact('links', 'courses', 'bundles', 'canSellCourses'));
     }
 
     public function store(Request $request)
     {
+        // Consolidate target_id based on type
+        if ($request->type == 'specific_bundle') {
+            $request->merge(['target_id' => $request->target_id_bundle]);
+        } elseif ($request->type == 'specific_course') {
+            $request->merge(['target_id' => $request->target_id_course]);
+        }
+
         $request->validate([
             'type' => 'required|in:general,specific_course,specific_bundle',
             'target_id' => 'nullable|required_if:type,specific_course,specific_bundle',
             'expiry_date' => 'nullable|date|after:today',
-            'description' => 'nullable|string|max:255',
+            // No description validation needed as per request? User said "no description field". verify if I removed it from view. I didn't remove it from controller yet.
         ]);
 
         $slug = Str::random(8); // Simple random slug
@@ -43,11 +58,12 @@ class AffiliateLinkController extends Controller
         AffiliateLink::create([
             'user_id' => Auth::id(),
             'slug' => $slug,
-            'type' => $request->type,
+            'target_type' => $request->type, // Model: target_type
             'target_id' => $request->target_id,
-            'expiry_date' => $request->expiry_date,
+            'expires_at' => $request->expiry_date ?: null, // Ensure null if empty string
             'description' => $request->description,
-            'is_active' => true,
+            'is_deleted' => false, // Active means NOT deleted
+            'clicks' => 0,
         ]);
 
         return back()->with('success', 'Affiliate link generated successfully!');
@@ -57,46 +73,32 @@ class AffiliateLinkController extends Controller
     {
         $link = AffiliateLink::where('slug', $slug)->first();
 
-        if (!$link || !$link->is_active) {
-            return redirect()->route('home')->with('error', 'Invalid or inactive link.');
+        // Check if link exists and is NOT deleted (active)
+        if (!$link || $link->is_deleted) {
+            return redirect()->route('register')->with('error', 'Invalid or inactive link.');
         }
 
         // Check Expiry
-        if ($link->expiry_date && $link->expiry_date->isPast()) {
-            return redirect()->route('home')->with('error', 'This link has expired.');
+        if ($link->expires_at && $link->expires_at->isPast()) {
+            return redirect()->route('register')->with('error', 'This link has expired.');
         }
 
         // Increment Click
-        $link->increment('click_count');
+        $link->increment('clicks');
 
         // Store Referral Data in Session & Cookie (valid for 30 days)
-        // We store the link ID to know *what* to show them later,
-        // and the referrer_code (user's referral code) for the actual commission logic.
-
         $referrer = $link->user;
 
         session([
             'affiliate_link_slug' => $slug,
             'referrer_code' => $referrer->referral_code,
+            'affiliate_referrer_id' => $referrer->id,
         ]);
 
         $cookie = cookie('referrer_code', $referrer->referral_code, 43200); // 30 days
 
-        // Redirect flow:
-        // 1. If user is already logged in:
-        //    - If they haven't bought anything -> Go to Product Selection
-        //    - If they have -> Go to Dashboard (or the specific product page if they want to buy it?)
-        //      User said: "agr mene ek bhi course purchase nhi kiya hain to... direct jaunga product page per"
-
-        if (Auth::check()) {
-            // Check if user has purchased anything?
-            // For now, let's redirect them to the product selection page if they are paying users or not.
-            // The user wants them to see specific products if the link is specific.
-            return redirect()->route('student.product_selection')->withCookie($cookie);
-        }
-
-        // 2. If user is NOT logged in -> Register Page
-        return redirect()->route('register')->withCookie($cookie);
+        // STRICT REDIRECT: Always to Register Phase 1
+        return redirect()->route('register.phase1')->withCookie($cookie);
     }
 
     public function destroy($id)

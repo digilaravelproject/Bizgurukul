@@ -1,5 +1,32 @@
 @extends('layouts.user.app')
 
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<style>
+    .swal2-popup {
+        border-radius: 2rem !important;
+        font-family: 'Outfit', sans-serif !important;
+    }
+    .swal2-confirm {
+        background: linear-gradient(90deg, #F7941D 0%, #D04A02 100%) !important;
+        border-radius: 12px !important;
+        padding: 12px 30px !important;
+        font-weight: 800 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+        font-size: 12px !important;
+    }
+    .swal2-cancel {
+        border-radius: 12px !important;
+        padding: 12px 30px !important;
+        font-weight: 800 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+        font-size: 12px !important;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="space-y-8 pb-12 font-sans text-mainText">
 
@@ -70,12 +97,39 @@
         </div>
     @endif
 </div>
+@endsection
 
+@push('scripts')
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     function purchasePackage(id, name, price) {
-        if (!confirm(`Are you sure you want to purchase "${name}" for ₹${price}?`)) return;
+        Swal.fire({
+            title: 'Purchase Confirmation',
+            text: `Are you sure you want to purchase "${name}" for ₹${price}?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Purchase Now',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                initiatePurchase(id, name);
+            }
+        });
+    }
 
-        fetch('{{ route('student.coupons.purchase') }}', {
+    function initiatePurchase(id, name) {
+        Swal.fire({
+            title: 'Initializing Payment',
+            text: 'Please wait...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        fetch('{{ route('student.coupons.purchase.initiate') }}', {
             method: 'POST',
             body: JSON.stringify({ package_id: id }),
             headers: {
@@ -87,16 +141,102 @@
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                alert(`Success! Your coupon code is: ${data.code}\nIt has been added to your inventory.`);
-                window.location.href = '{{ route('student.coupons.index') }}';
+                Swal.close();
+                const order = data.data;
+
+                var options = {
+                    "key": order.key,
+                    "amount": order.amount,
+                    "currency": "INR",
+                    "name": order.name,
+                    "description": "Purchase Coupon Package: " + name,
+                    "order_id": order.order_id,
+                    "handler": function (response){
+                        verifyPayment(response);
+                    },
+                    "prefill": order.prefill,
+                    "theme": {
+                        "color": "#F7941D" // Brand Color
+                    }
+                };
+                var rzp1 = new Razorpay(options);
+                rzp1.on('payment.failed', function (response){
+                    Swal.fire({
+                        title: 'Payment Failed',
+                        text: response.error.description,
+                        icon: 'error'
+                    });
+                });
+                rzp1.open();
+
             } else {
-                alert('Purchase Failed: ' + data.message);
+                Swal.fire({
+                    title: 'Initiation Failed',
+                    text: data.message,
+                    icon: 'error'
+                });
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Something went wrong. Please try again.');
+            Swal.fire({
+                title: 'Error',
+                text: 'Something went wrong during initialization.',
+                icon: 'error'
+            });
+        });
+    }
+
+    function verifyPayment(response) {
+        Swal.fire({
+            title: 'Verifying Payment',
+            text: 'Processing your purchase...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        fetch('{{ route('student.coupons.purchase.verify') }}', {
+            method: 'POST',
+            body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature
+            }),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                 Swal.fire({
+                    title: 'Purchase Successful!',
+                    html: `Your coupon code is: <b class="text-primary font-bold text-xl select-all">${data.code}</b><br><br>It has been added to your inventory.`,
+                    icon: 'success',
+                    confirmButtonText: 'View My Coupons'
+                 }).then(() => {
+                    window.location.href = '{{ route('student.coupons.index') }}';
+                 });
+            } else {
+                Swal.fire({
+                    title: 'Verification Failed',
+                    text: data.message,
+                    icon: 'error'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                title: 'Error',
+                text: 'Payment verification failed. Please contact support.',
+                icon: 'error'
+            });
         });
     }
 </script>
-@endsection
+@endpush

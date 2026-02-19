@@ -49,19 +49,64 @@ class CouponController extends Controller
     /**
      * Purchase Verification / Process
      */
-    public function purchase(Request $request)
+    /**
+     * Initiate Purchase (Create Razorpay Order)
+     */
+    public function initiatePurchase(Request $request)
     {
         $request->validate([
             'package_id' => 'required|exists:coupon_packages,id'
         ]);
 
         try {
-            $coupon = $this->couponService->purchasePackage(Auth::user(), $request->package_id);
+            $user = Auth::user();
+            $package = $this->packageRepo->find($request->package_id);
+
+            if (!$package || !$package->is_active) {
+                return response()->json(['status' => 'error', 'message' => 'Package not available'], 400);
+            }
+
+            // Use PaymentService to initiate
+            $paymentService = app(\App\Services\PaymentService::class);
+            $orderData = $paymentService->initiatePayment($user, $package, $package->selling_price);
+
             return response()->json([
                 'status' => 'success',
-                'message' => 'Coupon purchased successfully!',
-                'code' => $coupon->code
+                'data' => $orderData
             ]);
+        } catch (Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * Verify Purchase and Issue Coupon
+     */
+    public function verifyPurchase(Request $request)
+    {
+        $request->validate([
+            'razorpay_order_id' => 'required',
+            'razorpay_payment_id' => 'required',
+            'razorpay_signature' => 'required'
+        ]);
+
+        try {
+            $paymentService = app(\App\Services\PaymentService::class);
+            $payment = $paymentService->verifyPayment($request->all());
+
+            // Issue Coupon if payment is for a package
+            if ($payment->paymentable_type === \App\Models\CouponPackage::class) {
+                $coupon = $this->couponService->issueCouponForPayment($payment);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Coupon purchased successfully!',
+                    'code' => $coupon->code
+                ]);
+            }
+
+            return response()->json(['status' => 'error', 'message' => 'Invalid payment type'], 400);
+
         } catch (Exception $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 400);
         }

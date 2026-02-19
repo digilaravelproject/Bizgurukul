@@ -49,13 +49,18 @@ Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')
         // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard'); // Note: name is student.dashboard due to prefix
 
-        // Affiliate Links
+        // Affiliate Links (Original Resource)
         Route::resource('affiliate-links', AffiliateLinkController::class);
+
+        // Affiliate Controller Routes (For Dashboard Integration)
+        Route::post('/affiliate/generate-link', [\App\Http\Controllers\AffiliateController::class, 'generateLink'])->name('affiliate.link.generate');
+        Route::delete('/affiliate/delete-link/{id}', [\App\Http\Controllers\AffiliateController::class, 'deleteLink'])->name('affiliate.link.delete');
 
         // Coupons
         Route::get('/coupons', [CouponController::class, 'index'])->name('coupons.index');
         Route::get('/coupons/store', [CouponController::class, 'store'])->name('coupons.store');
-        Route::post('/coupons/purchase', [CouponController::class, 'purchase'])->name('coupons.purchase');
+        Route::post('/coupons/purchase/initiate', [CouponController::class, 'initiatePurchase'])->name('coupons.purchase.initiate');
+        Route::post('/coupons/purchase/verify', [CouponController::class, 'verifyPurchase'])->name('coupons.purchase.verify');
         Route::post('/coupons/transfer', [CouponController::class, 'transfer'])->name('coupons.transfer');
 
         // Browse Courses

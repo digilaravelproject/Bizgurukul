@@ -1,148 +1,230 @@
 @extends('layouts.user.app')
 
 @section('content')
-<div class="space-y-6">
+<div class="space-y-8 font-sans text-mainText" x-data="{ showToast: {{ session('success') ? 'true' : 'false' }}, toastMsg: '{{ session('success') }}' }" x-init="if(showToast) setTimeout(() => showToast = false, 3000)">
+
+    {{-- Global Session Toast --}}
+    <template x-if="showToast">
+        <div class="fixed top-10 right-10 z-[9999] pointer-events-none"
+            x-show="showToast"
+            x-transition:enter="transition ease-out duration-500"
+            x-transition:enter-start="opacity-0 translate-x-10 scale-90"
+            x-transition:enter-end="opacity-100 translate-x-0 scale-100"
+            x-transition:leave="transition ease-in duration-500"
+            x-transition:leave-start="opacity-100 translate-x-0 scale-100"
+            x-transition:leave-end="opacity-0 translate-x-10 scale-90">
+            <div class="bg-surface border border-primary/20 p-4 rounded-2xl shadow-2xl flex items-center gap-4 premium-shadow backdrop-blur-xl">
+                <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500">
+                    <i class="fas fa-check-circle text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black uppercase tracking-widest text-mutedText">Success Message</p>
+                    <p class="text-sm font-bold text-mainText" x-text="toastMsg"></p>
+                </div>
+            </div>
+        </div>
+    </template>
 
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-mainText">Affiliate Links</h1>
-            <p class="text-sm text-mutedText">Generate and manage your custom referral links.</p>
+            <h1 class="text-3xl font-black tracking-tight text-mainText">Affiliate Links</h1>
+            <p class="text-sm font-medium text-mutedText mt-1">Generate and share your unique referral links.</p>
         </div>
     </div>
 
     {{-- Link Generator --}}
-    <div class="bg-customWhite rounded-2xl shadow-lg border border-primary/5 p-6" x-data="{ type: 'general' }">
-        <h3 class="text-lg font-bold text-mainText border-b border-primary/10 pb-2 mb-4">Create New Link</h3>
+    <div class="bg-surface rounded-[2rem] shadow-xl border border-primary/10 p-8 relative overflow-hidden" x-data="{ type: 'general', selectedId: '', expiryOption: 'no_expiry' }">
+        {{-- Background Aesthetics --}}
+        <div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-bl-full pointer-events-none"></div>
 
-        <form action="{{ route('student.affiliate.links.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <h3 class="text-xl font-black text-mainText border-b border-primary/10 pb-4 mb-6 flex items-center gap-3">
+            <i class="fas fa-link text-primary"></i> Create New Link
+        </h3>
+
+        <form action="{{ route('student.affiliate-links.store') }}" method="POST" class="flex flex-col lg:flex-row gap-4 items-end">
             @csrf
 
-            {{-- Type Selection --}}
-            <div class="col-span-1">
-                <label class="block text-xs font-bold text-mutedText uppercase mb-1">Link Type</label>
-                <select name="type" x-model="type" class="w-full px-3 py-2 rounded-xl bg-navy/5 border border-primary/10 focus:ring-primary focus:border-primary text-sm font-bold text-mainText">
-                    <option value="general">General (All Products)</option>
-                    <option value="specific_course">Specific Course</option>
-                    <option value="specific_bundle">Specific Bundle</option>
-                </select>
+            {{-- Flexible Container for Inputs --}}
+            <div class="flex-1 grid grid-cols-1 md:grid-cols-12 gap-4 w-full">
+
+                {{-- Dynamic Form Fields --}}
+                <div class="md:col-span-4 lg:col-span-4">
+                    <label class="block text-xs font-bold text-mutedText uppercase tracking-widest mb-2">Type</label>
+                    <div class="relative group">
+                        <select x-model="type" name="type" class="w-full h-12 px-4 rounded-xl bg-white text-mainText border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none font-bold shadow-sm transition-all hover:border-primary/50 text-sm">
+                            <option value="general">All Bundles (General)</option>
+                            <option value="specific_bundle">Specific Bundle</option>
+                            @if($canSellCourses)
+                                <option value="specific_course">Specific Course</option>
+                            @endif
+                        </select>
+                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-mutedText pointer-events-none group-hover:text-primary transition-colors"></i>
+                    </div>
+                </div>
+
+                {{-- Specific Bundle Select --}}
+                <div class="md:col-span-4 lg:col-span-4" x-show="type === 'specific_bundle'" x-transition style="display: none;">
+                    <label class="block text-xs font-bold text-mutedText uppercase tracking-widest mb-2">Select Bundle</label>
+                    <div class="relative group">
+                        <select name="target_id_bundle" :required="type === 'specific_bundle'" class="w-full h-12 px-4 rounded-xl bg-white text-mainText border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none font-bold shadow-sm transition-all hover:border-primary/50 text-sm">
+                            <option value="">-- Choose Bundle --</option>
+                            @foreach($bundles as $bundle)
+                                <option value="{{ $bundle->id }}">{{ $bundle->title }}</option>
+                            @endforeach
+                        </select>
+                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-mutedText pointer-events-none group-hover:text-primary transition-colors"></i>
+                    </div>
+                </div>
+
+                {{-- Specific Course Select --}}
+                @if($canSellCourses)
+                <div class="md:col-span-4 lg:col-span-4" x-show="type === 'specific_course'" x-transition style="display: none;">
+                    <label class="block text-xs font-bold text-mutedText uppercase tracking-widest mb-2">Select Course</label>
+                    <div class="relative group">
+                        <select name="target_id_course" :required="type === 'specific_course'" class="w-full h-12 px-4 rounded-xl bg-white text-mainText border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none font-bold shadow-sm transition-all hover:border-primary/50 text-sm">
+                            <option value="">-- Choose Course --</option>
+                            @foreach($courses as $course)
+                                <option value="{{ $course->id }}">{{ $course->title }}</option>
+                            @endforeach
+                        </select>
+                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-mutedText pointer-events-none group-hover:text-primary transition-colors"></i>
+                    </div>
+                </div>
+                @endif
+
+                {{-- EXPIRY OPTION --}}
+                 <div class="md:col-span-3 lg:col-span-3">
+                    <label class="block text-xs font-bold text-mutedText uppercase tracking-widest mb-2">Expiry</label>
+                    <div class="relative group">
+                        <select x-model="expiryOption" class="w-full h-12 px-4 rounded-xl bg-white text-mainText border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none font-bold shadow-sm transition-all hover:border-primary/50 text-sm">
+                            <option value="no_expiry">Lifetime</option>
+                            <option value="custom">Set Date</option>
+                        </select>
+                        <i class="fas fa-hourglass-half absolute right-4 top-1/2 -translate-y-1/2 text-mutedText pointer-events-none group-hover:text-primary transition-colors"></i>
+                    </div>
+                </div>
+
+                {{-- CUSTOM DATE INPUT --}}
+                <div class="md:col-span-3 lg:col-span-3" x-show="expiryOption === 'custom'" x-transition>
+                    <label class="block text-xs font-bold text-mutedText uppercase tracking-widest mb-2">Select Date</label>
+                    <input type="date" name="expiry_date" min="{{ date('Y-m-d') }}" :required="expiryOption === 'custom'"
+                        class="w-full h-12 px-4 rounded-xl bg-white text-mainText border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary outline-none font-bold shadow-sm transition-all hover:border-primary/50 text-sm uppercase">
+                </div>
             </div>
 
-            {{-- Target Selection (Conditional) --}}
-            <div class="col-span-1" x-show="type !== 'general'" x-cloak>
-                <label class="block text-xs font-bold text-mutedText uppercase mb-1">Select Product</label>
-
-                {{-- Course Select --}}
-                <select name="target_id" x-show="type === 'specific_course'" :required="type === 'specific_course'"
-                    class="w-full px-3 py-2 rounded-xl bg-navy/5 border border-primary/10 focus:ring-primary focus:border-primary text-sm font-bold text-mainText">
-                    <option value="">Choose Course...</option>
-                    @foreach($courses as $course)
-                        <option value="{{ $course->id }}">{{ $course->title }}</option>
-                    @endforeach
-                </select>
-
-                {{-- Bundle Select --}}
-                <select name="target_id" x-show="type === 'specific_bundle'" :required="type === 'specific_bundle'"
-                    disabled {{-- Re-enable when bundles available --}}
-                    class="w-full px-3 py-2 rounded-xl bg-navy/5 border border-primary/10 focus:ring-primary focus:border-primary text-sm font-bold text-mainText">
-                    <option value="">Choose Bundle...</option>
-                    @foreach($bundles as $bundle)
-                        <option value="{{ $bundle->id }}">{{ $bundle->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            {{-- Expiry Date --}}
-            <div class="col-span-1">
-                <label class="block text-xs font-bold text-mutedText uppercase mb-1">Expiry Date (Optional)</label>
-                <input type="date" name="expiry_date" min="{{ date('Y-m-d') }}"
-                    class="w-full px-3 py-2 rounded-xl bg-navy/5 border border-primary/10 focus:ring-primary focus:border-primary text-sm font-bold text-mainText">
-            </div>
-
-            {{-- Create Button --}}
-            <div class="col-span-1 flex items-end">
-                <button type="submit" class="w-full bg-primary hover:bg-secondary text-white font-bold py-2 rounded-xl shadow-lg shadow-primary/20 transition-all">
-                    Generate Link
+            {{-- Create Button (Fixed Width) --}}
+            <div class="w-full lg:w-48">
+                <button type="submit" class="w-full h-12 brand-gradient text-white font-black uppercase tracking-widest rounded-xl shadow-lg hover:shadow-primary/25 hover:-translate-y-0.5 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm">
+                    <i class="fas fa-magic"></i> Generate
                 </button>
             </div>
         </form>
     </div>
 
     {{-- Existing Links Table --}}
-    <div class="bg-customWhite rounded-2xl shadow-lg border border-primary/5 overflow-hidden">
+    <div class="bg-surface rounded-[2rem] shadow-xl border border-primary/10 overflow-hidden">
+        <div class="p-6 border-b border-primary/10 flex items-center gap-3">
+             <div class="w-3 h-3 rounded-full bg-red-500"></div>
+             <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+             <div class="w-3 h-3 rounded-full bg-green-500"></div>
+             <span class="ml-2 text-xs font-bold text-mutedText uppercase tracking-widest">Active Links</span>
+        </div>
+
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-navy/5 border-b border-primary/5 text-xs uppercase text-mutedText font-bold">
-                        <th class="px-6 py-4">Link</th>
-                        <th class="px-6 py-4">Type</th>
-                        <th class="px-6 py-4">Target</th>
-                        <th class="px-6 py-4">Clicks</th>
-                        <th class="px-6 py-4">Expiry</th>
-                        <th class="px-6 py-4">Status</th>
-                        <th class="px-6 py-4">Action</th>
+                    <tr class="bg-navy/5 border-b border-primary/10 text-xs uppercase text-mutedText font-black tracking-wider">
+                        <th class="px-8 py-5">Target Product</th>
+                        <th class="px-8 py-5">Affiliate Link</th>
+                        <th class="px-8 py-5 text-center">Clicks</th>
+                        <th class="px-8 py-5 text-center">Expiry</th>
+                        <th class="px-8 py-5 text-center">Status</th>
+                        <th class="px-8 py-5 text-right">Action</th>
                     </tr>
                 </thead>
-                <tbody class="text-sm font-medium text-mainText divide-y divide-primary/5">
+                <tbody class="text-sm font-semibold text-mainText divide-y divide-primary/5">
                     @forelse($links as $link)
-                    <tr class="hover:bg-navy/5 transition group">
-                        <td class="px-6 py-4">
-                            <div class="flex items-center space-x-2">
-                                <span class="bg-primary/10 text-primary px-2 py-1 rounded-md text-xs font-bold font-mono">
-                                    {{ route('affiliate.redirect', $link->slug) }}
-                                </span>
-                                <button onclick="navigator.clipboard.writeText('{{ route('affiliate.redirect', $link->slug) }}')"
-                                    class="text-mutedText hover:text-primary transition" title="Copy">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    <tr class="hover:bg-navy/30 transition group">
+                        <td class="px-8 py-5">
+                             @if($link->target_type === 'general')
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500"><i class="fas fa-layer-group"></i></div>
+                                    <span class="text-mainText">All Bundles</span>
+                                </div>
+                            @elseif($link->target_type === 'specific_course')
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500"><i class="fas fa-graduation-cap"></i></div>
+                                    <span class="text-mainText">{{ $link->course->title ?? 'Deleted Course' }}</span>
+                                </div>
+                            @elseif($link->target_type === 'specific_bundle')
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500"><i class="fas fa-box-open"></i></div>
+                                    <span class="text-mainText">{{ $link->bundle->title ?? 'Deleted Bundle' }}</span>
+                                </div>
+                            @endif
+                        </td>
+                        <td class="px-8 py-5">
+                            <div class="flex items-center gap-2 bg-navy px-3 py-2 rounded-lg border border-primary/10 max-w-fit relative" x-data="{ copied: false }">
+                                <span class="text-xs font-mono text-mutedText truncate max-w-[200px]">{{ route('affiliate.redirect', $link->slug) }}</span>
+                                <button @click="navigator.clipboard.writeText('{{ route('affiliate.redirect', $link->slug) }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                                    class="text-primary hover:text-white transition" title="Copy">
+                                    <i class="fas fa-copy"></i>
                                 </button>
+
+                                {{-- Inline Toast --}}
+                                <div x-show="copied"
+                                    x-transition:enter="transition ease-out duration-300"
+                                    x-transition:enter-start="opacity-0 -translate-y-2"
+                                    x-transition:enter-end="opacity-100 translate-y-0"
+                                    x-transition:leave="transition ease-in duration-300"
+                                    x-transition:leave-start="opacity-100 translate-y-0"
+                                    x-transition:leave-end="opacity-0 -translate-y-2"
+                                    class="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-xl z-50 flex items-center gap-2 pointer-events-none">
+                                    <i class="fas fa-check-circle"></i> Copied
+                                    <div class="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-primary"></div>
+                                </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 capitalize">
-                            {{ str_replace('_', ' ', $link->type) }}
+                        <td class="px-8 py-5 text-center">
+                            <span class="bg-navy px-3 py-1 rounded-full text-xs font-bold text-mainText border border-primary/10 shadow-sm">{{ $link->clicks }}</span>
                         </td>
-                        <td class="px-6 py-4">
-                            @if($link->type === 'general')
-                                <span class="text-mutedText">All Products</span>
-                            @elseif($link->type === 'specific_course')
-                                {{ $link->course->title ?? 'Deleted Course' }}
-                            @elseif($link->type === 'specific_bundle')
-                                {{ $link->bundle->name ?? 'Deleted Bundle' }}
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 text-center font-bold">
-                            {{ $link->click_count }}
-                        </td>
-                        <td class="px-6 py-4">
-                            @if($link->expiry_date)
-                                <span class="{{ $link->expiry_date->isPast() ? 'text-red-500 font-bold' : 'text-emerald-600' }}">
-                                    {{ $link->expiry_date->format('d M, Y') }}
+                        <td class="px-8 py-5 text-center">
+                             @if($link->expires_at)
+                                <span class="bg-navy px-3 py-1 rounded-lg text-xs font-bold text-mutedText border border-primary/10">
+                                    {{ $link->expires_at->format('d M, Y') }}
                                 </span>
-                            @else
-                                <span class="text-mutedText text-xs">Never</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4">
-                             @if(!$link->is_active)
-                                <span class="text-red-500 text-xs font-bold uppercase">Inactive</span>
-                             @elseif($link->expiry_date && $link->expiry_date->isPast())
-                                <span class="text-red-500 text-xs font-bold uppercase">Expired</span>
                              @else
-                                <span class="text-emerald-500 text-xs font-bold uppercase">Active</span>
+                                <span class="bg-navy px-3 py-1 rounded-lg text-[10px] font-bold text-emerald-500 border border-emerald-500/20 uppercase tracking-widest">
+                                    Lifetime
+                                </span>
                              @endif
                         </td>
-                        <td class="px-6 py-4">
-                            <form action="{{ route('student.affiliate.links.destroy', $link->id) }}" method="POST" onsubmit="return confirm('Are you sure?');">
+                        <td class="px-8 py-5 text-center">
+                             @if($link->is_deleted)
+                                <span class="text-red-500 text-[10px] font-black uppercase tracking-widest bg-red-500/10 px-2 py-1 rounded-md">Inactive</span>
+                             @elseif($link->expires_at && $link->expires_at->isPast())
+                                <span class="text-red-500 text-[10px] font-black uppercase tracking-widest bg-red-500/10 px-2 py-1 rounded-md">Expired</span>
+                             @else
+                                <span class="text-emerald-500 text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 px-2 py-1 rounded-md">Active</span>
+                             @endif
+                        </td>
+                        <td class="px-8 py-5 text-right">
+                             <form action="{{ route('student.affiliate-links.destroy', $link->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this link?');" class="inline-block">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="text-red-400 hover:text-red-600 transition">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                <button type="submit" class="w-8 h-8 rounded-full flex items-center justify-center bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                                    <i class="fas fa-trash-alt text-xs"></i>
                                 </button>
                             </form>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-12 text-center text-mutedText">
-                            No affiliate links created yet.
+                        <td colspan="6" class="px-8 py-16 text-center">
+                            <div class="flex flex-col items-center justify-center gap-2">
+                                <i class="fas fa-link text-4xl text-mutedText/30"></i>
+                                <p class="text-mutedText font-medium">No affiliate links created yet.</p>
+                            </div>
                         </td>
                     </tr>
                     @endforelse

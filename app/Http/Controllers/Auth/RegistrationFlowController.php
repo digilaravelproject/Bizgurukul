@@ -10,10 +10,12 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Models\AffiliateCommission;
 use App\Models\Tax;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -43,6 +45,7 @@ class RegistrationFlowController extends Controller
                 'gender'   => ['nullable', 'string'],
                 'dob'      => ['nullable', 'date'],
                 'state'    => ['nullable', 'string'],
+                'pincode'  => ['nullable', 'numeric', 'digits:6'],
             ]);
 
             $lead = Lead::updateOrCreate(
@@ -50,11 +53,13 @@ class RegistrationFlowController extends Controller
                 [
                     'name'       => $request->name,
                     'mobile'     => $request->mobile,
-                    'password'   => bcrypt($request->password), // Hashed here
+                    'password'   => Hash::make($request->password), // Hashed here
                     'gender'     => $request->gender,
                     'dob'        => $request->dob,
                     'state'      => $request->state,
+                    'pincode'    => $request->pincode,
                     'ip_address' => $request->ip(),
+                    'referral_code' => Cookie::get('referral_code') ?: session('referrer_code'),
                 ]
             );
 
@@ -278,35 +283,33 @@ class RegistrationFlowController extends Controller
             ];
             $api->utility->verifyPaymentSignature($attributes);
 
-            // 2. Retrieve Data
-            $lead = Lead::findOrFail($request->lead_id);
+            // 2. Retrieve Data with Lock (Prevent double processing)
+            $lead = Lead::where('id', $request->lead_id)->lockForUpdate()->firstOrFail();
             $bundle = Bundle::findOrFail($lead->product_preference['bundle_id']);
 
-            // 3. Create User (Use stored password hash)
+            // 3. Resolve Referrer
+            $referrer = null;
+            $referralCode = $lead->referral_code ?: (session('referrer_code') ?: Cookie::get('referral_code'));
+
+            if ($referralCode) {
+                $referrer = User::where('referral_code', $referralCode)->first();
+            }
+
+            // 4. Create User (Atomic Transactional Create)
             $user = User::create([
                 'name'          => $lead->name,
                 'email'         => $lead->email,
                 'mobile'        => $lead->mobile,
-                'password'      => $lead->password, // FIX: Use the hash from Lead table
+                'password'      => $lead->password,
                 'gender'        => $lead->gender,
                 'dob'           => $lead->dob,
                 'state_id'      => null,
                 'referral_code' => Str::upper(Str::random(8)),
-                'referred_by'   => null,
+                'referred_by'   => $referrer ? $referrer->id : null,
                 'is_active'     => true,
             ]);
 
             $user->assignRole('Student');
-
-            // 4. Handle Referrer Link
-            $referrer = null;
-            if ($lead->referral_code) {
-                $referrer = User::where('referral_code', $lead->referral_code)->first();
-                if ($referrer) {
-                    $user->referred_by = $referrer->id;
-                    $user->save();
-                }
-            }
 
             // 5. Record Payment
             Payment::create([
@@ -341,11 +344,22 @@ class RegistrationFlowController extends Controller
 
             DB::commit();
 
+            // Fire Registered Event
+            event(new Registered($user));
+
+            // Authenticate and Regenerate Session
             Auth::login($user);
+            $request->session()->regenerate();
+
+            // Multi-Role Redirection Logic
+            $redirectUrl = route('student.dashboard');
+            if ($user->hasRole('Admin')) {
+                $redirectUrl = route('admin.dashboard');
+            }
 
             return response()->json([
                 'status'       => 'success',
-                'redirect_url' => route('student.dashboard')
+                'redirect_url' => $redirectUrl
             ]);
 
         } catch (\Exception $e) {

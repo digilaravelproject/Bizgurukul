@@ -48,17 +48,33 @@ class CouponService
      * Purchase Package
      * Handles payment (mocked here), usage tracking, and coupon generation
      */
-    public function purchasePackage(User $user, int $packageId)
+    /**
+     * Issue Coupon after Successful Payment
+     */
+    public function issueCouponForPayment(\App\Models\Payment $payment)
     {
-        return DB::transaction(function () use ($user, $packageId) {
+        if ($payment->status !== 'success') {
+            throw new Exception('Payment is not successful.');
+        }
+
+        if ($payment->paymentable_type !== CouponPackage::class) {
+            throw new Exception('Invalid payment type for coupon issuance.');
+        }
+
+        return $this->purchasePackage($payment->user, $payment->paymentable_id, $payment);
+    }
+
+    /**
+     * Purchase Package Logic (Internal)
+     */
+    private function purchasePackage(User $user, int $packageId, \App\Models\Payment $payment)
+    {
+        return DB::transaction(function () use ($user, $packageId, $payment) {
             $package = $this->packageRepo->find($packageId);
 
             if (!$package || !$package->is_active) {
                 throw new Exception('Package is not available.');
             }
-
-            // TODO: Integrate Wallet/Payment logic here.
-            // For now, assume payment is successful.
 
             // Generate Coupon
             $code = $this->generateUniqueCode();
@@ -83,6 +99,9 @@ class CouponService
             ];
 
             $coupon = $this->couponRepo->updateOrCreate(['code' => $code], $couponData);
+
+            // Link Coupon to Payment if needed, or just log
+            // $payment->coupon_id = $coupon->id; $payment->save(); (if generic payment supports it)
 
             // Update Package Usage Link (Optional tracking)
             $package->increment('used_count'); // Tracks how many times package was sold

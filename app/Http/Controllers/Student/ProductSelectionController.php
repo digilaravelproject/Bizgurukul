@@ -58,7 +58,11 @@ class ProductSelectionController extends Controller
 
             $referrer = null;
             $referralCode = Session::get('referrer_code');
-            if ($referralCode) {
+            $referrerId = Session::get('affiliate_referrer_id');
+
+            if ($referrerId) {
+                $referrer = User::find($referrerId);
+            } elseif ($referralCode) {
                 $referrer = User::where('referral_code', $referralCode)->first();
             }
 
@@ -68,7 +72,9 @@ class ProductSelectionController extends Controller
             Log::error('Product Selection Page Error: ' . $e->getMessage());
             return view('student.products.selection', [
                 'filteredCourses' => Course::where('is_published', true)->get(),
-                'filteredBundles' => Bundle::where('is_published', true)->get()
+                'filteredBundles' => Bundle::where('is_published', true)->get(),
+                'referrer' => null,
+                'link' => null
             ])->with('error', 'Unable to load specific filters.');
         }
     }

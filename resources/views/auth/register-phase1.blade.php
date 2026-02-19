@@ -96,15 +96,25 @@
                 </div>
             </div>
 
-            <!-- State -->
-            <div>
-                <label for="state" class="block text-sm font-medium text-mainText mb-1.5">State/Region</label>
-                <select id="state" name="state" class="w-full px-4 py-3 bg-navy/30 border border-slate-200 rounded-lg text-mainText focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition duration-200">
-                    <option value="">Select State</option>
-                    @foreach(['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Andaman and Nicobar Islands','Chandigarh','Dadra and Nagar Haveli and Daman and Diu','Lakshadweep','Delhi','Puducherry','Ladakh','Jammu and Kashmir'] as $state)
-                        <option value="{{ $state }}" {{ old('state') == $state ? 'selected' : '' }}>{{ $state }}</option>
-                    @endforeach
-                </select>
+            <!-- State & Pin Code -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="state" class="block text-sm font-medium text-mainText mb-1.5">State/Region</label>
+                    <select id="state" name="state" class="w-full px-4 py-3 bg-navy/30 border border-slate-200 rounded-lg text-mainText focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition duration-200">
+                        <option value="">Select State</option>
+                        @foreach(['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Andaman and Nicobar Islands','Chandigarh','Dadra and Nagar Haveli and Daman and Diu','Lakshadweep','Delhi','Puducherry','Ladakh','Jammu and Kashmir'] as $state)
+                            <option value="{{ $state }}" {{ old('state') == $state ? 'selected' : '' }}>{{ $state }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label for="pincode" class="block text-sm font-medium text-mainText mb-1.5">Pin Code</label>
+                    <input id="pincode" type="text" name="pincode" :value="old('pincode')"
+                        placeholder="110001" maxlength="6"
+                        class="w-full px-4 py-3 bg-navy/30 border border-slate-200 rounded-lg text-mainText placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition duration-200">
+                    <x-input-error :messages="$errors->get('pincode')" class="mt-1" />
+                </div>
             </div>
 
             <!-- Password Fields with Visibility Toggle -->
