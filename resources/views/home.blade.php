@@ -99,11 +99,31 @@
             </div>
 
             <div class="hidden lg:flex items-center space-x-6">
-                <a href="{{ route('login') }}" class="text-sm font-black uppercase tracking-widest hover:text-primary transition">Login</a>
-                <a href="{{ route('register') }}"
-                   class="brand-gradient text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-[2px] shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all hover:-translate-y-1">
-                    Get Access
-                </a>
+                @auth
+                    @if(auth()->user()->hasRole('Admin'))
+                        <a href="{{ route('admin.dashboard') }}"
+                           class="brand-gradient text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-[2px] shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all hover:-translate-y-1">
+                            Dashboard
+                        </a>
+                    @elseif(auth()->user()->hasRole('Student'))
+                        <a href="{{ route('student.dashboard') }}"
+                           class="brand-gradient text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-[2px] shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all hover:-translate-y-1">
+                            Dashboard
+                        </a>
+                    @else
+                        {{-- Fallback for users with no role or unhandled role --}}
+                         <a href="{{ route('login') }}"
+                           class="brand-gradient text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-[2px] shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all hover:-translate-y-1">
+                            Dashboard
+                        </a>
+                    @endif
+                @else
+                    <a href="{{ route('login') }}" class="text-sm font-black uppercase tracking-widest hover:text-primary transition">Login</a>
+                    <a href="{{ route('register') }}"
+                       class="brand-gradient text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-[2px] shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all hover:-translate-y-1">
+                        Get Access
+                    </a>
+                @endauth
             </div>
 
             <button @click="$dispatch('toggle-menu')" class="lg:hidden text-2xl text-secondary">

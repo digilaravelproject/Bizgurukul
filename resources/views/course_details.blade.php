@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $course->title }} - Bizgurukul</title>
+    <title>{{ $course->title }} - Skills Pahle</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -50,7 +50,7 @@
                     <a href="/" class="flex items-center space-x-2">
                         <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23f7941d' width='100' height='100' rx='10'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white' font-family='Arial, sans-serif' font-weight='bold'%3EB%3C/text%3E%3C/svg%3E"
                             alt="Logo" class="w-10 h-10">
-                        <span class="text-2xl font-bold text-secondary">Bizgurukul</span>
+                        <span class="text-2xl font-bold text-secondary">Skills Pahle</span>
                     </a>
                 </div>
 
@@ -145,7 +145,7 @@
                     <div class="bg-blue-100 p-4 rounded-lg flex items-center justify-center mx-auto mb-2 w-16 h-16">
                         <i class="fas fa-certificate text-blue-500 text-2xl"></i>
                     </div>
-                    <div class="text-2xl font-bold text-secondary">Bizgurukul</div>
+                    <div class="text-2xl font-bold text-secondary">Skills Pahle<</div>
                     <div class="text-gray-600">Certificate</div>
                 </div>
             </div>
@@ -214,9 +214,9 @@
                     <div class="flex items-center space-x-2 mb-4">
                         <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23f7941d' width='100' height='100' rx='10'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white' font-family='Arial, sans-serif' font-weight='bold'%3EB%3C/text%3E%3C/svg%3E"
                             alt="Logo" class="w-10 h-10">
-                        <span class="text-xl font-bold text-secondary">Bizgurukul</span>
+                        <span class="text-xl font-bold text-secondary">Skills Pahle<</span>
                     </div>
-                    <p class="text-gray-600 text-sm mb-4">Download the Bizgurukul app for more features.</p>
+                    <p class="text-gray-600 text-sm mb-4">Download the Skills Pahle< app for more features.</p>
                 </div>
                 <div>
                     <h4 class="font-bold text-secondary mb-4">Bundles</h4>
@@ -241,7 +241,7 @@
                 </div>
             </div>
             <div class="border-t pt-8 flex flex-col md:flex-row justify-between items-center">
-                <p class="text-gray-500 text-sm">All Rights Reserved © 2025 | BIZGURUKUL PRIVATE LIMITED</p>
+                <p class="text-gray-500 text-sm">All Rights Reserved © 2025 | Skills Pahle< PRIVATE LIMITED</p>
                 <div class="flex space-x-4 mt-4 md:mt-0">
                     <a href="#" class="text-gray-600 hover:text-primary"><i class="fab fa-facebook-f"></i></a>
                     <a href="#" class="text-gray-600 hover:text-primary"><i class="fab fa-instagram"></i></a>

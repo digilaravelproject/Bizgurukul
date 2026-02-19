@@ -10,27 +10,26 @@ use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VideoController;
 use App\Http\Controllers\Admin\CouponPackageController;
+use App\Http\Controllers\Admin\CommissionRuleController;
+use App\Http\Controllers\Admin\AffiliateController;
+use App\Http\Controllers\Admin\DashboardController;
 use Illuminate\Support\Facades\Route;
-
-/*
-|--------------------------------------------------------------------------
-| Admin Routes
-|--------------------------------------------------------------------------
-*/
 
 Route::middleware(['auth', 'role:Admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
 
-        // 1. Dashboard & Settings
-        // 1. Dashboard & Settings
-        Route::resource('coupon-packages', CouponPackageController::class);
-        Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
-        Route::get('/dashboard/stats', [App\Http\Controllers\Admin\DashboardController::class, 'stats'])->name('dashboard.stats');
+        // Dashboard
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/stats', [DashboardController::class, 'stats'])->name('dashboard.stats');
         Route::post('/settings/update', [AdminController::class, 'updateSettings'])->name('settings.update');
 
-        // 2. Category Management
+        // Core Resources
+        Route::resource('coupon-packages', CouponPackageController::class);
+        Route::resource('bundles', BundleController::class);
+
+        // Categories
         Route::prefix('categories')->name('categories.')->group(function () {
             Route::get('/', [CategoryController::class, 'index'])->name('index');
             Route::post('/store', [CategoryController::class, 'store'])->name('store');
@@ -38,7 +37,7 @@ Route::middleware(['auth', 'role:Admin'])
             Route::delete('/delete/{id}', [CategoryController::class, 'destroy'])->name('delete');
         });
 
-        // 3. LMS: Course Management
+        // Courses
         Route::prefix('courses')->name('courses.')->group(function () {
             Route::get('/', [CourseController::class, 'index'])->name('index');
             Route::get('/create', [CourseController::class, 'create'])->name('create');
@@ -53,7 +52,7 @@ Route::middleware(['auth', 'role:Admin'])
             Route::post('/{id}/resource/store', [CourseController::class, 'storeResource'])->name('resource.store');
         });
 
-        // 4. LMS: Lesson Management (Independent Operations if needed)
+        // Lessons (Direct Access)
         Route::prefix('lessons')->name('lessons.')->group(function () {
             Route::get('/all-lessons', [LessonController::class, 'allLessons'])->name('all');
             Route::get('/create/{course_id}', [LessonController::class, 'create'])->name('create');
@@ -62,19 +61,11 @@ Route::middleware(['auth', 'role:Admin'])
             Route::delete('/delete/{id}', [LessonController::class, 'destroy'])->name('delete');
         });
 
-        // 5. Video Processing
+        // Video
         Route::post('/lms/upload', [VideoController::class, 'uploadVideo'])->name('video.upload');
         Route::post('/api/video-progress', [VideoController::class, 'updateHeartbeat'])->name('video.progress');
 
-        // 6. Bundle Management
-        // Route::prefix('bundles')->name('bundles.')->group(function () {
-        //     Route::get('/create', [CourseController::class, 'createBundle'])->name('create');
-        //     Route::post('/store', [CourseController::class, 'storeBundle'])->name('store');
-        //     Route::get('/{id}/edit', [CourseController::class, 'editBundle'])->name('edit');
-        //     Route::delete('/{id}', [CourseController::class, 'deleteBundle'])->name('delete');
-        // });
-        Route::resource('bundles', BundleController::class);
-        // 7. Coupons
+        // Coupons
         Route::controller(CouponController::class)->prefix('coupons')->name('coupons.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::post('/store', 'store')->name('store');
@@ -82,7 +73,7 @@ Route::middleware(['auth', 'role:Admin'])
             Route::delete('/{id}', 'destroy')->name('destroy');
         });
 
-        // 8. User Management
+        // Users
         Route::prefix('users')->name('users.')->group(function () {
             Route::get('/', [UserController::class, 'index'])->name('index');
             Route::post('/store', [UserController::class, 'store'])->name('store');
@@ -94,35 +85,33 @@ Route::middleware(['auth', 'role:Admin'])
             Route::delete('/force-delete/{id}', [UserController::class, 'forceDelete'])->name('force.delete');
         });
 
-        // 9. KYC Requests
+        // KYC
         Route::prefix('kyc-requests')->name('kyc.')->group(function () {
             Route::get('/', [KycController::class, 'index'])->name('index');
             Route::get('/{id}', [KycController::class, 'show'])->name('show');
             Route::post('/{id}/status', [KycController::class, 'updateStatus'])->name('status');
         });
 
-        // 10. Affiliate Management
+        // Affiliate System
         Route::prefix('affiliate')->name('affiliate.')->group(function () {
-            // Rules Management
-            Route::get('/rules', [App\Http\Controllers\Admin\CommissionRuleController::class, 'index'])->name('rules.index');
-            Route::post('/rules/store', [App\Http\Controllers\Admin\CommissionRuleController::class, 'store'])->name('rules.store');
-            Route::delete('/rules/delete/{id}', [App\Http\Controllers\Admin\CommissionRuleController::class, 'destroy'])->name('rules.delete');
+            // Rules
+            Route::get('/rules', [CommissionRuleController::class, 'index'])->name('rules.index');
+            Route::post('/rules/store', [CommissionRuleController::class, 'store'])->name('rules.store');
+            Route::delete('/rules/delete/{id}', [CommissionRuleController::class, 'destroy'])->name('rules.delete');
 
-            // History / Reports
-            Route::get('/history', [App\Http\Controllers\Admin\AffiliateController::class, 'history'])->name('history');
-            Route::post('/commission/{id}/pay', [App\Http\Controllers\Admin\AffiliateController::class, 'markAsPaid'])->name('commission.pay');
+            // History & Payments
+            Route::get('/history', [AffiliateController::class, 'history'])->name('history');
+            Route::post('/commission/{id}/pay', [AffiliateController::class, 'markAsPaid'])->name('commission.pay');
 
             // Settings
-            Route::get('/settings', [App\Http\Controllers\Admin\AffiliateController::class, 'settings'])->name('settings');
-            Route::post('/settings', [App\Http\Controllers\Admin\AffiliateController::class, 'updateSettings'])->name('settings.update');
+            Route::get('/settings', [AffiliateController::class, 'settings'])->name('settings');
+            Route::post('/settings', [AffiliateController::class, 'updateSettings'])->name('settings.update');
 
-            // User Manager
-            Route::get('/users', [App\Http\Controllers\Admin\AffiliateController::class, 'index'])->name('users.index');
-            Route::get('/users/{id}/edit', [App\Http\Controllers\Admin\AffiliateController::class, 'edit'])->name('users.edit');
-            Route::put('/users/{id}/update', [App\Http\Controllers\Admin\AffiliateController::class, 'update'])->name('users.update');
-
-            // User Specific Rules (New)
-            Route::post('/users/{id}/rules', [App\Http\Controllers\Admin\AffiliateController::class, 'storeRule'])->name('users.rules.store');
-            Route::delete('/users/rules/{id}', [App\Http\Controllers\Admin\AffiliateController::class, 'deleteRule'])->name('users.rules.delete');
+            // Affiliate Users Management
+            Route::get('/users', [AffiliateController::class, 'index'])->name('users.index');
+            Route::get('/users/{id}/edit', [AffiliateController::class, 'edit'])->name('users.edit');
+            Route::put('/users/{id}/update', [AffiliateController::class, 'update'])->name('users.update');
+            Route::post('/users/{id}/rules', [AffiliateController::class, 'storeRule'])->name('users.rules.store');
+            Route::delete('/users/rules/{id}', [AffiliateController::class, 'deleteRule'])->name('users.rules.delete');
         });
     });

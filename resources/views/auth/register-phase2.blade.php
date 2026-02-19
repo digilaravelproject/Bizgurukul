@@ -7,13 +7,16 @@
     <form method="POST" action="{{ route('register.phase2.store') }}" class="mt-8 space-y-8"
           x-data="{
               referralCode: '{{ $referralCode ?? old('referral_code') }}',
-              sponsorName: '{{ $sponsor ? addslashes($sponsor->name) : '' }}',
-              sponsorMobile: '{{ $sponsor ? substr($sponsor->mobile, 0, 2).' '.substr($sponsor->mobile, 2, 3).'****'.substr($sponsor->mobile, -3) : '' }}',
-              isValidSponsor: {{ $sponsor ? 'true' : 'false' }},
+              sponsorName: '{{ $maskedSponsor->name ?? '' }}',
+              sponsorMobile: '{{ $maskedSponsor->mobile ?? '' }}',
+              isValidSponsor: {{ $maskedSponsor ? 'true' : 'false' }},
               loadingSponsor: false,
+              isLocked: {{ $maskedSponsor ? 'true' : 'false' }},
               selectedBundle: null,
+              errorMessage: '',
 
               checkSponsor() {
+                  this.errorMessage = '';
                   if (this.referralCode.length < 3) return;
                   this.loadingSponsor = true;
                   fetch('{{ route('register.check-referral') }}', {
@@ -31,15 +34,31 @@
                           this.sponsorName = data.name;
                           this.sponsorMobile = data.mobile;
                           this.isValidSponsor = true;
+                          this.errorMessage = '';
                       } else {
                           this.sponsorName = '';
                           this.sponsorMobile = '';
                           this.isValidSponsor = false;
-                          // Should we clear input? Or show error?
-                          // alert('Invalid Referral Code');
+                          this.errorMessage = 'Invalid Referral Code.';
                       }
                   })
-                  .catch(() => this.loadingSponsor = false);
+                  .catch(() => {
+                      this.loadingSponsor = false;
+                      this.errorMessage = 'Error validating code.';
+                  });
+              },
+
+              getFinalPrice(websitePrice, affiliatePrice) {
+                  // If Valid Referral: Affiliate Price (e.g. 7000)
+                  // If No Referral: Website Price - 10% (e.g. 10000 - 1000 = 9000)
+                  if (this.isValidSponsor) {
+                      return affiliatePrice;
+                  }
+                  return websitePrice * 0.9;
+              },
+
+              formatPrice(price) {
+                  return '₹' + new Intl.NumberFormat('en-IN').format(price);
               }
           }">
         @csrf
@@ -55,14 +74,16 @@
                 Referral Code
             </h3>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 <div>
                     <label for="referral_code" class="block text-sm font-medium text-mainText mb-1.5">Enter Referral Code</label>
                     <div class="relative">
                         <input id="referral_code" type="text" name="referral_code" x-model="referralCode"
                             @input.debounce.500ms="checkSponsor()"
+                            :readonly="isLocked"
                             placeholder="e.g. COMPANY"
-                            class="w-full px-4 py-3 bg-navy/50 border border-slate-200 rounded-lg text-mainText placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition duration-200 uppercase">
+                            class="w-full px-4 py-3 bg-navy/50 border border-slate-200 rounded-lg text-mainText placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition duration-200 uppercase"
+                            :class="{'opacity-75 cursor-not-allowed': isLocked}">
 
                         <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                             <span x-show="loadingSponsor" class="animate-spin h-5 w-5 text-primary">
@@ -76,13 +97,10 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                 </svg>
                             </span>
-                             <span x-show="!loadingSponsor && !isValidSponsor && referralCode.length > 2" class="text-red-500">
-                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </span>
                         </div>
                     </div>
+                     <p x-show="errorMessage" x-text="errorMessage" class="text-red-500 text-xs mt-1 animate-pulse"></p>
+                    <x-input-error :messages="$errors->get('referral_code')" class="mt-1" />
                 </div>
 
                 <div x-show="isValidSponsor" x-transition class="bg-primary/10 border border-primary/20 rounded-lg p-3">
@@ -93,7 +111,6 @@
                     </div>
                 </div>
             </div>
-            <x-input-error :messages="$errors->get('referral_code')" class="mt-1" />
         </div>
 
         <!-- Product Selection Section -->
@@ -108,7 +125,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach ($bundles as $bundle)
                 <div @click="selectedBundle = {{ $bundle->id }}"
-                     class="group relative border rounded-xl overflow-hidden transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl cursor-pointer bg-white dark:bg-navy/40"
+                     class="group relative border rounded-xl overflow-hidden transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl cursor-pointer bg-white dark:bg-navy/40 flex flex-col h-full"
                      :class="{'border-primary ring-2 ring-primary bg-primary/5': selectedBundle == {{ $bundle->id }}, 'border-slate-200 hover:border-primary/50': selectedBundle != {{ $bundle->id }}}">
 
                     <!-- Selection Indicator -->
@@ -132,22 +149,31 @@
                                 </svg>
                             </div>
                         @endif
-                        <!-- Optional Badge -->
+                        <!-- Recommended Badge -->
                         @if($loop->first)
                             <div class="absolute top-3 left-3 bg-secondary text-white text-xs font-bold px-2 py-1 rounded shadow">RECOMMENDED</div>
                         @endif
                     </div>
 
                     <!-- Content -->
-                    <div class="p-5">
-                        <h4 class="text-lg font-bold text-mainText group-hover:text-primary transition-colors">{{ $bundle->title }}</h4>
+                    <div class="p-5 flex-1 flex flex-col justify-between">
+                        <div>
+                            <h4 class="text-lg font-bold text-mainText group-hover:text-primary transition-colors">{{ $bundle->title }}</h4>
+                        </div>
 
-                        <div class="mt-4 flex items-baseline space-x-2">
-                            <span class="text-2xl font-extrabold text-primary">₹{{ number_format($bundle->affiliate_price, 2) }}</span>
-                            @if($bundle->website_price > $bundle->affiliate_price)
-                                <span class="text-sm text-slate-400 line-through">₹{{ number_format($bundle->website_price, 2) }}</span>
-                                <span class="text-xs font-semibold text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded ml-auto">SAVE {{ round((($bundle->website_price - $bundle->affiliate_price)/$bundle->website_price)*100) }}%</span>
-                            @endif
+                        <div class="mt-4 pt-4 border-t border-slate-100">
+                             <!-- Dynamic Pricing Display -->
+                            <div class="flex flex-col">
+                                <span class="text-xs text-slate-400 line-through">₹{{ number_format($bundle->website_price, 2) }}</span>
+                                <div class="flex items-baseline space-x-2">
+                                    <span class="text-2xl font-extrabold text-primary" x-text="formatPrice(getFinalPrice({{ $bundle->website_price }}, {{ $bundle->affiliate_price }}))">
+                                        ₹{{ number_format($bundle->website_price * 0.9, 2) }}
+                                    </span>
+                                    <span class="text-xs font-bold px-2 py-1 rounded" :class="isValidSponsor ? 'bg-primary/10 text-primary' : 'bg-green-100 text-green-600'">
+                                        <span x-text="isValidSponsor ? 'REFERRAL OFFER' : '10% DISCOUNT'">10% DISCOUNT</span>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

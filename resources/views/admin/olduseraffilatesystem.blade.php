@@ -67,7 +67,7 @@
             <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                 <div>
                     <h3 class="text-lg font-bold text-slate-800">Affiliate System Configuration</h3>
-                    <p class="text-slate-500 text-sm">Control global commissions and referral validity for Bizgurukul.</p>
+                    <p class="text-slate-500 text-sm">Control global commissions and referral validity for Skills Pahle.</p>
                 </div>
                 <div class="h-10 w-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
