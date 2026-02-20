@@ -125,7 +125,7 @@
                         <div class="flex items-center gap-4 p-3 rounded-xl hover:bg-navy transition-colors border border-transparent hover:border-primary/5">
                             <div class="w-16 h-12 bg-navy rounded-lg overflow-hidden flex-shrink-0">
                                 <template x-if="course.thumbnail">
-                                    <img :src="'/storage/' + course.thumbnail" class="w-full h-full object-cover">
+                                    <img :src="course.thumbnail_url" class="w-full h-full object-cover">
                                 </template>
                                 <template x-if="!course.thumbnail">
                                     <div class="w-full h-full flex items-center justify-center bg-primary/10 text-primary">
@@ -135,7 +135,7 @@
                             </div>
                             <div class="flex-1">
                                 <h4 class="font-bold text-mainText text-sm line-clamp-1" x-text="course.title"></h4>
-                                <p class="text-xs text-mutedText">Price: <span class="font-semibold text-primary" x-text="formatCurrency(course.price)"></span></p>
+                                <p class="text-xs text-mutedText">Price: <span class="font-semibold text-primary" x-text="formatCurrency(course.website_price)"></span></p>
                             </div>
                             <div class="text-right">
                                 <span class="block text-lg font-black text-mainText" x-text="course.users_count"></span>

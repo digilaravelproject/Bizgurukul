@@ -1,5 +1,5 @@
 <aside {{-- Sidebar opens with 0 translation, hides with -full translation on mobile --}} :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-    class="fixed inset-y-0 left-0 z-50 w-64 bg-navy border-r border-primary/10 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 flex flex-col overflow-hidden shadow-xl md:shadow-none ">
+    class="fixed inset-y-0 left-0 z-50 w-64 bg-navy border-r border-primary/10 transform transition-transform duration-300 ease-in-out md:fixed md:translate-x-0 flex flex-col h-screen overflow-hidden shadow-xl md:shadow-none ">
 
     <div class="relative z-10 flex flex-col h-full bg-customWhite">
         {{-- Logo Section --}}
@@ -9,10 +9,6 @@
                     <img src="{{ asset('storage/site_images/logo1.png') }}" alt="Logo"
                         class="h-full w-auto object-contain group-hover:scale-110 transition-transform" loading="lazy">
                 </div>
-                {{-- <div class="flex flex-col">
-                    <span class="text-lg font-extrabold tracking-tight text-mainText leading-none">Skills<span class="text-primary">Pehle</span></span>
-                    <span class="text-[9px] text-mutedText tracking-[0.2em] font-bold uppercase mt-1">Admin Pro</span>
-                </div> --}}
             </div>
 
             {{-- Mobile Close Button --}}
@@ -25,8 +21,7 @@
         </div>
 
         {{-- Nav Menu --}}
-        {{-- Nav Menu --}}
-        <nav class="flex-1 p-4 space-y-1 overflow-y-auto no-scrollbar" x-data="{
+        <nav class="flex-1 p-4 space-y-1 overflow-hidden" x-data="{
             lmsOpen: {{ request()->routeIs('admin.courses.*', 'admin.categories.*', 'admin.lessons.*', 'admin.bundles.*') ? 'true' : 'false' }},
             userOpen: {{ request()->routeIs('admin.users.*', 'admin.kyc.*') ? 'true' : 'false' }},
             promoOpen: {{ request()->routeIs('admin.coupons.*', 'admin.coupon-packages.*') ? 'true' : 'false' }}
@@ -201,8 +196,12 @@
                 </div>
             </div>
 
+
+
+
+
         {{-- Minimal Footer --}}
-        <div class="p-4 mt-auto border-t border-navy bg-navy/30">
+        <div class="p-4 mt-auto border-t border-navy bg-customWhite">
             <div class="flex items-center p-2 rounded-xl border border-primary/5 bg-customWhite">
                 <div
                     class="h-9 w-9 rounded-lg brand-gradient flex items-center justify-center text-white font-bold text-xs shadow-md">

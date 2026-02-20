@@ -1,5 +1,5 @@
 <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-    class="fixed inset-y-0 left-0 z-50 w-64 bg-navy border-r border-primary/10 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 flex flex-col shadow-xl md:shadow-none">
+    class="fixed inset-y-0 left-0 z-50 w-64 bg-navy border-r border-primary/10 transform transition-transform duration-300 ease-in-out md:fixed md:translate-x-0 flex flex-col h-screen shadow-xl md:shadow-none">
 
     <div class="relative z-10 flex flex-col h-full bg-customWhite">
         {{-- Sidebar Logo --}}
@@ -25,7 +25,7 @@
         </div>
 
         {{-- Sidebar Nav Menu --}}
-        <nav class="flex-1 p-4 space-y-1 overflow-y-auto no-scrollbar">
+        <nav class="flex-1 p-4 space-y-1 overflow-hidden">
             <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">Learning Hub</p>
 
             {{-- Dashboard --}}

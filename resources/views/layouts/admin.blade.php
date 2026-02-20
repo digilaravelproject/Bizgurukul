@@ -23,11 +23,11 @@
 
 <body class="antialiased bg-navy text-mainText" x-data="{ sidebarOpen: false }">
 
-    <div class="min-h-screen flex overflow-hidden">
+    <div class="h-screen flex overflow-hidden">
 
         @include('layouts.partials.sidebar')
 
-        <div class="flex-1 flex flex-col min-w-0 bg-navy relative">
+        <div class="flex-1 flex flex-col min-w-0 bg-navy relative md:ml-64">
 
             {{-- Header --}}
             <header class="bg-customWhite/80 backdrop-blur-md border-b border-primary/5 h-20 flex items-center px-4 md:px-8 justify-between sticky top-0 z-40">

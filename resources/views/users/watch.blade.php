@@ -90,7 +90,7 @@
                     </div>
 
                     {{-- Blackout Overlay (Soft DRM) --}}
-                    <div id="video-blackout" class="absolute inset-0 bg-black z-[100] hidden flex flex-col items-center justify-center text-white text-center p-6">
+                    <div id="video-blackout" class="absolute inset-0 bg-black z-[100] flex flex-col items-center justify-center text-white text-center p-6" style="display: none;">
                          <div class="space-y-4">
                             <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto">
                                 <i class="fas fa-shield-alt text-2xl text-primary"></i>
@@ -255,14 +255,14 @@
             const blackout = document.getElementById('video-blackout');
 
             function showBlackout() {
-                blackout.classList.remove('hidden');
+                blackout.style.display = 'flex';
                 if (player && !player.paused()) {
                     player.pause();
                 }
             }
 
             function hideBlackout() {
-                blackout.classList.add('hidden');
+                blackout.style.display = 'none';
             }
 
             // 1. Focus Tracking
