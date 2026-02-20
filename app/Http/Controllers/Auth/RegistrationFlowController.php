@@ -163,8 +163,10 @@ class RegistrationFlowController extends Controller
 
             $bundle = Bundle::findOrFail($lead->product_preference['bundle_id']);
 
+            $hasReferral = !empty($lead->referral_code) || !empty(session('referrer_code')) || !empty(Cookie::get('referral_code'));
+
             // Centralized Pricing Logic
-            $pricing = $this->calculatePricing($bundle);
+            $pricing = $this->calculatePricing($bundle, null, $hasReferral);
 
             $maskedEmail = $this->maskString($lead->email, 'email');
 
@@ -191,7 +193,8 @@ class RegistrationFlowController extends Controller
             ]);
 
             $bundle = Bundle::findOrFail($request->bundle_id);
-            $pricing = $this->calculatePricing($bundle, $request->code);
+            $hasReferral = !empty(session('referrer_code')) || !empty(Cookie::get('referral_code'));
+            $pricing = $this->calculatePricing($bundle, $request->code, $hasReferral);
 
             if (isset($pricing['error'])) {
                 return response()->json(['status' => 'invalid', 'message' => $pricing['error']]);
@@ -225,8 +228,10 @@ class RegistrationFlowController extends Controller
             $lead = Lead::findOrFail($request->lead_id);
             $bundle = Bundle::findOrFail($lead->product_preference['bundle_id']);
 
+            $hasReferral = !empty($lead->referral_code) || !empty(session('referrer_code')) || !empty(Cookie::get('referral_code'));
+
             // Recalculate Price Securely
-            $pricing = $this->calculatePricing($bundle, $request->coupon_code);
+            $pricing = $this->calculatePricing($bundle, $request->coupon_code, $hasReferral);
 
             // Initialize Razorpay
             $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
@@ -317,7 +322,7 @@ class RegistrationFlowController extends Controller
                 'bundle_id'           => $bundle->id,
                 'razorpay_order_id'   => $request->razorpay_order_id,
                 'razorpay_payment_id' => $request->razorpay_payment_id,
-                'amount'              => $bundle->affiliate_price,
+                'amount'              => $referrer ? $bundle->affiliate_price : $bundle->website_price,
                 'status'              => 'success',
             ]);
 
@@ -372,9 +377,9 @@ class RegistrationFlowController extends Controller
     /**
      * Helper: Centralized Pricing Logic
      */
-    private function calculatePricing(Bundle $bundle, ?string $couponCode = null)
+    private function calculatePricing(Bundle $bundle, ?string $couponCode = null, bool $hasReferral = false)
     {
-        $basePrice = $bundle->affiliate_price;
+        $basePrice = $hasReferral ? $bundle->affiliate_price : $bundle->website_price;
         $discountAmount = 0;
 
         // Apply Coupon
@@ -414,6 +419,7 @@ class RegistrationFlowController extends Controller
         return [
             'basePrice'     => $basePrice,
             'websitePrice'  => $bundle->website_price,
+            'affiliatePrice'=> $bundle->affiliate_price,
             'discount'      => $discountAmount,
             'taxableAmount' => $taxableAmount,
             'taxAmount'     => $taxAmount,

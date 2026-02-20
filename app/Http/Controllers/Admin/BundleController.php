@@ -145,8 +145,13 @@ class BundleController extends Controller
         ]);
 
         try {
+            // Ensure preference_index is passed
+            $data = $request->all();
+            if (!isset($data['preference_index'])) {
+                $data['preference_index'] = 0;
+            }
 
-            $this->bundleService->updateBundle($id, $request->all());
+            $this->bundleService->updateBundle($id, $data);
             return redirect()->route('admin.bundles.index')->with('success', 'Bundle updated successfully');
         } catch (Exception $e) {
             return back()->with('error', $e->getMessage());

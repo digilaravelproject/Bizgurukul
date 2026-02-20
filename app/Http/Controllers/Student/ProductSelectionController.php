@@ -81,30 +81,43 @@ class ProductSelectionController extends Controller
 
     public function applyReferral(Request $request)
     {
-        $request->validate([
-            'referral_code' => 'required|string|exists:users,referral_code',
-        ]);
+        try {
+            $request->validate([
+                'referral_code' => 'required|string|exists:users,referral_code',
+            ]);
 
-        /** @var User $currentUser */
-        $currentUser = Auth::user();
-        $referrer = User::where('referral_code', $request->referral_code)->first();
+            \Illuminate\Support\Facades\DB::beginTransaction();
 
-        if ($currentUser && $currentUser->referral_code === $request->referral_code) {
-            return response()->json(['success' => false, 'message' => 'You cannot refer yourself.'], 422);
+            /** @var User $currentUser */
+            $currentUser = Auth::user();
+            $referrer = User::where('referral_code', $request->referral_code)->first();
+
+            if ($currentUser && $currentUser->referral_code === $request->referral_code) {
+                return response()->json(['success' => false, 'message' => 'You cannot refer yourself.'], 422);
+            }
+
+            Session::put('referrer_code', $referrer->referral_code);
+            Cookie::queue('referrer_code', $referrer->referral_code, 43200);
+
+            if ($currentUser) {
+                $currentUser->referred_by = $referrer->id;
+                $currentUser->save();
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'referrer_name' => $referrer->name,
+                'message' => 'Referral code applied successfully!'
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['success' => false, 'message' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            Log::error("Error applying referral code {$request->referral_code} for user " . Auth::id() . ": " . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to apply referral code. Please try again.'], 500);
         }
-
-        Session::put('referrer_code', $referrer->referral_code);
-        Cookie::queue('referrer_code', $referrer->referral_code, 43200);
-
-        if ($currentUser) {
-            $currentUser->referred_by = $referrer->id;
-            $currentUser->save();
-        }
-
-        return response()->json([
-            'success' => true,
-            'referrer_name' => $referrer->name,
-            'message' => 'Referral code applied successfully!'
-        ]);
     }
 }

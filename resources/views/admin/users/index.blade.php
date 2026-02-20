@@ -430,16 +430,56 @@
                                 <p class="text-xs font-bold text-mainText" x-text="viewData.mobile || '-'"></p>
                             </div>
                             <div class="bg-navy p-5 rounded-2xl">
+                                <p class="text-[9px] font-black uppercase tracking-widest text-mutedText mb-1">Gender</p>
+                                <p class="text-xs font-bold text-mainText" x-text="viewData.gender || 'N/A'"></p>
+                            </div>
+                            <div class="bg-navy p-5 rounded-2xl">
+                                <p class="text-[9px] font-black uppercase tracking-widest text-mutedText mb-1">Date of Birth</p>
+                                <p class="text-xs font-bold text-mainText" x-text="viewData.dob || 'N/A'"></p>
+                            </div>
+                            <div class="bg-navy p-5 rounded-2xl">
+                                <p class="text-[9px] font-black uppercase tracking-widest text-mutedText mb-1">Joined On</p>
+                                <p class="text-xs font-bold text-mainText" x-text="viewData.joined_at || 'N/A'"></p>
+                            </div>
+                            <div class="bg-navy p-5 rounded-2xl">
                                 <p class="text-[9px] font-black uppercase tracking-widest text-mutedText mb-1">Location</p>
                                 <p class="text-xs font-bold text-mainText truncate"><span
                                         x-text="viewData.city || 'N/A'"></span>, <span
                                         x-text="indianStates[viewData.state_id - 1] || 'N/A'"></span></p>
+                            </div>
+                            <div class="bg-navy p-5 rounded-2xl col-span-2">
+                                <p class="text-[9px] font-black uppercase tracking-widest text-mutedText mb-1">Full Address</p>
+                                <p class="text-xs font-bold text-mainText" x-text="(viewData.address || 'N/A') + (viewData.zip_code ? ' - ' + viewData.zip_code : '')"></p>
                             </div>
                             <div class="bg-navy p-5 rounded-2xl border border-primary/10">
                                 <p class="text-[9px] font-black uppercase tracking-widest text-primary mb-1">Referral Code
                                 </p>
                                 <p class="text-xs font-black text-mainText" x-text="viewData.referral_code"></p>
                             </div>
+                            <div class="bg-primary/5 p-5 rounded-2xl border border-primary/20">
+                                <p class="text-[9px] font-black uppercase tracking-widest text-primary mb-1">Sponsor Name
+                                </p>
+                                <p class="text-xs font-black text-mainText" x-text="viewData.sponsor_name"></p>
+                            </div>
+                            <div class="bg-primary/5 p-5 rounded-2xl border border-primary/20">
+                                <p class="text-[9px] font-black uppercase tracking-widest text-primary mb-1">Sponsor Mobile
+                                </p>
+                                <p class="text-xs font-black text-mainText" x-text="viewData.sponsor_mobile"></p>
+                            </div>
+                        </div>
+
+                        {{-- KYC Status Badge --}}
+                        <div class="mt-6 flex justify-center">
+                            <span
+                                class="px-6 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border shadow-sm"
+                                :class="{
+                                    'bg-green-50 text-green-600 border-green-200': viewData.kyc_status === 'verified',
+                                    'bg-amber-50 text-amber-600 border-amber-200': viewData.kyc_status === 'pending',
+                                    'bg-red-50 text-red-600 border-red-200': viewData.kyc_status === 'rejected',
+                                    'bg-navy text-mutedText border-primary/5': viewData.kyc_status === 'not_submitted'
+                                }"
+                                x-text="'KYC: ' + viewData.kyc_status.replace('_', ' ')">
+                            </span>
                         </div>
 
                          {{-- Affiliate Stats Section --}}

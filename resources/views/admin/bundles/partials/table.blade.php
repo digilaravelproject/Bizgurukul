@@ -21,7 +21,7 @@
 
                         <div class="absolute top-4 left-4 z-10 flex gap-2">
                              <span class="inline-flex items-center px-3 py-1.5 rounded-full bg-navy/80 backdrop-blur-md border border-white/10 text-[10px] font-black text-customWhite shadow-sm">
-                                 #{{ $bundle->preference_index ?? 0 }}
+                                 Slab: {{ $bundle->preference_index ?? 0 }}
                             </span>
                         </div>
 

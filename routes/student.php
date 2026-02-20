@@ -9,6 +9,8 @@ use App\Http\Controllers\Student\AffiliateLinkController;
 use App\Http\Controllers\Student\StudentController;
 use App\Http\Controllers\Student\CouponController;
 use App\Http\Controllers\Student\ProfileController;
+use App\Http\Controllers\Student\AffiliateController;
+use App\Http\Controllers\Student\InvoiceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -62,6 +64,15 @@ Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')
         Route::post('/coupons/purchase/initiate', [CouponController::class, 'initiatePurchase'])->name('coupons.purchase.initiate');
         Route::post('/coupons/purchase/verify', [CouponController::class, 'verifyPurchase'])->name('coupons.purchase.verify');
         Route::post('/coupons/transfer', [CouponController::class, 'transfer'])->name('coupons.transfer');
+
+        // Affiliate Dashboard & Features
+        Route::get('/affiliate/dashboard', [AffiliateController::class, 'index'])->name('affiliate.dashboard');
+        Route::get('/affiliate/leads', [AffiliateController::class, 'leads'])->name('affiliate.leads');
+        Route::get('/affiliate/commission-structure', [AffiliateController::class, 'commissionStructure'])->name('affiliate.commission_structure');
+
+        // Invoices
+        Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+        Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('invoices.show');
 
         // Browse Courses
         Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');

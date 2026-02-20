@@ -59,7 +59,7 @@
                     Welcome back, <span class="bg-clip-text text-white brand-gradient">{{ explode(' ', $user->name)[0] }}</span>
                 </h1>
                 <p class="text-mutedText text-base font-medium max-w-lg leading-relaxed">
-                    Track your empire's growth. You have <span class="text-primary font-bold">{{ $myCourses->count() }} active programs</span> and are maintaining top-tier performance.
+                    Track your empire's growth. You have <span class="text-primary font-bold">{{ $myCourses->count() + $myBundles->count() }} active programs</span> and are maintaining top-tier performance.
                 </p>
             </div>
 
@@ -83,10 +83,7 @@
                     </button>
                 </div>
 
-                <button @click="copyToClipboard('{{ $referralLink }}')" class="w-full mt-3 text-center text-xs font-bold uppercase tracking-widest text-mutedText hover:text-primary transition-colors flex items-center justify-center gap-2 py-2">
-                    Copy Affiliate Link <i class="fas fa-link"></i>
-                </button>
-            </div>
+               </div>
         </div>
     </div>
 
@@ -298,7 +295,7 @@
     <div class="stagger-4 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
          @php
             $secStats = [
-                ['label' => 'Courses Enrolled', 'val' => $myCourses->count(), 'icon' => 'fa-graduation-cap'],
+                ['label' => 'Programs Enrolled', 'val' => $myCourses->count() + $myBundles->count(), 'icon' => 'fa-graduation-cap'],
                 ['label' => 'Lessons Mastered', 'val' => $myCourses->sum('completed_lessons'), 'icon' => 'fa-check-double'],
                 ['label' => 'Pending Payout', 'val' => '₹'.number_format($secondaryStats['pending_earnings']), 'icon' => 'fa-hourglass-half'],
                 ['label' => 'Total Withdrawn', 'val' => '₹'.number_format($secondaryStats['total_payouts']), 'icon' => 'fa-wallet']

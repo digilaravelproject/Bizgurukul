@@ -42,19 +42,31 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
-        ]);
+        try {
+            $request->validateWithBag('userDeletion', [
+                'password' => ['required', 'current_password'],
+            ]);
 
-        $user = $request->user();
+            \Illuminate\Support\Facades\DB::beginTransaction();
 
-        Auth::logout();
+            $user = $request->user();
 
-        $user->delete();
+            Auth::logout();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+            $user->delete();
 
-        return Redirect::to('/');
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            return Redirect::to('/');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->errors(), 'userDeletion');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            \Illuminate\Support\Facades\Log::error("Error deleting user account: " . $e->getMessage());
+            return back()->with('error', 'Failed to delete account. Please try again.');
+        }
     }
 }

@@ -19,8 +19,8 @@
                 {{-- 1. Video Player Container --}}
                 <div
                     class="relative w-full rounded-lg overflow-hidden shadow-2xl bg-black border border-slate-700/50 aspect-video">
-                    <video id="courseVideo" src="{{ $currentLesson->lesson_file_url }}" class="w-full h-full object-contain"
-                        controls playsinline controlsList="nodownload" data-lesson="{{ $currentLesson->id }}"
+                    <video id="courseVideo" src="{{ $currentLesson ? $currentLesson->lesson_file_url : '' }}" class="w-full h-full object-contain"
+                        controls playsinline controlsList="nodownload" oncontextmenu="return false;" data-lesson="{{ $currentLesson ? $currentLesson->id : '' }}"
                         data-start="{{ $progress->last_watched_second ?? 0 }}"
                         data-completed="{{ $progress->is_completed ?? 0 }}">
                     </video>
@@ -30,12 +30,12 @@
                 <div class="bg-slate-800/40 backdrop-blur-md rounded-xl p-6 border border-slate-700/30">
                     <div class="flex items-center gap-3 mb-2">
                         <span class="px-3 py-1 bg-indigo-500 text-white text-[10px] font-black uppercase rounded-full">
-                            Lesson {{ $loop->iteration ?? '01' }}
+                            Lesson {{ $currentLesson ? $loop->iteration ?? '01' : 'N/A' }}
                         </span>
                         <span class="text-slate-400 text-[11px] font-bold uppercase">{{ $course->title }}</span>
                     </div>
-                    <h1 class="text-2xl font-black italic uppercase text-white">{{ $currentLesson->title }}</h1>
-                    <p class="mt-4 text-slate-300 text-sm leading-relaxed">{{ $currentLesson->description }}</p>
+                    <h1 class="text-2xl font-black italic uppercase text-white">{{ $currentLesson ? $currentLesson->title : 'No Lessons Available' }}</h1>
+                    <p class="mt-4 text-slate-300 text-sm leading-relaxed">{{ $currentLesson ? $currentLesson->description : 'Check back later for content.' }}</p>
                 </div>
             </div>
 
@@ -56,7 +56,7 @@
                         @foreach ($course->lessons as $lesson)
                             <a href="{{ route('student.watch', [$course->id, $lesson->id]) }}"
                                 class="flex items-center gap-4 p-4 border-b border-slate-100 transition-all
-                                {{ $currentLesson->id == $lesson->id ? 'bg-slate-50' : 'bg-white hover:bg-slate-50' }}">
+                                {{ ($currentLesson && $currentLesson->id == $lesson->id) ? 'bg-slate-50' : 'bg-white hover:bg-slate-50' }}">
 
                                 <div class="flex-shrink-0 flex items-center gap-3">
                                     {{-- Lesson Number --}}
@@ -64,9 +64,9 @@
 
                                     {{-- Play Icon Circle with CSS Triangle --}}
                                     <div
-                                        class="relative w-8 h-8 rounded-full flex items-center justify-center border-2 {{ $currentLesson->id == $lesson->id ? 'border-[#ff6b35] bg-[#ff6b35]' : 'border-[#ff6b35] bg-white' }}">
+                                        class="relative w-8 h-8 rounded-full flex items-center justify-center border-2 {{ ($currentLesson && $currentLesson->id == $lesson->id) ? 'border-[#ff6b35] bg-[#ff6b35]' : 'border-[#ff6b35] bg-white' }}">
                                         <div
-                                            class="play-triangle {{ $currentLesson->id == $lesson->id ? 'play-white' : 'play-orange' }}">
+                                            class="play-triangle {{ ($currentLesson && $currentLesson->id == $lesson->id) ? 'play-white' : 'play-orange' }}">
                                         </div>
                                     </div>
                                 </div>

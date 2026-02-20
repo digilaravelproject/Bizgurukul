@@ -89,8 +89,8 @@ class Course extends Model
     }
     public function getThumbnailUrlAttribute()
     {
-        // If you have a 'thumbnail' column, return its URL, otherwise return null
-        return $this->thumbnail ? asset('storage/' . $this->thumbnail) : null;
+        // $this->thumbnail already returns Storage::url()
+        return $this->thumbnail ? asset($this->thumbnail) : null;
     }
 
     public function payments()
@@ -101,6 +101,22 @@ class Course extends Model
     // Check karne ke liye ki current user ne course kharida hai ya nahi
     public function isPurchasedBy($userId)
     {
-        return $this->payments()->where('user_id', $userId)->where('status', 'success')->exists();
+        // Check direct purchase
+        $hasDirectPurchase = $this->payments()->where('user_id', $userId)->where('status', 'success')->exists();
+        if ($hasDirectPurchase) {
+            return true;
+        }
+
+        // Check if user owns any bundle containing this course
+        $user = \App\Models\User::find($userId);
+        if ($user) {
+            foreach ($user->bundles as $bundle) {
+                if ($bundle->getAllCoursesFlat()->contains('id', $this->id)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

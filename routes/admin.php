@@ -13,6 +13,8 @@ use App\Http\Controllers\Admin\CouponPackageController;
 use App\Http\Controllers\Admin\CommissionRuleController;
 use App\Http\Controllers\Admin\AffiliateController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\TaxController;
+use App\Http\Controllers\Admin\SettingController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'role:Admin'])
@@ -24,6 +26,13 @@ Route::middleware(['auth', 'role:Admin'])
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard/stats', [DashboardController::class, 'stats'])->name('dashboard.stats');
         Route::post('/settings/update', [AdminController::class, 'updateSettings'])->name('settings.update');
+
+        // Tax Management
+        Route::resource('taxes', TaxController::class)->except(['show']);
+
+        // Billing Settings
+        Route::get('/settings/billing', [SettingController::class, 'billing'])->name('settings.billing');
+        Route::post('/settings/billing', [SettingController::class, 'updateBilling'])->name('settings.billing.update');
 
         // Core Resources
         Route::resource('coupon-packages', CouponPackageController::class);
