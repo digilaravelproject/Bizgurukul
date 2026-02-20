@@ -11,6 +11,16 @@ use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Bundle;
+use App\Models\Payment;
+use App\Models\AffiliateCommission;
+use App\Models\KycDetail;
+use App\Models\BankDetail;
+use App\Models\WalletTransaction;
+use App\Models\ReferralVisit;
+use App\Models\CommissionRule;
+use App\Models\UserAffiliateSetting;
+
 
 class User extends Authenticatable
 {
@@ -137,7 +147,56 @@ class User extends Authenticatable
     public function bundles()
     {
         return $this->belongsToMany(Bundle::class, 'payments', 'user_id', 'bundle_id')
-                    ->wherePivot('status', 'success')
-                    ->withTimestamps();
+            ->wherePivot('status', 'success')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get IDs of bundles directly purchased by the user.
+     */
+    public function purchasedBundleIds()
+    {
+        return $this->bundles()->pluck('bundles.id')->toArray();
+    }
+
+    /**
+     * Get the highest preference_index among purchased bundles.
+     */
+    public function maxBundlePreferenceIndex()
+    {
+        return $this->bundles()->max('preference_index') ?? 0;
+    }
+
+    /**
+     * Get IDs of all bundles unlocked via purchase or preference logic.
+     */
+    public function unlockedBundleIds()
+    {
+        $maxPref = $this->maxBundlePreferenceIndex();
+        return Bundle::where('preference_index', '<=', $maxPref)
+            ->where('is_published', true)
+            ->pluck('id')
+            ->toArray();
+    }
+
+    /**
+     * Get IDs of all courses unlocked via bundles or direct purchase.
+     */
+    public function unlockedCourseIds()
+    {
+        // 1. Courses from unlocked bundles
+        $unlockedBundles = Bundle::whereIn('id', $this->unlockedBundleIds())->with('courses')->get();
+        $bundleCourseIds = $unlockedBundles->flatMap(function ($bundle) {
+            return $bundle->getAllCoursesFlat()->pluck('id');
+        })->unique()->toArray();
+
+        // 2. Direct course purchases
+        $directCourseIds = Payment::where('user_id', $this->id)
+            ->where('status', 'success')
+            ->whereNotNull('course_id')
+            ->pluck('course_id')
+            ->toArray();
+
+        return array_unique(array_merge($bundleCourseIds, $directCourseIds));
     }
 }

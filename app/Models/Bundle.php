@@ -48,8 +48,9 @@ class Bundle extends Model
 
     public function getThumbnailUrlAttribute()
     {
-        return $this->thumbnail ? asset($this->thumbnail) : null; // Logic handled by accessor above actually
+        return $this->thumbnail ? asset($this->thumbnail) : null;
     }
+
 
     public function courses()
     {
@@ -72,5 +73,20 @@ class Bundle extends Model
             $allCourses = $allCourses->merge($child->getAllCoursesFlat());
         }
         return $allCourses->unique('id');
+    }
+
+    /**
+     * Check if the bundle is purchased/unlocked for a user.
+     */
+    public function isPurchasedBy($userId)
+    {
+        /** @var \App\Models\User $user */
+        $user = \App\Models\User::find($userId);
+        if (!$user) {
+            return false;
+        }
+
+
+        return in_array($this->id, $user->unlockedBundleIds());
     }
 }

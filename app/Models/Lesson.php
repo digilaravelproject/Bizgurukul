@@ -21,6 +21,21 @@ class Lesson extends Model
         'order_column'
     ];
 
+    protected $appends = ['lesson_file_url', 'thumbnail_url'];
+
+    // Consistency for thumbnail
+    protected function thumbnail(): Attribute
+    {
+        return Attribute::get(function ($value) {
+            return $value ? Storage::url($value) : null;
+        });
+    }
+
+    public function getThumbnailUrlAttribute()
+    {
+        return $this->thumbnail ? asset($this->thumbnail) : null;
+    }
+
     // Get the correct URL based on lesson type
     protected function lessonFileUrl(): Attribute
     {
@@ -32,6 +47,7 @@ class Lesson extends Model
             return $this->document_path ? Storage::url($this->document_path) : null;
         });
     }
+
 
     public function course()
     {

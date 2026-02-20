@@ -22,7 +22,7 @@
                 {{-- 1. Thumbnail Area --}}
                 <div class="relative h-44 w-full bg-primary/5 overflow-hidden">
                     @if($lesson->thumbnail)
-                        <img src="{{ Storage::url($lesson->thumbnail) }}" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110">
+                        <img src="{{ $lesson->thumbnail_url }}" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110">
                     @elseif($lesson->type == 'video')
                         <div class="h-full w-full flex items-center justify-center text-primary/20 group-hover:text-primary/40 transition-colors">
                             <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>

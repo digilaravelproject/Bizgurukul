@@ -13,9 +13,15 @@ class CourseController extends Controller
     public function index()
     {
         try {
+            // Fetch only published bundles ordered by preference_index
+            $bundles = \App\Models\Bundle::where('is_published', 1)
+                ->orderBy('preference_index', 'asc')
+                ->get();
+
             // Fetch only published courses
             $courses = Course::where('is_published', 1)->latest()->paginate(15);
-            return view('student.courses.index', compact('courses'));
+
+            return view('student.courses.index', compact('bundles', 'courses'));
         } catch (Exception $e) {
             Log::error("Error loading courses index: " . $e->getMessage());
             return back()->with('error', 'Unable to load courses at this time.');

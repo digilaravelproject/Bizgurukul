@@ -45,6 +45,7 @@ Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')
     Route::get('/my-courses', [StudentController::class, 'myCourses'])->name('my-courses');
     Route::get('/watch/{course}/{lesson?}', [StudentController::class, 'watch'])->name('watch');
     Route::post('/progress/update', [StudentController::class, 'updateProgress'])->name('progress.update');
+    Route::get('/video-key/{lesson}', [StudentController::class, 'getVideoKey'])->name('video.key');
 
     // Paid Student Features (Protected by Purchase Check)
     Route::middleware(['check.purchase'])->group(function () {

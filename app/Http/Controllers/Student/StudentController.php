@@ -19,32 +19,24 @@ class StudentController extends Controller
         try {
             $user = Auth::user();
 
-            // 1. Get Purchased Bundles
-            $purchasedBundleIds = \App\Models\Payment::where('user_id', $user->id)
-                ->where('status', 'success')
-                ->whereNotNull('bundle_id')
-                ->pluck('bundle_id');
-
-            $myBundles = \App\Models\Bundle::whereIn('id', $purchasedBundleIds)
-                ->with(['courses', 'courses.lessons']) // Eager load lessons for progress count if needed later
+            // 1. Get Unlocked Bundles (Purchased or via Preference Logic)
+            $unlockedBundleIds = $user->unlockedBundleIds();
+            $myBundles = \App\Models\Bundle::whereIn('id', $unlockedBundleIds)
+                ->with(['courses', 'courses.lessons'])
                 ->paginate(10, ['*'], 'bundles_page');
 
-            // 2. Get Direct Purchased Course IDs
-            $purchasedCourseIds = \App\Models\Payment::where('user_id', $user->id)
-                ->where('status', 'success')
-                ->whereNotNull('course_id')
-                ->pluck('course_id');
+            // 2. Get Unlocked Courses (Purchased or via Preference Logic)
+            $unlockedCourseIds = $user->unlockedCourseIds();
 
             // 3. Filter out courses that are already shown inside bundles
-            // Collecting all course IDs present in purchased bundles
             $bundleCourseIds = $myBundles->pluck('courses')->flatten()->pluck('id')->unique();
 
-            // Courses that are bought directly AND NOT part of any purchased bundle
-            $directCourseIds = $purchasedCourseIds->diff($bundleCourseIds);
+
+            $directCourseIds = collect($unlockedCourseIds)->diff($bundleCourseIds);
 
             $directCourses = Course::whereIn('id', $directCourseIds)->paginate(10, ['*'], 'courses_page');
 
-            return view('users.my-courses', compact('myBundles', 'directCourses'));
+            return view('users.my-courses', compact('myBundles', 'directCourses', 'unlockedBundleIds', 'unlockedCourseIds'));
         } catch (Exception $e) {
             Log::error("Error loading my courses for user " . Auth::id() . ": " . $e->getMessage());
             return back()->with('error', 'Something went wrong while loading your courses.');
@@ -98,4 +90,40 @@ class StudentController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Failed to save progress.'], 500);
         }
     }
+    // 4. Secure delivery of Video Encryption Key
+    public function getVideoKey(Lesson $lesson)
+    {
+        try {
+            // Security check: Must have purchased the course
+            if (!$lesson->course->isPurchasedBy(Auth::id())) {
+                return response('Unauthorized', 403);
+            }
+
+            // Path to the key
+            $filename = pathinfo($lesson->video_path, PATHINFO_FILENAME);
+            if (!$filename) {
+                // Fallback attempt from hls_path
+                $filename = basename(dirname($lesson->hls_path));
+            }
+
+            $keyPath = "lessons/keys/{$filename}.key";
+
+            if (!\Illuminate\Support\Facades\Storage::disk('local')->exists($keyPath)) {
+                Log::error("Video key not found at: {$keyPath} for Lesson ID: {$lesson->id}");
+                return response('Key not found', 404);
+            }
+
+            $key = \Illuminate\Support\Facades\Storage::disk('local')->get($keyPath);
+
+            return response($key)
+                ->header('Content-Type', 'application/octet-stream')
+                ->header('Cache-Control', 'no-cache, private');
+
+        } catch (Exception $e) {
+            Log::error("Error serving video key for lesson {$lesson->id}: " . $e->getMessage());
+            return response('Error', 500);
+        }
+    }
+
+
 }

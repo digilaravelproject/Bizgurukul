@@ -51,9 +51,6 @@ class LessonController extends Controller
         ]);
 
         try {
-            // Log 1: Request Receive
-            Log::info("Lesson creation started for Course ID: " . $request->course_id);
-
             $lesson = Lesson::updateOrCreate(
                 ['id' => $request->id],
                 [
@@ -65,9 +62,6 @@ class LessonController extends Controller
             );
 
             if ($request->hasFile('video')) {
-                // Log 2: File Upload Start
-                Log::info("Video upload detected for Lesson ID: " . $lesson->id);
-
                 $video = $request->file('video');
                 $filename = time() . '_' . $lesson->id;
                 $originalPath = 'lessons/videos/' . $filename . '.' . $video->getClientOriginalExtension();
@@ -75,22 +69,33 @@ class LessonController extends Controller
                 Storage::disk('public')->put($originalPath, file_get_contents($video));
                 $lesson->update(['video_path' => $originalPath]);
 
-                // Log 3: FFmpeg Start
-                Log::info("FFmpeg processing started for Lesson: " . $lesson->title);
-
                 $hlsPath = 'lessons/hls/' . $filename . '/playlist.m3u8';
+                $keyFilename = $filename . '.key';
+                $keyPath = 'lessons/keys/' . $keyFilename;
+                $encryptionKey = random_bytes(16);
+
+
+                // Save key to private storage
+                Storage::disk('local')->put($keyPath, $encryptionKey);
+
+                // We serve the key via a secure route
+                $keyUrl = route('student.video.key', ['lesson' => $lesson->id]);
 
                 FFMpeg::fromDisk('public')
                     ->open($originalPath)
                     ->export()
                     ->toDisk('public')
-                    ->inFormat((new X264)->setKiloBitrate(500))
+                    ->withEncryptionKey($encryptionKey, $keyUrl)
+                    ->inFormat((new X264)->setKiloBitrate(800)) // Increased bitrate for better quality
                     ->save($hlsPath);
 
-                $lesson->update(['hls_path' => $hlsPath]);
+                $lesson->update([
+                    'hls_path' => $hlsPath,
+                    'video_path' => $originalPath // Keep original as fallback if needed
+                ]);
 
                 // Log 4: Success
-                Log::info("HLS conversion successful for Lesson ID: " . $lesson->id);
+                Log::info("Encrypted HLS conversion successful for Lesson ID: " . $lesson->id);
             }
 
             return redirect()->route('admin.courses.index')->with('success', 'Lesson saved and processed!');

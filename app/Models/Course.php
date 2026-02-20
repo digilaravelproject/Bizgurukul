@@ -93,6 +93,7 @@ class Course extends Model
         return $this->thumbnail ? asset($this->thumbnail) : null;
     }
 
+
     public function payments()
     {
         return $this->hasMany(Payment::class);
@@ -101,22 +102,12 @@ class Course extends Model
     // Check karne ke liye ki current user ne course kharida hai ya nahi
     public function isPurchasedBy($userId)
     {
-        // Check direct purchase
-        $hasDirectPurchase = $this->payments()->where('user_id', $userId)->where('status', 'success')->exists();
-        if ($hasDirectPurchase) {
-            return true;
-        }
-
-        // Check if user owns any bundle containing this course
+        /** @var \App\Models\User $user */
         $user = \App\Models\User::find($userId);
-        if ($user) {
-            foreach ($user->bundles as $bundle) {
-                if ($bundle->getAllCoursesFlat()->contains('id', $this->id)) {
-                    return true;
-                }
-            }
+        if (!$user) {
+            return false;
         }
 
-        return false;
+        return in_array($this->id, $user->unlockedCourseIds());
     }
 }
