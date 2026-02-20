@@ -57,7 +57,7 @@ class ProductSelectionController extends Controller
             }
 
             $referrer = null;
-            $referralCode = Session::get('referrer_code');
+            $referralCode = Session::get('referral_code');
             $referrerId = Session::get('affiliate_referrer_id');
 
             if ($referrerId) {
@@ -96,8 +96,8 @@ class ProductSelectionController extends Controller
                 return response()->json(['success' => false, 'message' => 'You cannot refer yourself.'], 422);
             }
 
-            Session::put('referrer_code', $referrer->referral_code);
-            Cookie::queue('referrer_code', $referrer->referral_code, 43200);
+            Session::put('referral_code', $referrer->referral_code);
+            Cookie::queue('referral_code', $referrer->referral_code, 43200);
 
             if ($currentUser) {
                 $currentUser->referred_by = $referrer->id;

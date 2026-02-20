@@ -8,9 +8,6 @@
 
     <title>{{ config('app.name', 'Skills Pehle') }}</title>
 
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
     <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -34,18 +31,6 @@
             </div>
 
             <div class="relative z-10 text-center">
-                <!-- CSS-Only Logo Representation (Matches your image) -->
-                {{-- <div class="inline-flex items-center bg-white border-2 border-primary p-1 shadow-2xl transform hover:scale-105 transition duration-500">
-                    <div class="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 font-extrabold text-4xl tracking-tight">
-                        SKILLS
-                    </div>
-                    <div class="px-6 py-3 bg-white text-secondary font-extrabold text-4xl tracking-tight flex items-center relative">
-                        P<span class="text-primary">₹</span>HLE
-                        <!-- Arrow Graphic -->
-                        <div class="absolute bottom-2 left-6 right-4 h-0.5 bg-secondary"></div>
-                        <svg class="absolute bottom-[5px] right-4 w-3 h-3 text-secondary fill-current" viewBox="0 0 24 24"><path d="M24 12l-12-8v16l12-8z"/></svg>
-                    </div>
-                </div> --}}
                 @if (file_exists(public_path('storage/site_images/logo1.png')))
                     {{-- 1. Image agar file system mein exist karti hai --}}
                     <img src="{{ asset('storage/site_images/logo1.png') }}" alt="Logo"
@@ -126,6 +111,7 @@
         </div>
 
     </div>
+    @stack('scripts')
 </body>
 
 </html>

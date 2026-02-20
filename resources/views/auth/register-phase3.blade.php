@@ -125,7 +125,8 @@
                                 razorpay_order_id: rzpResponse.razorpay_order_id,
                                 razorpay_payment_id: rzpResponse.razorpay_payment_id,
                                 razorpay_signature: rzpResponse.razorpay_signature,
-                                lead_id: {{ $lead->id }}
+                                lead_id: {{ $lead->id }},
+                                coupon_code: this.couponCode
                             })
                         });
 

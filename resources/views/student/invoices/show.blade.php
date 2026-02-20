@@ -197,13 +197,27 @@
                             Product Purchase
                         @endif
                     </td>
-                    <td style="text-align: right;">₹{{ number_format($invoice->amount, 2) }}</td>
+                    <td style="text-align: right;">₹{{ number_format($invoice->subtotal ?? $invoice->amount, 2) }}</td>
                 </tr>
+
+                @if($invoice->discount_amount > 0)
+                <tr>
+                    <td style="text-align: right; color: #059669;">Discount (Coupon):</td>
+                    <td style="text-align: right; color: #059669;">- ₹{{ number_format($invoice->discount_amount, 2) }}</td>
+                </tr>
+                @endif
+
+                @if($invoice->tax_amount > 0)
+                <tr>
+                    <td style="text-align: right; color: #6b7280;">GST (Included):</td>
+                    <td style="text-align: right; color: #6b7280;">₹{{ number_format($invoice->tax_amount, 2) }}</td>
+                </tr>
+                @endif
             </tbody>
             <tfoot>
                 <tr class="total-row">
                     <td style="text-align: right;">Total Paid:</td>
-                    <td style="text-align: right;">₹{{ number_format($invoice->amount, 2) }}</td>
+                    <td style="text-align: right;">₹{{ number_format($invoice->total_amount ?? $invoice->amount, 2) }}</td>
                 </tr>
             </tfoot>
         </table>

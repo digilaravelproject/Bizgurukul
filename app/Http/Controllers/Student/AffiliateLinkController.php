@@ -111,11 +111,14 @@ class AffiliateLinkController extends Controller
 
             session([
                 'affiliate_link_slug' => $slug,
-                'referrer_code' => $referrer->referral_code,
+                'referral_code' => $referrer->referral_code,
                 'affiliate_referrer_id' => $referrer->id,
             ]);
 
-            $cookie = cookie('referrer_code', $referrer->referral_code, 43200); // 30 days
+            // Clear old cookie immediately and queue new specific matching cookie parameter name
+            Cookie::queue(Cookie::forget('referral_code'));
+            Cookie::queue(Cookie::forget('referrer_code'));
+            $cookie = cookie('referral_code', $referrer->referral_code, 43200); // 30 days
 
             // STRICT REDIRECT: Always to Register Phase 1
             return redirect()->route('register.phase1')->withCookie($cookie);

@@ -1,28 +1,32 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ config('app.name', 'Skills Pehle') }} | Future of Digital Learning</title>
+    <title>{{ config('app.name', 'Skills Pehle') }} | The Future of Digital Learning</title>
+
     <link rel="icon" type="image/png" href="{{ asset('storage/site_images/logo.png') }}">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Scripts & Styles -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
+    <!-- Configuration -->
     <script>
         tailwind.config = {
             theme: {
+                fontFamily: {
+                    sans: ['Outfit', 'sans-serif'],
+                },
                 extend: {
                     colors: {
                         primary: '#f7941d',
                         secondary: '#1a1a1a',
                         accent: '#ff5f1f',
                         surface: '#ffffff',
-                        bodyBg: '#fffbf7'
+                        bodyBg: '#fffbf7',
+                        muted: '#64748b',
                     },
                     borderRadius: {
                         '4xl': '2rem',
@@ -35,146 +39,154 @@
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
         body {
-            font-family: 'Outfit', sans-serif;
-            background-color: #fffbf7;
+            background-color: #ffffff;
             overflow-x: hidden;
-        }
-
-        .glass {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(247, 148, 29, 0.1);
-        }
-
-        .brand-gradient {
-            background: linear-gradient(135deg, #f7941d 0%, #ff5f1f 100%);
-        }
-
-        .hero-shape {
-            clip-path: polygon(0% 0%, 100% 0%, 100% 90%, 0% 100%);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #fffbf7; }
-        ::-webkit-scrollbar-thumb { background: #f7941d; border-radius: 10px; }
+        ::-webkit-scrollbar-track { background: #ffffff; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; }
+        ::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
 
         [x-cloak] { display: none !important; }
     </style>
 </head>
+<body class="bg-white text-secondary selection:bg-primary/20" x-data="{ scrolled: false }" @scroll.window="scrolled = (window.pageYOffset > 20)">
 
-<body x-data="{ atTop: true }" @scroll.window="atTop = (window.pageYOffset > 50 ? false : true)">
-
-    <nav class="fixed w-full top-0 z-[100] transition-all duration-500"
-         :class="atTop ? 'py-6' : 'py-3 glass shadow-lg'">
-        <div class="container mx-auto px-6 flex justify-between items-center">
-            <a href="#" class="flex items-center group">
-                <img src="{{ asset('storage/site_images/logo1.png') }}" alt="Logo" class="w-32 h-auto transition-transform group-hover:scale-110">
+    <!-- Navigation -->
+    <nav class="fixed w-full top-0 z-50 bg-white border-b transition-colors duration-200"
+         :class="scrolled ? 'border-gray-200 shadow-sm py-4' : 'border-transparent py-6'">
+        <div class="container mx-auto px-6 max-w-7xl flex items-center justify-between">
+            <a href="#" class="block focus:outline-none">
+                <img src="{{ asset('storage/site_images/logo1.png') }}" alt="Skills Pehle Logo" class="h-8 md:h-9 w-auto">
             </a>
 
+            <!-- Desktop Menu -->
             <div class="hidden lg:flex items-center space-x-10">
-                <a href="#home" class="text-sm font-bold uppercase tracking-widest hover:text-primary transition-all">Home</a>
-                <div class="relative group cursor-pointer" x-data="{ open: false }">
-                    <button @mouseenter="open = true" class="text-sm font-bold uppercase tracking-widest hover:text-primary transition flex items-center">
-                        Programs <i class="fas fa-chevron-down ml-2 text-[10px]"></i>
+                <a href="#home" class="text-sm font-semibold text-gray-600 hover:text-secondary transition-colors">Home</a>
+
+                <div class="relative group" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                    <button class="text-sm font-semibold text-gray-600 hover:text-secondary transition-colors flex items-center gap-1 focus:outline-none">
+                        Programs <i class="fas fa-chevron-down text-[10px] transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
                     </button>
-                    <div x-show="open" @mouseleave="open = false" x-cloak x-transition.opacity
-                         class="absolute top-full -left-4 w-64 bg-white shadow-2xl rounded-2xl p-4 mt-2 border border-orange-50">
-                        <a href="#" class="flex items-center p-3 hover:bg-orange-50 rounded-xl transition group">
-                            <div class="w-10 h-10 rounded-lg brand-gradient flex items-center justify-center text-white mr-3 shadow-md">
-                                <i class="fas fa-bolt"></i>
-                            </div>
-                            <span class="font-bold text-sm">Freelancing</span>
-                        </a>
-                        <a href="#" class="flex items-center p-3 hover:bg-orange-50 rounded-xl transition group mt-2">
-                            <div class="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center text-white mr-3">
-                                <i class="fas fa-rocket"></i>
-                            </div>
-                            <span class="font-bold text-sm">Business Mastery</span>
-                        </a>
+                    <!-- Dropdown -->
+                    <div x-show="open" x-cloak
+                         x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-2"
+                         class="absolute top-full left-0 pt-4 w-56">
+                        <div class="bg-white border border-gray-100 shadow-lg rounded-xl p-2 flex flex-col gap-1">
+                            <a href="#" class="px-4 py-3 text-sm font-medium text-gray-600 hover:text-secondary hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-3">
+                                <i class="fas fa-bolt text-gray-400"></i> Freelancing
+                            </a>
+                            <a href="#" class="px-4 py-3 text-sm font-medium text-gray-600 hover:text-secondary hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-3">
+                                <i class="fas fa-rocket text-gray-400"></i> Business Mastery
+                            </a>
+                        </div>
                     </div>
                 </div>
-                <a href="#about" class="text-sm font-bold uppercase tracking-widest hover:text-primary transition">About</a>
-                <a href="#refer" class="text-sm font-bold uppercase tracking-widest hover:text-primary transition">Refer & Earn</a>
+
+                <a href="#about" class="text-sm font-semibold text-gray-600 hover:text-secondary transition-colors">About</a>
+                <a href="#refer" class="text-sm font-semibold text-gray-600 hover:text-secondary transition-colors">Refer & Earn</a>
             </div>
 
+            <!-- Actions -->
             <div class="hidden lg:flex items-center space-x-6">
                 @auth
                     @if(auth()->user()->hasRole('Admin'))
-                        <a href="{{ route('admin.dashboard') }}"
-                           class="brand-gradient text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-[2px] shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all hover:-translate-y-1">
-                            Dashboard
-                        </a>
+                        <a href="{{ route('admin.dashboard') }}" class="text-sm font-bold text-white bg-secondary px-6 py-2.5 rounded-lg hover:bg-black transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-secondary">Dashboard</a>
                     @elseif(auth()->user()->hasRole('Student'))
-                        <a href="{{ route('student.dashboard') }}"
-                           class="brand-gradient text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-[2px] shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all hover:-translate-y-1">
-                            Dashboard
-                        </a>
+                        <a href="{{ route('student.dashboard') }}" class="text-sm font-bold text-white bg-secondary px-6 py-2.5 rounded-lg hover:bg-black transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-secondary">Dashboard</a>
                     @else
-                        {{-- Fallback for users with no role or unhandled role --}}
-                         <a href="{{ route('login') }}"
-                           class="brand-gradient text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-[2px] shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all hover:-translate-y-1">
-                            Dashboard
-                        </a>
+                        <a href="{{ route('login') }}" class="text-sm font-bold text-white bg-secondary px-6 py-2.5 rounded-lg hover:bg-black transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-secondary">Dashboard</a>
                     @endif
                 @else
-                    <a href="{{ route('login') }}" class="text-sm font-black uppercase tracking-widest hover:text-primary transition">Login</a>
-                    <a href="{{ route('register') }}"
-                       class="brand-gradient text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-[2px] shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all hover:-translate-y-1">
-                        Get Access
-                    </a>
+                    <a href="{{ route('login') }}" class="text-sm font-bold text-gray-600 hover:text-secondary transition-colors">Login</a>
+                    <a href="{{ route('register') }}" class="text-sm font-bold text-white bg-primary px-6 py-2.5 rounded-lg hover:bg-orange-500 transition-colors shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-primary">Get Access</a>
                 @endauth
             </div>
 
-            <button @click="$dispatch('toggle-menu')" class="lg:hidden text-2xl text-secondary">
-                <i class="fas fa-bars-staggered"></i>
+            <!-- Mobile Toggle -->
+            <button @click="$dispatch('open-menu')" class="lg:hidden text-gray-600 hover:text-secondary focus:outline-none p-2">
+                <i class="fas fa-bars text-xl"></i>
             </button>
         </div>
     </nav>
 
-    <section id="home" class="relative pt-40 lg:pt-56 pb-24 overflow-hidden hero-shape bg-white">
-        <div class="absolute top-0 right-0 w-1/2 h-full bg-orange-50/50 -z-10 rounded-bl-[100px]"></div>
+    <!-- Mobile Menu -->
+    <div x-data="{ open: false }" @open-menu.window="open = true" @keydown.escape.window="open = false" class="relative z-[100]" x-cloak>
+        <div x-show="open" class="fixed inset-0 bg-secondary/40 backdrop-blur-sm transition-opacity" @click="open = false" x-transition.opacity></div>
+        <div x-show="open" class="fixed inset-y-0 right-0 w-full max-w-sm bg-white shadow-2xl flex flex-col" x-transition:enter="transition ease-out duration-300 transform" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in duration-200 transform" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full">
+            <div class="p-6 flex items-center justify-between border-b border-gray-100">
+                <img src="{{ asset('storage/site_images/logo1.png') }}" alt="Logo" class="h-8 w-auto">
+                <button @click="open = false" class="p-2 text-gray-400 hover:text-secondary focus:outline-none"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 flex flex-col space-y-8">
+                <div class="flex flex-col space-y-6">
+                    <a href="#home" @click="open = false" class="text-lg font-bold text-secondary">Home</a>
+                    <a href="#courses" @click="open = false" class="text-lg font-bold text-secondary">Programs</a>
+                    <a href="#about" @click="open = false" class="text-lg font-bold text-secondary">About</a>
+                    <a href="#refer" @click="open = false" class="text-lg font-bold text-secondary">Refer & Earn</a>
+                </div>
+                <div class="pt-8 border-t border-gray-100 flex flex-col space-y-4">
+                    @auth
+                        <a href="{{ route('student.dashboard') }}" class="w-full text-center py-3.5 bg-secondary text-white font-bold rounded-xl">Dashboard</a>
+                    @else
+                        <a href="{{ route('login') }}" class="w-full text-center py-3.5 border border-gray-200 text-secondary font-bold rounded-xl hover:bg-gray-50">Login</a>
+                        <a href="{{ route('register') }}" class="w-full text-center py-3.5 bg-primary text-white font-bold rounded-xl shadow-sm">Get Access</a>
+                    @endauth
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <div class="container mx-auto px-6 relative">
-            <div class="flex flex-col lg:flex-row items-center gap-16">
-                <div class="lg:w-3/5 text-center lg:text-left">
-                    <span class="inline-flex items-center px-4 py-2 rounded-full bg-orange-100 text-primary text-xs font-black uppercase tracking-[3px] mb-8 animate__animated animate__fadeInDown">
-                        <span class="flex h-2 w-2 rounded-full bg-primary mr-3 animate-pulse"></span>
-                        Empowering 100K+ Learners
-                    </span>
-                    <h1 class="text-6xl lg:text-[100px] font-black leading-[0.85] mb-10 tracking-tighter text-secondary animate__animated animate__fadeInLeft">
-                        Think Freelance,<br>Think <span class="text-primary italic">Skills Pehle.</span>
+    <!-- Hero Section -->
+    <section id="home" class="pt-40 pb-20 lg:pt-48 lg:pb-32 bg-gray-50/50">
+        <div class="container mx-auto px-6 max-w-7xl">
+            <div class="grid lg:grid-cols-2 gap-16 lg:gap-8 items-center">
+                <!-- Content -->
+                <div class="max-w-xl">
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-gray-200 shadow-sm mb-8">
+                        <span class="w-2 h-2 rounded-full bg-primary flex-shrink-0"></span>
+                        <span class="text-xs font-bold text-gray-600 uppercase tracking-wide">Empowering 100K+ Learners</span>
+                    </div>
+
+                    <h1 class="text-5xl lg:text-7xl font-black text-secondary leading-[1.05] tracking-tight mb-8">
+                        Think Freelance,<br />
+                        <span class="text-primary">Think Skills Pehle.</span>
                     </h1>
-                    <p class="text-lg lg:text-xl text-gray-500 max-w-xl mb-12 font-medium leading-relaxed animate__animated animate__fadeInUp">
+
+                    <p class="text-lg text-gray-600 leading-relaxed mb-10 font-medium">
                         Master the skills that the world is ready to pay for. Build a high-income career without the traditional 9-to-5 grind.
                     </p>
-                    <div class="flex flex-col sm:flex-row items-center gap-6 justify-center lg:justify-start">
-                        <a href="#courses" class="brand-gradient text-white px-10 py-5 rounded-[2rem] font-black text-sm uppercase tracking-[3px] shadow-2xl shadow-primary/40 hover:scale-105 active:scale-95 transition-all">
+
+                    <div class="flex flex-col sm:flex-row items-center gap-4">
+                        <a href="#courses" class="w-full sm:w-auto px-8 py-4 bg-primary text-white font-bold rounded-xl hover:bg-orange-500 transition-colors text-center shadow-sm">
                             Start Your Journey
                         </a>
-                        <button class="flex items-center gap-4 font-black uppercase text-[10px] tracking-widest group">
-                            <span class="w-16 h-16 rounded-full border-2 border-primary/20 flex items-center justify-center group-hover:border-primary transition-all">
-                                <i class="fas fa-play text-primary ml-1"></i>
-                            </span>
+                        <button class="w-full sm:w-auto px-8 py-4 bg-white border border-gray-200 text-secondary font-bold rounded-xl hover:bg-gray-50 flex items-center justify-center gap-3 transition-colors">
+                            <i class="fas fa-play text-primary text-sm"></i>
                             Watch Manifesto
                         </button>
                     </div>
                 </div>
 
-                <div class="lg:w-2/5 relative animate__animated animate__fadeInRight">
-                    <div class="relative z-10 rounded-[3rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(247,148,29,0.3)]">
-                        <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80"
-                             alt="Learning" class="w-full h-auto object-cover hover:scale-110 transition-transform duration-1000">
+                <!-- Media -->
+                <div class="relative lg:ml-auto w-full max-w-lg">
+                    <div class="aspect-[4/5] rounded-3xl overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80" alt="Learning" class="w-full h-full object-cover">
                     </div>
-                    <div class="absolute -bottom-10 -left-10 glass p-6 rounded-[2rem] shadow-2xl z-20 animate__animated animate__fadeInUp animate__delay-1s">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-2xl bg-green-500 flex items-center justify-center text-white">
-                                <i class="fas fa-chart-line text-xl"></i>
-                            </div>
-                            <div>
-                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Global Ranking</p>
-                                <p class="text-xl font-black text-secondary">#1 in India</p>
-                            </div>
+
+                    <!-- Ranking Badge -->
+                    <div class="absolute bottom-8 -left-8 bg-white p-5 rounded-2xl shadow-xl flex items-center gap-4 border border-gray-100 max-w-xs">
+                        <div class="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
+                            <i class="fas fa-chart-line text-lg text-primary"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-0.5">Global Ranking</p>
+                            <p class="text-lg font-bold text-secondary leading-none">#1 in India</p>
                         </div>
                     </div>
                 </div>
@@ -182,135 +194,172 @@
         </div>
     </section>
 
-    <section class="py-16 bg-white overflow-hidden">
-        <div class="container mx-auto px-6">
-            <p class="text-center text-[10px] font-black text-gray-400 uppercase tracking-[5px] mb-12">Alumni Placed At</p>
-            <div class="flex flex-wrap justify-center items-center gap-12 lg:gap-24 opacity-30 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-1000">
-                <span class="text-3xl font-black tracking-tighter uppercase italic">Meta</span>
-                <span class="text-3xl font-black tracking-tighter uppercase">Genpact</span>
-                <span class="text-3xl font-black tracking-tighter uppercase italic text-primary">Zomato</span>
-                <span class="text-3xl font-black tracking-tighter uppercase font-serif">Deloitte</span>
-                <span class="text-3xl font-black tracking-tighter uppercase">Wipro</span>
+    <!-- Placement Banner -->
+    <section class="py-12 bg-white border-y border-gray-100">
+        <div class="container mx-auto px-6 max-w-7xl">
+            <p class="text-center text-xs font-bold text-gray-400 uppercase tracking-widest mb-8">Alumni Placed At</p>
+            <div class="flex flex-wrap justify-center items-center gap-x-12 lg:gap-x-24 gap-y-8 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                <span class="text-2xl font-black text-secondary tracking-tight">Meta</span>
+                <span class="text-2xl font-bold text-secondary tracking-tight">Genpact</span>
+                <span class="text-2xl font-black text-secondary tracking-tight">Zomato</span>
+                <span class="text-2xl font-bold text-secondary tracking-tight">Deloitte</span>
+                <span class="text-2xl font-black text-secondary tracking-tight">Wipro</span>
             </div>
         </div>
     </section>
 
-    <section id="courses" class="py-32 bg-bodyBg">
-        <div class="container mx-auto px-6 text-center">
-            <h2 class="text-[11px] font-black text-primary uppercase tracking-[5px] mb-6">Expert Modules</h2>
-            <h3 class="text-5xl lg:text-7xl font-black text-secondary tracking-tighter leading-none mb-24 uppercase">Choose Your <br> <span class="text-primary italic">Skill Path.</span></h3>
+    <!-- Course Deck -->
+    <section id="courses" class="py-24 bg-gray-50/50">
+        <div class="container mx-auto px-6 max-w-7xl text-center">
+            <div class="max-w-2xl mx-auto mb-16 pt-8">
+                <span class="text-primary font-bold uppercase tracking-widest text-xs mb-4 block">Expert Modules</span>
+                <h2 class="text-4xl md:text-5xl font-black text-secondary tracking-tight">Choose Your Skill Path</h2>
+            </div>
 
-            <div class="grid lg:grid-cols-3 gap-10">
-                @forelse($courses as $course)
-                <div class="group relative bg-white rounded-[3rem] p-6 border border-orange-50 hover:border-primary/20 hover:shadow-[0_40px_80px_-20px_rgba(247,148,29,0.15)] transition-all duration-500 hover:-translate-y-4 overflow-hidden">
-                    <div class="relative h-64 w-full rounded-[2rem] overflow-hidden mb-8">
-                        <img src="{{ $course->thumbnail ?? 'https://via.placeholder.com/400x500' }}"
-                             class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110">
-                        <div class="absolute top-4 left-4">
-                            <span class="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-primary shadow-sm border border-orange-50">
-                                {{ $course->category->name ?? 'Premium' }}
-                            </span>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
+                @forelse($courses ?? [] as $course)
+                @php /** @var \App\Models\Bundle|\App\Models\Course $course */ @endphp
+                <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:border-gray-300 hover:shadow-lg transition-all duration-200 flex flex-col h-full group">
+                    <div class="h-60 w-full relative overflow-hidden bg-gray-100">
+                        <img src="{{ $course->thumbnail ?? 'https://via.placeholder.com/600x400' }}" alt="{{ $course->title }}" class="w-full h-full object-cover">
+                        <div class="absolute top-4 left-4 bg-white px-3 py-1.5 rounded-lg text-xs font-bold text-secondary shadow-sm">
+                            {{ $course->category->name ?? 'Premium' }}
                         </div>
                     </div>
 
-                    <div class="text-left px-4 pb-4">
-                        <div class="flex items-center text-primary text-[10px] mb-3 gap-1">
+                    <div class="p-6 flex flex-col flex-1">
+                        <div class="flex items-center gap-1 text-primary text-xs mb-4">
                             <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-                            <span class="text-gray-400 font-bold ml-2">(12k+ Enrollments)</span>
+                            <span class="text-gray-500 font-bold ml-1.5">(12k+ Enrollments)</span>
                         </div>
-                        <h4 class="text-3xl font-black text-secondary leading-tight mb-4 tracking-tighter group-hover:text-primary transition-colors italic uppercase">
+
+                        <h3 class="text-xl font-bold text-secondary mb-3 leading-tight group-hover:text-primary transition-colors line-clamp-2">
                             {{ $course->title }}
-                        </h4>
-                        <p class="text-gray-400 font-medium text-sm mb-10 line-clamp-2 leading-relaxed italic">
-                            {{ strip_tags($course->description) }}
+                        </h3>
+
+                        <p class="text-gray-500 text-sm mb-8 line-clamp-2 flex-1">
+                            {{ strip_tags($course->description ?? 'Comprehensive learning module to elevate your skillset.') }}
                         </p>
 
-                        <div class="flex items-center justify-between pt-8 border-t border-orange-50">
+                        <div class="flex items-center justify-between pt-6 border-t border-gray-100 mt-auto">
                             <div>
-                                <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Fee</p>
-                                <p class="text-3xl font-black text-secondary">₹{{ number_format($course->final_price ?? $course->price) }}</p>
+                                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Fee</p>
+                                <p class="text-2xl font-black text-secondary leading-none">₹{{ number_format($course->final_price ?? $course->price ?? 0) }}</p>
                             </div>
-                            <a href="{{ route('course.show', $course->id) }}"
-                               class="brand-gradient w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-white shadow-xl shadow-primary/20 hover:rotate-12 transition-all">
-                                <i class="fas fa-arrow-right text-xl"></i>
+                            <a href="{{ route('course.show', $course->id) }}" class="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-secondary hover:bg-secondary hover:text-white transition-colors">
+                                <i class="fas fa-arrow-right"></i>
                             </a>
                         </div>
                     </div>
                 </div>
                 @empty
-                <div class="col-span-3 py-20 opacity-20 italic font-black uppercase tracking-widest">New Bundles Landing Soon...</div>
+                <div class="col-span-full py-24 text-center">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400 text-2xl">
+                        <i class="fas fa-box-open"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-secondary mb-2">New Bundles Landing Soon</h3>
+                    <p class="text-gray-500">We are currently curating the best content for you.</p>
+                </div>
                 @endforelse
             </div>
         </div>
     </section>
 
-    <section class="py-32">
-        <div class="container mx-auto px-6">
-            <div class="grid lg:grid-cols-4 gap-8">
-                <div class="lg:col-span-2 bg-secondary p-12 rounded-[3rem] flex flex-col justify-between relative overflow-hidden group">
-                    <div class="absolute inset-0 brand-gradient opacity-0 group-hover:opacity-10 transition-opacity duration-700"></div>
-                    <div class="relative z-10">
-                        <h2 class="text-5xl font-black text-white tracking-tighter leading-none mb-8 italic uppercase">The World is <br> Your Workplace.</h2>
-                        <p class="text-gray-400 font-medium text-lg max-w-sm mb-12">We provide the blueprint to escape the matrix and build a life of freedom through digital mastery.</p>
-                        <a href="#" class="inline-block bg-white text-secondary px-10 py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-primary hover:text-white transition-all shadow-2xl shadow-white/5">Launch Your Career</a>
+    <!-- Metrics Section -->
+    <section class="py-24 bg-white">
+        <div class="container mx-auto px-6 max-w-7xl">
+            <div class="bg-secondary rounded-[2.5rem] p-10 md:p-16 lg:p-20 overflow-hidden relative">
+                <div class="grid lg:grid-cols-5 gap-16 lg:gap-8 items-center relative z-10">
+
+                    <!-- Text Area -->
+                    <div class="lg:col-span-3">
+                        <h2 class="text-4xl lg:text-5xl font-black text-white leading-[1.1] tracking-tight mb-6">
+                            The World is <br class="hidden md:block"/> Your Workplace.
+                        </h2>
+                        <p class="text-gray-400 text-lg mb-10 max-w-lg leading-relaxed">
+                            We provide the blueprint to escape the matrix and build a life of freedom through digital mastery.
+                        </p>
+                        <a href="{{ route('register') }}" class="inline-block border-2 border-white/20 hover:border-white text-white px-8 py-4 rounded-xl font-bold transition-all focus:ring-2 focus:ring-white/50 focus:outline-none">
+                            Launch Your Career
+                        </a>
                     </div>
-                </div>
 
-                <div class="glass p-12 rounded-[3rem] text-center flex flex-col justify-center gap-2 border-orange-50">
-                    <p class="text-5xl font-black text-primary italic tracking-tighter">250+</p>
-                    <p class="text-[10px] font-black uppercase tracking-[3px] text-gray-400">Total Courses</p>
-                </div>
-
-                <div class="bg-primary p-12 rounded-[3rem] text-center flex flex-col justify-center gap-2 text-white shadow-[0_20px_40px_rgba(247,148,29,0.3)]">
-                    <p class="text-5xl font-black italic tracking-tighter">15.8Cr</p>
-                    <p class="text-[10px] font-black uppercase tracking-[3px] text-white/70">Payouts Processed</p>
-                </div>
-
-                <div class="lg:col-span-2 bg-orange-100 p-12 rounded-[3rem] flex items-center gap-8 relative overflow-hidden">
-                    <div class="flex -space-x-4">
-                        <img class="w-16 h-16 rounded-full border-4 border-white" src="https://i.pravatar.cc/100?u=1">
-                        <img class="w-16 h-16 rounded-full border-4 border-white" src="https://i.pravatar.cc/100?u=2">
-                        <img class="w-16 h-16 rounded-full border-4 border-white" src="https://i.pravatar.cc/100?u=3">
+                    <!-- Stats Grid -->
+                    <div class="lg:col-span-2 grid grid-cols-2 gap-x-8 gap-y-12">
+                        <div>
+                            <p class="text-4xl lg:text-5xl font-black text-white tracking-tight mb-2">250+</p>
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Courses</p>
+                        </div>
+                        <div>
+                            <p class="text-4xl lg:text-5xl font-black text-primary tracking-tight mb-2">15.8Cr</p>
+                            <p class="text-xs font-bold text-primary/70 uppercase tracking-widest">Payouts Processed</p>
+                        </div>
+                        <div class="col-span-2 pt-8 border-t border-white/10 flex items-center gap-6">
+                            <div class="flex -space-x-3 shrink-0">
+                                <img class="w-12 h-12 rounded-full border-2 border-secondary object-cover" src="https://i.pravatar.cc/100?u=1" alt="Student">
+                                <img class="w-12 h-12 rounded-full border-2 border-secondary object-cover" src="https://i.pravatar.cc/100?u=2" alt="Student">
+                                <img class="w-12 h-12 rounded-full border-2 border-secondary object-cover" src="https://i.pravatar.cc/100?u=3" alt="Student">
+                            </div>
+                            <p class="text-sm font-bold text-gray-300">Join 1M+ active digital warriors worldwide</p>
+                        </div>
                     </div>
-                    <p class="text-secondary font-black uppercase text-xs italic tracking-widest">Join 1M+ active digital warriors</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <footer class="bg-white pt-32 pb-12 border-t border-orange-50">
-        <div class="container mx-auto px-6">
-            <div class="grid lg:grid-cols-4 gap-20 mb-24 text-center lg:text-left">
+    <!-- Footer -->
+    <footer class="bg-gray-50 pt-20 pb-10 border-t border-gray-200">
+        <div class="container mx-auto px-6 max-w-7xl">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 lg:gap-8 mb-16">
+                <!-- Branding -->
                 <div class="lg:col-span-2">
-                    <img src="{{ asset('storage/site_images/logo1.png') }}" class="w-28 mb-10 mx-auto lg:mx-0">
-                    <h3 class="text-4xl font-black text-secondary tracking-tighter leading-none mb-10 max-w-sm uppercase italic">Empowering the next <span class="text-primary">Generation.</span></h3>
-                    <div class="flex justify-center lg:justify-start gap-4">
-                        <a href="#" class="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-primary hover:brand-gradient hover:text-white transition-all"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-primary hover:brand-gradient hover:text-white transition-all"><i class="fab fa-youtube"></i></a>
-                        <a href="#" class="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-primary hover:brand-gradient hover:text-white transition-all"><i class="fab fa-linkedin-in"></i></a>
+                    <img src="{{ asset('storage/site_images/logo1.png') }}" alt="Skills Pehle" class="h-8 w-auto mb-8">
+                    <h3 class="text-2xl font-bold text-secondary mb-8 max-w-sm tracking-tight leading-snug">
+                        Empowering the next Generation.
+                    </h3>
+                    <div class="flex gap-3">
+                        <a href="#" class="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-secondary hover:text-white transition-colors"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-secondary hover:text-white transition-colors"><i class="fab fa-youtube"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-secondary hover:text-white transition-colors"><i class="fab fa-linkedin-in"></i></a>
                     </div>
                 </div>
+
+                <!-- Nav 1 -->
                 <div>
-                    <h4 class="text-[10px] font-black text-primary uppercase tracking-[4px] mb-8">Navigation</h4>
-                    <ul class="space-y-4 text-sm font-bold uppercase tracking-tighter text-gray-400">
-                        <li><a href="#" class="hover:text-primary transition-all">Top Courses</a></li>
-                        <li><a href="#" class="hover:text-primary transition-all">Join as Mentor</a></li>
-                        <li><a href="#" class="hover:text-primary transition-all">Referral Portal</a></li>
+                    <h4 class="text-sm font-bold text-secondary mb-6 tracking-wide">Navigation</h4>
+                    <ul class="space-y-4">
+                        <li><a href="#courses" class="text-gray-500 hover:text-secondary font-medium transition-colors">Top Courses</a></li>
+                        <li><a href="#" class="text-gray-500 hover:text-secondary font-medium transition-colors">Join as Mentor</a></li>
+                        <li><a href="#refer" class="text-gray-500 hover:text-secondary font-medium transition-colors">Referral Portal</a></li>
                     </ul>
                 </div>
+
+                <!-- Nav 2 -->
                 <div>
-                    <h4 class="text-[10px] font-black text-primary uppercase tracking-[4px] mb-8">Legal</h4>
-                    <ul class="space-y-4 text-sm font-bold uppercase tracking-tighter text-gray-400">
-                        <li><a href="#" class="hover:text-primary transition-all">Terms of Use</a></li>
-                        <li><a href="#" class="hover:text-primary transition-all">Privacy Policy</a></li>
-                        <li><a href="#" class="hover:text-primary transition-all">Refund Terms</a></li>
+                    <h4 class="text-sm font-bold text-secondary mb-6 tracking-wide">Legal</h4>
+                    <ul class="space-y-4">
+                        <li><a href="#" class="text-gray-500 hover:text-secondary font-medium transition-colors">Terms of Use</a></li>
+                        <li><a href="#" class="text-gray-500 hover:text-secondary font-medium transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-500 hover:text-secondary font-medium transition-colors">Refund Terms</a></li>
+                    </ul>
+                </div>
+
+                <!-- Nav 3 -->
+                <div>
+                     <h4 class="text-sm font-bold text-secondary mb-6 tracking-wide">Company</h4>
+                     <ul class="space-y-4">
+                        <li><a href="#about" class="text-gray-500 hover:text-secondary font-medium transition-colors">About Us</a></li>
+                        <li><a href="#" class="text-gray-500 hover:text-secondary font-medium transition-colors">Contact</a></li>
+                        <li><a href="#" class="text-gray-500 hover:text-secondary font-medium transition-colors">Careers</a></li>
                     </ul>
                 </div>
             </div>
 
-            <div class="pt-12 border-t border-orange-50 flex flex-col md:flex-row justify-between items-center gap-6">
-                <p class="text-[10px] font-black uppercase tracking-[3px] text-gray-400">© 2026 Skills Pehle Ecosystem. Global Inc.</p>
-                <div class="flex gap-8 text-[10px] font-black uppercase tracking-[3px] text-gray-400">
+            <!-- Bottom Footer -->
+            <div class="pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-sm text-gray-500 font-medium">© 2026 Skills Pehle Ecosystem. Global Inc.</p>
+                <div class="flex gap-6 text-sm text-gray-500 font-medium">
                     <span>GSTIN: 09XXXXXXXXXXXX</span>
                     <span>PATNA, BIHAR</span>
                 </div>
@@ -318,40 +367,5 @@
         </div>
     </footer>
 
-    <button id="scrollTop" class="fixed bottom-10 right-10 w-14 h-14 brand-gradient text-white rounded-2xl shadow-2xl hidden items-center justify-center transition-all z-[200] hover:scale-110 active:scale-95">
-        <i class="fas fa-chevron-up"></i>
-    </button>
-
-    <script>
-        $(document).ready(function() {
-            // Smooth Reveal for all sections
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        $(entry.target).addClass('animate__animated animate__fadeInUp');
-                        entry.target.style.opacity = 1;
-                    }
-                });
-            }, { threshold: 0.1 });
-
-            $('section, .grid > div').each(function() {
-                this.style.opacity = 0;
-                observer.observe(this);
-            });
-
-            // Scroll Top Visibility
-            $(window).scroll(function() {
-                if ($(this).scrollTop() > 500) {
-                    $('#scrollTop').fadeIn().css('display', 'flex');
-                } else {
-                    $('#scrollTop').fadeOut();
-                }
-            });
-
-            $('#scrollTop').click(function() {
-                window.scrollTo({top: 0, behavior: 'smooth'});
-            });
-        });
-    </script>
 </body>
 </html>

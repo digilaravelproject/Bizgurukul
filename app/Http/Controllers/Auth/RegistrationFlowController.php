@@ -23,6 +23,12 @@ use Razorpay\Api\Api;
 
 class RegistrationFlowController extends Controller
 {
+    protected $registrationService;
+
+    public function __construct(\App\Services\RegistrationService $registrationService)
+    {
+        $this->registrationService = $registrationService;
+    }
     /**
      * Phase 1: Show Lead Capture Form
      */
@@ -59,7 +65,7 @@ class RegistrationFlowController extends Controller
                     'state'      => $request->state,
                     'pincode'    => $request->pincode,
                     'ip_address' => $request->ip(),
-                    'referral_code' => Cookie::get('referral_code') ?: session('referrer_code'),
+                    'referral_code' => Cookie::get('referral_code') ?: session('referral_code'),
                 ]
             );
 
@@ -79,17 +85,22 @@ class RegistrationFlowController extends Controller
         try {
             $lead = Lead::findOrFail($request->query('lead_id'));
 
-            $referralCode = $lead->referral_code ?? Cookie::get('referral_code');
+            $referralCode = $lead->referral_code ?? (session('referral_code') ?? Cookie::get('referral_code'));
             $sponsor = $referralCode ? User::where('referral_code', $referralCode)->first() : null;
 
-            $bundles = Bundle::where('is_active', true)
-                ->orderBy('preference_index', 'asc')
-                ->get();
+            // Affiliate link logic
+            $bundles = Bundle::where('is_active', true)->ordered()->get();
+            $affiliateLinkSlug = session('affiliate_link_slug');
 
-            $maskedSponsor = $sponsor ? (object) [
-                'name'   => $this->maskString($sponsor->name),
-                'mobile' => $this->maskString($sponsor->mobile, 'mobile')
-            ] : null;
+            if ($affiliateLinkSlug) {
+                $affiliateLink = \App\Models\AffiliateLink::where('slug', $affiliateLinkSlug)->first();
+                if ($affiliateLink && $affiliateLink->target_type === 'specific_bundle') {
+                    $specificBundle = Bundle::find($affiliateLink->target_id);
+                    if ($specificBundle && $specificBundle->is_active) {
+                        $bundles = collect([$specificBundle]);
+                    }
+                }
+            }
 
             return view('auth.register-phase2', compact('lead', 'sponsor', 'maskedSponsor', 'bundles', 'referralCode'));
 
@@ -123,7 +134,7 @@ class RegistrationFlowController extends Controller
     }
 
     /**
-     * Phase 2: Store Product & Sponsor
+     * Phase 2: Store Product Selection
      */
     public function storePhase2(Request $request)
     {
@@ -163,10 +174,10 @@ class RegistrationFlowController extends Controller
 
             $bundle = Bundle::findOrFail($lead->product_preference['bundle_id']);
 
-            $hasReferral = !empty($lead->referral_code) || !empty(session('referrer_code')) || !empty(Cookie::get('referral_code'));
+            $hasReferral = !empty($lead->referral_code) || !empty(session('referral_code')) || !empty(Cookie::get('referral_code'));
 
             // Centralized Pricing Logic
-            $pricing = $this->calculatePricing($bundle, null, $hasReferral);
+            $pricing = $this->registrationService->calculatePricing($bundle, null, $hasReferral);
 
             $maskedEmail = $this->maskString($lead->email, 'email');
 
@@ -193,8 +204,8 @@ class RegistrationFlowController extends Controller
             ]);
 
             $bundle = Bundle::findOrFail($request->bundle_id);
-            $hasReferral = !empty(session('referrer_code')) || !empty(Cookie::get('referral_code'));
-            $pricing = $this->calculatePricing($bundle, $request->code, $hasReferral);
+            $hasReferral = !empty(session('referral_code')) || !empty(Cookie::get('referral_code'));
+            $pricing = $this->registrationService->calculatePricing($bundle, $request->code, $hasReferral);
 
             if (isset($pricing['error'])) {
                 return response()->json(['status' => 'invalid', 'message' => $pricing['error']]);
@@ -210,7 +221,7 @@ class RegistrationFlowController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => 'Error applying coupon']);
+            return response()->json(['status' => 'error', 'message' => $e->getMessage() ?: 'Error applying coupon']);
         }
     }
 
@@ -228,10 +239,10 @@ class RegistrationFlowController extends Controller
             $lead = Lead::findOrFail($request->lead_id);
             $bundle = Bundle::findOrFail($lead->product_preference['bundle_id']);
 
-            $hasReferral = !empty($lead->referral_code) || !empty(session('referrer_code')) || !empty(Cookie::get('referral_code'));
+            $hasReferral = !empty($lead->referral_code) || !empty(session('referral_code')) || !empty(Cookie::get('referral_code'));
 
             // Recalculate Price Securely
-            $pricing = $this->calculatePricing($bundle, $request->coupon_code, $hasReferral);
+            $pricing = $this->registrationService->calculatePricing($bundle, $request->coupon_code, $hasReferral);
 
             // Initialize Razorpay
             $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
@@ -270,84 +281,16 @@ class RegistrationFlowController extends Controller
      */
     public function verifyPayment(Request $request)
     {
-        DB::beginTransaction();
         try {
             $request->validate([
                 'razorpay_order_id'   => 'required',
                 'razorpay_payment_id' => 'required',
                 'razorpay_signature'  => 'required',
-                'lead_id'             => 'required|exists:leads,id'
+                'lead_id'             => 'required|exists:leads,id',
+                'coupon_code'         => 'nullable|string'
             ]);
 
-            // 1. Verify Signature
-            $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
-            $attributes = [
-                'razorpay_order_id'   => $request->razorpay_order_id,
-                'razorpay_payment_id' => $request->razorpay_payment_id,
-                'razorpay_signature'  => $request->razorpay_signature
-            ];
-            $api->utility->verifyPaymentSignature($attributes);
-
-            // 2. Retrieve Data with Lock (Prevent double processing)
-            $lead = Lead::where('id', $request->lead_id)->lockForUpdate()->firstOrFail();
-            $bundle = Bundle::findOrFail($lead->product_preference['bundle_id']);
-
-            // 3. Resolve Referrer
-            $referrer = null;
-            $referralCode = $lead->referral_code ?: (session('referrer_code') ?: Cookie::get('referral_code'));
-
-            if ($referralCode) {
-                $referrer = User::where('referral_code', $referralCode)->first();
-            }
-
-            // 4. Create User (Atomic Transactional Create)
-            $user = User::create([
-                'name'          => $lead->name,
-                'email'         => $lead->email,
-                'mobile'        => $lead->mobile,
-                'password'      => $lead->password,
-                'gender'        => $lead->gender,
-                'dob'           => $lead->dob,
-                'state_id'      => null,
-                'referral_code' => Str::upper(Str::random(8)),
-                'referred_by'   => $referrer ? $referrer->id : null,
-                'is_active'     => true,
-            ]);
-
-            $user->assignRole('Student');
-
-            // 5. Record Payment
-            Payment::create([
-                'user_id'             => $user->id,
-                'bundle_id'           => $bundle->id,
-                'razorpay_order_id'   => $request->razorpay_order_id,
-                'razorpay_payment_id' => $request->razorpay_payment_id,
-                'amount'              => $referrer ? $bundle->affiliate_price : $bundle->website_price,
-                'status'              => 'success',
-            ]);
-
-            // 6. Calculate Commission
-            if ($referrer) {
-                $commissionService = app(\App\Services\CommissionCalculatorService::class);
-                $commissionAmount = $commissionService->calculateCommission($referrer, $bundle);
-
-                if ($commissionAmount > 0) {
-                    AffiliateCommission::create([
-                        'affiliate_id'     => $referrer->id,
-                        'referred_user_id' => $user->id,
-                        'amount'           => $commissionAmount,
-                        'status'           => 'pending',
-                        'reference_id'     => $bundle->id,
-                        'reference_type'   => get_class($bundle),
-                        'notes'            => 'Commission for Bundle: ' . $bundle->title,
-                    ]);
-                }
-            }
-
-            // 7. Cleanup Lead
-            $lead->delete();
-
-            DB::commit();
+            $user = $this->registrationService->verifyAndCompleteRegistration($request->all());
 
             // Fire Registered Event
             event(new Registered($user));
@@ -368,64 +311,9 @@ class RegistrationFlowController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            DB::rollBack();
             Log::error('Payment Verification Failed: ' . $e->getMessage());
             return response()->json(['status' => 'error', 'message' => 'Payment verification failed: ' . $e->getMessage()]);
         }
-    }
-
-    /**
-     * Helper: Centralized Pricing Logic
-     */
-    private function calculatePricing(Bundle $bundle, ?string $couponCode = null, bool $hasReferral = false)
-    {
-        $basePrice = $hasReferral ? $bundle->affiliate_price : $bundle->website_price;
-        $discountAmount = 0;
-
-        // Apply Coupon
-        if ($couponCode) {
-            $coupon = Coupon::where('code', $couponCode)->active()->first();
-
-            if (!$coupon) {
-                return ['error' => 'Invalid Coupon Code'];
-            }
-            if ($coupon->isExpired()) {
-                return ['error' => 'Coupon Expired'];
-            }
-            if ($coupon->isLimitReached()) {
-                return ['error' => 'Coupon Limit Reached'];
-            }
-            if (!$coupon->isValidForItems([], [$bundle->id])) {
-                return ['error' => 'Coupon not valid for this bundle'];
-            }
-
-            $discountAmount = $coupon->calculateDiscount($basePrice);
-        }
-
-        $taxableAmount = max(0, $basePrice - $discountAmount);
-
-        // Calculate Tax
-        $taxes = Tax::where('is_active', true)->get();
-        $taxAmount = 0;
-
-        foreach ($taxes as $tax) {
-            if ($tax->type == 'percentage') {
-                $taxAmount += ($taxableAmount * $tax->value / 100);
-            } else {
-                $taxAmount += $tax->value;
-            }
-        }
-
-        return [
-            'basePrice'     => $basePrice,
-            'websitePrice'  => $bundle->website_price,
-            'affiliatePrice'=> $bundle->affiliate_price,
-            'discount'      => $discountAmount,
-            'taxableAmount' => $taxableAmount,
-            'taxAmount'     => $taxAmount,
-            'taxes'         => $taxes,
-            'totalAmount'   => $taxableAmount + $taxAmount
-        ];
     }
 
     /**

@@ -18,9 +18,19 @@ class Payment extends Model
         'paymentable_id',
         'razorpay_order_id',
         'razorpay_payment_id',
+        'subtotal',
+        'discount_amount',
+        'tax_amount',
+        'total_amount',
+        'coupon_id',
         'amount',
         'status',
     ];
+
+    public function coupon()
+    {
+        return $this->belongsTo(Coupon::class);
+    }
 
     /**
      * Get the owning paymentable model (Course, Bundle, CouponPackage, etc.)
