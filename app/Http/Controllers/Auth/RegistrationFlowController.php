@@ -88,7 +88,17 @@ class RegistrationFlowController extends Controller
             $referralCode = $lead->referral_code ?? (session('referral_code') ?? Cookie::get('referral_code'));
             $sponsor = $referralCode ? User::where('referral_code', $referralCode)->first() : null;
 
+            // Masked Sponsor for UI (consistent with AlpineJS expectations)
+            $maskedSponsor = null;
+            if ($sponsor) {
+                $maskedSponsor = (object) [
+                    'name'   => $this->maskString($sponsor->name),
+                    'mobile' => $this->maskString($sponsor->mobile, 'mobile')
+                ];
+            }
+
             // Affiliate link logic
+
             $bundles = Bundle::where('is_active', true)->ordered()->get();
             $affiliateLinkSlug = session('affiliate_link_slug');
 

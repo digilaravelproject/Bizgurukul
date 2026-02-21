@@ -4,27 +4,53 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\LmsService;
+use App\Services\BundleService;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
 class HomeController extends Controller
 {
     protected $lmsService;
+    protected $bundleService;
 
-    public function __construct(LmsService $lmsService)
+    public function __construct(LmsService $lmsService, BundleService $bundleService)
     {
         $this->lmsService = $lmsService;
+        $this->bundleService = $bundleService;
     }
 
     public function index(Request $request)
     {
         try {
             $courses = $this->lmsService->getFilteredCourses(['is_published' => 1]);
-            return view('home', compact('courses'));
+            $bundles = $this->bundleService->getBundles(['is_published' => 1]);
+            return view('web.home', compact('courses', 'bundles'));
         } catch (Exception $e) {
             Log::error("HomeController Error [index]: " . $e->getMessage());
             return response()->view('errors.500', [], 500); // Or handle gracefully
         }
+    }
+
+    public function variant(Request $request)
+    {
+        try {
+            $courses = $this->lmsService->getFilteredCourses(['is_published' => 1]);
+            $bundles = $this->bundleService->getBundles(['is_published' => 1]);
+            return view('web.home-variant', compact('courses', 'bundles'));
+        } catch (Exception $e) {
+            Log::error("HomeController Error [variant]: " . $e->getMessage());
+            return response()->view('errors.500', [], 500);
+        }
+    }
+
+    public function about()
+    {
+        return view('web.about');
+    }
+
+    public function contact()
+    {
+        return view('web.contact');
     }
 
     public function courses($id)

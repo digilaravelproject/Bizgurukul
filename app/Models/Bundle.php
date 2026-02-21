@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Builder;
 
 class Bundle extends Model
 {
@@ -89,4 +90,14 @@ class Bundle extends Model
 
         return in_array($this->id, $user->unlockedBundleIds());
     }
+
+    /**
+     * Scope: Order by preference_index (asc)
+     */
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('preference_index', 'asc');
+    }
+
 }
+

@@ -51,20 +51,20 @@
             <div class="space-y-3">
                 <div class="flex items-center gap-3">
                     <span class="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border border-primary/20">
-                        Executive Dashboard
+                        Partner Dashboard
                     </span>
-                    <span class="text-mutedText text-xs font-semibold uppercase tracking-widest">{{ now()->format('F j, Y') }}</span>
+                    {{-- <span class="text-mutedText text-xs font-semibold uppercase tracking-widest">{{ now()->format('F j, Y') }}</span> --}}
                 </div>
                 <h1 class="text-4xl md:text-5xl font-black tracking-tight text-mainText">
-                    Welcome back, <span class="bg-clip-text text-white brand-gradient">{{ explode(' ', $user->name)[0] }}</span>
+                    Welcome, <span class="bg-clip-text text-white brand-gradient">{{ explode(' ', $user->name)[0] }}</span>
                 </h1>
-                <p class="text-mutedText text-base font-medium max-w-lg leading-relaxed">
+                {{-- <p class="text-mutedText text-base font-medium max-w-lg leading-relaxed">
                     Track your empire's growth. You have <span class="text-primary font-bold">{{ $myCourses->count() + $myBundles->count() }} active programs</span> and are maintaining top-tier performance.
-                </p>
+                </p> --}}
             </div>
 
             {{-- Referral Section --}}
-            <div class="w-full md:w-auto min-w-[340px] bg-navy rounded-2xl p-6 border border-primary/10 premium-shadow">
+            {{-- <div class="w-full md:w-auto min-w-[340px] bg-navy rounded-2xl p-6 border border-primary/10 premium-shadow">
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-xs font-bold uppercase tracking-widest text-mutedText">My Referral Code</span>
                     <div class="flex items-center gap-2">
@@ -83,7 +83,7 @@
                     </button>
                 </div>
 
-               </div>
+               </div> --}}
         </div>
     </div>
 
