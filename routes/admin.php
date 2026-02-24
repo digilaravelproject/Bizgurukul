@@ -77,6 +77,8 @@ Route::middleware(['auth', 'role:Admin'])
         // Beginner guide management
         Route::get('/beginner-guide', [\App\Http\Controllers\Admin\BeginnerGuideController::class, 'index'])
             ->name('beginner-guide');
+        Route::get('/resources', [\App\Http\Controllers\Admin\BeginnerGuideController::class, 'resources'])
+            ->name('resources');
         Route::post('/beginner-guide/store', [\App\Http\Controllers\Admin\BeginnerGuideController::class, 'store'])
             ->name('beginner-guide.store');
         // legacy upload route kept for compatibility

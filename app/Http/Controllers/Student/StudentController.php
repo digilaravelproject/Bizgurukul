@@ -159,5 +159,15 @@ class StudentController extends Controller
         return view('users.beginner-guide', compact('videos', 'selected', 'progressData'));
     }
 
+    /**
+     * Display the resources page with tabs for Product Knowledge and Beginners Guide.
+     */
+    public function resources(Request $request)
+    {
+        $productKnowledge = \App\Models\CourseResource::orderBy('created_at', 'desc')->get();
+        $beginnersGuide = \App\Models\BeginnerGuideVideo::orderBy('category')->orderBy('order_column')->get();
+
+        return view('users.resources', compact('productKnowledge', 'beginnersGuide'));
+    }
 
 }

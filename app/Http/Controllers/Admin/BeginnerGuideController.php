@@ -79,4 +79,15 @@ class BeginnerGuideController extends Controller
         $video->delete();
         return redirect()->route('admin.beginner-guide')->with('success', 'Video removed.');
     }
+
+    /**
+     * Display the resources page with tabs for Product Knowledge and Beginners Guide.
+     */
+    public function resources(Request $request)
+    {
+        $productKnowledge = \App\Models\CourseResource::orderBy('created_at', 'desc')->get();
+        $beginnersGuide = \App\Models\BeginnerGuideVideo::orderBy('category')->orderBy('order_column')->get();
+
+        return view('admin.resources', compact('productKnowledge', 'beginnersGuide'));
+    }
 }
