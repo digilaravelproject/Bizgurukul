@@ -54,6 +54,7 @@
     <div x-show="sidebarOpen" @click="sidebarOpen = false" x-cloak
         class="fixed inset-0 bg-mainText/60 z-40 md:hidden backdrop-blur-sm"></div>
 
+    @include('layouts.partials.global-toast')
     @stack('scripts')
 </body>
 

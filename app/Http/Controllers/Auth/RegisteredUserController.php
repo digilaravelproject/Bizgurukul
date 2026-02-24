@@ -100,11 +100,10 @@ class RegisteredUserController extends Controller
             // Commission Logic (If applicable at registration)
             $commAmount = (float) Setting::get('referral_commission_amount', 0);
             if ($referredBy && $commAmount > 0) {
-                AffiliateCommission::create([
+                app(\App\Services\WalletService::class)->processCommission([
                     'affiliate_id' => $referredBy,
                     'referred_user_id' => $user->id,
                     'amount' => $commAmount,
-                    'status' => 'pending',
                     'notes' => 'Registration bonus commission.',
                 ]);
 

@@ -17,14 +17,21 @@ class AffiliateCommission extends Model
         'reference_type',
         'reference_id',
         'amount',
+        'tds_amount',
+        'payable_amount',
         'status',
         'notes',
-        'processed_at'
+        'processed_at',
+        'available_at',
+        'withdrawal_request_id'
     ];
 
     protected $casts = [
         'processed_at' => 'datetime',
+        'available_at' => 'datetime',
         'amount' => 'decimal:2',
+        'tds_amount' => 'decimal:2',
+        'payable_amount' => 'decimal:2',
     ];
 
     public function affiliate(): BelongsTo
@@ -39,6 +46,11 @@ class AffiliateCommission extends Model
     public function reference(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    public function withdrawalRequest(): BelongsTo
+    {
+        return $this->belongsTo(WithdrawalRequest::class);
     }
     public function scopePending($query)
     {

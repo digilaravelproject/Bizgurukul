@@ -1,34 +1,33 @@
 @extends('layouts.user.app')
 
 @section('content')
-<div class="space-y-8 font-sans text-mainText" x-data="{ showToast: {{ session('success') ? 'true' : 'false' }}, toastMsg: '{{ session('success') }}' }" x-init="if(showToast) setTimeout(() => showToast = false, 3000)">
+<div class="space-y-8 font-sans text-mainText">
 
-    {{-- Global Session Toast --}}
-    <template x-if="showToast">
-        <div class="fixed top-10 right-10 z-[9999] pointer-events-none"
-            x-show="showToast"
-            x-transition:enter="transition ease-out duration-500"
-            x-transition:enter-start="opacity-0 translate-x-10 scale-90"
-            x-transition:enter-end="opacity-100 translate-x-0 scale-100"
-            x-transition:leave="transition ease-in duration-500"
-            x-transition:leave-start="opacity-100 translate-x-0 scale-100"
-            x-transition:leave-end="opacity-0 translate-x-10 scale-90">
-            <div class="bg-surface border border-primary/20 p-4 rounded-2xl shadow-2xl flex items-center gap-4 premium-shadow backdrop-blur-xl">
-                <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500">
-                    <i class="fas fa-check-circle text-xl"></i>
-                </div>
-                <div>
-                    <p class="text-[10px] font-black uppercase tracking-widest text-mutedText">Success Message</p>
-                    <p class="text-sm font-bold text-mainText" x-text="toastMsg"></p>
-                </div>
-            </div>
-        </div>
-    </template>
-
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
             <h1 class="text-3xl font-black tracking-tight text-mainText">Affiliate Links</h1>
             <p class="text-sm font-medium text-mutedText mt-1">Generate and share your unique referral links.</p>
+        </div>
+
+        {{-- Compact Referral Code --}}
+        <div class="flex items-center gap-3 bg-surface border border-primary/10 pl-5 pr-2 py-2 rounded-2xl shadow-xl shadow-primary/5 group/code cursor-pointer relative"
+            x-data="{ copied: false, code: '{{ auth()->user()->referral_code }}' }"
+            @click="navigator.clipboard.writeText(code); copied = true; setTimeout(() => copied = false, 2000)">
+
+            <div class="flex flex-col">
+                <span class="text-[9px] font-black text-mutedText uppercase tracking-widest">Your Referral Code</span>
+                <span class="text-xl font-black tracking-widest text-primary font-mono uppercase" x-text="code"></span>
+            </div>
+
+            <div class="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary group-hover/code:bg-primary group-hover/code:text-white transition-all duration-300">
+                <i class="fas" :class="copied ? 'fa-check' : 'fa-copy'"></i>
+            </div>
+
+            {{-- Clean Toast Feedback --}}
+            <div x-show="copied" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                class="absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-1 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-xl z-50">
+                Copied!
+            </div>
         </div>
     </div>
 

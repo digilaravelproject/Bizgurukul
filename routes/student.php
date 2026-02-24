@@ -26,8 +26,8 @@ Route::middleware(['auth', 'role:Student|Admin'])->group(function () {
     Route::post('/product-selection/apply-referral', [ProductSelectionController::class, 'applyReferral'])->name('student.apply_referral');
 
     // 2. Student Course Purchase Payment
-    // CHANGED URI to avoid conflict with Registration Payment
-    Route::post('/payment/create/{courseId}', [RazorpayController::class, 'createOrder'])->name('razorpay.create');
+    Route::get('/checkout/{type}/{id}', [RazorpayController::class, 'checkout'])->name('student.checkout');
+    Route::post('/payment/create/{type}/{id}', [RazorpayController::class, 'createOrder'])->name('razorpay.create');
     Route::post('/student/payment/verify', [RazorpayController::class, 'verifyPayment'])->name('razorpay.verify');
 });
 
@@ -60,6 +60,10 @@ Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')
         // Affiliate Controller Routes (For Dashboard Integration)
         Route::post('/affiliate/generate-link', [\App\Http\Controllers\AffiliateController::class, 'generateLink'])->name('affiliate.link.generate');
         Route::delete('/affiliate/delete-link/{id}', [\App\Http\Controllers\AffiliateController::class, 'deleteLink'])->name('affiliate.link.delete');
+
+        // Wallet & Payouts
+        Route::get('/wallet', [\App\Http\Controllers\Student\WalletController::class, 'index'])->name('wallet.index');
+        Route::post('/wallet/withdraw', [\App\Http\Controllers\Student\WalletController::class, 'requestWithdrawal'])->name('wallet.withdraw');
 
         // Coupons
         Route::get('/coupons', [CouponController::class, 'index'])->name('coupons.index');

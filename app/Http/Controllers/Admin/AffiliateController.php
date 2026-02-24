@@ -74,6 +74,7 @@ class AffiliateController extends Controller
     {
         $affiliateEnabled = \App\Models\Setting::get('affiliate_module_enabled', true);
         $courseSellingEnabled = \App\Models\Setting::get('course_selling_enabled', false);
+        $upgradeWindowHours = \App\Models\Setting::get('upgrade_window_hours', 24);
 
         // Fetch Global Rules (where affiliate_id is null)
         $globalRules = \App\Models\CommissionRule::with('product')
@@ -84,7 +85,7 @@ class AffiliateController extends Controller
         $courses = \App\Models\Course::select('id', 'title')->get();
         $bundles = \App\Models\Bundle::select('id', 'title')->get();
 
-        return view('admin.affiliate.settings', compact('affiliateEnabled', 'courseSellingEnabled', 'globalRules', 'courses', 'bundles'));
+        return view('admin.affiliate.settings', compact('affiliateEnabled', 'courseSellingEnabled', 'upgradeWindowHours', 'globalRules', 'courses', 'bundles'));
     }
 
     /**
@@ -94,6 +95,11 @@ class AffiliateController extends Controller
     {
         \App\Models\Setting::set('affiliate_module_enabled', $request->boolean('affiliate_module_enabled'));
         \App\Models\Setting::set('course_selling_enabled', $request->boolean('course_selling_enabled'));
+
+        $request->validate([
+            'upgrade_window_hours' => 'required|integer|min:0'
+        ]);
+        \App\Models\Setting::set('upgrade_window_hours', $request->input('upgrade_window_hours'));
 
         return redirect()->back()->with('success', 'Global settings updated.');
     }

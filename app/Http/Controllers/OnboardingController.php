@@ -64,11 +64,10 @@ class OnboardingController extends Controller
                          $commAmount = (float) Setting::get('referral_commission_amount', 0);
 
                          if ($commAmount > 0) {
-                            AffiliateCommission::create([
+                            app(\App\Services\WalletService::class)->processCommission([
                                 'affiliate_id' => $referrer->id,
                                 'referred_user_id' => $user->id,
                                 'amount' => $commAmount,
-                                'status' => 'pending',
                                 'notes' => 'Registration bonus commission (Onboarding).',
                             ]);
                          }
