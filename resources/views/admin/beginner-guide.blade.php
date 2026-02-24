@@ -126,7 +126,7 @@
                                         </h3>
                                         <div class="space-y-3">
                                             @foreach($categoryVideos->sortBy('order_column') as $video)
-                                                <button onclick="previewVideo({{ $video->id }}, '{{ $video->title }}', '{{ addslashes($video->description) }}', '{{ addslashes($video->resources ?? '') }}', '{{ $video->video_url }}')" 
+                                                <button onclick="previewVideo({{ $video->id }}, '{{ addslashes($video->title) }}', '{{ addslashes($video->description) }}', '{{ addslashes($video->resources ?? '') }}', '{{ asset($video->video_url) }}')" 
                                                     class="w-full flex items-start justify-between bg-gray-50 p-4 rounded-lg hover:bg-blue-50 hover:border-l-4 hover:border-l-primary transition-all group cursor-pointer text-left">
                                                     <div class="flex-1 min-w-0">
                                                         <div class="flex items-center gap-3 mb-1">
@@ -137,7 +137,7 @@
                                                         </div>
                                                         <p class="text-xs text-mutedText line-clamp-2 ml-9">{{ $video->description }}</p>
                                                     </div>
-                                                    <form method="POST" action="{{ route('admin.beginner-guide.destroy', $video->id) }}" 
+                                                    <?php /*<form method="POST" action="{{ route('admin.beginner-guide.destroy', $video->id) }}" 
                                                         onclick="event.stopPropagation();"
                                                         class="ml-3 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         @csrf
@@ -146,7 +146,7 @@
                                                             class="flex-shrink-0 w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-colors">
                                                             <i class="fas fa-trash-alt text-xs"></i>
                                                         </button>
-                                                    </form>
+                                                    </form> */?>
                                                 </button>
                                             @endforeach
                                         </div>
@@ -166,7 +166,7 @@
                     <div id="preview-container" class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                         {{-- Video Player --}}
                         <div class="w-full bg-black">
-                            <video id="preview-video" width="100%" height="auto" controls style="display: block; max-width: 100%; background-color: #000;">
+                            <video id="preview-video" width="100%" height="auto" controls style="display: block; max-width: 100%; background-color: #000; cursor: pointer;" onclick="this.paused ? this.play() : this.pause();">
                                 <source id="preview-source" src="" type="video/mp4">
                                 Your browser does not support the video tag.
                             </video>
@@ -216,6 +216,7 @@
             
             // Reset and reload video
             videoEl.load();
+            videoEl.play();
             
             // Scroll to preview
             setTimeout(function() {
@@ -237,7 +238,6 @@
             }, 300);
         });
     </script>
-@endsection
 @endsection
 
 
