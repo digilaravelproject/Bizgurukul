@@ -20,6 +20,7 @@ use App\Models\WalletTransaction;
 use App\Models\ReferralVisit;
 use App\Models\CommissionRule;
 use App\Models\UserAffiliateSetting;
+use App\Models\Setting;
 
 
 class User extends Authenticatable
@@ -106,6 +107,11 @@ class User extends Authenticatable
     public function kyc()
     {
         return $this->hasOne(KycDetail::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
     }
 
     public function bank()
@@ -198,5 +204,57 @@ class User extends Authenticatable
             ->toArray();
 
         return array_unique(array_merge($bundleCourseIds, $directCourseIds));
+    }
+
+    /**
+     * Get the highest purchased bundle block
+     */
+    public function highestPurchasedBundle()
+    {
+        $maxPref = $this->maxBundlePreferenceIndex();
+        if ($maxPref <= 0) return null;
+
+        foreach ($this->bundles as $bundle) {
+            if ($bundle->preference_index == $maxPref) {
+                return $bundle;
+            }
+        }
+        return null;
+    }
+
+    public function maxBundlePayment()
+    {
+        $highestBundle = $this->highestPurchasedBundle();
+        if (!$highestBundle) return null;
+
+        return Payment::where('user_id', $this->id)
+            ->where('status', 'success')
+            ->where('bundle_id', $highestBundle->id)
+            ->latest('created_at')
+            ->first();
+    }
+
+    public function canUpgradeBundles()
+    {
+        $payment = $this->maxBundlePayment();
+        if (!$payment) return false;
+
+        $hours = (int) Setting::get('upgrade_window_hours', 24);
+        if ($hours <= 0) return false; // Disabled
+
+        return now()->diffInHours($payment->created_at) < $hours;
+    }
+
+    public function upgradeTimeLeftSeconds()
+    {
+        $payment = $this->maxBundlePayment();
+        if (!$payment) return 0;
+
+        $hours = (int) Setting::get('upgrade_window_hours', 24);
+        if ($hours <= 0) return 0;
+
+        $expiresAt = (clone $payment->created_at)->addHours($hours);
+        $seconds = now()->diffInSeconds($expiresAt, false);
+        return $seconds > 0 ? $seconds : 0;
     }
 }

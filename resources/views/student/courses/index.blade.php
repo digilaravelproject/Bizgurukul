@@ -40,15 +40,29 @@
                  class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 
                 @forelse($bundles as $bundle)
-                    @php $isUnlocked = auth()->check() && $bundle->isPurchasedBy(auth()->id()); @endphp
+                    @php
+                        $isUnlocked = auth()->check() && $bundle->isPurchasedBy(auth()->id());
+                        $canUpgrade = auth()->check() && auth()->user()->canUpgradeBundles() && $bundle->preference_index > auth()->user()->maxBundlePreferenceIndex();
+                        $effectivePrice = $bundle->getEffectivePriceForUser(auth()->user());
+                        $originalPrice = $bundle->final_price;
+                        $upgradeTimeLeft = auth()->check() ? auth()->user()->upgradeTimeLeftSeconds() : 0;
+                    @endphp
 
-                    <div class="bg-surface rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full group">
+                    <div class="bg-surface rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full group relative">
+                        {{-- Countdown Overlay if Upgradable --}}
+                        @if(!$isUnlocked && $canUpgrade && $upgradeTimeLeft > 0)
+                            <div class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black uppercase px-3 py-1.5 rounded-bl-xl z-20 shadow-md flex items-center gap-1.5" x-data="{ time: {{ $upgradeTimeLeft }} }" x-init="setInterval(() => { if(time > 0) time--; }, 1000)">
+                                <i class="fas fa-clock animate-pulse"></i>
+                                <span class="tracking-widest" x-text="Math.floor(time / 3600).toString().padStart(2, '0') + ':' + Math.floor((time % 3600) / 60).toString().padStart(2, '0') + ':' + Math.floor(time % 60).toString().padStart(2, '0')"></span>
+                            </div>
+                        @endif
+
                         {{-- Compact Image --}}
                         <div class="relative h-40 overflow-hidden bg-gray-100">
                             <img src="{{ $bundle->thumbnail_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
 
                             @if($isUnlocked)
-                                <div class="absolute top-3 right-3 bg-green-500/90 text-white text-[9px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                                <div class="absolute top-3 right-3 bg-green-500/90 text-white text-[9px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm z-10">
                                     <div class="w-1 h-1 bg-white rounded-full animate-pulse"></div>
                                     PURCHASED
                                 </div>
@@ -56,7 +70,7 @@
                         </div>
 
                         {{-- Card Content --}}
-                        <div class="p-5 flex flex-col flex-grow">
+                        <div class="p-5 flex flex-col flex-grow relative z-10">
                             <h3 class="text-base font-bold text-mainText leading-snug group-hover:text-primary transition-colors line-clamp-1">
                                 {{ $bundle->title }}
                             </h3>
@@ -69,7 +83,12 @@
                             <div class="mt-auto pt-4 flex items-center justify-between border-t border-gray-50">
                                 <div>
                                     <span class="text-[9px] font-bold text-mutedText uppercase tracking-widest block mb-0.5">Price</span>
-                                    <span class="text-lg font-bold text-primary">₹{{ number_format($bundle->final_price, 0) }}</span>
+                                    <div class="flex items-end gap-2">
+                                        <span class="text-lg font-bold text-primary">₹{{ number_format($effectivePrice, 0) }}</span>
+                                        @if($canUpgrade && $effectivePrice < $originalPrice)
+                                            <span class="text-[10px] text-mutedText line-through font-semibold mb-1">₹{{ number_format($originalPrice, 0) }}</span>
+                                        @endif
+                                    </div>
                                 </div>
 
                                 @if($isUnlocked)
@@ -77,9 +96,9 @@
                                         View
                                     </a>
                                 @else
-                                    <button class="bg-primary text-white px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-secondary transition-colors shadow-sm">
-                                        {{ (auth()->check() && auth()->user()->maxBundlePreferenceIndex() > 0 && $bundle->preference_index > auth()->user()->maxBundlePreferenceIndex()) ? 'Upgrade' : 'Unlock' }}
-                                    </button>
+                                    <a href="{{ route('student.checkout', ['type' => 'bundle', 'id' => $bundle->id]) }}" class="bg-primary text-white px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-secondary transition-colors shadow-sm flex items-center gap-1">
+                                        @if($canUpgrade) <i class="fas fa-arrow-up text-[9px]"></i> Upgrade @else Unlock @endif
+                                    </a>
                                 @endif
                             </div>
                         </div>

@@ -99,5 +99,44 @@ class Bundle extends Model
         return $query->orderBy('preference_index', 'asc');
     }
 
+    /**
+     * Calculate the effective price for a user, handling time-bound upgrades.
+     */
+    public function getEffectivePriceForUser($user)
+    {
+        $price = $this->final_price;
+
+        if ($user) {
+            $maxPref = $user->maxBundlePreferenceIndex();
+            // Can only upgrade to higher preference
+            if ($maxPref > 0 && $this->preference_index > $maxPref) {
+                if ($user->canUpgradeBundles()) {
+                    $highestBundle = $user->highestPurchasedBundle();
+                    if ($highestBundle) {
+                        $diff = $this->final_price - $highestBundle->final_price;
+                        $price = max(0, $diff);
+                    }
+                }
+            }
+        }
+        return $price;
+    }
+
+    /**
+     * Return the discount amount if upgrading.
+     */
+    public function getUpgradeDiscountAmount($user)
+    {
+        if ($user) {
+            $maxPref = $user->maxBundlePreferenceIndex();
+            if ($maxPref > 0 && $this->preference_index > $maxPref && $user->canUpgradeBundles()) {
+                $highestBundle = $user->highestPurchasedBundle();
+                if ($highestBundle) {
+                    return $highestBundle->final_price; // Current value as discount
+                }
+            }
+        }
+        return 0;
+    }
 }
 

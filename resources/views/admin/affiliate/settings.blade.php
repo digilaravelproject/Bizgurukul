@@ -50,6 +50,20 @@
                         </div>
                         <p class="text-xs text-mutedText leading-relaxed">Allow affiliates to sell individual courses by default. Can be overridden per user.</p>
                     </div>
+
+                    <div class="p-5 border border-primary/10 rounded-2xl bg-white hover:border-primary/30 transition-all group md:col-span-2">
+                        <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-2">
+                            <div>
+                                <h3 class="text-base font-bold text-mainText group-hover:text-primary transition-colors">Bundle Upgrade Window</h3>
+                                <p class="text-xs text-mutedText leading-relaxed mt-1">Time allowed (in hours) to pay the difference when upgrading. Set to 0 to disable upgrades entirely.</p>
+                            </div>
+                            <div class="w-full md:w-32 relative">
+                                <input type="number" name="upgrade_window_hours" value="{{ $upgradeWindowHours }}" min="0" required
+                                    class="w-full bg-navy border border-primary/10 rounded-xl px-4 py-2 text-sm font-bold text-mainText focus:border-primary outline-none focus:ring-1 focus:ring-primary transition-all shadow-sm">
+                                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-mutedText pointer-events-none">hrs</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="flex justify-end pt-2">

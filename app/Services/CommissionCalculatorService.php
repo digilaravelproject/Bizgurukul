@@ -16,13 +16,14 @@ class CommissionCalculatorService
      *
      * @param User $sponsor
      * @param Bundle $product
+     * @param float|null $actualAmount The actual amount paid (e.g., during upgrades). If null, uses product's final price.
      * @return float
      */
-    public function calculateCommission(User $sponsor, Bundle $product)
+    public function calculateCommission(User $sponsor, Bundle $product, $actualAmount = null)
     {
         // 1. Check for Custom Commission Percentage Override
         $sponsorSettings = $sponsor->affiliateSettings;
-        $productPrice = $product->final_price ?? $product->website_price ?? 0;
+        $productPrice = !is_null($actualAmount) ? $actualAmount : ($product->final_price ?? $product->website_price ?? 0);
 
         if ($sponsorSettings && !is_null($sponsorSettings->custom_commission_percentage)) {
              return $productPrice * ($sponsorSettings->custom_commission_percentage / 100);

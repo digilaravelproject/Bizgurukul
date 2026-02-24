@@ -104,7 +104,21 @@
 
         {{-- BUNDLES --}}
         @foreach($filteredBundles as $bundle)
-        <div class="group flex flex-col rounded-[2rem] bg-surface shadow-sm border border-primary/5 overflow-hidden hover:border-secondary/40 transition-all duration-500 hover:-translate-y-2">
+        @php
+            $isUnlocked = auth()->check() && $bundle->isPurchasedBy(auth()->id());
+            $canUpgrade = auth()->check() && auth()->user()->canUpgradeBundles() && $bundle->preference_index > auth()->user()->maxBundlePreferenceIndex();
+            $effectivePrice = $bundle->getEffectivePriceForUser(auth()->user());
+            $originalPrice = $bundle->final_price;
+            $upgradeTimeLeft = auth()->check() ? auth()->user()->upgradeTimeLeftSeconds() : 0;
+        @endphp
+        <div class="group flex flex-col rounded-[2rem] bg-surface shadow-sm border border-primary/5 overflow-hidden hover:border-secondary/40 transition-all duration-500 hover:-translate-y-2 relative">
+            @if(!$isUnlocked && $canUpgrade && $upgradeTimeLeft > 0)
+                <div class="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-black uppercase px-4 py-2 rounded-bl-2xl z-20 shadow-lg flex items-center gap-2" x-data="{ time: {{ $upgradeTimeLeft }} }" x-init="setInterval(() => { if(time > 0) time--; }, 1000)">
+                    <i class="fas fa-clock animate-pulse"></i>
+                    <span class="tracking-widest" x-text="Math.floor(time / 3600).toString().padStart(2, '0') + ':' + Math.floor((time % 3600) / 60).toString().padStart(2, '0') + ':' + Math.floor(time % 60).toString().padStart(2, '0')"></span>
+                </div>
+            @endif
+
             <div class="aspect-[4/3] w-full relative overflow-hidden bg-navy">
                 @php
                     $src = $bundle->thumbnail ? (str_starts_with($bundle->thumbnail, 'http') ? $bundle->thumbnail : asset('storage/'.$bundle->thumbnail)) : 'https://via.placeholder.com/600x450';
@@ -114,18 +128,33 @@
                 <span class="absolute top-6 left-6 bg-secondary text-customWhite text-[10px] font-black uppercase px-4 py-1.5 rounded-full tracking-widest shadow-xl">Bundle</span>
             </div>
 
-            <div class="p-8 flex flex-col flex-1">
+            <div class="p-8 flex flex-col flex-1 relative z-10">
                 <h3 class="text-xl font-bold text-mainText tracking-tight uppercase mb-3 leading-tight">{{ $bundle->title ?? $bundle->name }}</h3>
                 <p class="text-mutedText font-medium text-sm line-clamp-2 mb-8 leading-relaxed">{{ strip_tags($bundle->description) }}</p>
 
                 <div class="mt-auto pt-6 border-t border-primary/10 flex items-center justify-between">
                     <div>
                         <p class="text-[10px] font-bold text-mutedText uppercase mb-1 tracking-widest">Investment</p>
-                        <p class="text-3xl font-black text-secondary tracking-tighter">₹{{ number_format($bundle->price, 0) }}</p>
+                        <div class="flex items-end gap-2">
+                            <p class="text-3xl font-black text-secondary tracking-tighter">₹{{ number_format($effectivePrice, 0) }}</p>
+                            @if($canUpgrade && $effectivePrice < $originalPrice)
+                                <span class="text-sm text-mutedText line-through font-semibold mb-1">₹{{ number_format($originalPrice, 0) }}</span>
+                            @endif
+                        </div>
                     </div>
-                    <button class="brand-gradient text-customWhite w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-secondary/30 transition-all group/btn">
-                        <i class="fas fa-plus transition-transform group-hover/btn:rotate-90"></i>
-                    </button>
+                    @if($isUnlocked)
+                        <a href="{{ route('student.my-courses') }}" class="brand-gradient text-customWhite w-auto px-6 h-14 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-secondary/30 transition-all font-black text-xs uppercase tracking-widest">
+                            Owned
+                        </a>
+                    @else
+                        <a href="{{ route('student.checkout', ['type' => 'bundle', 'id' => $bundle->id]) }}" class="brand-gradient text-customWhite w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-secondary/30 transition-all group/btn">
+                            @if($canUpgrade)
+                                <i class="fas fa-arrow-up transition-transform group-hover/btn:-translate-y-1"></i>
+                            @else
+                                <i class="fas fa-plus transition-transform group-hover/btn:rotate-90"></i>
+                            @endif
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>
@@ -161,6 +190,7 @@
     </div>
 </div>
 
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('productSelection', () => ({

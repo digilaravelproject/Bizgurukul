@@ -33,10 +33,10 @@
                         Already Enrolled
                     </button>
                 @else
-                    <button id="pay-button"
-                        class="w-full bg-primary text-white py-4 rounded-2xl text-xs font-bold uppercase tracking-wider shadow-lg shadow-primary/20 active:scale-95 transition-all">
+                    <a href="{{ route('student.checkout', ['type' => 'course', 'id' => $course->id]) }}"
+                        class="w-full block text-center bg-primary text-white py-4 rounded-2xl text-xs font-bold uppercase tracking-wider shadow-lg shadow-primary/20 hover:bg-secondary hover:shadow-xl active:scale-95 transition-all">
                         Buy This Course
-                    </button>
+                    </a>
                 @endif
             </div>
         </div>
@@ -102,82 +102,5 @@
         </div>
     </div>
 
-    {{-- Razorpay Script & Logic --}}
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    <script>
-        const payButton = document.getElementById('pay-button');
-        if (payButton) {
-            payButton.onclick = function(e) {
-                payButton.innerText = "Processing...";
-                payButton.disabled = true;
 
-                // 1. Create Order
-                fetch("{{ route('razorpay.create', $course->id) }}", {
-                        method: "POST",
-                        headers: {
-                            "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                            "Accept": "application/json"
-                        }
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.error) {
-                            alert('Error: ' + data.error);
-                            payButton.innerText = "Buy This Course";
-                            payButton.disabled = false;
-                            return;
-                        }
-
-                        var options = {
-                            "key": data.key,
-                            "amount": data.amount,
-                            "currency": "INR",
-                            "name": "Course Payment",
-                            "description": data.course_name,
-                            "order_id": data.order_id,
-                            "handler": function(response) {
-                                // 2. Verify Payment
-                                fetch("{{ route('razorpay.verify') }}", {
-                                        method: "POST",
-                                        headers: {
-                                            "Content-Type": "application/json",
-                                            "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                                        },
-                                        body: JSON.stringify(response)
-                                    })
-                                    .then(res => res.json())
-                                    .then(verification => {
-                                        if (verification.status === 'success') {
-                                            alert('Welcome! Payment Successful.');
-                                            window.location.reload();
-                                        } else {
-                                            alert('Verification Failed');
-                                        }
-                                    });
-                            },
-                            "modal": {
-                                "ondismiss": function() {
-                                    payButton.innerText = "Buy This Course";
-                                    payButton.disabled = false;
-                                }
-                            },
-                            "prefill": {
-                                "name": "{{ Auth::user()->name ?? '' }}",
-                                "email": "{{ Auth::user()->email ?? '' }}"
-                            },
-                            "theme": {
-                                "color": "#4F46E5"
-                            }
-                        };
-                        var rzp1 = new Razorpay(options);
-                        rzp1.open();
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        payButton.innerText = "Buy This Course";
-                        payButton.disabled = false;
-                    });
-            }
-        }
-    </script>
 @endsection
