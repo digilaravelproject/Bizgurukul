@@ -627,6 +627,7 @@
                         this.form = {
                             ...this.form,
                             ...user,
+                            dob: user.dob ? user.dob.split('T')[0] : '',
                             role: user.roles.length > 0 ? user.roles[0].name : ''
                         };
                         this.form.state_id = user.state_id;

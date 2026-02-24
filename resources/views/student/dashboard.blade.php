@@ -10,6 +10,7 @@
 
 @section('content')
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 
 <style>
@@ -89,23 +90,71 @@
         @endforeach
     </div>
 
+
     {{-- 3. DUAL ANALYTICS SECTION --}}
-    <div class="stagger-3 grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-        {{-- Graph 1: Earnings Trend --}}
-        <div class="lg:col-span-2 bg-surface rounded-[1.5rem] md:rounded-[2.5rem] p-5 md:p-8 border border-primary/10 premium-shadow relative overflow-hidden">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8 relative z-10">
+    <div class="stagger-3 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {{-- Graph: Earnings Trend --}}
+        <div class="lg:col-span-2 bg-surface rounded-[1.5rem] md:rounded-[2.5rem] p-6 border border-primary/10 premium-shadow relative overflow-hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 relative z-10">
                 <div>
-                    <h3 class="text-lg md:text-xl font-black text-mainText uppercase tracking-widest flex items-center gap-3">
+                    <h3 class="text-sm font-black text-mainText uppercase tracking-widest flex items-center gap-3">
                         <i class="fas fa-chart-area text-primary"></i> Revenue Trajectory
                     </h3>
-                    <p class="text-[10px] md:text-sm text-mutedText font-medium mt-1">Financial performance over the last 30 days</p>
                 </div>
             </div>
-            <div id="earningsChart" class="w-full h-[250px] md:h-[350px] relative z-10"></div>
+            <div id="earningsChart" class="w-full h-[300px] relative z-10"></div>
+        </div>
+
+        {{-- Reward Gauge (Integrated) --}}
+        <div class="bg-surface rounded-[2.5rem] p-6 border border-primary/10 premium-shadow relative overflow-hidden flex flex-col items-center justify-center text-center">
+            <div class="absolute -top-12 -left-12 w-48 h-48 bg-primary/5 blur-[50px] rounded-full pointer-events-none"></div>
+
+            <div class="relative z-10 w-full">
+                <h3 class="text-[10px] font-black text-mutedText uppercase tracking-[3px] mb-6">
+                    Rank Status
+                </h3>
+
+                {{-- Semi-Circle Gauge --}}
+                <div class="relative w-full h-32 mx-auto flex items-center justify-center">
+                    <svg viewBox="0 0 100 60" class="w-full h-full transform transition-all duration-1000">
+                        <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="rgba(var(--color-primary), 0.05)" stroke-width="10" stroke-linecap="round" />
+                        <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="url(#dash-speed-gradient)" stroke-width="10" stroke-linecap="round"
+                                stroke-dasharray="125.66" stroke-dashoffset="{{ 125.66 * (1 - ($achievementData['percentage'] / 100)) }}" class="transition-all duration-[2000ms] ease-out" />
+
+                        <defs>
+                            <linearGradient id="dash-speed-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:rgb(var(--color-primary))" />
+                                <stop offset="100%" style="stop-color:rgb(var(--color-secondary))" />
+                            </linearGradient>
+                        </defs>
+
+                        {{-- Needle --}}
+                        <g transform="rotate({{ -90 + (180 * ($achievementData['percentage'] / 100)) }} 50 50)" class="transition-all duration-[2000ms] ease-out origin-center">
+                            <line x1="50" y1="50" x2="20" y2="50" stroke="white" stroke-width="2" stroke-linecap="round" />
+                            <circle cx="50" cy="50" r="3" fill="white" />
+                        </g>
+                    </svg>
+
+                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 text-center">
+                        <span class="text-xl font-black text-mainText tracking-tighter">{{ round($achievementData['percentage']) }}%</span>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <p class="text-[9px] font-black text-mutedText uppercase tracking-widest">Level</p>
+                    <h4 class="text-xs font-black text-mainText uppercase mt-1">
+                        {{ $achievementData['current_milestone'] ? $achievementData['current_milestone']->short_title : 'Novice' }}
+                    </h4>
+
+                    <a href="{{ route('student.rewards') }}" class="mt-4 inline-flex items-center gap-2 text-[9px] font-black text-primary uppercase tracking-widest hover:text-white transition-colors">
+                        Rewards Hub <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
         </div>
 
         {{-- Affiliate Link Generator (Enhanced) --}}
-        <div class="bg-surface rounded-[2.5rem] p-8 border border-primary/10 premium-shadow flex flex-col relative overflow-hidden" x-data="{ type: 'general', expiryOption: 'no_expiry' }">
+        <div class="bg-surface rounded-3xl p-6 border border-primary/10 premium-shadow flex flex-col relative overflow-hidden" x-data="{ type: 'general', expiryOption: 'no_expiry' }">
              {{-- Background Accent --}}
              <div class="absolute -right-10 -top-10 w-32 h-32 bg-secondary/10 blur-[40px] rounded-full pointer-events-none"></div>
 
@@ -409,6 +458,7 @@
 
         }
     }
+
 
     function copyToClipboard(text) {
         navigator.clipboard.writeText(text).then(() => {

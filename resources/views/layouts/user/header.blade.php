@@ -14,7 +14,7 @@
         {{-- Desktop Text (Hidden on Mobile) --}}
         <div class="hidden md:block">
             <h2 class="text-xl font-extrabold text-mainText tracking-tight">
-                 Partner <span class="text-primary">Panel</span>
+                Partner <span class="text-primary">Panel</span>
             </h2>
             <p class="text-[10px] text-mutedText uppercase tracking-[0.2em] font-bold">Skills Pehle Learning</p>
         </div>
@@ -72,7 +72,8 @@
                         <div class="flex items-center gap-2">
                             <i class="fas fa-id-card w-4"></i> KYC Verification
                         </div>
-                        <span class="h-2 w-2 rounded-full {{ $user->kyc_status === 'verified' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : ($user->kyc_status === 'pending' ? 'bg-amber-500' : 'bg-slate-300') }}"></span>
+                        <span
+                            class="h-2 w-2 rounded-full {{ auth()->user()->kyc_status === 'verified' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : (auth()->user()->kyc_status === 'pending' ? 'bg-amber-500' : 'bg-slate-300') }}"></span>
                     </a>
                     <a href="{{ route('student.profile', ['section' => 'bank']) }}"
                         class="px-4 py-2 text-xs text-mutedText hover:text-primary hover:bg-navy font-bold transition-all flex items-center justify-between group">
@@ -80,10 +81,13 @@
                             <i class="fas fa-university w-4"></i> Bank Details
                         </div>
                         @php
-                            $bankStatus = $user->bank->status ?? 'not_submitted';
-                            $hasBankPending = $user->bankUpdateRequests()->where('status', 'pending')->exists();
+                            // Fetch authenticated user once to keep code clean and avoid multiple calls
+                            $authUser = auth()->user();
+                            $bankStatus = $authUser->bank->status ?? 'not_submitted';
+                            $hasBankPending = $authUser->bankUpdateRequests()->where('status', 'pending')->exists();
                         @endphp
-                        <span class="h-2 w-2 rounded-full {{ $bankStatus === 'verified' && !$hasBankPending ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : ($bankStatus === 'pending' || $hasBankPending ? 'bg-amber-500' : 'bg-slate-300') }}"></span>
+                        <span
+                            class="h-2 w-2 rounded-full {{ $bankStatus === 'verified' && !$hasBankPending ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : ($bankStatus === 'pending' || $hasBankPending ? 'bg-amber-500' : 'bg-slate-300') }}"></span>
                     </a>
                     <a href="{{ route('student.profile', ['section' => 'password']) }}"
                         class="px-4 py-2 text-xs text-mutedText hover:text-primary hover:bg-navy font-bold transition-all flex items-center gap-2">

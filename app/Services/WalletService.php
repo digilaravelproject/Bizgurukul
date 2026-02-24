@@ -10,10 +10,12 @@ use Exception;
 class WalletService
 {
     protected WalletRepository $walletRepo;
+    protected AchievementService $achievementService;
 
-    public function __construct(WalletRepository $walletRepo)
+    public function __construct(WalletRepository $walletRepo, AchievementService $achievementService)
     {
         $this->walletRepo = $walletRepo;
+        $this->achievementService = $achievementService;
     }
 
     public function processCommission(array $data)
@@ -30,7 +32,16 @@ class WalletService
         $data['available_at'] = $availableAt;
         $data['status'] = $holdingHours > 0 ? 'on_hold' : 'available';
 
-        return $this->walletRepo->createCommission($data);
+        $commission = $this->walletRepo->createCommission($data);
+
+        // Trigger Achievement Check
+        /** @var \App\Models\User $user */
+        $user = \App\Models\User::find($data['affiliate_id']);
+        if ($user) {
+            $this->achievementService->checkAndUnlockAchievements($user);
+        }
+
+        return $commission;
     }
 
     public function getWalletDashboardData(int $userId)

@@ -39,6 +39,8 @@ Route::middleware(['auth', 'role:Admin'])
         // Core Resources
         Route::resource('coupon-packages', CouponPackageController::class);
         Route::resource('bundles', BundleController::class);
+        Route::resource('achievements', \App\Http\Controllers\Admin\AchievementController::class)->except(['show']);
+        Route::post('achievements/{achievement}/toggle-status', [\App\Http\Controllers\Admin\AchievementController::class, 'toggleStatus'])->name('achievements.toggle-status');
 
         // Categories
         Route::prefix('categories')->name('categories.')->group(function () {

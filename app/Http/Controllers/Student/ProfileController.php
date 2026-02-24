@@ -7,6 +7,7 @@ use App\Services\ProfileService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use App\Models\State;
 
 class ProfileController extends Controller
 {
@@ -21,7 +22,8 @@ class ProfileController extends Controller
     {
         try {
             $user = Auth::user()->load(['kyc', 'bank']);
-            return view('student.profile.index', compact('user'));
+            $states = State::select('id', 'name')->orderBy('name', 'asc')->get();
+            return view('student.profile.index', compact('user', 'states'));
         } catch (\Exception $e) {
             Log::error("Error loading profile index for user " . Auth::id() . ": " . $e->getMessage());
             return back()->with('error', 'Something went wrong while loading your profile.');

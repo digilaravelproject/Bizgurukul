@@ -21,22 +21,15 @@ use App\Models\ReferralVisit;
 use App\Models\CommissionRule;
 use App\Models\UserAffiliateSetting;
 use App\Models\Setting;
+use App\Models\Achievement;
+use App\Models\UserAchievement;
 
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, HasRoles, SoftDeletes;
 
-    public const INDIAN_STATES = [
-        'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
-        'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
-        'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
-        'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
-        'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
-        'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Andaman and Nicobar Islands',
-        'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu', 'Lakshadweep',
-        'Delhi', 'Puducherry', 'Ladakh', 'Jammu and Kashmir'
-    ];
+
 
     protected $fillable = [
         'name',
@@ -67,7 +60,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'is_active' => 'boolean',
-        'dob' => 'date',
+        'dob' => 'date:Y-m-d',
         'kyc_status' => 'string',
         'is_banned' => 'boolean',
         'banned_at' => 'datetime',
@@ -176,6 +169,43 @@ class User extends Authenticatable
         return $this->belongsToMany(Bundle::class, 'payments', 'user_id', 'bundle_id')
             ->wherePivot('status', 'success')
             ->withTimestamps();
+    }
+
+    public function userAchievements(): HasMany
+    {
+        return $this->hasMany(UserAchievement::class);
+    }
+
+    public function achievements()
+    {
+        return $this->belongsToMany(Achievement::class, 'user_achievements')
+            ->withPivot(['status', 'unlocked_at', 'claimed_at', 'admin_notes'])
+            ->withTimestamps();
+    }
+
+    public function getTotalEarningsAttribute(): float
+    {
+        return (float) $this->commissions()->sum('amount');
+    }
+
+    public function getNextAchievementAttribute(): ?Achievement
+    {
+        $totalEarned = $this->total_earnings;
+
+        return Achievement::active()
+            ->where('target_amount', '>', $totalEarned)
+            ->orderBy('priority', 'asc')
+            ->orderBy('target_amount', 'asc')
+            ->first();
+    }
+
+    public function getLatestUnlockedAchievementAttribute(): ?Achievement
+    {
+        return $this->achievements()
+            ->wherePivot('status', 'unlocked')
+            ->orderBy('priority', 'desc')
+            ->orderBy('target_amount', 'desc')
+            ->first();
     }
 
     /**

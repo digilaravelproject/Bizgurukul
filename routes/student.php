@@ -52,7 +52,9 @@ Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')
     // Paid Student Features (Protected by Purchase Check)
     Route::middleware(['check.purchase'])->group(function () {
         // Dashboard
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard'); // Note: name is student.dashboard due to prefix
+        // Dashboard
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/rewards', [DashboardController::class, 'rewards'])->name('rewards');
 
         // Affiliate Links (Original Resource)
         Route::resource('affiliate-links', AffiliateLinkController::class);
@@ -60,6 +62,7 @@ Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')
         // Affiliate Controller Routes (For Dashboard Integration)
         Route::post('/affiliate/generate-link', [\App\Http\Controllers\AffiliateController::class, 'generateLink'])->name('affiliate.link.generate');
         Route::delete('/affiliate/delete-link/{id}', [\App\Http\Controllers\AffiliateController::class, 'deleteLink'])->name('affiliate.link.delete');
+        Route::post('/achievements/{id}/claim', [App\Http\Controllers\Student\DashboardController::class, 'claimReward'])->name('achievements.claim');
 
         // Wallet & Payouts
         Route::get('/wallet', [\App\Http\Controllers\Student\WalletController::class, 'index'])->name('wallet.index');

@@ -20,7 +20,7 @@ class UserRepository
 
         return $this->model->query()
             // Optimization: Sirf table ke liye zaroori columns hi fetch karein
-            ->select('id', 'name', 'email', 'mobile', 'state_id', 'dob', 'profile_picture', 'referral_code', 'kyc_status', 'is_banned')
+            ->select('id', 'name', 'email', 'mobile', 'gender','state_id', 'dob', 'profile_picture', 'referral_code', 'kyc_status', 'is_banned')
             ->addSelect(['bank_status' => \App\Models\BankDetail::select('status')
                 ->whereColumn('user_id', 'users.id')
                 ->limit(1)
