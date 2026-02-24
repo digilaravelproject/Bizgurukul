@@ -5,9 +5,11 @@
             return {
                 couponCode: '',
                 discount: 0,
+                basePrice: {{ $basePrice }},
+                taxableAmount: {{ $taxableAmount }},
                 taxAmount: {{ $taxAmount }},
                 total: {{ $totalAmount }},
-                basePrice: {{ $basePrice }},
+                taxes: @json($taxes),
                 couponMessage: '',
                 couponStatus: '',
                 loadingCoupon: false,
@@ -36,8 +38,13 @@
 
                         if (data.status === 'valid') {
                             this.discount = data.discount;
+                            this.taxableAmount = data.taxable_amount;
                             this.taxAmount = data.tax;
                             this.total = data.total;
+                            // Re-assign updated taxes from backend
+                            if (data.taxes) {
+                                this.taxes = data.taxes;
+                            }
                             this.couponStatus = 'success';
                             this.couponMessage = data.message;
                         } else {
@@ -78,7 +85,7 @@
                                 "key": data.key,
                                 "amount": data.amount,
                                 "currency": "INR",
-                                "name": "Bizgurukul",
+                                "name": "{{ config('app.name') }}",
                                 "description": "Course Bundle Purchase",
                                 "order_id": data.order_id,
                                 "handler": (response) => {
@@ -186,10 +193,12 @@
                     <span>- ₹<span x-text="Number(discount).toFixed(2)"></span></span>
                 </div>
 
-                <div class="flex justify-between text-[rgb(var(--color-text-muted))] text-xs">
-                    <span>GST (18%)</span>
-                    <span>₹<span x-text="Number(taxAmount).toFixed(2)"></span></span>
-                </div>
+                <template x-for="tax in taxes" :key="tax.id">
+                    <div class="flex justify-between text-[rgb(var(--color-text-muted))] text-xs">
+                        <span x-text="tax.name + ' (' + (tax.type === 'percentage' ? tax.value + '%' : 'Fixed') + ' ' + (tax.tax_type === 'inclusive' ? 'Incl.' : 'Excl.') + ')'"></span>
+                        <span x-text="'₹' + Number(tax.calculated_amount || 0).toFixed(2)"></span>
+                    </div>
+                </template>
 
                 <div class="flex justify-between items-center text-lg font-bold text-[rgb(var(--color-text-main))] border-t border-dashed border-gray-200 pt-3 mt-2">
                     <span>Total Pay</span>

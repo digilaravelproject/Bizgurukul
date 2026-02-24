@@ -93,27 +93,62 @@ class RegistrationService
             $discountAmount = $coupon->calculateDiscount($basePrice);
         }
 
-        $taxableAmount = max(0, $basePrice - $discountAmount);
-        $taxes = Tax::where('is_active', true)->get();
-        $taxAmount = 0;
+        $baseAmountDue = max(0, $basePrice - $discountAmount);
 
+        $taxes = Tax::where('is_active', true)->get();
+        $totalTaxAmount = 0;
+        $totalExclusiveTaxAmount = 0;
+        $inclusiveTaxRateAmount = 0;
+
+        // 1. Calculate Exclusive Taxes first
         foreach ($taxes as $tax) {
-            if ($tax->type == 'percentage') {
-                $taxAmount += ($taxableAmount * $tax->value / 100);
-            } else {
-                $taxAmount += $tax->value;
+            if ($tax->tax_type === 'exclusive') {
+                $currentTax = 0;
+                if ($tax->type == 'percentage') {
+                    $currentTax = ($baseAmountDue * $tax->value / 100);
+                } else {
+                    $currentTax = $tax->value;
+                }
+                $totalTaxAmount += $currentTax;
+                $totalExclusiveTaxAmount += $currentTax;
+                // Dynamically attach the calculated value for frontend use
+                $tax->calculated_amount = $currentTax;
             }
         }
+
+        // 2. Calculate Inclusive Taxes
+        foreach ($taxes as $tax) {
+            if ($tax->tax_type === 'inclusive') {
+                $currentTax = 0;
+                if ($tax->type == 'percentage') {
+                    // For inclusive tax, the baseAmountDue *already contains* this tax
+                    // Formula: Tax = Total - (Total / (1 + Rate))
+                    $actualBaseWithoutThisTax = $baseAmountDue / (1 + ($tax->value / 100));
+                    $currentTax = $baseAmountDue - $actualBaseWithoutThisTax;
+                } else {
+                    // Fixed inclusive tax (rare, but supported)
+                    $currentTax = $tax->value;
+                }
+                $totalTaxAmount += $currentTax;
+                $inclusiveTaxRateAmount += $currentTax;
+                // Dynamically attach the calculated value for frontend use
+                $tax->calculated_amount = $currentTax;
+            }
+        }
+
+        // The subtotal (pre-tax amount) is the base amount due minus the inclusive taxes embedded within it
+        $pureSubtotal = $baseAmountDue - $inclusiveTaxRateAmount;
 
         return [
             'basePrice'      => $basePrice,
             'websitePrice'   => $bundle->website_price,
             'affiliatePrice' => $bundle->affiliate_price,
             'discount'       => $discountAmount,
-            'taxableAmount'  => $taxableAmount,
-            'taxAmount'      => $taxAmount,
+            'taxableAmount'  => $pureSubtotal,
+            'taxAmount'      => $totalTaxAmount,
             'taxes'          => $taxes,
-            'totalAmount'    => $taxableAmount + $taxAmount
+            // Total amount is the base amount due plus any *exclusive* taxes added on top
+            'totalAmount'    => $baseAmountDue + $totalExclusiveTaxAmount
         ];
     }
 
@@ -164,9 +199,18 @@ class RegistrationService
             'bundle_id'           => $bundle->id,
             'razorpay_order_id'   => $data['razorpay_order_id'],
             'razorpay_payment_id' => $data['razorpay_payment_id'],
-            'subtotal'            => $pricing['basePrice'],
+            'subtotal'            => $pricing['taxableAmount'],
             'discount_amount'     => $pricing['discount'],
             'tax_amount'          => $pricing['taxAmount'],
+            'tax_details'         => collect($pricing['taxes'])->map(function($tax) {
+                return [
+                    'name' => $tax->name,
+                    'value' => $tax->value,
+                    'type' => $tax->type,
+                    'tax_type' => $tax->tax_type,
+                    'calculated_amount' => $tax->calculated_amount ?? 0,
+                ];
+            })->toArray(),
             'total_amount'        => $pricing['totalAmount'],
             'amount'              => $pricing['totalAmount'],
             'coupon_id'           => $coupon ? $coupon->id : null,

@@ -21,10 +21,15 @@ class Payment extends Model
         'subtotal',
         'discount_amount',
         'tax_amount',
+        'tax_details',
         'total_amount',
         'coupon_id',
         'amount',
         'status',
+    ];
+
+    protected $casts = [
+        'tax_details' => 'array',
     ];
 
     public function coupon()

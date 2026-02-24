@@ -12,7 +12,7 @@
         <div class="flex flex-col md:flex-row md::items-center justify-between gap-4 mb-2">
             <div>
                 <h2 class="text-2xl font-bold text-mainText">
-                    {{ __('Student Dashboard') }}
+                    {{ __('Partner Dashboard') }}
                 </h2>
                 <p class="text-xs text-mutedText font-medium mt-1">
                     Manage your affiliate network & real-time earnings

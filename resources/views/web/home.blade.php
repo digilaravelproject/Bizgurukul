@@ -103,7 +103,7 @@
         </div>
     </section>
 
-    <section class="py-10 bg-surface border-y border-gray-100 overflow-hidden relative">
+    {{-- <section class="py-10 bg-surface border-y border-gray-100 overflow-hidden relative">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <p class="text-xs font-bold text-mutedText uppercase tracking-widest mb-6">Trusted by students working at top tech firms</p>
             <div class="flex flex-wrap justify-center items-center gap-10 md:gap-20 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
@@ -114,7 +114,7 @@
                 <svg class="h-6 md:h-8 hidden sm:block hover:text-primary transition-colors" viewBox="0 0 100 30" fill="currentColor"><text x="0" y="22" font-family="sans-serif" font-weight="900" font-size="22">ApexSys</text></svg>
             </div>
         </div>
-    </section>
+    </section> --}}
 
     <section class="py-16 bg-surface relative" x-data="statsCounter()" x-intersect.once="startCounters()">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -527,7 +527,7 @@
         </div>
     </section>
 
-    <section class="py-24 bg-surface border-t border-gray-100">
+    {{-- <section class="py-24 bg-surface border-t border-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row justify-between items-end mb-14 gap-6">
                 <div class="max-w-2xl">
@@ -614,7 +614,7 @@
                 </article>
             </div>
         </div>
-    </section>
+    </section> --}}
 
     <section class="py-24 relative overflow-hidden bg-navy">
         <div class="absolute top-0 right-0 w-full h-full brand-gradient opacity-[0.03] object-cover z-0"></div>

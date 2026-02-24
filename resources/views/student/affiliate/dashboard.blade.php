@@ -1,5 +1,5 @@
 @extends('layouts.user.app')
-@section('title', 'Affiliate Dashboard')
+@section('title', 'Partner Dashboard')
 
 @section('content')
 <div class="space-y-8 font-sans text-mainText pb-12">
@@ -7,7 +7,7 @@
     {{-- Header --}}
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-fade-in-down">
         <div>
-            <h1 class="text-3xl md:text-4xl font-black tracking-tight text-mainText">Affiliate Dashboard</h1>
+            <h1 class="text-3xl md:text-4xl font-black tracking-tight text-mainText">Partner Dashboard</h1>
             <p class="text-mutedText text-base font-medium mt-2">Track your referrals and earnings in real-time.</p>
         </div>
         <div class="flex gap-3">

@@ -50,11 +50,11 @@
 
               getFinalPrice(websitePrice, affiliatePrice) {
                   // If Valid Referral: Affiliate Price (e.g. 7000)
-                  // If No Referral: Website Price - 10% (e.g. 10000 - 1000 = 9000)
+                  // If No Referral: Website Price
                   if (this.isValidSponsor) {
                       return affiliatePrice;
                   }
-                  return websitePrice * 0.9;
+                  return websitePrice;
               },
 
               formatPrice(price) {
@@ -150,9 +150,9 @@
                             </div>
                         @endif
                         <!-- Recommended Badge -->
-                        @if($loop->first)
+                        {{-- @if($loop->first)
                             <div class="absolute top-3 left-3 bg-secondary text-white text-xs font-bold px-2 py-1 rounded shadow">RECOMMENDED</div>
-                        @endif
+                        @endif --}}
                     </div>
 
                     <!-- Content -->
@@ -164,13 +164,13 @@
                         <div class="mt-4 pt-4 border-t border-slate-100">
                              <!-- Dynamic Pricing Display -->
                             <div class="flex flex-col">
-                                <span class="text-xs text-slate-400 line-through">₹{{ number_format($bundle->website_price, 2) }}</span>
-                                <div class="flex items-baseline space-x-2">
+                                <span class="text-xs text-slate-400 line-through" x-show="isValidSponsor && {{ $bundle->website_price }} > {{ $bundle->affiliate_price }}" x-cloak>₹{{ number_format($bundle->website_price, 2) }}</span>
+                                <div class="flex items-baseline space-x-2 flex-wrap gap-y-1 mt-1">
                                     <span class="text-2xl font-extrabold text-primary" x-text="formatPrice(getFinalPrice({{ $bundle->website_price }}, {{ $bundle->affiliate_price }}))">
-                                        ₹{{ number_format($bundle->website_price * 0.9, 2) }}
+                                        ₹{{ number_format($bundle->website_price, 2) }}
                                     </span>
-                                    <span class="text-xs font-bold px-2 py-1 rounded" :class="isValidSponsor ? 'bg-primary/10 text-primary' : 'bg-green-100 text-green-600'">
-                                        <span x-text="isValidSponsor ? 'REFERRAL OFFER' : '10% DISCOUNT'">10% DISCOUNT</span>
+                                    <span class="text-[10px] sm:text-xs font-bold px-2 py-1 rounded bg-primary/10 text-primary" x-show="isValidSponsor && {{ $bundle->website_price }} > {{ $bundle->affiliate_price }}" x-cloak>
+                                        REFERRAL OFFER
                                     </span>
                                 </div>
                             </div>
