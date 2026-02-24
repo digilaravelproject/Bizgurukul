@@ -86,6 +86,13 @@
                 <span class="text-sm font-bold">Partner Dashboard</span>
             </a>
 
+            {{-- Wallet --}}
+            <a href="{{ route('student.wallet.index') }}"
+                class="flex items-center px-4 py-3 rounded-2xl transition-all duration-300 group {{ request()->routeIs('student.wallet.*') ? 'bg-primary/10 text-primary shadow-sm' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
+                <i class="fas fa-wallet w-5 h-5 mr-3 text-lg flex items-center justify-center text-center"></i>
+                <span class="text-sm font-bold">My Wallet</span>
+            </a>
+
             {{-- My Leads --}}
             <a href="{{ route('student.affiliate.leads') }}"
                 class="flex items-center px-4 py-3 rounded-2xl transition-all duration-300 group {{ request()->routeIs('student.affiliate.leads') ? 'bg-primary/10 text-primary shadow-sm' : 'text-mutedText hover:bg-navy hover:text-primary' }}">

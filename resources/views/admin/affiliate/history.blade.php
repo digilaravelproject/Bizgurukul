@@ -105,26 +105,36 @@
                             </td>
 
                             <td class="px-6 py-4 text-center">
-                                @if($commission->status == 'pending')
+                                @if($commission->status == 'on_hold')
                                     <div class="flex flex-col items-center gap-2">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700">
-                                            Pending
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-500">
+                                            <i class="fas fa-hourglass-half mr-1"></i> On Hold
                                         </span>
-                                        <form action="{{ route('admin.affiliate.commission.pay', $commission->id) }}" method="POST" onsubmit="return confirm('Confirm payment approval?');">
+                                        <form action="{{ route('admin.payouts.commission.early_approve', $commission->id) }}" method="POST" onsubmit="return confirm('Manually approve this commission early?');">
                                             @csrf
-                                            <button type="submit" class="text-xs bg-primary hover:bg-secondary text-white px-3 py-1 rounded-lg font-bold transition-all shadow-md shadow-primary/20 flex items-center gap-1">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                                Approve
+                                            <button type="submit" class="text-[10px] uppercase tracking-widest bg-emerald-500 hover:bg-emerald-400 text-white px-3 py-1.5 rounded-lg font-black transition-all shadow-md flex items-center gap-1">
+                                                <i class="fas fa-check"></i> Early Approve
                                             </button>
                                         </form>
                                     </div>
+                                @elseif($commission->status == 'available')
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500">
+                                        <i class="fas fa-check-circle mr-1"></i> Available
+                                    </span>
+                                @elseif($commission->status == 'requested')
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-500/10 text-blue-500">
+                                        <i class="fas fa-spinner fa-spin mr-1"></i> Processing Withdrawal
+                                    </span>
+                                @elseif($commission->status == 'pending')
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-orange-100 text-orange-700">
+                                        Pending
+                                    </span>
                                 @elseif($commission->status == 'paid')
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
-                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        Paid
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-green-100 text-green-700 border border-green-200">
+                                        <i class="fas fa-wallet mr-1"></i> Paid
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-600">
                                         {{ ucfirst($commission->status) }}
                                     </span>
                                 @endif

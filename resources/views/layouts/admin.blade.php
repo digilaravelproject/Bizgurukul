@@ -10,7 +10,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         [x-cloak] { display: none !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -159,6 +159,59 @@
          class="fixed inset-0 bg-mainText/60 z-40 md:hidden backdrop-blur-sm">
     </div>
 
+    <div x-data="withdrawalNotifier()" x-init="initNotifier()">
+        <template x-if="showToast">
+            <div class="fixed bottom-10 right-10 z-[100] bg-emerald-500 text-white px-6 py-4 rounded-xl shadow-2xl shadow-emerald-500/30 flex justify-between items-center gap-4"
+                 x-transition:enter="transition ease-out duration-300 transform"
+                 x-transition:enter-start="translate-y-10 opacity-0"
+                 x-transition:enter-end="translate-y-0 opacity-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-bell text-2xl animate-bounce"></i>
+                    <div>
+                        <h4 class="font-black text-sm uppercase tracking-widest">New Withdrawal Request</h4>
+                        <p class="text-xs font-semibold opacity-90 mt-0.5">A new partner payout requires attention!</p>
+                    </div>
+                </div>
+                <button @click="closeToast()" class="text-white hover:text-emerald-100 ml-2 transition">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </template>
+    </div>
+
     @stack('scripts')
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('withdrawalNotifier', () => ({
+                lastId: {{ \App\Models\WithdrawalRequest::max('id') ?? 0 }},
+                showToast: false,
+
+                initNotifier() {
+                    setInterval(() => {
+                        fetch('{{ route("admin.payouts.check_new") }}')
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.latest_id > this.lastId) {
+                                    this.lastId = data.latest_id;
+                                    this.showToast = true;
+                                    // Auto hide
+                                    setTimeout(() => this.showToast = false, 8000);
+
+                                    // Optional: If they are on the payouts page, we could refresh it, but it's simpler to just notify.
+                                }
+                            })
+                            .catch(err => console.error('Notification Error:', err));
+                    }, 15000); // 15 seconds polling
+                },
+
+                closeToast() {
+                    this.showToast = false;
+                }
+            }));
+        });
+    </script>
 </body>
 </html>

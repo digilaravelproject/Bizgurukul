@@ -225,11 +225,10 @@ class RegistrationService
             $commissionAmount = $commissionService->calculateCommission($referrer, $bundle);
 
             if ($commissionAmount > 0) {
-                AffiliateCommission::create([
+                app(\App\Services\WalletService::class)->processCommission([
                     'affiliate_id'     => $referrer->id,
                     'referred_user_id' => $user->id,
                     'amount'           => $commissionAmount,
-                    'status'           => 'pending',
                     'reference_id'     => $bundle->id,
                     'reference_type'   => get_class($bundle),
                     'notes'            => 'Commission for Bundle: ' . $bundle->title,

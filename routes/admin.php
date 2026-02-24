@@ -136,4 +136,17 @@ Route::middleware(['auth', 'role:Admin'])
             Route::post('/users/{id}/rules', [AffiliateController::class, 'storeRule'])->name('users.rules.store');
             Route::delete('/users/rules/{id}', [AffiliateController::class, 'deleteRule'])->name('users.rules.delete');
         });
+        // Payouts
+        Route::prefix('payouts')->name('payouts.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\PayoutController::class, 'index'])->name('index');
+            Route::post('/approve/{id}', [\App\Http\Controllers\Admin\PayoutController::class, 'approve'])->name('approve');
+            Route::post('/reject/{id}', [\App\Http\Controllers\Admin\PayoutController::class, 'reject'])->name('reject');
+            Route::post('/early-approve/{id}', [\App\Http\Controllers\Admin\PayoutController::class, 'earlyApproveCommission'])->name('commission.early_approve');
+
+            // For Real-time notifications
+            Route::get('/check-new', function() {
+                $latest = \App\Models\WithdrawalRequest::latest('id')->first();
+                return response()->json(['latest_id' => $latest ? $latest->id : 0]);
+            })->name('check_new');
+        });
     });

@@ -211,11 +211,11 @@ class RazorpayController extends Controller
                     }
 
                     if ($commissionAmount > 0) {
-                        \App\Models\AffiliateCommission::create([
+                        app(\App\Services\WalletService::class)->processCommission([
                             'affiliate_id' => $sponsor->id,
                             'referred_user_id' => $user->id,
                             'amount' => $commissionAmount,
-                            'status' => 'pending',
+                            // Status is handled by processCommission
                             'reference_id' => $product->id,
                             'reference_type' => get_class($product),
                             'notes' => 'Commission for ' . class_basename($product) . ': ' . $product->title,
