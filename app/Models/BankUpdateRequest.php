@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class BankDetail extends Model
+class BankUpdateRequest extends Model
 {
     use HasFactory;
 
@@ -20,17 +20,21 @@ class BankDetail extends Model
         'document_path',
         'status',
         'admin_note',
-        'verified_at',
-        'is_verified'
+        'processed_by',
+        'processed_at'
     ];
 
     protected $casts = [
-        'verified_at' => 'datetime',
-        'is_verified' => 'boolean'
+        'processed_at' => 'datetime'
     ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function processor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'processed_by');
     }
 }

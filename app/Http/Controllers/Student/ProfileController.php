@@ -106,14 +106,15 @@ class ProfileController extends Controller
     {
         try {
             $request->validate([
-                'bank_name' => 'required',
-                'holder_name' => 'required',
+                'bank_name' => 'required|string',
+                'holder_name' => 'required|string',
                 'account_number' => 'required|confirmed',
-                'ifsc_code' => 'required',
+                'ifsc_code' => 'required|string',
+                'document' => 'required|mimes:jpg,jpeg,png,pdf|max:3072',
             ]);
 
             $this->profileService->saveBankDetails(Auth::id(), $request->all());
-            return response()->json(['status' => true, 'message' => 'Bank details saved successfully']);
+            return response()->json(['status' => true, 'message' => 'Bank details request submitted successfully']);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['status' => false, 'message' => $e->errors()], 422);

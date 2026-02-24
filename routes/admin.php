@@ -11,10 +11,12 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VideoController;
 use App\Http\Controllers\Admin\CouponPackageController;
 use App\Http\Controllers\Admin\CommissionRuleController;
-use App\Http\Controllers\Admin\AffiliateController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\TaxController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\PayoutController;
+use App\Http\Controllers\Admin\ProfileVerificationController;
+use App\Http\Controllers\Admin\AffiliateController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'role:Admin'])
@@ -138,17 +140,24 @@ Route::middleware(['auth', 'role:Admin'])
             Route::post('/users/{id}/rules', [AffiliateController::class, 'storeRule'])->name('users.rules.store');
             Route::delete('/users/rules/{id}', [AffiliateController::class, 'deleteRule'])->name('users.rules.delete');
         });
-        // Payouts
-        Route::prefix('payouts')->name('payouts.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Admin\PayoutController::class, 'index'])->name('index');
-            Route::post('/approve/{id}', [\App\Http\Controllers\Admin\PayoutController::class, 'approve'])->name('approve');
-            Route::post('/reject/{id}', [\App\Http\Controllers\Admin\PayoutController::class, 'reject'])->name('reject');
-            Route::post('/early-approve/{id}', [\App\Http\Controllers\Admin\PayoutController::class, 'earlyApproveCommission'])->name('commission.early_approve');
+        // Payouts & Verifications
+    Route::prefix('payouts')->name('payouts.')->group(function () {
+        Route::get('/', [PayoutController::class, 'index'])->name('index');
+        Route::post('/approve/{id}', [PayoutController::class, 'approve'])->name('approve');
+        Route::post('/reject/{id}', [PayoutController::class, 'reject'])->name('reject');
+        Route::get('/check-new', [PayoutController::class, 'checkNew'])->name('check_new');
+        Route::post('/early-approve/{id}', [PayoutController::class, 'earlyApproveCommission'])->name('commission.early_approve');
+    });
 
-            // For Real-time notifications
-            Route::get('/check-new', function() {
-                $latest = \App\Models\WithdrawalRequest::latest('id')->first();
-                return response()->json(['latest_id' => $latest ? $latest->id : 0]);
-            })->name('check_new');
-        });
+    Route::prefix('verifications')->name('verifications.')->group(function () {
+        Route::get('/', [ProfileVerificationController::class, 'index'])->name('index');
+        Route::get('/check-new', [ProfileVerificationController::class, 'checkNew'])->name('check_new');
+        Route::get('/kyc', [ProfileVerificationController::class, 'kycIndex'])->name('kyc.index');
+        Route::post('/kyc/{userId}/approve', [ProfileVerificationController::class, 'kycApprove'])->name('kyc.approve');
+        Route::post('/kyc/{userId}/reject', [ProfileVerificationController::class, 'kycReject'])->name('kyc.reject');
+
+        Route::get('/bank', [ProfileVerificationController::class, 'bankIndex'])->name('bank.index');
+        Route::post('/bank/initial/{bankId}/process', [ProfileVerificationController::class, 'verifyInitialBank'])->name('bank.verify-initial');
+        Route::post('/bank/update/{requestId}/process', [ProfileVerificationController::class, 'processBankUpdate'])->name('bank.process-update');
+    });
     });

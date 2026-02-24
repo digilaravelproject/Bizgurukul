@@ -62,7 +62,7 @@ class AffiliateCommission extends Model
         return $query->where('status', 'paid');
     }
 
-    public function markAsPaid(string $note = null): void
+    public function markAsPaid(?string $note = null): void
     {
         $this->update([
             'status' => 'paid',

@@ -14,28 +14,36 @@ class UserRepository
     }
 
     // List with Pagination, Search & Trash logic
-public function getPaginatedUsers($perPage, $search, $viewTrash)
-{
-    $searchTerm = trim($search);
+    public function getPaginatedUsers($perPage, $search, $viewTrash)
+    {
+        $searchTerm = trim($search);
 
-    return $this->model->query()
-        // Optimization: Sirf table ke liye zaroori columns hi fetch karein
-        ->select('id', 'name', 'email', 'profile_picture', 'referral_code', 'kyc_status', 'is_banned')
-        ->with(['roles:id,name'])
-        ->when($viewTrash === 'true', function ($q) {
-            return $q->onlyTrashed();
-        })
-        ->when($searchTerm, function ($q) use ($searchTerm) {
-            $q->where(function ($sub) use ($searchTerm) {
-                $sub->where('name', 'like', "%{$searchTerm}%")
-                  ->orWhere('email', 'like', "%{$searchTerm}%")
-                  ->orWhere('mobile', 'like', "%{$searchTerm}%")
-                  ->orWhere('referral_code', 'like', "%{$searchTerm}%");
-            });
-        })
-        ->latest()
-        ->paginate($perPage);
-}
+        return $this->model->query()
+            // Optimization: Sirf table ke liye zaroori columns hi fetch karein
+            ->select('id', 'name', 'email', 'mobile', 'state_id', 'dob', 'profile_picture', 'referral_code', 'kyc_status', 'is_banned')
+            ->addSelect(['bank_status' => \App\Models\BankDetail::select('status')
+                ->whereColumn('user_id', 'users.id')
+                ->limit(1)
+            ])
+            ->addSelect(['total_earnings' => \App\Models\AffiliateCommission::selectRaw('SUM(amount)')
+                ->whereColumn('affiliate_id', 'users.id')
+                ->where('status', 'paid')
+            ])
+            ->with(['roles:id,name', 'state:id,name'])
+            ->when($viewTrash === 'true', function ($q) {
+                return $q->onlyTrashed();
+            })
+            ->when($searchTerm, function ($q) use ($searchTerm) {
+                $q->where(function ($sub) use ($searchTerm) {
+                    $sub->where('name', 'like', "%{$searchTerm}%")
+                      ->orWhere('email', 'like', "%{$searchTerm}%")
+                      ->orWhere('mobile', 'like', "%{$searchTerm}%")
+                      ->orWhere('referral_code', 'like', "%{$searchTerm}%");
+                });
+            })
+            ->latest()
+            ->paginate($perPage);
+    }
 
     // **Aapki Requirement:** Active & Unbanned Users List
     public function getActiveUnbannedUsers()
@@ -48,14 +56,14 @@ public function getPaginatedUsers($perPage, $search, $viewTrash)
     // Find User (Normal)
     public function findById($id, $withTrashed = false)
     {
-        $query = $this->model->with(['roles', 'referrer']);
+        $query = $this->model->with(['roles', 'referrer', 'state']);
         return $withTrashed ? $query->withTrashed()->find($id) : $query->find($id);
     }
 
     // **DB Locking:** Find User and Lock Row (for Updates/Transactions)
     public function findForUpdate($id, $withTrashed = false)
     {
-        $query = $this->model->with(['roles']);
+        $query = $this->model->with(['roles', 'state']);
         if ($withTrashed) {
             $query->withTrashed();
         }

@@ -64,4 +64,17 @@ class PayoutController extends Controller
             return back()->with('error', $e->getMessage());
         }
     }
+
+    public function checkNew()
+    {
+        try {
+            $latestId = \App\Models\WithdrawalRequest::max('id') ?? 0;
+            return response()->json([
+                'status' => true,
+                'latest_id' => $latestId
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
 }

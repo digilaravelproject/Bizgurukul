@@ -33,15 +33,16 @@ class UserController extends Controller
     }
 
     $roles = Role::all();
-    return view('admin.users.index', compact('roles'));
+    $states = \App\Models\State::orderBy('name')->get();
+    return view('admin.users.index', compact('roles', 'states'));
 }
 
     public function show($id)
     {
         try {
             $user = $this->userService->getUserDetails($id);
+            $user->load(['bank', 'roles', 'referrer']);
 
-            // Formatting Response as per your original code
             return response()->json([
                 'status' => true,
                 'data' => [
@@ -49,30 +50,32 @@ class UserController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'mobile' => $user->mobile,
-                    'gender' => ucfirst($user->gender),
-                    'dob' => $user->dob ? $user->dob->format('d M, Y') : 'N/A',
-                    'city' => $user->city,
+                    'gender' => $user->gender,
+                    'dob' => $user->dob ? $user->dob->format('Y-m-d') : null,
                     'state_id' => $user->state_id,
-                    'referral_code' => $user->referral_code,
+                    'state_name' => $user->state?->name ?? 'N/A',
+                    'city' => $user->city,
                     'role' => $user->roles->pluck('name')->implode(', '),
                     'kyc_status' => $user->kyc_status,
-                    'status' => $user->is_active ? 'Active' : 'Inactive',
-                    'is_banned' => $user->is_banned,
                     'joined_at' => $user->created_at->format('d M, Y'),
                     'profile_picture' => $user->profile_picture ? asset('storage/' . $user->profile_picture) : null,
                     'initials' => strtoupper(substr($user->name, 0, 1)),
-                    'address' => $user->address,
-                    'zip_code' => $user->zip_code,
-                    'referred_by' => $user->referrer ? $user->referrer->name : 'Direct',
-                    'sponsor_name' => $user->referrer ? $user->referrer->name : 'N/A',
-                    'sponsor_mobile' => $user->referrer ? $user->referrer->mobile : 'N/A',
 
                     // Affiliate Stats
-                    'referral_count' => $user->referrals()->count(),
                     'total_earnings' => $user->commissions()->where('status', 'paid')->sum('amount'),
-                    'pending_earnings' => $user->commissions()->where('status', 'pending')->sum('amount'),
-                    // Using the accessor we added earlier
                     'wallet_balance' => $user->wallet_balance,
+
+                    // Bank Details
+                    'bank' => $user->bank ? [
+                        'name' => $user->bank->bank_name,
+                        'holder' => $user->bank->account_holder_name,
+                        'account' => $user->bank->account_number,
+                        'ifsc' => $user->bank->ifsc_code,
+                        'upi' => $user->bank->upi_id,
+                        'status' => $user->bank->status ?? 'not_submitted',
+                    ] : null,
+
+                    'sponsor_name' => $user->referrer ? $user->referrer->name : 'N/A',
                 ]
             ]);
         } catch (Exception $e) {
@@ -90,6 +93,7 @@ class UserController extends Controller
             'mobile' => 'nullable|numeric|digits:10',
             'gender' => 'nullable|in:male,female,other',
             'dob' => 'nullable|date',
+            'state_id' => 'nullable|integer',
         ]);
 
         try {
@@ -107,6 +111,9 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email,' . $id,
             'role' => 'required',
             'mobile' => 'nullable|numeric|digits:10',
+            'gender' => 'nullable|in:male,female,other',
+            'dob' => 'nullable|date',
+            'state_id' => 'nullable|integer',
         ]);
 
         try {

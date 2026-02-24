@@ -64,19 +64,39 @@
 
                 <div class="py-1">
                     <a href="{{ route('student.profile') }}"
-                        class="block px-4 py-2 text-xs text-mutedText hover:text-primary hover:bg-navy font-bold transition-all">
-                        Edit Profile
+                        class="px-4 py-2 text-xs text-mutedText hover:text-primary hover:bg-navy font-bold transition-all flex items-center gap-2">
+                        <i class="fas fa-user-edit w-4"></i> Edit Profile
                     </a>
-                    <a href="#"
-                        class="block px-4 py-2 text-xs text-mutedText hover:text-primary hover:bg-navy font-bold transition-all">
-                        Security
+                    <a href="{{ route('student.profile', ['section' => 'kyc']) }}"
+                        class="px-4 py-2 text-xs text-mutedText hover:text-primary hover:bg-navy font-bold transition-all flex items-center justify-between group">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-id-card w-4"></i> KYC Verification
+                        </div>
+                        <span class="h-2 w-2 rounded-full {{ $user->kyc_status === 'verified' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : ($user->kyc_status === 'pending' ? 'bg-amber-500' : 'bg-slate-300') }}"></span>
                     </a>
+                    <a href="{{ route('student.profile', ['section' => 'bank']) }}"
+                        class="px-4 py-2 text-xs text-mutedText hover:text-primary hover:bg-navy font-bold transition-all flex items-center justify-between group">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-university w-4"></i> Bank Details
+                        </div>
+                        @php
+                            $bankStatus = $user->bank->status ?? 'not_submitted';
+                            $hasBankPending = $user->bankUpdateRequests()->where('status', 'pending')->exists();
+                        @endphp
+                        <span class="h-2 w-2 rounded-full {{ $bankStatus === 'verified' && !$hasBankPending ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : ($bankStatus === 'pending' || $hasBankPending ? 'bg-amber-500' : 'bg-slate-300') }}"></span>
+                    </a>
+                    <a href="{{ route('student.profile', ['section' => 'password']) }}"
+                        class="px-4 py-2 text-xs text-mutedText hover:text-primary hover:bg-navy font-bold transition-all flex items-center gap-2">
+                        <i class="fas fa-key w-4"></i> Change Password
+                    </a>
+
                     <div class="h-px bg-navy my-1 mx-2"></div>
+
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit"
-                            class="w-full text-left px-4 py-2 text-xs text-secondary hover:bg-secondary/5 font-bold transition-all">
-                            Logout Account
+                            class="w-full text-left px-4 py-2 text-xs text-secondary hover:bg-secondary/5 font-bold transition-all flex items-center gap-2">
+                            <i class="fas fa-sign-out-alt w-4"></i> Logout Account
                         </button>
                     </form>
                 </div>

@@ -123,12 +123,12 @@
                 </div>
 
                 <div>
-                    <label for="state" class="block text-xs font-bold text-mutedText uppercase tracking-widest mb-2">State/Region <span class="text-red-500">*</span></label>
+                    <label for="state_id" class="block text-xs font-bold text-mutedText uppercase tracking-widest mb-2">State/Region <span class="text-red-500">*</span></label>
                     <div class="relative">
-                        <select id="state" name="state" required class="w-full px-4 py-3.5 bg-navy/20 border border-primary/10 rounded-xl text-mainText focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm appearance-none cursor-pointer">
+                        <select id="state_id" name="state_id" required class="w-full px-4 py-3.5 bg-navy/20 border border-primary/10 rounded-xl text-mainText focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm appearance-none cursor-pointer">
                             <option value="">Select State</option>
-                            @foreach(['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Andaman and Nicobar Islands','Chandigarh','Dadra and Nagar Haveli and Daman and Diu','Lakshadweep','Delhi','Puducherry','Ladakh','Jammu and Kashmir'] as $state)
-                                <option value="{{ $state }}" {{ old('state') == $state ? 'selected' : '' }}>{{ $state }}</option>
+                            @foreach($states as $state)
+                                <option value="{{ $state->id }}" {{ old('state_id') == $state->id ? 'selected' : '' }}>{{ $state->name }}</option>
                             @endforeach
                         </select>
                         <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-mutedText text-xs pointer-events-none"></i>

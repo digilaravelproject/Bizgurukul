@@ -3,6 +3,8 @@
 @section('content')
 <div class="space-y-6">
 
+
+
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
             <h2 class="text-2xl font-black text-mainText uppercase tracking-widest"><i class="fas fa-hand-holding-usd text-primary"></i> Payout Management</h2>

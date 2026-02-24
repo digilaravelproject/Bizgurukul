@@ -182,6 +182,35 @@
         </template>
     </div>
 
+    {{-- Verification Notifier --}}
+    <div x-data="verificationNotifier()" x-init="initVerificationNotifier()">
+        <template x-if="showVerificationToast">
+            <div class="fixed bottom-32 right-10 z-[100] bg-primary text-white px-6 py-4 rounded-xl shadow-2xl shadow-primary/30 flex justify-between items-center gap-4 border border-white/10"
+                 x-transition:enter="transition ease-out duration-300 transform"
+                 x-transition:enter-start="translate-y-10 opacity-0"
+                 x-transition:enter-end="translate-y-0 opacity-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white/20 p-2 rounded-lg">
+                        <i class="fas fa-user-check text-xl animate-pulse"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-black text-sm uppercase tracking-widest">Pending Verification</h4>
+                        <p class="text-[10px] font-bold opacity-90 mt-0.5">New KYC or Bank details submitted!</p>
+                    </div>
+                </div>
+                <a href="{{ route('admin.verifications.index') }}" class="bg-white text-primary px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-navy hover:text-white transition">
+                    View Hub
+                </a>
+                <button @click="showVerificationToast = false" class="text-white/60 hover:text-white ml-2 transition">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </template>
+    </div>
+
     @stack('scripts')
     <script>
         document.addEventListener('alpine:init', () => {
@@ -197,18 +226,30 @@
                                 if (data.latest_id > this.lastId) {
                                     this.lastId = data.latest_id;
                                     this.showToast = true;
-                                    // Auto hide
                                     setTimeout(() => this.showToast = false, 8000);
-
-                                    // Optional: If they are on the payouts page, we could refresh it, but it's simpler to just notify.
                                 }
-                            })
-                            .catch(err => console.error('Notification Error:', err));
-                    }, 15000); // 15 seconds polling
+                            });
+                    }, 30000); // 30 seconds
                 },
+                closeToast() { this.showToast = false; }
+            }));
 
-                closeToast() {
-                    this.showToast = false;
+            Alpine.data('verificationNotifier', () => ({
+                lastCount: {{ $pendingVerificationsCount ?? 0 }},
+                showVerificationToast: false,
+
+                initVerificationNotifier() {
+                    setInterval(() => {
+                        fetch('{{ route("admin.verifications.check_new") }}')
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.total_pending > this.lastCount) {
+                                    this.lastCount = data.total_pending;
+                                    this.showVerificationToast = true;
+                                    setTimeout(() => this.showVerificationToast = false, 10000);
+                                }
+                            });
+                    }, 45000); // 45 seconds
                 }
             }));
         });

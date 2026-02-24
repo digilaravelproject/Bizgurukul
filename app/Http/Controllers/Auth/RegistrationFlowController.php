@@ -34,7 +34,11 @@ class RegistrationFlowController extends Controller
      */
     public function showPhase1(Request $request)
     {
-        return view('auth.register-phase1', ['email' => $request->query('email')]);
+        $states = \App\Models\State::orderBy('name')->get();
+        return view('auth.register-phase1', [
+            'email' => $request->query('email'),
+            'states' => $states
+        ]);
     }
 
     /**
@@ -50,7 +54,8 @@ class RegistrationFlowController extends Controller
                 'password' => ['required', 'confirmed', Password::defaults()],
                 'gender'   => ['nullable', 'string'],
                 'dob'      => ['nullable', 'date'],
-                'state'    => ['nullable', 'string'],
+                'state_id' => ['nullable', 'exists:states,id'],
+                'city'     => ['nullable', 'string', 'max:255'],
                 // 'pincode'  => ['nullable', 'numeric', 'digits:6'],
             ]);
 
@@ -62,7 +67,8 @@ class RegistrationFlowController extends Controller
                     'password'   => Hash::make($request->password), // Hashed here
                     'gender'     => $request->gender,
                     'dob'        => $request->dob,
-                    'state'      => $request->state,
+                    'state_id'   => $request->state_id,
+                    'city'       => $request->city,
                     // 'pincode'    => $request->pincode,
                     'ip_address' => $request->ip(),
                     'referral_code' => Cookie::get('referral_code') ?: session('referral_code'),

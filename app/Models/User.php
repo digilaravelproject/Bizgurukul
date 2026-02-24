@@ -27,6 +27,17 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, HasRoles, SoftDeletes;
 
+    public const INDIAN_STATES = [
+        'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+        'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
+        'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
+        'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
+        'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
+        'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Andaman and Nicobar Islands',
+        'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu', 'Lakshadweep',
+        'Delhi', 'Puducherry', 'Ladakh', 'Jammu and Kashmir'
+    ];
+
     protected $fillable = [
         'name',
         'email',
@@ -117,6 +128,16 @@ class User extends Authenticatable
     public function bank()
     {
         return $this->hasOne(BankDetail::class);
+    }
+
+    public function state(): BelongsTo
+    {
+        return $this->belongsTo(State::class, 'state_id');
+    }
+
+    public function bankUpdateRequests(): HasMany
+    {
+        return $this->hasMany(BankUpdateRequest::class);
     }
 
     public function walletTransactions(): HasMany

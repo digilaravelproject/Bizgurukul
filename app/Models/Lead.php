@@ -18,6 +18,8 @@ class Lead extends Model
         'gender',
         'dob',
         'state',
+        'state_id',
+        'city',
         'pincode',
         'product_preference',
         'ip_address',

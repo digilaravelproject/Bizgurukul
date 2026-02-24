@@ -45,7 +45,7 @@ class WalletService
         ];
     }
 
-    public function syncAvailableCommissions(int $userId = null)
+    public function syncAvailableCommissions(?int $userId = null)
     {
         $query = \App\Models\AffiliateCommission::where('status', 'on_hold')
                     ->where('available_at', '<=', now());

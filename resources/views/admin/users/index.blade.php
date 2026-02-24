@@ -101,7 +101,9 @@
                             <tr>
                                 <th class="px-8 py-6">User Profile</th>
                                 <th class="px-6 py-6">Role</th>
-                                <th class="px-6 py-6 text-center">KYC Status</th>
+                                <th class="px-6 py-6 text-center">KYC</th>
+                                <th class="px-6 py-6 text-center">Bank</th>
+                                <th class="px-6 py-6 text-right">Earnings</th>
                                 <th class="px-6 py-6 text-center">Status</th>
                                 <th class="px-8 py-6 text-right">Actions</th>
                             </tr>
@@ -126,8 +128,13 @@
                                             <div class="min-w-0">
                                                 <div class="font-bold text-mainText text-sm truncate max-w-[180px]"
                                                     x-text="user.name"></div>
-                                                <div class="text-xs text-mutedText truncate max-w-[180px]"
-                                                    x-text="user.email"></div>
+                                                <div class="text-xs text-mutedText truncate max-w-[180px]">
+                                                    <span x-text="user.email"></span>
+                                                    <template x-if="user.state">
+                                                        <span class="text-primary/60 font-black ml-1">• <span x-text="user.state.name"></span></span>
+                                                    </template>
+                                                </div>
+                                                <div class="text-[11px] font-bold text-mainText/70 mt-0.5" x-text="user.mobile || 'No Mobile'"></div>
                                                 <div class="mt-1 text-[9px] font-black text-primary/80 uppercase">REF: <span
                                                         x-text="user.referral_code"></span></div>
                                             </div>
@@ -142,7 +149,7 @@
                                     </td>
                                     <td class="px-6 py-5 text-center">
                                         <span
-                                            class="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter border shadow-sm"
+                                            class="px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter border shadow-sm"
                                             :class="{
                                                 'bg-green-50 text-green-600 border-green-200': user
                                                     .kyc_status === 'verified',
@@ -152,8 +159,23 @@
                                                 'bg-navy text-mutedText border-primary/5': user
                                                     .kyc_status === 'not_submitted'
                                             }"
-                                            x-text="user.kyc_status.replace('_', ' ')">
+                                            x-text="user.kyc_status.split('_').pop()">
                                         </span>
+                                    </td>
+                                    <td class="px-6 py-5 text-center">
+                                        <span
+                                            class="px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter border shadow-sm"
+                                            :class="{
+                                                'bg-green-50 text-green-600 border-green-200': user.bank_status === 'verified',
+                                                'bg-amber-50 text-amber-600 border-amber-200': user.bank_status === 'pending',
+                                                'bg-red-50 text-red-600 border-red-200': user.bank_status === 'rejected',
+                                                'bg-navy text-mutedText border-primary/5': !user.bank_status || user.bank_status === 'not_submitted'
+                                            }"
+                                            x-text="(user.bank_status || 'NONE').split('_').pop()">
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-5 text-right">
+                                        <span class="font-black text-emerald-600" x-text="'₹' + (user.total_earnings || 0)"></span>
                                     </td>
                                     <td class="px-6 py-5">
                                         <div class="flex items-center justify-center text-xs font-bold"
@@ -298,9 +320,9 @@
                             </div>
                             <div>
                                 <label
-                                    class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-1.5 ml-1">Gender</label>
+                                     class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-1.5 ml-1">Gender</label>
                                 <select x-model="form.gender"
-                                    class="w-full rounded-2xl bg-navy/50 px-5 py-3.5 text-sm font-bold text-mainText focus:bg-white focus:border-primary outline-none appearance-none">
+                                    class="w-full rounded-2xl bg-navy/50 px-5 py-3.5 text-sm font-bold text-mainText focus:bg-white focus:border-primary outline-none">
                                     <option value="">Select Gender</option>
                                     <option value="male">Male</option>
                                     <option value="female">Female</option>
@@ -309,28 +331,20 @@
                             </div>
                             <div>
                                 <label
-                                    class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-1.5 ml-1">Date
-                                    of Birth</label>
+                                     class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-1.5 ml-1">Date of Birth</label>
                                 <input type="date" x-model="form.dob"
                                     class="w-full rounded-2xl bg-navy/50 px-5 py-3.5 text-sm font-bold text-mainText focus:bg-white focus:border-primary outline-none">
                             </div>
                             <div>
                                 <label
-                                    class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-1.5 ml-1">State</label>
+                                     class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-1.5 ml-1">State</label>
                                 <select x-model="form.state_id"
                                     class="w-full rounded-2xl bg-navy/50 px-5 py-3.5 text-sm font-bold text-mainText focus:bg-white focus:border-primary outline-none">
                                     <option value="">Select State</option>
-                                    <template x-for="(state, index) in indianStates" :key="index">
-                                        <option :value="index + 1" x-text="state"></option>
+                                    <template x-for="state in states" :key="state.id">
+                                        <option :value="state.id" x-text="state.name"></option>
                                     </template>
                                 </select>
-                            </div>
-                            <div>
-                                <label
-                                    class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-1.5 ml-1">City</label>
-                                <input type="text" x-model="form.city"
-                                    class="w-full rounded-2xl bg-navy/50 px-5 py-3.5 text-sm font-bold text-mainText focus:bg-white focus:border-primary outline-none"
-                                    placeholder="City Name">
                             </div>
                             <div class="col-span-2 border-t border-primary/5 pt-6 mt-2 grid grid-cols-2 gap-6">
                                 <div>
@@ -416,90 +430,101 @@
                         </div>
 
                         <h2 class="mt-6 text-2xl font-black text-mainText tracking-tight" x-text="viewData.name"></h2>
-                        <p class="text-sm font-bold text-primary tracking-wide uppercase" x-text="viewData.role"></p>
+                        <p class="text-xs font-bold text-primary tracking-widest uppercase mb-6" x-text="viewData.role"></p>
 
-                        <div class="mt-8 grid grid-cols-2 gap-4 text-left">
-                            <div class="bg-navy p-5 rounded-2xl">
-                                <p class="text-[9px] font-black uppercase tracking-widest text-mutedText mb-1">Email
-                                    Address</p>
+                        <div class="grid grid-cols-2 gap-4 text-left">
+                            <div class="bg-navy p-5 rounded-2xl border border-primary/5">
+                                <p class="text-[9px] font-black uppercase tracking-widest text-mutedText mb-1">Email</p>
                                 <p class="text-xs font-bold text-mainText truncate" x-text="viewData.email"></p>
                             </div>
-                            <div class="bg-navy p-5 rounded-2xl">
-                                <p class="text-[9px] font-black uppercase tracking-widest text-mutedText mb-1">Mobile
-                                    Contact</p>
+                            <div class="bg-navy p-5 rounded-2xl border border-primary/5">
+                                <p class="text-[9px] font-black uppercase tracking-widest text-mutedText mb-1">Mobile</p>
                                 <p class="text-xs font-bold text-mainText" x-text="viewData.mobile || '-'"></p>
                             </div>
-                            <div class="bg-navy p-5 rounded-2xl">
+                            <div class="bg-navy p-5 rounded-2xl border border-primary/5">
                                 <p class="text-[9px] font-black uppercase tracking-widest text-mutedText mb-1">Gender</p>
-                                <p class="text-xs font-bold text-mainText" x-text="viewData.gender || 'N/A'"></p>
+                                <p class="text-xs font-bold text-mainText capitalize" x-text="viewData.gender || 'N/A'"></p>
                             </div>
-                            <div class="bg-navy p-5 rounded-2xl">
+                            <div class="bg-navy p-5 rounded-2xl border border-primary/5">
                                 <p class="text-[9px] font-black uppercase tracking-widest text-mutedText mb-1">Date of Birth</p>
                                 <p class="text-xs font-bold text-mainText" x-text="viewData.dob || 'N/A'"></p>
                             </div>
-                            <div class="bg-navy p-5 rounded-2xl">
+                             <div class="bg-navy p-5 rounded-2xl border border-primary/5">
+                                 <p class="text-[9px] font-black uppercase tracking-widest text-mutedText mb-1">State</p>
+                                 <p class="text-xs font-bold text-mainText" x-text="viewData.state_name || 'N/A'"></p>
+                             </div>
+                            <div class="bg-navy p-5 rounded-2xl border border-primary/5">
                                 <p class="text-[9px] font-black uppercase tracking-widest text-mutedText mb-1">Joined On</p>
-                                <p class="text-xs font-bold text-mainText" x-text="viewData.joined_at || 'N/A'"></p>
-                            </div>
-                            <div class="bg-navy p-5 rounded-2xl">
-                                <p class="text-[9px] font-black uppercase tracking-widest text-mutedText mb-1">Location</p>
-                                <p class="text-xs font-bold text-mainText truncate"><span
-                                        x-text="viewData.city || 'N/A'"></span>, <span
-                                        x-text="indianStates[viewData.state_id - 1] || 'N/A'"></span></p>
-                            </div>
-                            <div class="bg-navy p-5 rounded-2xl col-span-2">
-                                <p class="text-[9px] font-black uppercase tracking-widest text-mutedText mb-1">Full Address</p>
-                                <p class="text-xs font-bold text-mainText" x-text="(viewData.address || 'N/A') + (viewData.zip_code ? ' - ' + viewData.zip_code : '')"></p>
-                            </div>
-                            <div class="bg-navy p-5 rounded-2xl border border-primary/10">
-                                <p class="text-[9px] font-black uppercase tracking-widest text-primary mb-1">Referral Code
-                                </p>
-                                <p class="text-xs font-black text-mainText" x-text="viewData.referral_code"></p>
-                            </div>
-                            <div class="bg-primary/5 p-5 rounded-2xl border border-primary/20">
-                                <p class="text-[9px] font-black uppercase tracking-widest text-primary mb-1">Sponsor Name
-                                </p>
-                                <p class="text-xs font-black text-mainText" x-text="viewData.sponsor_name"></p>
-                            </div>
-                            <div class="bg-primary/5 p-5 rounded-2xl border border-primary/20">
-                                <p class="text-[9px] font-black uppercase tracking-widest text-primary mb-1">Sponsor Mobile
-                                </p>
-                                <p class="text-xs font-black text-mainText" x-text="viewData.sponsor_mobile"></p>
+                                <p class="text-xs font-bold text-mainText" x-text="viewData.joined_at"></p>
                             </div>
                         </div>
 
-                        {{-- KYC Status Badge --}}
-                        <div class="mt-6 flex justify-center">
-                            <span
-                                class="px-6 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border shadow-sm"
+                        {{-- Earnings & KYC --}}
+                        <div class="mt-6 grid grid-cols-3 gap-3">
+                            <div class="brand-gradient p-4 rounded-2xl text-left text-white shadow-lg shadow-primary/20">
+                                <p class="text-[8px] font-black uppercase tracking-widest opacity-80 mb-0.5">Total Earnings</p>
+                                <p class="text-base font-black">₹<span x-text="viewData.total_earnings"></span></p>
+                            </div>
+                            <div class="p-4 rounded-2xl text-left border shadow-sm flex flex-col justify-center"
                                 :class="{
-                                    'bg-green-50 text-green-600 border-green-200': viewData.kyc_status === 'verified',
-                                    'bg-amber-50 text-amber-600 border-amber-200': viewData.kyc_status === 'pending',
-                                    'bg-red-50 text-red-600 border-red-200': viewData.kyc_status === 'rejected',
-                                    'bg-navy text-mutedText border-primary/5': viewData.kyc_status === 'not_submitted'
-                                }"
-                                x-text="'KYC: ' + viewData.kyc_status.replace('_', ' ')">
-                            </span>
+                                    'bg-green-50 border-green-200 text-green-600': viewData.kyc_status === 'verified',
+                                    'bg-amber-50 border-amber-200 text-amber-600': viewData.kyc_status === 'pending',
+                                    'bg-red-50 border-red-200 text-red-600': viewData.kyc_status === 'rejected',
+                                    'bg-navy border-primary/5 text-mutedText': viewData.kyc_status === 'not_submitted'
+                                }">
+                                <p class="text-[8px] font-black uppercase tracking-widest opacity-80 mb-0.5">KYC Status</p>
+                                <p class="text-[10px] font-black x-text" x-text="viewData.kyc_status.replace('_', ' ').toUpperCase()"></p>
+                            </div>
+                            <div class="p-4 rounded-2xl text-left border shadow-sm flex flex-col justify-center"
+                                :class="{
+                                    'bg-green-50 border-green-200 text-green-600': viewData.bank && viewData.bank.status === 'verified',
+                                    'bg-amber-50 border-amber-200 text-amber-600': viewData.bank && viewData.bank.status === 'pending',
+                                    'bg-red-50 border-red-200 text-red-600': viewData.bank && viewData.bank.status === 'rejected',
+                                    'bg-navy border-primary/5 text-mutedText': !viewData.bank || viewData.bank.status === 'not_submitted'
+                                }">
+                                <p class="text-[8px] font-black uppercase tracking-widest opacity-80 mb-0.5">Bank Status</p>
+                                <p class="text-[10px] font-black x-text" x-text="(viewData.bank ? viewData.bank.status : 'not_submitted').replace('_', ' ').toUpperCase()"></p>
+                            </div>
                         </div>
 
-                         {{-- Affiliate Stats Section --}}
-                         <div class="mt-6 pt-6 border-t border-primary/5">
-                            <h3 class="text-sm font-black text-mainText mb-4">Affiliate Performance</h3>
-                            <div class="grid grid-cols-3 gap-4 text-center">
-                                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                                    <p class="text-[9px] font-black uppercase tracking-widest text-indigo-400 mb-1">Referrals</p>
-                                    <p class="text-xl font-black text-indigo-700" x-text="viewData.referral_count"></p>
+                        {{-- Bank Details Section --}}
+                        <div class="mt-8 pt-6 border-t border-primary/5 text-left">
+                            <h3 class="text-xs font-black text-mainText uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                                Bank Account Details
+                            </h3>
+
+                            <template x-if="viewData.bank">
+                                <div class="grid grid-cols-2 gap-y-4 gap-x-6 bg-navy/30 p-5 rounded-2xl border border-primary/5">
+                                    <div>
+                                        <p class="text-[9px] font-black uppercase tracking-widest text-mutedText/60 mb-0.5">Bank Name</p>
+                                        <p class="text-xs font-bold text-mainText" x-text="viewData.bank.name"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[9px] font-black uppercase tracking-widest text-mutedText/60 mb-0.5">Account Holder</p>
+                                        <p class="text-xs font-bold text-mainText" x-text="viewData.bank.holder"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[9px] font-black uppercase tracking-widest text-mutedText/60 mb-0.5">Account Number</p>
+                                        <p class="text-xs font-bold text-mainText" x-text="viewData.bank.account"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[9px] font-black uppercase tracking-widest text-mutedText/60 mb-0.5">IFSC Code</p>
+                                        <p class="text-xs font-bold text-mainText" x-text="viewData.bank.ifsc"></p>
+                                    </div>
+                                    <div class="col-span-2" x-show="viewData.bank.upi">
+                                        <p class="text-[9px] font-black uppercase tracking-widest text-mutedText/60 mb-0.5">UPI ID</p>
+                                        <p class="text-xs font-bold text-primary" x-text="viewData.bank.upi"></p>
+                                    </div>
                                 </div>
-                                <div class="bg-green-50 p-4 rounded-xl border border-green-100">
-                                    <p class="text-[9px] font-black uppercase tracking-widest text-green-400 mb-1">Total Earned</p>
-                                    <p class="text-lg font-black text-green-700">₹<span x-text="viewData.total_earnings"></span></p>
+                            </template>
+
+                            <template x-if="!viewData.bank">
+                                <div class="bg-navy p-6 rounded-2xl border border-dashed border-primary/20 text-center">
+                                    <p class="text-xs font-bold text-mutedText/50 italic text-center">No bank details added or verified yet.</p>
                                 </div>
-                                <div class="bg-orange-50 p-4 rounded-xl border border-orange-100">
-                                    <p class="text-[9px] font-black uppercase tracking-widest text-orange-400 mb-1">Pending</p>
-                                    <p class="text-lg font-black text-orange-700">₹<span x-text="viewData.pending_earnings"></span></p>
-                                </div>
-                            </div>
-                         </div>
+                            </template>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -521,13 +546,7 @@
                 isSubmitting: false,
                 viewData: {},
                 controller: null,
-                indianStates: ["Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar",
-                    "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli", "Daman and Diu", "Delhi", "Goa", "Gujarat",
-                    "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka", "Kerala", "Ladakh",
-                    "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland",
-                    "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura",
-                    "Uttar Pradesh", "Uttarakhand", "West Bengal"
-                ],
+                states: @json($states),
                 form: {
                     id: null,
                     name: '',
