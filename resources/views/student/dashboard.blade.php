@@ -38,57 +38,31 @@
     }
 </style>
 
-<div class="space-y-8 pb-12 font-sans text-mainText" x-data="dashboardHandler()">
+<div class="space-y-4 md:space-y-8 pb-12 font-sans text-mainText" x-data="dashboardHandler()">
 
     {{-- 1. HEADER: PREMIUM WELCOME & REFERRAL --}}
-    <div class="stagger-1 rounded-[2.5rem] bg-surface p-8 md:p-10 border border-primary/10 relative overflow-hidden premium-shadow">
+    <div class="stagger-1 rounded-[1.5rem] md:rounded-[2.5rem] bg-surface p-5 md:p-10 border border-primary/10 relative overflow-hidden premium-shadow">
         {{-- Aesthetic Background Accents --}}
         <div class="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 blur-[80px] rounded-full pointer-events-none"></div>
         <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-secondary/5 blur-[60px] rounded-full pointer-events-none"></div>
 
-        <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+        <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-8 text-center md:text-left">
             {{-- User Welcome --}}
-            <div class="space-y-3">
-                <div class="flex items-center gap-3">
-                    <span class="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border border-primary/20">
+            <div class="space-y-1.5 md:space-y-3">
+                <div class="flex items-center justify-center md:justify-start gap-3">
+                    <span class="bg-primary/10 text-primary px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest border border-primary/20">
                         Partner Dashboard
                     </span>
-                    {{-- <span class="text-mutedText text-xs font-semibold uppercase tracking-widest">{{ now()->format('F j, Y') }}</span> --}}
                 </div>
-                <h1 class="text-4xl md:text-5xl font-black tracking-tight text-mainText">
-                    Welcome, <span class="bg-clip-text text-white brand-gradient">{{ explode(' ', $user->name)[0] }}</span>
+                <h1 class="text-2xl md:text-5xl font-black tracking-tight text-mainText leading-tight">
+                    Welcome, <br class="md:hidden"> <span class="bg-clip-text text-white brand-gradient">{{ $user->name }}</span>
                 </h1>
-                {{-- <p class="text-mutedText text-base font-medium max-w-lg leading-relaxed">
-                    Track your empire's growth. You have <span class="text-primary font-bold">{{ $myCourses->count() + $myBundles->count() }} active programs</span> and are maintaining top-tier performance.
-                </p> --}}
             </div>
-
-            {{-- Referral Section --}}
-            {{-- <div class="w-full md:w-auto min-w-[340px] bg-navy rounded-2xl p-6 border border-primary/10 premium-shadow">
-                <div class="flex justify-between items-center mb-4">
-                    <span class="text-xs font-bold uppercase tracking-widest text-mutedText">My Referral Code</span>
-                    <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                        <span class="text-xs font-bold text-green-600">Active</span>
-                    </div>
-                </div>
-
-                <div class="relative group">
-                    <input type="text" readonly value="{{ $user->referral_code }}"
-                        class="w-full bg-surface border border-primary/10 rounded-xl px-5 py-4 text-xl font-black text-center text-mainText tracking-widest focus:ring-2 focus:ring-primary/50 transition-all shadow-sm">
-
-                    <button @click="copyToClipboard('{{ $user->referral_code }}')"
-                        class="absolute right-2 top-2 bottom-2 brand-gradient text-customWhite px-5 rounded-lg hover:opacity-90 transition-all flex items-center justify-center shadow-md active:scale-95">
-                        <i class="fas fa-copy"></i>
-                    </button>
-                </div>
-
-               </div> --}}
         </div>
     </div>
 
     {{-- 2. EARNINGS OVERVIEW --}}
-    <div class="stagger-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="stagger-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         @php
             $earningCards = [
                 ['title' => "Today's Revenue", 'amount' => $earningsStats['today'], 'icon' => 'fa-calendar-day'],
@@ -99,18 +73,16 @@
         @endphp
 
         @foreach($earningCards as $card)
-        <div class="bg-surface rounded-[2rem] p-6 border border-primary/10 premium-shadow hover-lift relative overflow-hidden group">
+        <div class="bg-surface rounded-2xl md:rounded-[2rem] p-5 md:p-6 border border-primary/10 premium-shadow hover-lift relative overflow-hidden group">
             <div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-full pointer-events-none transition-transform group-hover:scale-110"></div>
 
-            <div class="relative z-10 flex flex-col h-full justify-between gap-6">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-xs font-bold text-mutedText uppercase tracking-widest mb-1">{{ $card['title'] }}</p>
-                        <h3 class="text-3xl font-black text-mainText tracking-tight">₹{{ number_format($card['amount']) }}</h3>
-                    </div>
-                    <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-xl group-hover:rotate-12 transition-transform duration-300">
-                        <i class="fas {{ $card['icon'] }}"></i>
-                    </div>
+            <div class="relative z-10 flex items-center justify-between">
+                <div class="flex-1">
+                    <p class="text-[10px] md:text-xs font-bold text-mutedText uppercase tracking-widest mb-1">{{ $card['title'] }}</p>
+                    <h3 class="text-2xl md:text-3xl font-black text-mainText tracking-tight">₹{{ number_format($card['amount']) }}</h3>
+                </div>
+                <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-base md:text-xl group-hover:rotate-12 transition-transform duration-300">
+                    <i class="fas {{ $card['icon'] }}"></i>
                 </div>
             </div>
         </div>
@@ -118,21 +90,18 @@
     </div>
 
     {{-- 3. DUAL ANALYTICS SECTION --}}
-    <div class="stagger-3 grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="stagger-3 grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
         {{-- Graph 1: Earnings Trend --}}
-        <div class="lg:col-span-2 bg-surface rounded-[2.5rem] p-8 border border-primary/10 premium-shadow">
-            <div class="flex items-center justify-between mb-8">
+        <div class="lg:col-span-2 bg-surface rounded-[1.5rem] md:rounded-[2.5rem] p-5 md:p-8 border border-primary/10 premium-shadow relative overflow-hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8 relative z-10">
                 <div>
-                    <h3 class="text-xl font-black text-mainText uppercase tracking-widest flex items-center gap-3">
+                    <h3 class="text-lg md:text-xl font-black text-mainText uppercase tracking-widest flex items-center gap-3">
                         <i class="fas fa-chart-area text-primary"></i> Revenue Trajectory
                     </h3>
-                    <p class="text-sm text-mutedText font-medium mt-1">Financial performance over the last days</p>
-                </div>
-                <div class="bg-navy px-4 py-2 rounded-xl text-xs font-bold text-mainText uppercase tracking-widest border border-primary/10">
-                    Overview
+                    <p class="text-[10px] md:text-sm text-mutedText font-medium mt-1">Financial performance over the last 30 days</p>
                 </div>
             </div>
-            <div id="earningsChart" class="w-full min-h-[350px]"></div>
+            <div id="earningsChart" class="w-full h-[250px] md:h-[350px] relative z-10"></div>
         </div>
 
         {{-- Affiliate Link Generator (Enhanced) --}}
@@ -398,20 +367,41 @@
                 // Category Chart removed/replaced by Link Generator
             },
             renderEarningsChart() {
+                const isMobile = window.innerWidth < 768;
                 const options = {
                     series: [{ name: 'Earnings', data: @json($graphData['data']) }],
-                    chart: { type: 'area', height: 350, toolbar: { show: false }, fontFamily: 'var(--font-main)', background: 'transparent' },
+                    chart: {
+                        type: 'area',
+                        height: isMobile ? 250 : 350,
+                        toolbar: { show: false },
+                        fontFamily: 'var(--font-main)',
+                        background: 'transparent'
+                    },
                     colors: ['rgb(var(--color-primary))'],
                     fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.0, stops: [0, 100] } },
                     dataLabels: { enabled: false },
-                    stroke: { curve: 'smooth', width: 4 },
+                    stroke: { curve: 'smooth', width: isMobile ? 2 : 4 },
                     xaxis: {
                         categories: @json($graphData['labels']),
-                        labels: { style: { colors: 'rgb(var(--color-text-muted))', fontSize: '11px', fontWeight: 600 } },
-                        axisBorder: { show: false }, axisTicks: { show: false }
+                        labels: {
+                            show: !isMobile,
+                            style: { colors: 'rgb(var(--color-text-muted))', fontSize: '11px', fontWeight: 600 }
+                        },
+                        axisBorder: { show: false },
+                        axisTicks: { show: false }
                     },
-                    yaxis: { labels: { style: { colors: 'rgb(var(--color-text-muted))', fontWeight: 600 }, formatter: (val) => "₹" + val.toFixed(0) } },
-                    grid: { borderColor: 'rgba(var(--color-text-muted), 0.1)', strokeDashArray: 4 },
+                    yaxis: {
+                        show: !isMobile,
+                        labels: { style: { colors: 'rgb(var(--color-text-muted))', fontWeight: 600 }, formatter: (val) => "₹" + val.toFixed(0) }
+                    },
+                    grid: {
+                        borderColor: 'rgba(var(--color-text-muted), 0.1)',
+                        strokeDashArray: 4,
+                        padding: {
+                            left: isMobile ? -10 : 0,
+                            right: isMobile ? -10 : 0
+                        }
+                    },
                     tooltip: { theme: 'light' }
                 };
                 new ApexCharts(document.querySelector("#earningsChart"), options).render();

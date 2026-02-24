@@ -66,7 +66,7 @@
         <!-- Right Side: Form Area -->
         <div
             class="w-full lg:w-1/2 bg-surface flex flex-col justify-center items-center p-6 sm:p-12 lg:p-8 shadow-2xl lg:shadow-none border-l border-slate-100">
-            <div class="w-full max-w-md space-y-8">
+            <div class="w-full max-w-xl space-y-8">
                 <!-- Mobile Logo (Visible only on small screens) -->
                 {{-- <div class="lg:hidden flex justify-center mb-8">
                     <div class="inline-flex items-center border border-primary p-0.5 shadow-md scale-75 origin-center">
@@ -99,7 +99,9 @@
                 @endif
 
                 <!-- Slot Content -->
-                {{ $slot }}
+                <div class="w-full">
+                    {{ $slot }}
+                </div>
 
             </div>
 

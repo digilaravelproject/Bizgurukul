@@ -23,10 +23,10 @@
             @error('name') <p class="text-red-500 text-xs font-bold mt-1">{{ $message }}</p> @enderror
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             {{-- Type --}}
             <div>
-                <label class="block text-xs font-bold text-mutedText uppercase tracking-widest mb-2">Tax Type <span class="text-red-500">*</span></label>
+                <label class="block text-xs font-bold text-mutedText uppercase tracking-widest mb-2">Calculation <span class="text-red-500">*</span></label>
                 <div class="relative">
                     <select name="type" required class="w-full bg-navy border border-primary/10 rounded-xl px-4 py-3 text-sm font-bold text-mainText focus:border-primary outline-none appearance-none cursor-pointer">
                         <option value="percentage" {{ old('type') == 'percentage' ? 'selected' : '' }}>Percentage (%)</option>
@@ -35,6 +35,19 @@
                     <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-mutedText text-xs pointer-events-none"></i>
                 </div>
                 @error('type') <p class="text-red-500 text-xs font-bold mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Tax Configuration --}}
+            <div>
+                <label class="block text-xs font-bold text-mutedText uppercase tracking-widest mb-2">Tax Type <span class="text-red-500">*</span></label>
+                <div class="relative">
+                    <select name="tax_type" required class="w-full bg-navy border border-primary/10 rounded-xl px-4 py-3 text-sm font-bold text-mainText focus:border-primary outline-none appearance-none cursor-pointer">
+                        <option value="inclusive" {{ old('tax_type') == 'inclusive' ? 'selected' : '' }}>Inclusive (Extract from Total)</option>
+                        <option value="exclusive" {{ old('tax_type') == 'exclusive' ? 'selected' : '' }}>Exclusive (Add to Total)</option>
+                    </select>
+                    <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-mutedText text-xs pointer-events-none"></i>
+                </div>
+                @error('tax_type') <p class="text-red-500 text-xs font-bold mt-1">{{ $message }}</p> @enderror
             </div>
 
             {{-- Value --}}

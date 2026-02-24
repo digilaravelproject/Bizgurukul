@@ -1,5 +1,7 @@
 <header
     class="bg-customWhite/80 backdrop-blur-md border-b border-primary/5 h-20 flex items-center px-4 md:px-8 justify-between sticky top-0 z-40">
+
+    {{-- Left Side: Hamburger & Desktop Title --}}
     <div class="flex items-center flex-1">
         {{-- Mobile Hamburger Menu --}}
         <button @click="sidebarOpen = true"
@@ -8,16 +10,29 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
             </svg>
         </button>
+
+        {{-- Desktop Text (Hidden on Mobile) --}}
         <div class="hidden md:block">
             <h2 class="text-xl font-extrabold text-mainText tracking-tight">
-                Student <span class="text-primary">Panel</span>
+                 Partner <span class="text-primary">Panel</span>
             </h2>
             <p class="text-[10px] text-mutedText uppercase tracking-[0.2em] font-bold">Skills Pehle Learning</p>
         </div>
     </div>
 
-    <div class="flex items-center space-x-4">
-        {{-- Profile Dropdown Section --}}
+    <div class="md:hidden flex-[2] flex justify-center items-center">
+        <div class="h-12 w-auto py-1">
+            @if (file_exists(public_path('storage/site_images/logo1.png')))
+                <img src="{{ asset('storage/site_images/logo1.png') }}" alt="Logo"
+                    class="h-full w-auto object-contain" loading="lazy">
+            @else
+                <span class="font-bold text-base text-primary">SKILLS PEHLE</span>
+            @endif
+        </div>
+    </div>
+
+    {{-- Right Side: Profile Dropdown --}}
+    <div class="flex items-center space-x-4 flex-1 justify-end">
         <div class="relative" x-data="{ userMenuOpen: false }">
             <button @click="userMenuOpen = !userMenuOpen" @click.away="userMenuOpen = false"
                 class="flex items-center space-x-3 p-1 rounded-full hover:bg-navy transition pr-4">
@@ -25,7 +40,7 @@
                 {{-- User Info (Desktop Only) --}}
                 <div class="text-right hidden sm:block leading-tight">
                     <p class="text-xs font-bold text-mainText">{{ Auth::user()->name }}</p>
-                    <p class="text-[10px] text-mutedText uppercase font-bold tracking-tighter">Student</p>
+                    <p class="text-[10px] text-mutedText uppercase font-bold tracking-tighter">Partner</p>
                 </div>
 
                 {{-- User Avatar Icon --}}
@@ -35,7 +50,7 @@
                 </div>
             </button>
 
-            {{-- Dropdown Menu Logic --}}
+            {{-- Dropdown Menu --}}
             <div x-show="userMenuOpen" x-cloak x-transition:enter="transition ease-out duration-100"
                 x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                 x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100"
@@ -43,26 +58,20 @@
                 class="absolute right-0 mt-3 w-56 origin-top-right bg-customWhite rounded-2xl shadow-xl border border-primary/10 overflow-hidden z-50">
 
                 <div class="p-4 border-b border-navy">
-                    <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-widest">Student</p>
+                    <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-widest">Partner</p>
                     <p class="text-xs font-bold text-primary uppercase">ID: #{{ Auth::user()->id }}</p>
                 </div>
 
                 <div class="py-1">
-                    {{-- My Profile Link --}}
                     <a href="{{ route('student.profile') }}"
                         class="block px-4 py-2 text-xs text-mutedText hover:text-primary hover:bg-navy font-bold transition-all">
                         Edit Profile
                     </a>
-
-                    {{-- Settings Link --}}
                     <a href="#"
                         class="block px-4 py-2 text-xs text-mutedText hover:text-primary hover:bg-navy font-bold transition-all">
                         Security
                     </a>
-
                     <div class="h-px bg-navy my-1 mx-2"></div>
-
-                    {{-- Logout Form --}}
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit"
@@ -75,4 +84,3 @@
         </div>
     </div>
 </header>
-

@@ -51,7 +51,7 @@ class RegistrationFlowController extends Controller
                 'gender'   => ['nullable', 'string'],
                 'dob'      => ['nullable', 'date'],
                 'state'    => ['nullable', 'string'],
-                'pincode'  => ['nullable', 'numeric', 'digits:6'],
+                // 'pincode'  => ['nullable', 'numeric', 'digits:6'],
             ]);
 
             $lead = Lead::updateOrCreate(
@@ -63,7 +63,7 @@ class RegistrationFlowController extends Controller
                     'gender'     => $request->gender,
                     'dob'        => $request->dob,
                     'state'      => $request->state,
-                    'pincode'    => $request->pincode,
+                    // 'pincode'    => $request->pincode,
                     'ip_address' => $request->ip(),
                     'referral_code' => Cookie::get('referral_code') ?: session('referral_code'),
                 ]
@@ -226,6 +226,7 @@ class RegistrationFlowController extends Controller
                 'message'        => 'Coupon Applied Successfully',
                 'discount'       => $pricing['discount'],
                 'tax'            => $pricing['taxAmount'],
+                'taxes'          => $pricing['taxes'], // Added to update frontend inclusive/exclusive display
                 'total'          => $pricing['totalAmount'],
                 'taxable_amount' => $pricing['taxableAmount']
             ]);

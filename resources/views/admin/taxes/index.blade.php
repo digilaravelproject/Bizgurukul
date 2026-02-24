@@ -18,6 +18,7 @@
                 <tr class="bg-navy/50 text-xs uppercase tracking-widest text-mutedText border-b border-primary/10">
                     <th class="p-4 font-bold">Tax Name</th>
                     <th class="p-4 font-bold">Type</th>
+                    <th class="p-4 font-bold">Configuration</th>
                     <th class="p-4 font-bold">Value</th>
                     <th class="p-4 font-bold">Status</th>
                     <th class="p-4 font-bold text-right">Actions</th>
@@ -30,6 +31,11 @@
                         <td class="p-4">
                             <span class="px-2 py-1 bg-navy text-primary rounded-md text-xs font-bold uppercase tracking-wider">
                                 {{ $tax->type }}
+                            </span>
+                        </td>
+                        <td class="p-4">
+                            <span class="px-2 py-1 {{ $tax->tax_type == 'inclusive' ? 'bg-green-500/10 text-green-600' : 'bg-orange-500/10 text-orange-600' }} rounded-md text-xs font-bold uppercase tracking-wider">
+                                {{ $tax->tax_type }}
                             </span>
                         </td>
                         <td class="p-4 font-black text-mainText">

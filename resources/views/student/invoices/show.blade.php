@@ -207,9 +207,18 @@
                 </tr>
                 @endif
 
-                @if($invoice->tax_amount > 0)
+                @if($invoice->tax_details && is_array($invoice->tax_details))
+                    @foreach($invoice->tax_details as $tax)
+                    <tr>
+                        <td style="text-align: right; color: #6b7280;">
+                            {{ $tax['name'] }} ({{ $tax['value'] }}{{ $tax['type'] == 'percentage' ? '%' : '' }} {{ $tax['tax_type'] == 'inclusive' ? 'Incl.' : 'Excl.' }}):
+                        </td>
+                        <td style="text-align: right; color: #6b7280;">₹{{ number_format($tax['calculated_amount'] ?? 0, 2) }}</td>
+                    </tr>
+                    @endforeach
+                @elseif($invoice->tax_amount > 0)
                 <tr>
-                    <td style="text-align: right; color: #6b7280;">GST (Included):</td>
+                    <td style="text-align: right; color: #6b7280;">Tax (GST):</td>
                     <td style="text-align: right; color: #6b7280;">₹{{ number_format($invoice->tax_amount, 2) }}</td>
                 </tr>
                 @endif
