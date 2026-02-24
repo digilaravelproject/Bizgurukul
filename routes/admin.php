@@ -74,6 +74,19 @@ Route::middleware(['auth', 'role:Admin'])
         Route::post('/lms/upload', [VideoController::class, 'uploadVideo'])->name('video.upload');
         Route::post('/api/video-progress', [VideoController::class, 'updateHeartbeat'])->name('video.progress');
 
+        // Beginner guide management
+        Route::get('/beginner-guide', [\App\Http\Controllers\Admin\BeginnerGuideController::class, 'index'])
+            ->name('beginner-guide');
+        Route::post('/beginner-guide/store', [\App\Http\Controllers\Admin\BeginnerGuideController::class, 'store'])
+            ->name('beginner-guide.store');
+        // legacy upload route kept for compatibility
+        Route::post('/beginner-guide/upload', [\App\Http\Controllers\Admin\BeginnerGuideController::class, 'store'])
+            ->name('beginner-guide.upload');
+        Route::delete('/beginner-guide/{id}', [\App\Http\Controllers\Admin\BeginnerGuideController::class, 'destroy'])
+            ->name('beginner-guide.destroy');
+        Route::post('/beginner-guide/progress', [\App\Http\Controllers\Admin\BeginnerGuideController::class, 'updateProgress'])
+            ->name('beginner-guide.progress');
+
         // Coupons
         Route::controller(CouponController::class)->prefix('coupons')->name('coupons.')->group(function () {
             Route::get('/', 'index')->name('index');

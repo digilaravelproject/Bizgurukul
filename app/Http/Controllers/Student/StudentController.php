@@ -75,15 +75,29 @@ class StudentController extends Controller
     public function updateProgress(Request $request)
     {
         try {
-            $request->validate([
-                'lesson_id' => 'required|exists:lessons,id',
-                'seconds' => 'required|numeric'
-            ]);
+            // if lesson_id is provided we store in VideoProgress table as usual
+            if ($request->has('lesson_id')) {
+                $request->validate([
+                    'lesson_id' => 'required|exists:lessons,id',
+                    'seconds' => 'required|numeric'
+                ]);
 
-            VideoProgress::updateOrCreate(
-                ['user_id' => Auth::id(), 'lesson_id' => $request->lesson_id],
-                ['last_watched_second' => $request->seconds, 'is_completed' => $request->completed ?? false]
-            );
+                VideoProgress::updateOrCreate(
+                    ['user_id' => Auth::id(), 'lesson_id' => $request->lesson_id],
+                    ['last_watched_second' => $request->seconds, 'is_completed' => $request->completed ?? false]
+                );
+            } else {
+                // beginner guide or other standalone video progress - keep in session
+                $seconds = $request->input('seconds', 0);
+                $completed = $request->boolean('completed');
+                $videoId = $request->input('video_id');
+                if ($videoId) {
+                    $progress = session('beginner_guide.progress', []);
+                    $progress[$videoId] = ['seconds' => (int)$seconds, 'completed' => $completed];
+                    session(['beginner_guide.progress' => $progress]);
+                }
+            }
+
             return response()->json(['status' => 'saved']);
         } catch (Exception $e) {
             Log::error("Error updating video progress for user " . Auth::id() . ": " . $e->getMessage());
@@ -123,6 +137,26 @@ class StudentController extends Controller
             Log::error("Error serving video key for lesson {$lesson->id}: " . $e->getMessage());
             return response('Error', 500);
         }
+    }
+
+    /**
+     * Display the beginner guide video for students.
+     */
+    public function beginnerGuide(Request $request)
+    {
+        $videos = \App\Models\BeginnerGuideVideo::orderBy('category')->orderBy('order_column')->get();
+        $progressData = session('beginner_guide.progress', []);
+
+        // determine selected video by query param, default to first available
+        $selectedId = $request->query('video');
+        if ($selectedId) {
+            $selected = $videos->firstWhere('id', $selectedId);
+        }
+        if (empty($selected)) {
+            $selected = $videos->first();
+        }
+
+        return view('users.beginner-guide', compact('videos', 'selected', 'progressData'));
     }
 
 

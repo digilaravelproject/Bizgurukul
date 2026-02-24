@@ -43,6 +43,7 @@ Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')
 
     // Learning / LMS
     Route::get('/my-courses', [StudentController::class, 'myCourses'])->name('my-courses');
+    Route::get('/beginner-guide', [StudentController::class, 'beginnerGuide'])->name('beginner-guide');
     Route::get('/watch/{course}/{lesson?}', [StudentController::class, 'watch'])->name('watch');
     Route::post('/progress/update', [StudentController::class, 'updateProgress'])->name('progress.update');
     Route::get('/video-key/{lesson}', [StudentController::class, 'getVideoKey'])->name('video.key');
