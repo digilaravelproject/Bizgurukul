@@ -11,6 +11,7 @@ use App\Http\Controllers\Student\CouponController;
 use App\Http\Controllers\Student\ProfileController;
 use App\Http\Controllers\Student\AffiliateController;
 use App\Http\Controllers\Student\InvoiceController;
+use App\Http\Controllers\Student\CertificateController;
 
 /*
 |--------------------------------------------------------------------------
@@ -82,6 +83,10 @@ Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')
         Route::get('/affiliate/dashboard', [AffiliateController::class, 'index'])->name('affiliate.dashboard');
         Route::get('/affiliate/leads', [AffiliateController::class, 'leads'])->name('affiliate.leads');
         Route::get('/affiliate/commission-structure', [AffiliateController::class, 'commissionStructure'])->name('affiliate.commission_structure');
+
+        // Certificates
+        Route::get('/certificates', [CertificateController::class, 'index'])->name('certificates.index');
+        Route::get('/certificates/generate/{course}', [CertificateController::class, 'generate'])->name('certificates.generate');
 
         // Invoices
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');

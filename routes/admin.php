@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\PayoutController;
 use App\Http\Controllers\Admin\ProfileVerificationController;
 use App\Http\Controllers\Admin\AffiliateController;
 use App\Http\Controllers\Admin\CommunityController;
+use App\Http\Controllers\Admin\CertificateSettingController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'role:Admin'])
@@ -42,6 +43,10 @@ Route::middleware(['auth', 'role:Admin'])
         Route::resource('bundles', BundleController::class);
         Route::resource('achievements', \App\Http\Controllers\Admin\AchievementController::class)->except(['show']);
         Route::post('achievements/{achievement}/toggle-status', [\App\Http\Controllers\Admin\AchievementController::class, 'toggleStatus'])->name('achievements.toggle-status');
+
+        // Certificates
+        Route::get('certificate-settings', [CertificateSettingController::class, 'index'])->name('certificate.settings');
+        Route::post('certificate-settings', [CertificateSettingController::class, 'store'])->name('certificate.settings.store');
 
         // Categories
         Route::prefix('categories')->name('categories.')->group(function () {

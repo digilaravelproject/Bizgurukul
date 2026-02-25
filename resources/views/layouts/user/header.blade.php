@@ -100,6 +100,11 @@
                         <i class="fas fa-key w-4"></i> Change Password
                     </a>
 
+                    <a href="{{ route('student.certificates.index') }}"
+                        class="px-4 py-2 text-xs text-mutedText hover:text-primary hover:bg-navy font-bold transition-all flex items-center gap-2">
+                        <i class="fas fa-certificate w-4"></i> My Certificates
+                    </a>
+
                     <div class="h-px bg-navy my-1 mx-2"></div>
 
                     <form method="POST" action="{{ route('logout') }}">
