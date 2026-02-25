@@ -236,4 +236,78 @@ class AffiliateService
             throw $e;
         }
     }
+
+    public function getLeaderboard($filter = 'last_30_days', $limit = 10)
+    {
+        try {
+            $query = AffiliateCommission::where('status', 'paid')
+                ->selectRaw('affiliate_id, SUM(amount) as total_earnings')
+                ->groupBy('affiliate_id')
+                ->with(['affiliate' => function ($query) {
+                    $query->select('id', 'name', 'profile_picture');
+                }]);
+
+            if ($filter === 'today') {
+                $query->whereDate('created_at', Carbon::today());
+            } elseif ($filter === 'last_7_days') {
+                $query->where('created_at', '>=', Carbon::now()->subDays(7));
+            } elseif ($filter === 'last_30_days') {
+                $query->where('created_at', '>=', Carbon::now()->subDays(30));
+            } // 'all_time' no date filter
+
+            return $query->orderByDesc('total_earnings')
+                         ->take($limit)
+                         ->get();
+        } catch (Exception $e) {
+            Log::error("AffiliateService Error [getLeaderboard]: " . $e->getMessage());
+            return collect([]);
+        }
+    }
+
+    public function getUserRank(User $user, $filter = 'last_30_days')
+    {
+         try {
+            $userEarningsQuery = $user->commissions()->where('status', 'paid');
+
+            if ($filter === 'today') {
+                $userEarningsQuery->whereDate('created_at', Carbon::today());
+            } elseif ($filter === 'last_7_days') {
+                $userEarningsQuery->where('created_at', '>=', Carbon::now()->subDays(7));
+            } elseif ($filter === 'last_30_days') {
+                $userEarningsQuery->where('created_at', '>=', Carbon::now()->subDays(30));
+            }
+
+            $userEarnings = (float) $userEarningsQuery->clone()->sum('amount');
+            $userSaleCount = $userEarningsQuery->clone()->count();
+
+            $query = AffiliateCommission::where('status', 'paid')
+                ->selectRaw('affiliate_id, SUM(amount) as total_earnings')
+                ->groupBy('affiliate_id');
+
+            if ($filter === 'today') {
+                $query->whereDate('created_at', Carbon::today());
+            } elseif ($filter === 'last_7_days') {
+                $query->where('created_at', '>=', Carbon::now()->subDays(7));
+            } elseif ($filter === 'last_30_days') {
+                $query->where('created_at', '>=', Carbon::now()->subDays(30));
+            }
+
+            $usersWithMoreEarnings = DB::query()
+                ->fromSub($query, 'earnings_table')
+                ->where('earnings_table.total_earnings', '>', $userEarnings)
+                ->count();
+
+            $rank = $usersWithMoreEarnings + 1;
+
+            return [
+                'rank' => $rank,
+                'earnings' => $userEarnings,
+                'sale_count' => $userSaleCount
+            ];
+
+         } catch (Exception $e) {
+            Log::error("AffiliateService Error [getUserRank]: " . $e->getMessage(), ['user_id' => $user->id]);
+            return ['rank' => 0, 'earnings' => 0, 'sale_count' => 0];
+         }
+    }
 }

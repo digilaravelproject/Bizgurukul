@@ -32,7 +32,7 @@
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">Select Course</label>
                         <select name="course_id" required
-                            class="w-full rounded-xl border-slate-200 focus:ring-2 focus:ring-[#0777be]/20 focus:border-[#0777be] px-4 py-3 bg-gray-50 @error('course_id') border-red-500 @enderror">
+                            class="w-full rounded-xl {{ $errors->has('course_id') ? 'border-red-500' : 'border-slate-200' }} focus:ring-2 focus:ring-[#0777be]/20 focus:border-[#0777be] px-4 py-3 bg-gray-50">
                             <option value="">-- Click to Select Course --</option>
                             @foreach ($courses as $course)
                                 <option value="{{ $course->id }}"
@@ -50,7 +50,7 @@
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">Lesson Title</label>
                         <input type="text" name="title" required value="{{ old('title', $lesson->title ?? '') }}"
-                            class="w-full rounded-xl border-slate-200 px-4 py-3 focus:ring-2 focus:ring-[#0777be]/20 @error('title') border-red-500 @enderror"
+                            class="w-full rounded-xl {{ $errors->has('title') ? 'border-red-500' : 'border-slate-200' }} px-4 py-3 focus:ring-2 focus:ring-[#0777be]/20"
                             placeholder="e.g. Setting up Environment">
                     </div>
 
@@ -96,7 +96,7 @@
 
     {{-- Full Screen Processing Loader --}}
     <div id="loaderOverlay"
-        class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[9999] hidden flex items-center justify-center text-center p-4">
+        class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[9999] hidden items-center justify-center text-center p-4">
         <div class="space-y-6">
             <div class="relative flex items-center justify-center">
                 <div class="animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-white"></div>
@@ -153,6 +153,7 @@
         document.getElementById('lessonForm').onsubmit = function() {
             // Screen Lock & Loader Show
             document.getElementById('loaderOverlay').classList.remove('hidden');
+            document.getElementById('loaderOverlay').classList.add('flex');
 
             const btn = document.getElementById('submitBtn');
             const log = document.getElementById('logText');

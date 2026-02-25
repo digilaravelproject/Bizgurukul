@@ -45,6 +45,7 @@ Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')
     Route::get('/my-courses', [StudentController::class, 'myCourses'])->name('my-courses');
     Route::get('/beginner-guide', [StudentController::class, 'beginnerGuide'])->name('beginner-guide');
     Route::get('/resources', [StudentController::class, 'resources'])->name('resources');
+    Route::get('/communities', [\App\Http\Controllers\CommunityController::class, 'studentIndex'])->name('communities');
     Route::get('/watch/{course}/{lesson?}', [StudentController::class, 'watch'])->name('watch');
     Route::post('/progress/update', [StudentController::class, 'updateProgress'])->name('progress.update');
     Route::get('/video-key/{lesson}', [StudentController::class, 'getVideoKey'])->name('video.key');
@@ -55,6 +56,8 @@ Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')
         // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/rewards', [DashboardController::class, 'rewards'])->name('rewards');
+        Route::get('/leaderboard', [\App\Http\Controllers\Student\LeaderboardController::class, 'index'])->name('leaderboard');
+        Route::get('/leaderboard/data', [\App\Http\Controllers\Student\LeaderboardController::class, 'fetchData'])->name('leaderboard.data');
 
         // Affiliate Links (Original Resource)
         Route::resource('affiliate-links', AffiliateLinkController::class);

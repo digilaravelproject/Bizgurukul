@@ -22,6 +22,7 @@ Route::get('/about', [HomeController::class, 'about'])->name('web.about');
 Route::get('/contact', [HomeController::class, 'contact'])->name('web.contact');
 Route::get('/course/{course}', [HomeController::class, 'courses'])->name('course.show');
 Route::get('/coursesp/{course}', [HomeController::class, 'courses'])->name('bundles.show');
+Route::get('/communities', [\App\Http\Controllers\CommunityController::class, 'index'])->name('communities');
 
 // 3. Guest/Registration Payment Flow (Publicly Accessible)
 // These handle the initial payment during registration

@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\PayoutController;
 use App\Http\Controllers\Admin\ProfileVerificationController;
 use App\Http\Controllers\Admin\AffiliateController;
+use App\Http\Controllers\Admin\CommunityController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'role:Admin'])
@@ -151,15 +152,24 @@ Route::middleware(['auth', 'role:Admin'])
         Route::post('/early-approve/{id}', [PayoutController::class, 'earlyApproveCommission'])->name('commission.early_approve');
     });
 
-    Route::prefix('verifications')->name('verifications.')->group(function () {
-        Route::get('/', [ProfileVerificationController::class, 'index'])->name('index');
-        Route::get('/check-new', [ProfileVerificationController::class, 'checkNew'])->name('check_new');
-        Route::get('/kyc', [ProfileVerificationController::class, 'kycIndex'])->name('kyc.index');
-        Route::post('/kyc/{userId}/approve', [ProfileVerificationController::class, 'kycApprove'])->name('kyc.approve');
-        Route::post('/kyc/{userId}/reject', [ProfileVerificationController::class, 'kycReject'])->name('kyc.reject');
+        Route::prefix('verifications')->name('verifications.')->group(function () {
+            Route::get('/', [ProfileVerificationController::class, 'index'])->name('index');
+            Route::get('/check-new', [ProfileVerificationController::class, 'checkNew'])->name('check_new');
+            Route::get('/kyc', [ProfileVerificationController::class, 'kycIndex'])->name('kyc.index');
+            Route::post('/kyc/{userId}/approve', [ProfileVerificationController::class, 'kycApprove'])->name('kyc.approve');
+            Route::post('/kyc/{userId}/reject', [ProfileVerificationController::class, 'kycReject'])->name('kyc.reject');
 
-        Route::get('/bank', [ProfileVerificationController::class, 'bankIndex'])->name('bank.index');
-        Route::post('/bank/initial/{bankId}/process', [ProfileVerificationController::class, 'verifyInitialBank'])->name('bank.verify-initial');
-        Route::post('/bank/update/{requestId}/process', [ProfileVerificationController::class, 'processBankUpdate'])->name('bank.process-update');
-    });
+            Route::get('/bank', [ProfileVerificationController::class, 'bankIndex'])->name('bank.index');
+            Route::post('/bank/initial/{bankId}/process', [ProfileVerificationController::class, 'verifyInitialBank'])->name('bank.verify-initial');
+            Route::post('/bank/update/{requestId}/process', [ProfileVerificationController::class, 'processBankUpdate'])->name('bank.process-update');
+        });
+
+        // Communities
+        Route::prefix('communities')->name('communities.')->group(function () {
+            Route::get('/', [CommunityController::class, 'index'])->name('index');
+            Route::post('/', [CommunityController::class, 'store'])->name('store');
+            Route::put('/{community}', [CommunityController::class, 'update'])->name('update');
+            Route::post('/{community}/toggle', [CommunityController::class, 'toggleStatus'])->name('toggle');
+            Route::delete('/{community}', [CommunityController::class, 'destroy'])->name('destroy');
+        });
     });

@@ -17,12 +17,12 @@ class SettingController extends Controller
     public function billing()
     {
         $settings = [
-            'site_name' => Setting::get('site_name', 'BizGurukul'),
+            'site_name' => Setting::get('site_name', 'Skills Pehle'),
             'company_address' => Setting::get('company_address', '123 Business Park, Tech Hub'),
             'company_city' => Setting::get('company_city', 'New Delhi'),
             'company_state' => Setting::get('company_state', 'Delhi'),
             'company_zip' => Setting::get('company_zip', '110001'),
-            'company_email' => Setting::get('company_email', 'support@bizgurukul.com'),
+            'company_email' => Setting::get('company_email', 'support@Skills Pehle.com'),
             'company_phone' => Setting::get('company_phone', '+91 9876543210'),
             'company_logo' => Setting::get('company_logo', null),
         ];

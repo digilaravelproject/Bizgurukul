@@ -23,7 +23,7 @@
                 {{-- Site Name --}}
                 <div class="md:col-span-2">
                     <label class="block text-xs font-bold text-mutedText uppercase tracking-widest mb-2">Company / Site Name <span class="text-red-500">*</span></label>
-                    <input type="text" name="site_name" value="{{ old('site_name', $settings['site_name']) }}" required placeholder="e.g. BizGurukul Pvt Ltd"
+                    <input type="text" name="site_name" value="{{ old('site_name', $settings['site_name']) }}" required placeholder="e.g. Skills Pehle Pvt Ltd"
                         class="w-full bg-navy border border-primary/10 rounded-xl px-4 py-3 text-sm font-bold text-mainText focus:border-primary outline-none focus:ring-1 focus:ring-primary transition-all shadow-sm">
                     @error('site_name') <p class="text-red-500 text-xs font-bold mt-1">{{ $message }}</p> @enderror
                 </div>

@@ -46,7 +46,13 @@
                 {{-- User Avatar Icon --}}
                 <div
                     class="h-9 w-9 rounded-lg brand-gradient flex items-center justify-center text-white font-bold shadow-lg shadow-primary/20 text-xs">
-                    {{ substr(Auth::user()->name, 0, 2) }}
+                    @php
+                        $nameParts = explode(' ', trim(Auth::user()->name));
+                        $initials = count($nameParts) === 1
+                            ? strtoupper(substr($nameParts[0], 0, 2))
+                            : strtoupper(substr($nameParts[0], 0, 1) . substr(end($nameParts), 0, 1));
+                    @endphp
+                    {{ $initials }}
                 </div>
             </button>
 
