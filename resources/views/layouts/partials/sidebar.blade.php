@@ -26,7 +26,7 @@
             promoOpen: {{ request()->routeIs('admin.coupons.*', 'admin.coupon-packages.*') ? 'true' : 'false' }},
             userOpen: {{ request()->routeIs('admin.users.*', 'admin.kyc.*', 'admin.verifications.*', 'admin.communities.*') ? 'true' : 'false' }},
             affiliateOpen: {{ request()->routeIs('admin.affiliate.*', 'admin.payouts.*', 'admin.achievements.*') ? 'true' : 'false' }},
-            settingsOpen: {{ request()->routeIs('admin.settings.*', 'admin.taxes.*') ? 'true' : 'false' }}
+            settingsOpen: {{ request()->routeIs('admin.settings.*', 'admin.taxes.*', 'admin.email-templates.*') ? 'true' : 'false' }}
         }">
 
             {{-- OPERATIONS --}}
@@ -203,6 +203,14 @@
                     <a href="{{ route('admin.settings.billing') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.settings.billing') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                         Billing / Company
+                    </a>
+                    <a href="{{ route('admin.settings.email') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.settings.email*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                        <i class="fas fa-envelope text-[11px]"></i>
+                        Email Configuration
+                    </a>
+                    <a href="{{ route('admin.email-templates.index') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.email-templates.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                        <i class="fas fa-mail-bulk text-[11px]"></i>
+                        Email Templates
                     </a>
                     <a href="{{ route('admin.taxes.index') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.taxes.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>

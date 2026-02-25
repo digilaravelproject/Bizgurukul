@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\Auth;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\CouponPurchasedMail;
+use App\Mail\CouponTransferSenderMail;
+use App\Mail\CouponTransferReceiverMail;
+use App\Mail\AdminNotificationMail;
+use App\Services\EmailService;
 
 class CouponController extends Controller
 {
@@ -118,6 +124,20 @@ class CouponController extends Controller
                 $coupon = $this->couponService->issueCouponForPayment($payment);
 
                 DB::commit();
+
+                // Fire coupon purchase email
+                try {
+                    $user = Auth::user();
+                    $package = $payment->paymentable;
+                    Mail::to($user->email)->queue(new CouponPurchasedMail(
+                        $user->name,
+                        $package ? $package->name : 'Coupon Package',
+                        $coupon->code ?? 'See Dashboard',
+                        number_format($payment->amount, 2),
+                        1
+                    ));
+                } catch (\Throwable $ignored) {}
+
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Coupon purchased successfully!',
@@ -159,6 +179,24 @@ class CouponController extends Controller
             $this->couponService->transferCoupon(Auth::user(), $request->coupon_id, $recipient->id);
 
             DB::commit();
+
+            // Fire coupon transfer emails
+            try {
+                $sender = Auth::user();
+                $coupon = \App\Models\Coupon::find($request->coupon_id);
+                $couponCode = $coupon ? $coupon->code : 'N/A';
+
+                Mail::to($sender->email)->queue(new CouponTransferSenderMail($sender->name, $recipient->name, $couponCode));
+                Mail::to($recipient->email)->queue(new CouponTransferReceiverMail($recipient->name, $sender->name, $couponCode));
+
+                $adminEmail = EmailService::adminEmail();
+                if ($adminEmail) {
+                    Mail::to($adminEmail)->queue(new AdminNotificationMail(
+                        'Coupon Transfer',
+                        "{$sender->name} transferred coupon [{$couponCode}] to {$recipient->name} ({$recipient->email})"
+                    ));
+                }
+            } catch (\Throwable $ignored) {}
 
             return response()->json(['status' => 'success', 'message' => 'Coupon transferred successfully!']);
 

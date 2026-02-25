@@ -11,6 +11,7 @@
                 total: {{ $totalAmount }},
                 taxes: @json($taxes),
                 processingPayment: false,
+                processingRedirect: false,
 
                 async initiatePayment() {
                     if (this.processingPayment) return;
@@ -26,10 +27,11 @@
                         });
 
                         const data = await response.json();
+                        console.log('Order Creation Response:', data);
 
                         // Automatically handled zero-amount upgrades in the backend
                         if (data.status === 'success_free') {
-                            alert(data.message);
+                            this.processingRedirect = true;
                             window.location.href = '{{ route('student.dashboard') }}';
                             return;
                         }
@@ -75,7 +77,10 @@
                 },
 
                 async verifyPayment(rzpResponse) {
+                    this.processingPayment = true;
+                    this.processingRedirect = true;
                     try {
+                        console.log('Verifying payment...', rzpResponse);
                         const response = await fetch('{{ route('razorpay.verify') }}', {
                             method: 'POST',
                             headers: {
@@ -90,17 +95,22 @@
                         });
 
                         const data = await response.json();
+                        console.log('Verification Response:', data);
 
                         if (data.status === 'success') {
+                            // Redirect to dashboard
                             window.location.href = '{{ route('student.dashboard') }}';
                         } else {
-                            alert('Verification Failed: ' + data.message);
+                            this.processingRedirect = false;
                             this.processingPayment = false;
+                            alert('Verification Failed: ' + (data.message || 'Unknown error'));
                         }
                     } catch (error) {
-                        console.error(error);
-                        alert('Payment verified but redirect failed. Contact support.');
+                        console.error('Redirection/Verification error:', error);
+                        this.processingRedirect = false;
                         this.processingPayment = false;
+                        alert('Payment verified but redirect failed. Redirecting manually...');
+                        window.location.href = '{{ route('student.dashboard') }}';
                     }
                 }
             }
@@ -193,17 +203,25 @@
             @else
                 <button type="button"
                     @click="initiatePayment()"
-                    :disabled="processingPayment"
+                    :disabled="processingPayment || processingRedirect"
                     class="w-full py-4 rounded-2xl text-white font-black uppercase tracking-widest text-sm shadow-xl hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 transform active:scale-95 bg-primary hover:bg-secondary flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
 
-                    <span x-show="!processingPayment">Pay Securely (₹<span x-text="Number(total).toFixed(2)"></span>)</span>
+                    <span x-show="!processingPayment && !processingRedirect">Pay Securely (₹<span x-text="Number(total).toFixed(2)"></span>)</span>
 
-                    <span x-show="processingPayment" class="flex items-center gap-2">
+                    <span x-show="processingPayment && !processingRedirect" class="flex items-center gap-2">
                         <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                         Loading Gateway...
+                    </span>
+
+                    <span x-show="processingRedirect" class="flex items-center gap-2">
+                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Verifying & Redirecting...
                     </span>
                 </button>
             @endif

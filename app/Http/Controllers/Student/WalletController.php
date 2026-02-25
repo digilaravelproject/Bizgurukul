@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use App\Services\WalletService;
 use App\Repositories\WalletRepository;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\WithdrawalRequestedMail;
+use App\Services\EmailService;
 
 class WalletController extends Controller
 {
@@ -39,6 +42,26 @@ class WalletController extends Controller
 
         try {
             $this->walletService->requestWithdrawal(Auth::id(), $request->commission_ids);
+
+            // Notify admin of withdrawal request
+            try {
+                $user = Auth::user();
+                $adminEmail = EmailService::adminEmail();
+                if ($adminEmail) {
+                    $bankDetail = $user->bankDetail;
+                    $bankDetails = $bankDetail
+                        ? "{$bankDetail->bank_name} — A/C: {$bankDetail->account_number} (IFSC: {$bankDetail->ifsc_code})"
+                        : 'Bank details not on file';
+                    $totalAmount = \App\Models\AffiliateCommission::whereIn('id', $request->commission_ids)->sum('amount');
+                    Mail::to($adminEmail)->queue(new WithdrawalRequestedMail(
+                        $user->name,
+                        $user->email,
+                        number_format($totalAmount, 2),
+                        $bankDetails
+                    ));
+                }
+            } catch (\Throwable $ignored) {}
+
             return back()->with('success', 'Withdrawal request submitted successfully.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());

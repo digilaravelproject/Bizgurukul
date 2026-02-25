@@ -16,6 +16,10 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\WelcomeMail;
+use App\Mail\AdminNotificationMail;
+use App\Services\EmailService;
 
 class RegisteredUserController extends Controller
 {
@@ -112,6 +116,19 @@ class RegisteredUserController extends Controller
             }
 
             DB::commit();
+
+            // --- Welcome Email ---
+            try {
+                Mail::to($user->email)->queue(new WelcomeMail($user));
+                $adminEmail = EmailService::adminEmail();
+                if ($adminEmail) {
+                    Mail::to($adminEmail)->queue(new AdminNotificationMail(
+                        'New User Registration',
+                        "{$user->name} ({$user->email}) just registered on the platform."
+                    ));
+                }
+            } catch (\Throwable $ignored) {}
+            // --- End Welcome Email ---
 
             event(new Registered($user));
             Auth::login($user);

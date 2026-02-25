@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\ProfileVerificationController;
 use App\Http\Controllers\Admin\AffiliateController;
 use App\Http\Controllers\Admin\CommunityController;
 use App\Http\Controllers\Admin\CertificateSettingController;
+use App\Http\Controllers\Admin\EmailTemplateController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'role:Admin'])
@@ -37,6 +38,18 @@ Route::middleware(['auth', 'role:Admin'])
         // Billing Settings
         Route::get('/settings/billing', [SettingController::class, 'billing'])->name('settings.billing');
         Route::post('/settings/billing', [SettingController::class, 'updateBilling'])->name('settings.billing.update');
+
+        // Email Settings
+        Route::get('/settings/email', [SettingController::class, 'emailConfig'])->name('settings.email');
+        Route::post('/settings/email', [SettingController::class, 'updateEmailConfig'])->name('settings.email.update');
+        Route::post('/settings/email/test', [SettingController::class, 'testEmail'])->name('settings.email.test');
+
+        // Email Templates
+        Route::prefix('email-templates')->name('email-templates.')->group(function () {
+            Route::get('/', [EmailTemplateController::class, 'index'])->name('index');
+            Route::get('/{key}/edit', [EmailTemplateController::class, 'edit'])->name('edit');
+            Route::put('/{key}', [EmailTemplateController::class, 'update'])->name('update');
+        });
 
         // Core Resources
         Route::resource('coupon-packages', CouponPackageController::class);

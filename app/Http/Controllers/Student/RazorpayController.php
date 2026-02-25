@@ -8,6 +8,11 @@ use Razorpay\Api\Api;
 use App\Models\Course;
 use App\Models\Payment;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\CoursePurchasedMail;
+use App\Mail\PlanUpgradedMail;
+use App\Mail\AdminNotificationMail;
+use App\Services\EmailService;
 
 class RazorpayController extends Controller
 {
@@ -134,6 +139,20 @@ class RazorpayController extends Controller
                 // Success - Flash message for dashboard
                 session()->flash('success', 'Investment Successful! Your ' . ($type == 'bundle' ? 'Bundle' : 'Course') . ' has been activated.');
 
+                // Fire email for free/zero-amount upgrade
+                try {
+                    $productName = isset($bundle) ? $bundle->title : (isset($course) ? $course->title : 'Your Product');
+                    $mailClass = ($type === 'bundle') ? PlanUpgradedMail::class : CoursePurchasedMail::class;
+                    Mail::to($user->email)->queue(new $mailClass($user->name, $productName, '0', 'FREE-' . time()));
+                    $adminEmail = EmailService::adminEmail();
+                    if ($adminEmail) {
+                        Mail::to($adminEmail)->queue(new AdminNotificationMail(
+                            'New ' . ($type === 'bundle' ? 'Plan Upgrade' : 'Course Purchase'),
+                            "{$user->name} ({$user->email}) just activated: {$productName} (Free upgrade)"
+                        ));
+                    }
+                } catch (\Throwable $ignored) {}
+
                 return response()->json(['status' => 'success']);
             }
 
@@ -225,6 +244,30 @@ class RazorpayController extends Controller
             }
 
             \Illuminate\Support\Facades\DB::commit();
+
+            // --- Email Notifications ---
+            try {
+                $product = $payment->bundle ?? $payment->course;
+                $productName = $product ? $product->title : 'Your Product';
+                $user = Auth::user();
+                $amountFormatted = number_format($payment->amount, 2);
+                $txnId = $payment->razorpay_payment_id;
+
+                if ($payment->bundle_id) {
+                    Mail::to($user->email)->queue(new PlanUpgradedMail($user->name, $productName, $amountFormatted, $txnId));
+                } else {
+                    Mail::to($user->email)->queue(new CoursePurchasedMail($user->name, $productName, $amountFormatted, $txnId));
+                }
+
+                $adminEmail = EmailService::adminEmail();
+                if ($adminEmail) {
+                    Mail::to($adminEmail)->queue(new AdminNotificationMail(
+                        'New ' . ($payment->bundle_id ? 'Plan Purchase' : 'Course Purchase'),
+                        "{$user->name} ({$user->email}) purchased: {$productName} for ₹{$amountFormatted} (TXN: {$txnId})"
+                    ));
+                }
+            } catch (\Throwable $ignored) {}
+            // --- End Email Notifications ---
 
             // Success - Flash message for dashboard
             session()->flash('success', 'Investment Successful! Your ' . ($payment->bundle_id ? 'Bundle' : 'Course') . ' has been activated.');

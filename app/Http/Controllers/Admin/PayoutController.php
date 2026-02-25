@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\WalletService;
 use App\Repositories\WalletRepository;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\WithdrawalApprovedMail;
 
 class PayoutController extends Controller
 {
@@ -35,6 +37,21 @@ class PayoutController extends Controller
 
         try {
             $this->walletService->approveWithdrawal($id, $request->all());
+
+            // Notify user of approval
+            try {
+                $withdrawal = \App\Models\WithdrawalRequest::with('user.bankDetail')->find($id);
+                if ($withdrawal && $withdrawal->user) {
+                    $user = $withdrawal->user;
+                    $bankName = $user->bankDetail ? $user->bankDetail->bank_name : $request->input('payment_method', 'Bank Account');
+                    Mail::to($user->email)->queue(new WithdrawalApprovedMail(
+                        $user->name,
+                        number_format($withdrawal->amount, 2),
+                        $bankName
+                    ));
+                }
+            } catch (\Throwable $ignored) {}
+
             return back()->with('success', 'Withdrawal approved successfully.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());

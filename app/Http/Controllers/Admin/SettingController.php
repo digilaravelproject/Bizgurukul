@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Services\EmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Exception;
@@ -69,6 +70,77 @@ class SettingController extends Controller
         } catch (Exception $e) {
             Log::error("Error updating billing settings: " . $e->getMessage());
             return back()->withInput()->with('error', 'Failed to update settings. Please try again.');
+        }
+    }
+
+    // ──────────────────────────────────────
+    // Email Configuration
+    // ──────────────────────────────────────
+
+    public function emailConfig()
+    {
+        $settings = [
+            'mail_host'               => Setting::get('mail_host', ''),
+            'mail_port'               => Setting::get('mail_port', '587'),
+            'mail_username'           => Setting::get('mail_username', ''),
+            'mail_password'           => Setting::get('mail_password', ''),
+            'mail_encryption'         => Setting::get('mail_encryption', 'tls'),
+            'mail_from_address'       => Setting::get('mail_from_address', ''),
+            'mail_from_name'          => Setting::get('mail_from_name', Setting::get('site_name', config('app.name'))),
+            'admin_notification_email'=> Setting::get('admin_notification_email', ''),
+        ];
+
+        return view('admin.settings.email', compact('settings'));
+    }
+
+    public function updateEmailConfig(Request $request)
+    {
+        $request->validate([
+            'mail_host'                => 'required|string|max:255',
+            'mail_port'                => 'required|numeric',
+            'mail_username'            => 'required|email|max:255',
+            'mail_password'            => 'nullable|string|max:255',
+            'mail_encryption'          => 'required|in:ssl,tls,none',
+            'mail_from_address'        => 'required|email|max:255',
+            'mail_from_name'           => 'required|string|max:255',
+            'admin_notification_email' => 'required|email|max:255',
+        ]);
+
+        try {
+            $keys = [
+                'mail_host', 'mail_port', 'mail_username',
+                'mail_encryption', 'mail_from_address', 'mail_from_name',
+                'admin_notification_email',
+            ];
+
+            foreach ($keys as $key) {
+                Setting::set($key, $request->input($key));
+            }
+
+            // Only update password if provided (don't blank out existing)
+            if ($request->filled('mail_password')) {
+                Setting::set('mail_password', $request->input('mail_password'));
+            }
+
+            return redirect()->route('admin.settings.email')
+                ->with('success', 'Email configuration saved successfully.');
+
+        } catch (Exception $e) {
+            Log::error('Email config update error: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to save email settings.');
+        }
+    }
+
+    public function testEmail(Request $request)
+    {
+        $request->validate(['test_email' => 'required|email']);
+
+        try {
+            EmailService::sendTest($request->input('test_email'));
+            return response()->json(['success' => true, 'message' => 'Test email sent successfully! Please check your inbox.']);
+        } catch (\Throwable $e) {
+            Log::error('Test email error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed: ' . $e->getMessage()], 500);
         }
     }
 }
