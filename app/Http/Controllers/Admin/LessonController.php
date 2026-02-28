@@ -81,21 +81,31 @@ class LessonController extends Controller
                 // We serve the key via a secure route
                 $keyUrl = route('student.video.key', ['lesson' => $lesson->id]);
 
-                FFMpeg::fromDisk('public')
-                    ->open($originalPath)
-                    ->export()
-                    ->toDisk('public')
-                    ->withEncryptionKey($encryptionKey, $keyUrl)
-                    ->inFormat((new X264)->setKiloBitrate(800)) // Increased bitrate for better quality
-                    ->save($hlsPath);
+                // Debug Logging for FFmpeg
+                Log::info("Starting FFMPEG Processing for Lesson ID: " . $lesson->id);
+                Log::info("FFMPEG Binary Path configured: " . config('laravel-ffmpeg.ffmpeg.binaries'));
+                Log::info("FFPROBE Binary Path configured: " . config('laravel-ffmpeg.ffprobe.binaries'));
 
-                $lesson->update([
-                    'hls_path' => $hlsPath,
-                    'video_path' => $originalPath // Keep original as fallback if needed
-                ]);
+                try {
+                    FFMpeg::fromDisk('public')
+                        ->open($originalPath)
+                        ->export()
+                        ->toDisk('public')
+                        ->withEncryptionKey($encryptionKey, $keyUrl)
+                        ->inFormat((new X264)->setKiloBitrate(800)) // Increased bitrate for better quality
+                        ->save($hlsPath);
 
-                // Log 4: Success
-                Log::info("Encrypted HLS conversion successful for Lesson ID: " . $lesson->id);
+                    $lesson->update([
+                        'hls_path' => $hlsPath,
+                        'video_path' => $originalPath // Keep original as fallback if needed
+                    ]);
+
+                    Log::info("Encrypted HLS conversion successful for Lesson ID: " . $lesson->id);
+                } catch (\Exception $e) {
+                    Log::error("FFMpeg Processing Failed for Lesson ID: " . $lesson->id . " | Error: " . $e->getMessage());
+                    Log::error($e->getTraceAsString());
+                    throw $e;
+                }
             }
 
             return redirect()->route('admin.courses.index')->with('success', 'Lesson saved and processed!');
