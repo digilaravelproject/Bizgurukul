@@ -131,14 +131,19 @@ class CourseService
                 $lessonData['document_path'] = $data['document_file']->store('lessons/docs', $this->disk);
             }
 
-            if ($data['type'] === 'video' && isset($data['video_file'])) {
-                $lessonData['video_path'] = $data['video_file']->store('lessons/raw', $this->disk);
-            }
-
             $lesson = $this->repo->createLesson($lessonData);
 
-            if ($lesson->type === 'video' && $lesson->video_path) {
-                ProcessLessonVideo::dispatch($lesson);
+            if ($data['type'] === 'video' && isset($data['video_file'])) {
+                $video = $data['video_file'];
+                $filename = time() . '_' . $lesson->id;
+                $originalPath = 'lessons/videos/' . $filename . '.' . $video->getClientOriginalExtension();
+
+                Storage::disk('public')->put($originalPath, file_get_contents($video));
+
+                $lesson->update(['video_path' => $originalPath]);
+
+                Log::info("Dispatching ProcessLessonVideo Job for Lesson ID: " . $lesson->id . " from CourseService");
+                ProcessLessonVideo::dispatch($lesson)->afterCommit();
             }
 
             return $lesson;

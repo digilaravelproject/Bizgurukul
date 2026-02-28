@@ -115,6 +115,7 @@
     {{-- MODAL FOR ADDING LESSON --}}
     <div x-data="{ show: false, lType: 'video' }"
          @open-lesson-modal.window="show = true"
+         @close-lesson-modal.window="show = false"
          x-show="show" x-cloak
          class="fixed inset-0 z-50 flex items-center justify-center p-4">
 
@@ -126,7 +127,7 @@
                 <button @click="show = false" class="text-mutedText hover:text-secondary"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
             </div>
 
-            <form action="{{ route('admin.courses.lesson.store', $course->id) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+            <form id="addLessonForm" action="{{ route('admin.courses.lesson.store', $course->id) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
                 @csrf
                 <div>
                     <label class="block text-xs font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Title</label>
@@ -156,7 +157,7 @@
 
                 {{-- File Inputs --}}
                 <div x-show="lType === 'video'" class="animate-fade-in">
-                    <label class="block text-xs font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Video File (MP4)</label>
+                    <label class="block text-xs font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Video File (MP4) - Max 5GB</label>
                     <input type="file" name="video_file" accept="video/*" class="w-full text-xs text-mutedText file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary/20 file:text-primary hover:file:bg-primary hover:file:text-customWhite cursor-pointer transition-all">
                 </div>
                 <div x-show="lType === 'document'" class="animate-fade-in">
@@ -213,4 +214,115 @@ function deleteLesson(id) {
 
     // Har 10 second mein check karega
     setInterval(checkProcessingStatus, 10000);
+
+    // AJAX Form Submission for uploading video without blocking UI
+    document.getElementById('addLessonForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const form = this;
+        const formData = new FormData(form);
+        const submitBtn = form.querySelector('button[type="submit"]');
+
+        // Hide Modal
+        window.dispatchEvent(new CustomEvent('close-lesson-modal'));
+
+        // Setup XHR
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', form.action, true);
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+        // Disable button while preparing request
+        if(submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Starting...';
+        }
+
+        // Show placeholder grid item
+        const grid = document.getElementById('lessons-grid-container');
+        const placeholderId = 'uploading-' + Date.now();
+
+        if (grid) {
+            const placeholderHTML = `
+            <div id="${placeholderId}" class="group relative bg-surface rounded-[1.5rem] border border-secondary shadow-sm overflow-hidden flex flex-col h-full animate-pulse border-dashed">
+                <div class="relative h-44 w-full bg-secondary/10 flex items-center justify-center flex-col gap-2">
+                    <svg class="w-10 h-10 text-secondary animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    <span class="text-xs font-black text-secondary uppercase tracking-widest text-center px-4">Uploading<br><span id="${placeholderId}-percent" class="text-xl">0%</span></span>
+                </div>
+                <div class="p-5 flex flex-col flex-1">
+                    <h4 class="text-sm font-bold text-mainText line-clamp-2 leading-snug mb-2">${formData.get('title') || 'New Lesson'}</h4>
+                    <div class="mt-auto pt-4 border-t border-dashed border-primary flex items-center justify-between">
+                        <span class="text-[10px] font-black uppercase text-secondary bg-secondary/10 px-2 py-1 rounded-md">Uploading to Server...</span>
+                    </div>
+                </div>
+            </div>`;
+            grid.insertAdjacentHTML('afterbegin', placeholderHTML);
+        }
+
+        xhr.upload.onprogress = function(event) {
+            if (event.lengthComputable) {
+                const percentComplete = Math.round((event.loaded / event.total) * 100);
+                const percentEl = document.getElementById(`${placeholderId}-percent`);
+                if (percentEl) {
+                    percentEl.innerText = percentComplete + '%';
+                }
+            }
+        };
+
+        xhr.onload = function() {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Add Lesson';
+            }
+            if (xhr.status >= 200 && xhr.status < 300) {
+                if(typeof toastr !== 'undefined') toastr.success('Uploaded successfully! Processing started in background.');
+                form.reset(); // clear form
+
+                // Refresh grid to load the real lesson card
+                fetch(window.location.href)
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newGrid = doc.getElementById('lessons-grid-container');
+                    if (newGrid && grid) {
+                        grid.innerHTML = newGrid.innerHTML;
+                    } else if (grid) {
+                        // Fallback: Just reload the page if grid refreshing fails but upload worked
+                        window.location.reload();
+                    }
+                });
+
+            } else {
+                // Remove placeholder
+                const placeholder = document.getElementById(placeholderId);
+                if (placeholder) placeholder.remove();
+
+                try {
+                    const res = JSON.parse(xhr.responseText);
+                    if (res.message && typeof toastr !== 'undefined') toastr.error(res.message);
+                    if (res.errors && typeof toastr !== 'undefined') {
+                        for(let key in res.errors) {
+                            toastr.error(res.errors[key][0]);
+                        }
+                    }
+                } catch(e) {
+                    if(typeof toastr !== 'undefined') toastr.error('Upload failed: ' + xhr.statusText);
+                }
+            }
+        };
+
+        xhr.onerror = function() {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Add Lesson';
+            }
+            const placeholder = document.getElementById(placeholderId);
+            if (placeholder) placeholder.remove();
+            if(typeof toastr !== 'undefined') toastr.error('Network Error. Upload interrupted.');
+        };
+
+        // Send Request
+        xhr.send(formData);
+    });
 </script>

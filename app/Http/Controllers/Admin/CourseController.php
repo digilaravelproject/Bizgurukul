@@ -169,17 +169,28 @@ class CourseController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'type' => 'required|in:video,document',
-            'video_file' => 'required_if:type,video|mimes:mp4,mov,avi,wmv|max:512000', // 500MB
+            'video_file' => 'required_if:type,video|mimes:mp4,mov,avi,wmv|max:5242880', // 5GB limit
             'document_file' => 'required_if:type,document|mimes:pdf,docx,zip|max:20480',
             'thumbnail' => 'nullable|image|max:5120',
         ]);
 
         try {
-            $this->courseService->addLesson($id, $request->all());
+            $lesson = $this->courseService->addLesson($id, $request->all());
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Lesson added. Video processing started in background.',
+                    'lesson' => $lesson
+                ]);
+            }
 
             return redirect()->route('admin.courses.edit', ['id' => $id, 'tab' => 'lessons'])
                 ->with('success', 'Lesson added. Video processing started in background.');
         } catch (Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['message' => $e->getMessage()], 500);
+            }
             return back()->with('error', $e->getMessage());
         }
     }

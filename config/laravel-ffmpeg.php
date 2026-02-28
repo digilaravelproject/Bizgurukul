@@ -4,7 +4,7 @@ return [
     'ffmpeg' => [
         'binaries' => env('FFMPEG_BINARIES', 'ffmpeg'),
 
-        'threads' => 12,   // set to false to disable the default 'threads' filter
+        'threads' => 2,   // MUST be kept low (e.g. 2) to prevent "Resource temporarily unavailable" crash on shared hosting
     ],
 
     'ffprobe' => [

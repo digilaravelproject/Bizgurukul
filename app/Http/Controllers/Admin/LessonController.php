@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
-use FFMpeg\Format\Video\X264;
 use Exception;
 
 class LessonController extends Controller
@@ -47,7 +46,7 @@ class LessonController extends Controller
         $request->validate([
             'course_id' => 'required|exists:courses,id',
             'title' => 'required|string|max:255',
-            'video' => 'nullable|mimes:mp4,mov,avi,wmv|max:102400',
+            'video' => 'nullable|mimes:mp4,mov,avi,wmv|max:5242880', // 5GB limit
         ]);
 
         try {
@@ -69,46 +68,12 @@ class LessonController extends Controller
                 Storage::disk('public')->put($originalPath, file_get_contents($video));
                 $lesson->update(['video_path' => $originalPath]);
 
-                $hlsPath = 'lessons/hls/' . $filename . '/playlist.m3u8';
-                $keyFilename = $filename . '.key';
-                $keyPath = 'lessons/keys/' . $keyFilename;
-                $encryptionKey = random_bytes(16);
-
-
-                // Save key to private storage
-                Storage::disk('local')->put($keyPath, $encryptionKey);
-
-                // We serve the key via a secure route
-                $keyUrl = route('student.video.key', ['lesson' => $lesson->id]);
-
-                // Debug Logging for FFmpeg
-                Log::info("Starting FFMPEG Processing for Lesson ID: " . $lesson->id);
-                Log::info("FFMPEG Binary Path configured: " . config('laravel-ffmpeg.ffmpeg.binaries'));
-                Log::info("FFPROBE Binary Path configured: " . config('laravel-ffmpeg.ffprobe.binaries'));
-
-                try {
-                    FFMpeg::fromDisk('public')
-                        ->open($originalPath)
-                        ->export()
-                        ->toDisk('public')
-                        ->withEncryptionKey($encryptionKey, $keyUrl)
-                        ->inFormat((new X264)->setKiloBitrate(800)) // Increased bitrate for better quality
-                        ->save($hlsPath);
-
-                    $lesson->update([
-                        'hls_path' => $hlsPath,
-                        'video_path' => $originalPath // Keep original as fallback if needed
-                    ]);
-
-                    Log::info("Encrypted HLS conversion successful for Lesson ID: " . $lesson->id);
-                } catch (\Exception $e) {
-                    Log::error("FFMpeg Processing Failed for Lesson ID: " . $lesson->id . " | Error: " . $e->getMessage());
-                    Log::error($e->getTraceAsString());
-                    throw $e;
-                }
+                // Dispatch Job instead of synchronous processing
+                Log::info("Dispatching ProcessLessonVideo Job for Lesson ID: " . $lesson->id);
+                \App\Jobs\ProcessLessonVideo::dispatch($lesson);
             }
 
-            return redirect()->route('admin.courses.index')->with('success', 'Lesson saved and processed!');
+            return redirect()->route('admin.courses.index')->with('success', 'Lesson saved! Video format conversion is processing in background.');
         } catch (Exception $e) {
             // Log Error
             Log::error("Lesson Store Error: " . $e->getMessage());
