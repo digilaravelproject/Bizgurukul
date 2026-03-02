@@ -505,9 +505,15 @@
                     Join thousands of ambitious individuals turning their skills into high-paying careers and successful businesses.
                 </p>
                 <div class="flex flex-col sm:flex-row justify-center gap-3">
-                    <a href="{{ route('register') }}" class="px-8 py-3.5 rounded-xl brand-gradient text-white font-bold text-base hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300">
-                        Create Free Account
-                    </a>
+                    @auth
+                        <a href="{{ route('dashboard') }}" class="px-8 py-3.5 rounded-xl brand-gradient text-white font-bold text-base hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300">
+                            Go to Dashboard
+                        </a>
+                    @else
+                        <a href="{{ route('register') }}" class="px-8 py-3.5 rounded-xl brand-gradient text-white font-bold text-base hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300">
+                            Create Free Account
+                        </a>
+                    @endauth
                     <a href="#bundles" class="px-8 py-3.5 rounded-xl bg-surface text-mainText font-bold text-base border border-gray-200 hover:border-primary/50 hover:bg-gray-50 transition-all shadow-sm">
                         Browse Courses
                     </a>

@@ -22,14 +22,14 @@
 
         {{-- 2. Nav Menu (Scrollable Area) --}}
         <nav class="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar" x-data="{
-            lmsOpen: {{ request()->routeIs('admin.courses.*', 'admin.categories.*', 'admin.lessons.*', 'admin.bundles.*', 'admin.beginner-guide', 'admin.resources') ? 'true' : 'false' }},
+            lmsOpen: {{ request()->routeIs('admin.courses.*', 'admin.categories.*', 'admin.lessons.*', 'admin.bundles.*', 'admin.beginner-guide', 'admin.resources', 'admin.certificate.*') ? 'true' : 'false' }},
             promoOpen: {{ request()->routeIs('admin.coupons.*', 'admin.coupon-packages.*') ? 'true' : 'false' }},
             userOpen: {{ request()->routeIs('admin.users.*', 'admin.kyc.*', 'admin.verifications.*', 'admin.communities.*') ? 'true' : 'false' }},
             affiliateOpen: {{ request()->routeIs('admin.affiliate.*', 'admin.payouts.*', 'admin.achievements.*') ? 'true' : 'false' }},
-            settingsOpen: {{ request()->routeIs('admin.settings.*', 'admin.taxes.*', 'admin.email-templates.*') ? 'true' : 'false' }}
+            settingsOpen: {{ request()->routeIs('admin.settings.*', 'admin.taxes.*', 'admin.email-templates.*', 'admin.roles.*', 'admin.activity-logs.*') ? 'true' : 'false' }}
         }">
 
-            {{-- OPERATIONS --}}
+            {{-- OPERATIONS — Dashboard is visible to everyone in admin panel --}}
             <div class="mb-4 space-y-1">
                 <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">Operations</p>
                 <a href="{{ route('admin.dashboard') }}"
@@ -39,6 +39,8 @@
                     </svg>
                     <span class="font-bold text-sm">Dashboard Overview</span>
                 </a>
+
+                @can('manage-transactions')
                 <a href="{{ route('admin.orders.index') }}"
                     class="flex items-center px-4 py-3 rounded-2xl transition-all duration-300 group {{ request()->routeIs('admin.orders.*') ? 'bg-primary/10 text-primary shadow-sm' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -46,13 +48,15 @@
                     </svg>
                     <span class="font-bold text-sm">Order History</span>
                 </a>
+                @endcan
             </div>
 
-            {{-- COURSE & CONTENT --}}
+            {{-- COURSE & CONTENT — manage-courses permission --}}
+            @can('manage-courses')
             <div class="pt-2">
                 <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">Content Engine</p>
                 <button @click="lmsOpen = !lmsOpen"
-                    class="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group {{ request()->routeIs('admin.courses.*', 'admin.categories.*', 'admin.bundles.*', 'admin.beginner-guide', 'admin.resources') ? 'bg-navy text-primary' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
+                    class="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group {{ request()->routeIs('admin.courses.*', 'admin.categories.*', 'admin.bundles.*', 'admin.beginner-guide', 'admin.resources', 'admin.certificate.*') ? 'bg-navy text-primary' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
                     <div class="flex items-center">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
@@ -73,10 +77,12 @@
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
                         Categories
                     </a>
+                    @can('manage-bundles')
                     <a href="{{ route('admin.bundles.index') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.bundles.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                         Bundles (Combos)
                     </a>
+                    @endcan
                     <a href="{{ route('admin.beginner-guide') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.beginner-guide') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Beginner's Guide
@@ -85,14 +91,18 @@
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                         Resources
                     </a>
+                    @can('manage-certificates')
                     <a href="{{ route('admin.certificate.settings') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.certificate.settings') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Certificate Template
                     </a>
+                    @endcan
                 </div>
             </div>
+            @endcan
 
-            {{-- PROMO SYSTEM --}}
+            {{-- PROMO SYSTEM — manage-courses permission (coupons are under manage-courses) --}}
+            @can('manage-courses')
             <div class="pt-2">
                 <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">Growth Lab</p>
                 <button @click="promoOpen = !promoOpen"
@@ -119,8 +129,10 @@
                     </a>
                 </div>
             </div>
+            @endcan
 
-            {{-- COMMUNITY --}}
+            {{-- USER HUB — manage-users permission --}}
+            @can('manage-users')
             <div class="pt-2">
                 <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">User Hub</p>
                 <button @click="userOpen = !userOpen"
@@ -141,18 +153,22 @@
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                         Full Directory
                     </a>
+                    @can('manage-kyc')
                     <a href="{{ route('admin.verifications.index') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.verifications.*', 'admin.kyc.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
                         <i class="fas fa-user-check text-[12px]"></i>
                         Verifications Hub
                     </a>
+                    @endcan
                     <a href="{{ route('admin.communities.index') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.communities.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
                         <i class="fas fa-users text-[12px]"></i>
                         Community Hub
                     </a>
                 </div>
             </div>
+            @endcan
 
-            {{-- PARTNERS --}}
+            {{-- REVENUE HUB — manage-transactions permission --}}
+            @can('manage-transactions')
             <div class="pt-2">
                 <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">Revenue Hub</p>
                 <button @click="affiliateOpen = !affiliateOpen"
@@ -191,12 +207,14 @@
                     </a>
                 </div>
             </div>
+            @endcan
 
-            {{-- SETTINGS --}}
+            {{-- PLATFORM SETTINGS — manage-settings permission --}}
+            @can('manage-settings')
             <div class="pt-2">
                 <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">Config</p>
                 <button @click="settingsOpen = !settingsOpen"
-                    class="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group {{ request()->routeIs('admin.settings.*', 'admin.taxes.*') ? 'bg-navy text-primary' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
+                    class="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group {{ request()->routeIs('admin.settings.*', 'admin.taxes.*', 'admin.email-templates.*', 'admin.roles.*', 'admin.activity-logs.*') ? 'bg-navy text-primary' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
                     <div class="flex items-center">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         <span class="font-bold text-sm">Platform Settings</span>
@@ -223,8 +241,26 @@
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                         Tax Management
                     </a>
+                    <a href="{{ route('admin.activity-logs.index') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.activity-logs.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                        <i class="fas fa-history text-[11px]"></i>
+                        Activity Logs
+                    </a>
                 </div>
             </div>
+            @endcan
+
+            {{-- ROLES & PERMISSIONS — manage-roles (shown separately or inside settings) --}}
+            @can('manage-roles')
+            <div class="pt-2">
+                <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">Security</p>
+                <a href="{{ route('admin.roles.index') }}"
+                    class="flex items-center px-4 py-3 rounded-2xl transition-all duration-300 group {{ request()->routeIs('admin.roles.*') ? 'bg-primary/10 text-primary shadow-sm' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
+                    <i class="fas fa-user-shield w-5 h-5 mr-3 text-[16px]"></i>
+                    <span class="font-bold text-sm">Roles & Permissions</span>
+                </a>
+            </div>
+            @endcan
+
         </nav>
 
         {{-- 3. Footer Section (Pinned to Bottom) --}}
@@ -235,7 +271,7 @@
                 </div>
                 <div class="ml-3 flex-1 overflow-hidden">
                     <p class="text-xs font-bold text-mainText truncate">{{ Auth::user()->name ?? 'Administrator' }}</p>
-                    <p class="text-[9px] text-primary font-bold uppercase tracking-wider">Super Admin</p>
+                    <p class="text-[9px] text-primary font-bold uppercase tracking-wider">{{ Auth::user()->roles->first()->name ?? 'Staff' }}</p>
                 </div>
                 <form method="POST" action="{{ route('logout') }}" class="ml-1">
                     @csrf

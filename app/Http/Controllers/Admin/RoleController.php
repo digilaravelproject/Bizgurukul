@@ -15,10 +15,7 @@ class RoleController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:role-list', only: ['index']),
-            new Middleware('permission:role-create', only: ['create', 'store']),
-            new Middleware('permission:role-edit', only: ['edit', 'update']),
-            new Middleware('permission:role-delete', only: ['destroy']),
+            new Middleware('permission:manage-roles'),
         ];
     }
 
@@ -48,12 +45,20 @@ class RoleController extends Controller implements HasMiddleware
         $role = Role::create(['name' => $request->name]);
         $role->syncPermissions($request->permission);
 
-        // JSON Response
-        return response()->json([
-            'success' => true,
-            'message' => 'Role created successfully',
-            'redirect' => route('roles.index')
-        ]);
+        activity()
+            ->performedOn($role)
+            ->event('created')
+            ->log('Created role');
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Role created successfully',
+                'redirect' => route('admin.roles.index')
+            ]);
+        }
+
+        return redirect()->route('admin.roles.index')->with('success', 'Role created successfully');
     }
 
     public function edit($id)
@@ -80,22 +85,40 @@ class RoleController extends Controller implements HasMiddleware
         $role->save();
         $role->syncPermissions($request->permission);
 
-        // JSON Response
-        return response()->json([
-            'success' => true,
-            'message' => 'Role updated successfully',
-            'redirect' => route('roles.index')
-        ]);
+        activity()
+            ->performedOn($role)
+            ->event('updated')
+            ->log('Updated role');
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Role updated successfully',
+                'redirect' => route('admin.roles.index')
+            ]);
+        }
+
+        return redirect()->route('admin.roles.index')->with('success', 'Role updated successfully');
     }
 
     public function destroy($id)
     {
+        $role = Role::find($id);
+        if ($role) {
+            activity()
+                ->performedOn($role)
+                ->event('deleted')
+                ->log('Deleted role');
+        }
         DB::table("roles")->where('id', $id)->delete();
 
-        // JSON Response
-        return response()->json([
-            'success' => true,
-            'message' => 'Role deleted successfully'
-        ]);
+        if (request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Role deleted successfully'
+            ]);
+        }
+
+        return redirect()->route('admin.roles.index')->with('success', 'Role deleted successfully');
     }
 }

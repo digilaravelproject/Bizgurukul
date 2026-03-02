@@ -7,7 +7,7 @@
     <div class="flex flex-col md:flex-row justify-between items-end gap-4">
         <div>
             <h1 class="text-3xl font-extrabold tracking-tight text-mainText">Dashboard Overview</h1>
-            <p class="text-mutedText mt-1 text-sm">Welcome back, Super Admin. Here's what's happening today.</p>
+            <p class="text-mutedText mt-1 text-sm">Welcome back, <span class="text-primary">{{ Auth::user()->roles->first()->name ?? 'User' }}</span>. Here's what's happening today.</p>
         </div>
         <div class="flex items-center gap-3 bg-white p-1.5 rounded-xl border border-primary/10 shadow-sm">
             <span class="text-xs font-medium text-mutedText px-3" x-text="'Last updated: ' + lastUpdated"></span>
@@ -22,6 +22,7 @@
     {{-- Key Metrics Grid --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
+        @can('manage-transactions')
         {{-- Revenue Card --}}
         <div class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300">
             <div class="absolute -right-6 -top-6 w-24 h-24 bg-primary/5 rounded-full group-hover:bg-primary/10 transition-colors"></div>
@@ -40,6 +41,7 @@
                 <h3 class="text-2xl font-bold text-mainText mt-1" x-text="formatCurrency(stats.total_revenue)"></h3>
             </div>
         </div>
+        @endcan
 
         {{-- Active Students --}}
         <div class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300">
@@ -75,6 +77,7 @@
             </div>
         </div>
 
+        @can('manage-transactions')
         {{-- Commissions --}}
         <div class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300">
             <div class="absolute -right-6 -top-6 w-24 h-24 bg-orange-50 rounded-full group-hover:bg-orange-100 transition-colors"></div>
@@ -91,9 +94,11 @@
                 <h3 class="text-2xl font-bold text-mainText mt-1" x-text="formatCurrency(stats.pending_commission)"></h3>
             </div>
         </div>
+        @endcan
     </div>
 
     {{-- Revenue Metrics Grid (Today, 7 Days, 30 Days, All Time) --}}
+    @can('manage-transactions')
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
         {{-- Today Revenue Card --}}
         <div class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300">
@@ -131,6 +136,7 @@
             </div>
         </div>
     </div>
+    @endcan
 
     {{-- Main Content Split --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -138,6 +144,7 @@
         {{-- Left Column (Chart & Top Courses) --}}
         <div class="lg:col-span-2 space-y-8">
 
+            @can('manage-transactions')
             {{-- Chart Section --}}
             <div class="bg-surface p-6 rounded-2xl shadow-sm border border-primary/10">
                 <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
@@ -155,6 +162,7 @@
                     <canvas id="salesChart"></canvas>
                 </div>
             </div>
+            @endcan
 
             {{-- Top Courses --}}
             <div class="bg-surface p-6 rounded-2xl shadow-sm border border-primary/10">
@@ -215,6 +223,7 @@
                 </div>
             </div>
 
+            @can('manage-transactions')
             {{-- Recent Transactions --}}
             <div class="bg-surface p-6 rounded-2xl shadow-sm border border-primary/10">
                 <div class="flex justify-between items-center mb-6">
@@ -240,6 +249,7 @@
                     </template>
                 </div>
             </div>
+            @endcan
 
         </div>
     </div>

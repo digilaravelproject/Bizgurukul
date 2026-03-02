@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
 use Illuminate\Support\Facades\Hash;
 
@@ -18,11 +19,35 @@ class RoleAndUserSeeder extends Seeder
         // 1. Spatie Permission Cache Reset karein (Zaroori hai)
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // 2. Roles Create Karein (Admin aur Student)
+        // 2. Define Permissions
+        $permissions = [
+            'access-admin-panel',
+            'manage-users',
+            'manage-roles',
+            'manage-courses',
+            'manage-lessons',
+            'manage-categories',
+            'manage-bundles',
+            'manage-coupons',
+            'manage-settings',
+            'manage-kyc',
+            'manage-affiliate',
+            'manage-payouts',
+            'view-activity-logs',
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
+        }
+
+        // 3. Roles Create Karein (Admin aur Student)
         $adminRole = Role::firstOrCreate(['name' => 'Admin']);
         $studentRole = Role::firstOrCreate(['name' => 'Student']);
 
-        // 3. ADMIN User Create Karein & Role Assign Karein
+        // Assign ALL permissions to Admin role explicitly (just to be safe, though Gate::before handles it)
+        $adminRole->syncPermissions(Permission::all());
+
+        // 4. ADMIN User Create Karein & Role Assign Karein
         $adminUser = User::firstOrCreate(
             ['email' => 'admin@admin.com'], // Is email se check karega
             [

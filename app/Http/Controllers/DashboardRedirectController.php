@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardRedirectController extends Controller
@@ -18,15 +17,22 @@ class DashboardRedirectController extends Controller
             return redirect()->route('login');
         }
 
-        if ($user->hasRole('Admin')) {
+        // 1. Administrative Check: Admin role, Has Permissions, or has ANY role other than 'Student'
+        // This ensures custom roles (Moderate, Editor, etc.) go to the Admin side.
+        $hasAdminRole = $user->hasRole('Admin');
+        $hasPermissions = $user->permissions->count() > 0 || $user->getPermissionsViaRoles()->count() > 0;
+        $hasCustomRole = $user->roles->where('name', '!=', 'Student')->count() > 0;
+
+        if ($hasAdminRole || $hasPermissions || $hasCustomRole) {
             return redirect()->route('admin.dashboard');
         }
 
+        // 2. Student Check
         if ($user->hasRole('Student')) {
             return redirect()->route('student.dashboard');
         }
 
-        // Fallback for users with no specific role or unexpected roles
-        return redirect()->route('home')->with('error', 'Dashboard not found for your account type.');
+        // 3. Fallback (If no roles assigned, default to student area)
+        return redirect()->route('student.dashboard');
     }
 }
