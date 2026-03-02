@@ -30,7 +30,8 @@
                             },
                             body: JSON.stringify({
                                 code: this.couponCode,
-                                bundle_id: {{ $bundle->id }}
+                                bundle_id: {{ $bundle->id }},
+                                lead_id: {{ $lead->id }}
                             })
                         });
 

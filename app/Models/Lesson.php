@@ -3,9 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Support\Facades\Auth;
 
 class Lesson extends Model
 {
@@ -21,30 +19,37 @@ class Lesson extends Model
         'order_column'
     ];
 
-    protected $appends = ['lesson_file_url', 'thumbnail_url'];
+    protected $appends = ['lesson_file_url', 'thumbnail_url', 'admin_video_url']; // Added admin_video_url
 
     // Consistency for thumbnail
     protected function thumbnail(): Attribute
     {
         return Attribute::get(function ($value) {
-            return $value ? Storage::url($value) : null;
+            if (!$value) return null;
+            $path = ltrim($value, '/');
+            return str_starts_with($path, 'storage/') ? '/' . $path : '/storage/' . $path;
         });
     }
 
     public function getThumbnailUrlAttribute()
     {
-        return $this->thumbnail ? asset($this->thumbnail) : null;
+        return $this->thumbnail; // The thumbnail attribute already handles the path
     }
 
     // Get the correct URL based on lesson type
     protected function lessonFileUrl(): Attribute
     {
         return Attribute::get(function () {
+            $path = null;
             if ($this->type === 'video') {
                 $path = $this->hls_path ?? $this->video_path;
-                return $path ? Storage::url($path) : null;
+            } else {
+                $path = $this->document_path;
             }
-            return $this->document_path ? Storage::url($this->document_path) : null;
+
+            if (!$path) return null;
+            $path = ltrim($path, '/');
+            return str_starts_with($path, 'storage/') ? '/' . $path : '/storage/' . $path;
         });
     }
 
@@ -58,5 +63,21 @@ class Lesson extends Model
     public function progress()
     {
         return $this->hasOne(VideoProgress::class);
+    }
+
+    /**
+     * Direct MP4 URL for Admin Panel Preview (Bypasses HLS Encryption)
+     * Optimized for large files up to 5GB (supports byte-range requests)
+     */
+    protected function adminVideoUrl(): Attribute
+    {
+        return Attribute::get(function () {
+            $path = $this->video_path; // Fetch the original MP4 path
+
+            if (!$path) return null;
+
+            $path = ltrim($path, '/');
+            return str_starts_with($path, 'storage/') ? '/' . $path : '/storage/' . $path;
+        });
     }
 }

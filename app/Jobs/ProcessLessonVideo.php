@@ -19,6 +19,8 @@ class ProcessLessonVideo implements ShouldQueue
 
     public $lesson;
     public $timeout = 3600; // 1 hour
+    public $tries = 3;
+    public $backoff = [60, 300]; // wait 1 minute, then 5 minutes
 
     public function __construct(Lesson $lesson)
     {
@@ -36,6 +38,14 @@ class ProcessLessonVideo implements ShouldQueue
         }
 
         try {
+            /*
+            |--------------------------------------------------------------------------
+            | 0. Debug Configurations (For Production)
+            |--------------------------------------------------------------------------
+            */
+            $ffmpegPath = config('laravel-ffmpeg.ffmpeg.binaries');
+            $ffprobePath = config('laravel-ffmpeg.ffprobe.binaries');
+            Log::info("ProcessLessonVideo [ID: {$this->lesson->id}] starting. FFmpeg Path: {$ffmpegPath}, FFprobe Path: {$ffprobePath}");
 
             /*
             |--------------------------------------------------------------------------
@@ -92,7 +102,7 @@ class ProcessLessonVideo implements ShouldQueue
             // Route that serves key securely
             $keyUrl = route('student.video.key', [
                 'lesson' => $this->lesson->id
-            ]);
+            ], false); // Use relative URL to avoid hostname mismatch issues (localhost vs 127.0.0.1)
 
             Log::info("Starting Encrypted HLS Processing for Lesson ID: {$this->lesson->id}");
 
@@ -164,8 +174,8 @@ class ProcessLessonVideo implements ShouldQueue
             Log::info("Encrypted HLS conversion successful for Lesson ID: {$this->lesson->id}");
 
         } catch (\Exception $e) {
-
-            Log::error("Video Processing Failed ID {$this->lesson->id}: " . $e->getMessage());
+            $this->lesson->update(['hls_path' => 'failed']);
+            Log::error("Video Processing Failed ID {$this->lesson->id}: " . $e->getMessage() . "\n" . $e->getTraceAsString());
             throw $e;
         }
     }

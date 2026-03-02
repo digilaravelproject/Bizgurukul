@@ -108,22 +108,28 @@ class StudentController extends Controller
     public function getVideoKey(Lesson $lesson)
     {
         try {
-            // Security check: Must have purchased the course
-            if (!$lesson->course->isPurchasedBy(Auth::id())) {
-                return response('Unauthorized', 403);
+            // Security check: Must have purchased the course (Admins bypass)
+            $user = Auth::user();
+            if (!$user) {
+                Log::warning("Unauthorized video key request for lesson {$lesson->id}");
+                return response('Unauthorized', 401);
+            }
+
+            if (!$user->hasRole('Admin') && !$lesson->course->isPurchasedBy($user->id)) {
+                return response('Forbidden', 403);
             }
 
             // Path to the key
             $filename = pathinfo($lesson->video_path, PATHINFO_FILENAME);
-            if (!$filename) {
-                // Fallback attempt from hls_path
+            if (!$filename || $filename === 'playlist') {
+                // Fallback attempt from directory name if path logic changed
                 $filename = basename(dirname($lesson->hls_path));
             }
 
             $keyPath = "lessons/keys/{$filename}.key";
 
             if (!\Illuminate\Support\Facades\Storage::disk('local')->exists($keyPath)) {
-                Log::error("Video key not found at: {$keyPath} for Lesson ID: {$lesson->id}");
+                Log::error("Video key not found at: [{$keyPath}] for Lesson ID: {$lesson->id}. Check if job stored it correctly.");
                 return response('Key not found', 404);
             }
 

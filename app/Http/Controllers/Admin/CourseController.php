@@ -169,7 +169,8 @@ class CourseController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'type' => 'required|in:video,document',
-            'video_file' => 'required_if:type,video|mimes:mp4,mov,avi,wmv|max:5242880', // 5GB limit
+            'video_file' => 'required_without:assembled_video_path|mimetypes:video/mp4,video/quicktime,video/x-msvideo,video/x-ms-wmv|max:5242880',
+            'assembled_video_path' => 'nullable|string',
             'document_file' => 'required_if:type,document|mimes:pdf,docx,zip|max:20480',
             'thumbnail' => 'nullable|image|max:5120',
         ]);
@@ -178,9 +179,11 @@ class CourseController extends Controller
             $lesson = $this->courseService->addLesson($id, $request->all());
 
             if ($request->ajax() || $request->wantsJson()) {
+                $html = view('admin.courses.partials._lesson_card', compact('lesson'))->render();
                 return response()->json([
                     'success' => true,
-                    'message' => 'Lesson added. Video processing started in background.',
+                    'message' => 'Lesson added.',
+                    'html' => $html,
                     'lesson' => $lesson
                 ]);
             }

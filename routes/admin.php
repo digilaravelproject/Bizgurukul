@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\AffiliateController;
 use App\Http\Controllers\Admin\CommunityController;
 use App\Http\Controllers\Admin\CertificateSettingController;
 use App\Http\Controllers\Admin\EmailTemplateController;
+use App\Http\Controllers\Admin\VideoUploadController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'role:Admin'])
@@ -82,6 +83,7 @@ Route::middleware(['auth', 'role:Admin'])
             Route::delete('/resource/{id}/delete', [CourseController::class, 'destroyResource'])->name('resource.delete');
             Route::post('/{id}/lesson/store', [CourseController::class, 'storeLesson'])->name('lesson.store');
             Route::post('/{id}/resource/store', [CourseController::class, 'storeResource'])->name('resource.store');
+            Route::post('/lessons/upload-chunk', [VideoUploadController::class, 'uploadChunk'])->name('lesson.upload-chunk');
         });
 
         // Lessons (Direct Access)

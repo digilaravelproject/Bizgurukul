@@ -104,7 +104,7 @@ class Coupon extends Model
     {
         if ($this->type === 'percentage') {
             return ($totalAmount * $this->value) / 100;
-        } elseif ($this->type === 'flat') {
+        } elseif ($this->type === 'flat' || $this->type === 'fixed') {
             return min($this->value, $totalAmount);
         }
 

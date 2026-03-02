@@ -17,87 +17,11 @@
     @if(count($course->lessons) > 0)
         <div id="lessons-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach($course->lessons as $lesson)
-            <div class="group relative bg-surface rounded-[1.5rem] border border-primary hover:border-primary/30 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full">
-
-                {{-- 1. Thumbnail Area --}}
-                <div class="relative h-44 w-full bg-primary/5 overflow-hidden">
-                    @if($lesson->thumbnail)
-                        <img src="{{ $lesson->thumbnail_url }}" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110">
-                    @elseif($lesson->type == 'video')
-                        <div class="h-full w-full flex items-center justify-center text-primary/20 group-hover:text-primary/40 transition-colors">
-                            <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                        </div>
-                    @else
-                        <div class="h-full w-full flex items-center justify-center text-secondary/20 group-hover:text-secondary/40 transition-colors">
-                            <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/></svg>
-                        </div>
-                    @endif
-
-                    {{-- Type Badge --}}
-                    <div class="absolute top-3 right-3 z-10">
-                        <span class="px-2 py-1 rounded-lg bg-black/50 backdrop-blur text-[10px] font-bold text-customWhite uppercase border border-white/10 shadow-sm">
-                            {{ $lesson->type }}
-                        </span>
-                    </div>
-
-                    {{-- PREVIEW OVERLAY BUTTON --}}
-                    @if($lesson->lesson_file_url)
-                    <button
-                        type="button"
-                        @click="$dispatch('open-preview', {
-                            type: '{{ $lesson->type }}',
-                            url: '{{ $lesson->lesson_file_url }}',
-                            title: '{{ addslashes($lesson->title) }}'
-                        })"
-                        class="absolute inset-0 w-full h-full flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[1px] cursor-pointer z-20">
-
-                        <div class="h-12 w-12 rounded-full bg-surface flex items-center justify-center text-primary shadow-xl transform scale-0 group-hover:scale-100 transition-transform duration-300 hover:scale-110 hover:bg-white">
-                            @if($lesson->type == 'video')
-                                {{-- Play Icon for Video --}}
-                                <svg class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                            @else
-                                {{-- Eye Icon for Doc --}}
-                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                            @endif
-                        </div>
-                    </button>
-                    @endif
-                </div>
-
-                {{-- 2. Content Area --}}
-                <div class="p-5 flex flex-col flex-1">
-                    <h4 class="text-sm font-bold text-mainText line-clamp-2 leading-snug mb-2" title="{{ $lesson->title }}">
-                        {{ $lesson->title }}
-                    </h4>
-
-                    <div class="mt-auto pt-4 border-t border-dashed border-primary flex items-center justify-between">
-                        @if($lesson->type == 'video')
-                            @if(!$lesson->hls_path)
-                                <span class="flex items-center gap-1 text-[10px] font-black uppercase text-amber-600 bg-amber-50 px-2 py-1 rounded-md">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Processing
-                                </span>
-                            @else
-                                <span class="flex items-center gap-1 text-[10px] font-black uppercase text-green-600 bg-green-50 px-2 py-1 rounded-md">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Ready
-                                </span>
-                            @endif
-                        @else
-                             <span class="flex items-center gap-1 text-[10px] font-black uppercase text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
-                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Document
-                            </span>
-                        @endif
-
-                        <button onclick="deleteLesson({{ $lesson->id }})" class="p-2 rounded-lg text-mutedText hover:bg-secondary/10 hover:text-secondary transition-colors" title="Delete Lesson">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                        </button>
-                        <form id="delete-lesson-{{ $lesson->id }}" action="{{ route('admin.courses.lesson.delete', ['id' => $lesson->id]) }}" method="POST" class="hidden">@csrf @method('DELETE')</form>
-                    </div>
-                </div>
-            </div>
+                @include('admin.courses.partials._lesson_card', ['lesson' => $lesson])
             @endforeach
         </div>
     @else
-        <div class="text-center py-16 bg-surface border-2 border-dashed border-primary rounded-[2rem] flex flex-col items-center justify-center">
+        <div id="no-lessons-placeholder" class="text-center py-16 bg-surface border-2 border-dashed border-primary rounded-[2rem] flex flex-col items-center justify-center">
             <div class="h-16 w-16 rounded-full bg-primary/5 flex items-center justify-center mb-4 text-primary">
                 <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
             </div>
@@ -197,40 +121,51 @@ function deleteLesson(id) {
 </script>
 <script>
     function checkProcessingStatus() {
-        // Check if any 'Processing' badge exists
-        if (document.querySelectorAll('.animate-pulse').length > 0) {
-            fetch(window.location.href)
-                .then(response => response.text())
-                .then(html => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    const newGrid = doc.getElementById('lessons-grid-container');
-                    if (newGrid) {
-                        document.getElementById('lessons-grid-container').innerHTML = newGrid.innerHTML;
-                    }
-                });
-        }
+        // Find all cards that are currently marked as "Processing"
+        const processingBadges = document.querySelectorAll('.processing-badge');
+
+        if (processingBadges.length === 0) return;
+
+        // Fetch latest cards for those processing
+        fetch(window.location.href, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            processingBadges.forEach(badge => {
+                const lessonId = badge.getAttribute('data-lesson-id');
+                const newCard = doc.getElementById('lesson-card-' + lessonId);
+                const oldCard = document.getElementById('lesson-card-' + lessonId);
+
+                // If it finished processing in the response, swap out the card
+                if (newCard && oldCard && !newCard.querySelector('.processing-badge')) {
+                    oldCard.outerHTML = newCard.outerHTML;
+                    if (typeof toastr !== 'undefined') toastr.success('Lesson processing completed!');
+                }
+            });
+        });
     }
 
-    // Har 10 second mein check karega
+    // Check every 10 seconds for jobs in processing state
     setInterval(checkProcessingStatus, 10000);
 
     // AJAX Form Submission for uploading video without blocking UI
-    document.getElementById('addLessonForm').addEventListener('submit', function(e) {
+    document.getElementById('addLessonForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
         const form = this;
-        const formData = new FormData(form);
+        let formData = new FormData(form);
         const submitBtn = form.querySelector('button[type="submit"]');
+        const videoFileInput = form.querySelector('input[name="video_file"]');
+        const lType = document.querySelector('input[name="type"]:checked').value;
 
         // Hide Modal
         window.dispatchEvent(new CustomEvent('close-lesson-modal'));
-
-        // Setup XHR
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', form.action, true);
-        xhr.setRequestHeader('Accept', 'application/json');
-        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
         // Disable button while preparing request
         if(submitBtn) {
@@ -238,13 +173,22 @@ function deleteLesson(id) {
             submitBtn.innerHTML = 'Starting...';
         }
 
-        // Show placeholder grid item
-        const grid = document.getElementById('lessons-grid-container');
+        // Add Grid container if it does not exist
+        let grid = document.getElementById('lessons-grid-container');
+        if (!grid) {
+            const placeholder = document.getElementById('no-lessons-placeholder');
+            if(placeholder) {
+                placeholder.insertAdjacentHTML('afterend', '<div id="lessons-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>');
+                grid = document.getElementById('lessons-grid-container');
+                placeholder.remove();
+            }
+        }
+
         const placeholderId = 'uploading-' + Date.now();
 
         if (grid) {
             const placeholderHTML = `
-            <div id="${placeholderId}" class="group relative bg-surface rounded-[1.5rem] border border-secondary shadow-sm overflow-hidden flex flex-col h-full animate-pulse border-dashed">
+            <div id="${placeholderId}" class="group relative bg-surface rounded-[1.5rem] border border-secondary shadow-sm overflow-hidden flex flex-col h-full animate-fade-in-up border-dashed">
                 <div class="relative h-44 w-full bg-secondary/10 flex items-center justify-center flex-col gap-2">
                     <svg class="w-10 h-10 text-secondary animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                     <span class="text-xs font-black text-secondary uppercase tracking-widest text-center px-4">Uploading<br><span id="${placeholderId}-percent" class="text-xl">0%</span></span>
@@ -252,22 +196,102 @@ function deleteLesson(id) {
                 <div class="p-5 flex flex-col flex-1">
                     <h4 class="text-sm font-bold text-mainText line-clamp-2 leading-snug mb-2">${formData.get('title') || 'New Lesson'}</h4>
                     <div class="mt-auto pt-4 border-t border-dashed border-primary flex items-center justify-between">
-                        <span class="text-[10px] font-black uppercase text-secondary bg-secondary/10 px-2 py-1 rounded-md">Uploading to Server...</span>
+                        <span class="flex items-center gap-1 text-[10px] font-black uppercase text-secondary bg-secondary/10 px-2 py-1 rounded-md">
+                            <span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span> Uploading
+                        </span>
                     </div>
                 </div>
             </div>`;
             grid.insertAdjacentHTML('afterbegin', placeholderHTML);
         }
 
-        xhr.upload.onprogress = function(event) {
-            if (event.lengthComputable) {
-                const percentComplete = Math.round((event.loaded / event.total) * 100);
-                const percentEl = document.getElementById(`${placeholderId}-percent`);
-                if (percentEl) {
-                    percentEl.innerText = percentComplete + '%';
+        // --- Execute Document / Non-video Upload (Standard Single Request) ---
+        if (lType !== 'video' || !videoFileInput.files.length) {
+            sendStandardForm(form, formData, submitBtn, placeholderId);
+            return;
+        }
+
+        // --- Execute Chunked Video Upload Approach ---
+        const file = videoFileInput.files[0];
+        const chunkSize = 10 * 1024 * 1024; // 10MB Chunks
+        const totalChunks = Math.ceil(file.size / chunkSize);
+        const identifier = Date.now() + '-' + file.name.replace(/[^a-zA-Z0-9.\-]/g, "");
+
+        let assembledVideoPath = null;
+
+        for (let i = 0; i < totalChunks; i++) {
+            const start = i * chunkSize;
+            const end = Math.min(start + chunkSize, file.size);
+            const chunk = file.slice(start, end);
+
+            const chunkData = new FormData();
+            chunkData.append('video_file', chunk);
+            chunkData.append('resumableChunkNumber', i + 1);
+            chunkData.append('resumableTotalChunks', totalChunks);
+            chunkData.append('resumableIdentifier', identifier);
+            chunkData.append('resumableFilename', file.name);
+            chunkData.append('_token', form.querySelector('input[name="_token"]').value);
+
+            try {
+                const chunkResult = await uploadChunkRequest('{{ route('admin.courses.lesson.upload-chunk') }}', chunkData, i, totalChunks, placeholderId);
+
+                if (chunkResult.status === 'completed') {
+                    assembledVideoPath = chunkResult.path;
                 }
+            } catch (err) {
+                if(typeof toastr !== 'undefined') toastr.error('Chunk upload interrupted or failed.');
+                cleanupPlaceholder(submitBtn, placeholderId);
+                return; // Stop upload loop.
             }
-        };
+        }
+
+        if (assembledVideoPath) {
+            // Replace the actual File object with the generated assembled path
+            formData.delete('video_file');
+            formData.append('assembled_video_path', assembledVideoPath);
+            // Finally submit the rest of the form indicating the video has already been transferred
+            sendStandardForm(form, formData, submitBtn, placeholderId);
+        }
+    });
+
+    // Handle Upload Promise
+    function uploadChunkRequest(url, formData, chunkIndex, totalChunks, placeholderId) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', url, true);
+            xhr.setRequestHeader('Accept', 'application/json');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+            xhr.upload.onprogress = function(event) {
+                if (event.lengthComputable) {
+                    const chunkContribution = (event.loaded / event.total) / totalChunks;
+                    const baseProgress = chunkIndex / totalChunks;
+                    const percentComplete = Math.round((baseProgress + chunkContribution) * 100);
+
+                    const percentEl = document.getElementById(`${placeholderId}-percent`);
+                    if (percentEl) percentEl.innerText = percentComplete + '%';
+                }
+            };
+
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve(JSON.parse(xhr.responseText));
+                } else {
+                    reject(xhr.responseText);
+                }
+            };
+
+            xhr.onerror = () => reject('Network Error');
+            xhr.send(formData);
+        });
+    }
+
+    // Handles the actual lesson creation after chunks finish or if it is just a document
+    function sendStandardForm(form, formData, submitBtn, placeholderId) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', form.action, true);
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
         xhr.onload = function() {
             if (submitBtn) {
@@ -275,54 +299,43 @@ function deleteLesson(id) {
                 submitBtn.innerHTML = 'Add Lesson';
             }
             if (xhr.status >= 200 && xhr.status < 300) {
-                if(typeof toastr !== 'undefined') toastr.success('Uploaded successfully! Processing started in background.');
-                form.reset(); // clear form
+                if(typeof toastr !== 'undefined') toastr.success('Lesson created successfully!');
+                form.reset();
 
-                // Refresh grid to load the real lesson card
-                fetch(window.location.href)
-                .then(response => response.text())
-                .then(html => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    const newGrid = doc.getElementById('lessons-grid-container');
-                    if (newGrid && grid) {
-                        grid.innerHTML = newGrid.innerHTML;
-                    } else if (grid) {
-                        // Fallback: Just reload the page if grid refreshing fails but upload worked
-                        window.location.reload();
-                    }
-                });
-
-            } else {
-                // Remove placeholder
+                const response = JSON.parse(xhr.responseText);
                 const placeholder = document.getElementById(placeholderId);
-                if (placeholder) placeholder.remove();
 
+                if (placeholder && response.html) {
+                     placeholder.outerHTML = response.html;
+                } else if (placeholder) {
+                     placeholder.remove();
+                     window.location.reload();
+                }
+            } else {
+                cleanupPlaceholder(submitBtn, placeholderId);
                 try {
                     const res = JSON.parse(xhr.responseText);
                     if (res.message && typeof toastr !== 'undefined') toastr.error(res.message);
                     if (res.errors && typeof toastr !== 'undefined') {
-                        for(let key in res.errors) {
-                            toastr.error(res.errors[key][0]);
-                        }
+                        Object.keys(res.errors).forEach(key => toastr.error(res.errors[key][0]));
                     }
-                } catch(e) {
-                    if(typeof toastr !== 'undefined') toastr.error('Upload failed: ' + xhr.statusText);
-                }
+                } catch(e) {}
             }
         };
 
         xhr.onerror = function() {
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Add Lesson';
-            }
-            const placeholder = document.getElementById(placeholderId);
-            if (placeholder) placeholder.remove();
-            if(typeof toastr !== 'undefined') toastr.error('Network Error. Upload interrupted.');
+            cleanupPlaceholder(submitBtn, placeholderId);
+            if(typeof toastr !== 'undefined') toastr.error('Network Error. Creation interrupted.');
         };
-
-        // Send Request
         xhr.send(formData);
-    });
+    }
+
+    function cleanupPlaceholder(submitBtn, placeholderId) {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Add Lesson';
+        }
+        const placeholder = document.getElementById(placeholderId);
+        if (placeholder) placeholder.remove();
+    }
 </script>

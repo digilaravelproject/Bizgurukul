@@ -2,18 +2,20 @@
 
 namespace App\Services;
 
+use App\Jobs\ProcessLessonVideo;
 use App\Repositories\CourseRepository;
 use Exception;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use App\Jobs\ProcessLessonVideo;
 
 class CourseService
 {
     protected $repo;
+
     protected $mediaService;
+
     protected $disk;
 
     public function __construct(CourseRepository $repo, MediaProcessingService $mediaService)
@@ -133,17 +135,48 @@ class CourseService
 
             $lesson = $this->repo->createLesson($lessonData);
 
-            if ($data['type'] === 'video' && isset($data['video_file'])) {
-                $video = $data['video_file'];
-                $filename = time() . '_' . $lesson->id;
-                $originalPath = 'lessons/videos/' . $filename . '.' . $video->getClientOriginalExtension();
+            if ($data['type'] === 'video') {
+                $filename = time().'_'.$lesson->id;
+                $extension = 'mp4'; // default fallback or try to extract from original
 
-                Storage::disk('public')->put($originalPath, file_get_contents($video));
+                if (isset($data['assembled_video_path'])) {
+                    // Extract extension from the path, fallback to mp4
+                    $extension = pathinfo($data['assembled_video_path'], PATHINFO_EXTENSION) ?: 'mp4';
+                    $finalPath = 'lessons/videos/'.$filename.'.'.$extension;
 
-                $lesson->update(['video_path' => $originalPath]);
+                    // Move assembled file from temp raw to final location
+                    $assembledStoragePath = storage_path('app/public/'.ltrim($data['assembled_video_path'], '/'));
+                    $finalStoragePath = storage_path('app/public/'.ltrim($finalPath, '/'));
 
-                Log::info("Dispatching ProcessLessonVideo Job for Lesson ID: " . $lesson->id . " from CourseService");
-                ProcessLessonVideo::dispatch($lesson)->afterCommit();
+                    if (file_exists($assembledStoragePath)) {
+                        // Ensure parent directory exists
+                        $dir = dirname($finalStoragePath);
+                        if (! file_exists($dir)) {
+                            mkdir($dir, 0755, true);
+                        }
+                        // Use raw OS rename instead of loaded RAM transfer
+                        rename($assembledStoragePath, $finalStoragePath);
+                    } else {
+                        throw new Exception('Assembled video file not found on disk.');
+                    }
+
+                    $lesson->update(['video_path' => $finalPath]);
+
+                    Log::info('Dispatching ProcessLessonVideo Job for Lesson ID: '.$lesson->id.' from CourseService (Chunked)');
+                    ProcessLessonVideo::dispatch($lesson)->afterCommit();
+
+                } elseif (isset($data['video_file'])) {
+                    // Standard fallback
+                    $video = $data['video_file'];
+                    $originalPath = 'lessons/videos/'.$filename.'.'.$video->getClientOriginalExtension();
+
+                    Storage::disk('public')->put($originalPath, file_get_contents($video));
+
+                    $lesson->update(['video_path' => $originalPath]);
+
+                    Log::info('Dispatching ProcessLessonVideo Job for Lesson ID: '.$lesson->id.' from CourseService (Direct)');
+                    ProcessLessonVideo::dispatch($lesson)->afterCommit();
+                }
             }
 
             return $lesson;
@@ -152,31 +185,33 @@ class CourseService
 
     public function deleteLesson($id)
     {
-        $lesson = $this->repo->findLesson($id);
+        return DB::transaction(function () use ($id) {
+            $lesson = $this->repo->findLesson($id);
 
-        // 1. Delete Files
-        if ($lesson->thumbnail) {
-            Storage::disk($this->disk)->delete($lesson->thumbnail);
-        }
-        if ($lesson->document_path) {
-            Storage::disk($this->disk)->delete($lesson->document_path);
-        }
-        if ($lesson->video_path) {
-            Storage::disk($this->disk)->delete($lesson->video_path);
-        }
-        if ($lesson->hls_path) {
-            $hlsFolder = dirname($lesson->hls_path);
-            Storage::disk($this->disk)->deleteDirectory($hlsFolder);
-        }
+            // 1. Delete Files
+            if ($lesson->thumbnail) {
+                Storage::disk($this->disk)->delete($lesson->thumbnail);
+            }
+            if ($lesson->document_path) {
+                Storage::disk($this->disk)->delete($lesson->document_path);
+            }
+            if ($lesson->video_path) {
+                Storage::disk($this->disk)->delete($lesson->video_path);
+            }
+            if ($lesson->hls_path) {
+                $hlsFolder = dirname($lesson->hls_path);
+                Storage::disk($this->disk)->deleteDirectory($hlsFolder);
+            }
 
-        return $this->repo->deleteLesson($id);
+            return $this->repo->deleteLesson($id);
+        });
     }
 
     // --- Resources ---
     public function addResource($courseId, array $data)
     {
-        if (!isset($data['file'])) {
-             throw new Exception('File is required');
+        if (! isset($data['file'])) {
+            throw new Exception('File is required');
         }
 
         $path = $data['file']->store('courses/resources', $this->disk);
@@ -191,6 +226,13 @@ class CourseService
 
     public function deleteResource($id)
     {
-        return $this->repo->deleteResource($id);
+        return DB::transaction(function () use ($id) {
+            $resource = $this->repo->findResource($id);
+            if ($path = $resource->getRawOriginal('file_path')) {
+                Storage::disk($this->disk)->delete($path);
+            }
+
+            return $this->repo->deleteResource($id);
+        });
     }
 }

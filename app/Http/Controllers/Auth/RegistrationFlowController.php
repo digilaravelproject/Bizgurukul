@@ -4,20 +4,14 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bundle;
-use App\Models\Coupon;
 use App\Models\Lead;
-use App\Models\Payment;
 use App\Models\User;
-use App\Models\AffiliateCommission;
-use App\Models\Tax;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Razorpay\Api\Api;
 
@@ -216,11 +210,14 @@ class RegistrationFlowController extends Controller
         try {
             $request->validate([
                 'code'      => 'required|string',
-                'bundle_id' => 'required|exists:bundles,id'
+                'bundle_id' => 'required|exists:bundles,id',
+                'lead_id'   => 'required|exists:leads,id'
             ]);
 
             $bundle = Bundle::findOrFail($request->bundle_id);
-            $hasReferral = !empty(session('referral_code')) || !empty(Cookie::get('referral_code'));
+            $lead = Lead::findOrFail($request->lead_id);
+
+            $hasReferral = !empty($lead->referral_code) || !empty(session('referral_code')) || !empty(Cookie::get('referral_code'));
             $pricing = $this->registrationService->calculatePricing($bundle, $request->code, $hasReferral);
 
             if (isset($pricing['error'])) {

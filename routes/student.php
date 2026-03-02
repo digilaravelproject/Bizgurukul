@@ -49,7 +49,9 @@ Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')
     Route::get('/communities', [\App\Http\Controllers\CommunityController::class, 'studentIndex'])->name('communities');
     Route::get('/watch/{course}/{lesson?}', [StudentController::class, 'watch'])->name('watch');
     Route::post('/progress/update', [StudentController::class, 'updateProgress'])->name('progress.update');
-    Route::get('/video-key/{lesson}', [StudentController::class, 'getVideoKey'])->name('video.key');
+
+    // This specific route needs to be accessible by Admin for previews too
+    Route::get('/video-key/{lesson}', [StudentController::class, 'getVideoKey'])->name('video.key')->withoutMiddleware(['role:Student'])->middleware(['role:Student|Admin']);
 
     // Paid Student Features (Protected by Purchase Check)
     Route::middleware(['check.purchase'])->group(function () {

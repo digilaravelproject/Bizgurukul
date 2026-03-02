@@ -159,9 +159,11 @@ class LmsService
     // **NEW: Single Lesson Delete**
     public function deleteLesson($id)
     {
-        $lesson = $this->repo->findLesson($id);
-        $this->deleteLessonFiles($lesson);
-        return $this->repo->deleteLesson($id);
+        return DB::transaction(function () use ($id) {
+            $lesson = $this->repo->findLesson($id);
+            $this->deleteLessonFiles($lesson);
+            return $this->repo->deleteLesson($id);
+        });
     }
 
     // Helper to avoid duplicate code
@@ -200,10 +202,12 @@ class LmsService
     // **NEW: Single Resource Delete**
     public function deleteResource($id)
     {
-        $resource = $this->repo->findResource($id);
-        if ($path = $resource->getRawOriginal('file_path')) {
-            Storage::disk($this->disk)->delete($path);
-        }
-        return $this->repo->deleteResource($id);
+        return DB::transaction(function () use ($id) {
+            $resource = $this->repo->findResource($id);
+            if ($path = $resource->getRawOriginal('file_path')) {
+                Storage::disk($this->disk)->delete($path);
+            }
+            return $this->repo->deleteResource($id);
+        });
     }
 }

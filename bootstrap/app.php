@@ -21,4 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [\App\Http\Middleware\TrackReferral::class,]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-    })->create();
+    })
+    ->withSchedule(function ($schedule) {
+        $schedule->command('queue:work --stop-when-empty')->everyMinute();
+    })
+    ->create();
