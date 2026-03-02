@@ -16,12 +16,12 @@
         </div>
     </div>
 
-    @if(session('success'))
+    {{-- @if(session('success'))
         <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 flex items-center gap-3 font-bold text-sm animate-fade-in">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
             <span>{{ session('success') }}</span>
         </div>
-    @endif
+    @endif --}}
 
     @if(session('error'))
         <div class="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-600 flex items-center gap-3 font-bold text-sm animate-fade-in">

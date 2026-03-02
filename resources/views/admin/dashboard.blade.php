@@ -93,6 +93,45 @@
         </div>
     </div>
 
+    {{-- Revenue Metrics Grid (Today, 7 Days, 30 Days, All Time) --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+        {{-- Today Revenue Card --}}
+        <div class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-green-50 rounded-full group-hover:bg-green-100 transition-colors"></div>
+            <div class="relative z-10">
+                <p class="text-sm font-medium text-mutedText">Today Revenue</p>
+                <h3 class="text-2xl font-bold text-mainText mt-1" x-text="formatCurrency(stats.today_revenue)"></h3>
+            </div>
+        </div>
+
+        {{-- 7 Days Revenue Card --}}
+        <div class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-blue-50 rounded-full group-hover:bg-blue-100 transition-colors"></div>
+            <div class="relative z-10">
+                <p class="text-sm font-medium text-mutedText">7 Days Revenue</p>
+                <h3 class="text-2xl font-bold text-mainText mt-1" x-text="formatCurrency(stats.seven_days_revenue)"></h3>
+            </div>
+        </div>
+
+        {{-- 30 Days Revenue Card --}}
+        <div class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-purple-50 rounded-full group-hover:bg-purple-100 transition-colors"></div>
+            <div class="relative z-10">
+                <p class="text-sm font-medium text-mutedText">30 Days Revenue</p>
+                <h3 class="text-2xl font-bold text-mainText mt-1" x-text="formatCurrency(stats.thirty_days_revenue)"></h3>
+            </div>
+        </div>
+
+        {{-- All Time Revenue Card --}}
+        <div class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-orange-50 rounded-full group-hover:bg-orange-100 transition-colors"></div>
+            <div class="relative z-10">
+                <p class="text-sm font-medium text-mutedText">All Time Revenue</p>
+                <h3 class="text-2xl font-bold text-mainText mt-1" x-text="formatCurrency(stats.all_time_revenue)"></h3>
+            </div>
+        </div>
+    </div>
+
     {{-- Main Content Split --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
@@ -204,6 +243,8 @@
 
         </div>
     </div>
+
+
 </div>
 
 @push('scripts')
@@ -212,10 +253,6 @@
     document.addEventListener('alpine:init', () => {
         Alpine.data('dashboard', () => ({
             loading: false,
-            period: 'month',
-            stats: @json($stats),
-            lastUpdated: new Date().toLocaleTimeString(),
-
             init() {
                 this.$nextTick(() => { this.renderChart(this.stats.chart || {}); });
                 setInterval(() => { this.fetchStats(); }, 300000);
@@ -236,6 +273,8 @@
                     this.loading = false;
                 }
             },
+
+
 
             formatCurrency(value) {
                 return new Intl.NumberFormat('en-IN', {

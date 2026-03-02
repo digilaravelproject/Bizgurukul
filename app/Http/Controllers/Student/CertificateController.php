@@ -3,9 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Course;
-use App\Models\Payment;
 use App\Models\VideoProgress;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Auth;
@@ -25,16 +23,13 @@ class CertificateController extends Controller
             ->pluck('lesson_id')
             ->toArray();
 
-        // Fetch user's enrolled courses that are successful
-        $myCourses = Payment::where('user_id', $user->id)
-            ->where('status', 'success')
-            ->whereNotNull('course_id')
-            ->with(['course' => function($q) {
-                $q->withCount('lessons');
-            }])
+        // Fetch user's enrolled courses (direct and via bundle)
+        $unlockedCourseIds = $user->unlockedCourseIds();
+
+        $myCourses = Course::whereIn('id', $unlockedCourseIds)
+            ->with('lessons')
+            ->withCount('lessons')
             ->get()
-            ->pluck('course')
-            ->filter()
             ->map(function ($course) use ($completedLessonIds) {
                 // Determine progress
                 $completed = $course->lessons->pluck('id')->intersect($completedLessonIds)->count();
@@ -62,10 +57,7 @@ class CertificateController extends Controller
         $user = Auth::user();
 
         // 1. Verify User has access to the course
-        $hasAccess = Payment::where('user_id', $user->id)
-            ->where('status', 'success')
-            ->where('course_id', $course->id)
-            ->exists();
+        $hasAccess = in_array($course->id, $user->unlockedCourseIds());
 
         if (!$hasAccess) {
             return redirect()->back()->with('error', 'You do not have access to this course.');

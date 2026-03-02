@@ -107,7 +107,7 @@
 
             <div class="mt-8 text-center">
                 <p class="text-xs text-mutedText">
-                    &copy; {{ date('Y') }} Skills Pehle. All rights reserved.
+                    &copy; {{ date('Y') }}. All Rights Reserved by Shrivardhankar Enterprises ( Skillspehle ).
                 </p>
             </div>
         </div>

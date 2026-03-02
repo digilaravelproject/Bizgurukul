@@ -29,4 +29,5 @@ class DashboardController extends Controller
             'chart' => $this->dashboardService->getSalesChartData($period),
         ]);
     }
+
 }

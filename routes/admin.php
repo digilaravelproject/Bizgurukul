@@ -33,6 +33,10 @@ Route::middleware(['auth', 'role:Admin'])
         Route::get('/dashboard/stats', [DashboardController::class, 'stats'])->name('dashboard.stats');
         Route::post('/settings/update', [AdminController::class, 'updateSettings'])->name('settings.update');
 
+        // Order History
+        Route::get('/orders', [\App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{id}/invoice', [\App\Http\Controllers\Admin\OrderController::class, 'invoice'])->name('orders.invoice');
+
         // Tax Management
         Route::resource('taxes', TaxController::class)->except(['show']);
 

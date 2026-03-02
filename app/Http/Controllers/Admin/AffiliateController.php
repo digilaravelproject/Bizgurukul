@@ -104,12 +104,47 @@ class AffiliateController extends Controller
         return redirect()->back()->with('success', 'Global settings updated.');
     }
 
-    public function history()
+    public function history(Request $request)
     {
-        // Use repo or direct model with relations
-        $commissions = \App\Models\AffiliateCommission::with(['affiliate', 'referredUser', 'reference'])
-                        ->latest()
-                        ->paginate(20);
+        $query = \App\Models\AffiliateCommission::with(['affiliate', 'referredUser', 'reference']);
+
+        // Applying Search
+        if ($search = $request->input('search')) {
+            $query->whereHas('affiliate', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            });
+        }
+
+        // Applying Date Filter
+        $filter = $request->input('filter', 'all_time');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        if ($filter === 'custom' && $startDate && $endDate) {
+            $query->whereBetween('created_at', [\Carbon\Carbon::parse($startDate)->startOfDay(), \Carbon\Carbon::parse($endDate)->endOfDay()]);
+        } else {
+            switch ($filter) {
+                case 'today':
+                    $query->whereDate('created_at', \Carbon\Carbon::today());
+                    break;
+                case '7_days':
+                    $query->where('created_at', '>=', \Carbon\Carbon::now()->subDays(7));
+                    break;
+                case '30_days':
+                    $query->where('created_at', '>=', \Carbon\Carbon::now()->subDays(30));
+                    break;
+                case 'all_time':
+                default:
+                    // no date filter
+                    break;
+            }
+        }
+
+        $commissions = $query->latest()->paginate(20)->withQueryString();
+
+        if ($request->ajax()) {
+            return view('admin.affiliate.partials.history_table', compact('commissions'))->render();
+        }
 
         return view('admin.affiliate.history', compact('commissions'));
     }

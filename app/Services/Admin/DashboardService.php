@@ -28,6 +28,9 @@ class DashboardService
                 $revenueThisMonth = (float) Payment::where('status', 'success')->whereBetween('created_at', [$startOfMonth, $endOfMonth])->sum('amount');
                 $revenueLastMonth = (float) Payment::where('status', 'success')->whereBetween('created_at', [$startOfLastMonth, $endOfLastMonth])->sum('amount');
 
+                $sevenDaysRevenue = (float) Payment::where('status', 'success')->where('created_at', '>=', Carbon::now()->subDays(7))->sum('amount');
+                $thirtyDaysRevenue = (float) Payment::where('status', 'success')->where('created_at', '>=', Carbon::now()->subDays(30))->sum('amount');
+
                 // Growth Calculation (Prevent Division by Zero)
                 $growthPercentage = 0;
                 if ($revenueLastMonth > 0) {
@@ -54,6 +57,10 @@ class DashboardService
                     'total_courses'         => Course::count(),
                     'active_courses'        => Course::where('is_published', true)->count(),
                     'total_revenue'         => $totalRevenue,
+                    'today_revenue'         => (float) Payment::where('status', 'success')->whereDate('created_at', $today)->sum('amount'),
+                    'seven_days_revenue'    => $sevenDaysRevenue,
+                    'thirty_days_revenue'   => $thirtyDaysRevenue,
+                    'all_time_revenue'      => $totalRevenue,
                     'revenue_growth'        => round($growthPercentage, 1),
                     'total_paid_commission' => (float) AffiliateCommission::paid()->sum('amount'),
                     'pending_commission'    => (float) AffiliateCommission::pending()->sum('amount'),
@@ -77,6 +84,10 @@ class DashboardService
                     'total_courses' => 0,
                     'active_courses' => 0,
                     'total_revenue' => 0,
+                    'today_revenue' => 0,
+                    'seven_days_revenue' => 0,
+                    'thirty_days_revenue' => 0,
+                    'all_time_revenue' => 0,
                     'revenue_growth' => 0,
                     'total_paid_commission' => 0,
                     'pending_commission' => 0,

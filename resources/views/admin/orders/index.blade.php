@@ -1,24 +1,24 @@
 @extends('layouts.admin')
 
-@section('title', 'Referral History')
+@section('title', 'Order History')
 
 @section('content')
-<div class="space-y-8 font-sans text-mainText" x-data="historyFilter()">
+<div class="space-y-8 font-sans text-mainText" x-data="orderFilter()">
 
     {{-- Header Section --}}
     <div class="flex flex-col md:flex-row justify-between items-end gap-4">
         <div>
-            <h1 class="text-3xl font-extrabold tracking-tight text-mainText">Referral & Commission History</h1>
-            <p class="text-mutedText mt-1 text-sm">Track affiliate performance and manage commission payouts.</p>
+            <h1 class="text-3xl font-extrabold tracking-tight text-mainText">Order History</h1>
+            <p class="text-mutedText mt-1 text-sm">Track user orders and view invoices.</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
             <div class="relative">
-                <input type="text" x-model="search" @input.debounce.500ms="fetchHistory()" placeholder="Search affiliates..." class="pl-10 pr-4 py-2 bg-surface text-mainText border border-primary/10 rounded-xl text-sm focus:ring-primary focus:border-primary w-64 shadow-sm">
+                <input type="text" x-model="search" @input.debounce.500ms="fetchOrders()" placeholder="Search orders..." class="pl-10 pr-4 py-2 bg-surface text-mainText border border-primary/10 rounded-xl text-sm focus:ring-primary focus:border-primary w-64 shadow-sm">
                 <svg class="w-4 h-4 text-mutedText absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
 
-            <select x-model="filter" @change="fetchHistory()" class="bg-surface border border-primary/10 rounded-xl text-sm font-medium focus:ring-primary text-mainText px-4 py-2">
+            <select x-model="filter" @change="fetchOrders()" class="bg-surface border border-primary/10 rounded-xl text-sm font-medium focus:ring-primary text-mainText px-4 py-2">
                 <option value="all_time">All Time</option>
                 <option value="today">Today</option>
                 <option value="7_days">7 Days</option>
@@ -30,7 +30,7 @@
                 <input type="date" x-model="startDate" class="bg-surface border border-primary/10 rounded-xl text-sm font-medium focus:ring-primary text-mainText px-3 py-2">
                 <span class="text-mutedText">to</span>
                 <input type="date" x-model="endDate" class="bg-surface border border-primary/10 rounded-xl text-sm font-medium focus:ring-primary text-mainText px-3 py-2">
-                <button @click="fetchHistory()" class="bg-primary hover:bg-primary-dark text-white px-3 py-2 rounded-xl text-sm font-bold transition-colors">
+                <button @click="fetchOrders()" class="bg-primary hover:bg-primary-dark text-white px-3 py-2 rounded-xl text-sm font-bold transition-colors">
                     Apply
                 </button>
             </div>
@@ -42,11 +42,11 @@
 
         <div class="p-6 border-b border-primary/5 flex justify-between items-center bg-navy/30">
             <h3 class="text-lg font-bold text-mainText flex items-center gap-2">
-                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                Recent Conversions
+                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                Recent Orders
             </h3>
             <span class="text-xs font-medium text-mutedText bg-white px-3 py-1 rounded-full border border-primary/5 shadow-sm">
-                Total Records: {{ $commissions->total() }}
+                Total Records: {{ $orders->total() }}
             </span>
         </div>
 
@@ -60,15 +60,16 @@
                 <thead class="bg-primary/5 text-xs uppercase text-primary font-bold tracking-wider">
                     <tr>
                         <th class="px-6 py-4">Date & Time</th>
-                        <th class="px-6 py-4">Affiliate</th>
-                        <th class="px-6 py-4">Referred User</th>
-                        <th class="px-6 py-4">Product / Course</th>
-                        <th class="px-6 py-4 text-right">Commission</th>
-                        <th class="px-6 py-4 text-center">Status & Action</th>
+                        <th class="px-6 py-4">Order ID</th>
+                        <th class="px-6 py-4">User</th>
+                        <th class="px-6 py-4">Product</th>
+                        <th class="px-6 py-4 text-right">Amount</th>
+                        <th class="px-6 py-4 text-center">Status</th>
+                        <th class="px-6 py-4 text-center">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-primary/5" id="history-table-body">
-                    @include('admin.affiliate.partials.history_table')
+                    @include('admin.orders.partials.history_table')
                 </tbody>
             </table>
         </div>
@@ -78,19 +79,19 @@
 @push('scripts')
 <script>
     document.addEventListener('alpine:init', () => {
-        Alpine.data('historyFilter', () => ({
+        Alpine.data('orderFilter', () => ({
             loading: false,
             search: '{{ request('search') }}',
             filter: 'all_time',
             startDate: '',
             endDate: '',
 
-            async fetchHistory() {
+            async fetchOrders() {
                 if (this.filter === 'custom' && (!this.startDate || !this.endDate)) return;
 
                 this.loading = true;
                 try {
-                    let url = `{{ route('admin.affiliate.history') }}?filter=${this.filter}&search=${encodeURIComponent(this.search)}`;
+                    let url = `{{ route('admin.orders.index') }}?filter=${this.filter}&search=${encodeURIComponent(this.search)}`;
                     if (this.filter === 'custom') {
                         url += `&start_date=${this.startDate}&end_date=${this.endDate}`;
                     }
@@ -106,7 +107,7 @@
                     const html = await response.text();
                     document.getElementById('history-table-body').innerHTML = html;
                 } catch (error) {
-                    console.error('Error fetching history:', error);
+                    console.error('Error fetching orders:', error);
                 } finally {
                     this.loading = false;
                 }
@@ -126,7 +127,7 @@
 
         if (link && link.closest('#history-table-body')) {
             e.preventDefault();
-            const component = Alpine.$data(document.querySelector('[x-data="historyFilter()"]'));
+            const component = Alpine.$data(document.querySelector('[x-data="orderFilter()"]'));
             component.loading = true;
             try {
                 const response = await fetch(link.href, {

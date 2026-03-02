@@ -236,13 +236,10 @@
                 </div>
             </div>
 
-            <div class="mt-16 pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="mt-16 pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-center items-center gap-4">
                 <p class="text-mutedText text-sm font-medium">
-                    &copy; {{ date('Y') }} {{ config('app.name', 'Skills Pehle') }}. All rights reserved.
+                    &copy; {{ date('Y') }}. All Rights Reserved by Shrivardhankar Enterprises ( Skillspehle ).
                 </p>
-                <div class="flex items-center gap-2 text-sm text-mutedText font-medium">
-                    Developed by <span class="text-primary font-bold">Digi Emporirer</span>
-                </div>
             </div>
         </div>
     </footer>
