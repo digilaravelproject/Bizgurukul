@@ -149,7 +149,7 @@
                         Master the skills that the world is ready to pay for. Build a high-income career without the traditional 9-to-5 grind.
                     </p>
                     <div class="flex flex-col sm:flex-row items-center gap-6 justify-center lg:justify-start">
-                        <a href="#courses" class="brand-gradient text-white px-10 py-5 rounded-[2rem] font-black text-sm uppercase tracking-[3px] shadow-2xl shadow-primary/40 hover:scale-105 active:scale-95 transition-all">
+                        <a href="#bundles" class="brand-gradient text-white px-10 py-5 rounded-[2rem] font-black text-sm uppercase tracking-[3px] shadow-2xl shadow-primary/40 hover:scale-105 active:scale-95 transition-all">
                             Start Your Journey
                         </a>
                         <button class="flex items-center gap-4 font-black uppercase text-[10px] tracking-widest group">

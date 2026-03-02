@@ -19,9 +19,12 @@ Route::get('/u/{slug}', [App\Http\Controllers\Student\AffiliateLinkController::c
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/home-variant', [HomeController::class, 'variant'])->name('web.variant');
 Route::get('/about', [HomeController::class, 'about'])->name('web.about');
+Route::get('/terms', [HomeController::class, 'terms'])->name('web.terms');
 Route::get('/contact', [HomeController::class, 'contact'])->name('web.contact');
-Route::get('/course/{course}', [HomeController::class, 'courses'])->name('course.show');
-Route::get('/coursesp/{course}', [HomeController::class, 'courses'])->name('bundles.show');
+Route::get('/privacy', [HomeController::class, 'privacy'])->name('web.privacy');
+Route::get('/refund', [HomeController::class, 'refund'])->name('web.refund');
+Route::get('/course/{slug}', [HomeController::class, 'courseShow'])->name('course.show');
+Route::get('/bundle/{slug}', [HomeController::class, 'bundleShow'])->name('bundles.show');
 Route::get('/communities', [\App\Http\Controllers\CommunityController::class, 'index'])->name('communities');
 
 // 3. Guest/Registration Payment Flow (Publicly Accessible)

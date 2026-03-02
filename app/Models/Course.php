@@ -15,6 +15,7 @@ class Course extends Model
         'category_id',
         'sub_category_id',
         'title',
+        'slug',
         'description',
         'is_published',
         'demo_video_url',

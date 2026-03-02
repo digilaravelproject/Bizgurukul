@@ -45,7 +45,7 @@ class RegistrationFlowController extends Controller
                 'name'     => ['required', 'string', 'max:255'],
                 'email'    => ['required', 'string', 'email', 'max:255', 'unique:users'],
                 'mobile'   => ['required', 'numeric', 'digits_between:10,15'],
-                'password' => ['required', 'confirmed', Password::defaults()],
+                'password' => ['required', Password::defaults()],
                 'gender'   => ['nullable', 'string'],
                 'dob'      => ['nullable', 'date'],
                 'state_id' => ['nullable', 'exists:states,id'],
@@ -92,7 +92,7 @@ class RegistrationFlowController extends Controller
             $maskedSponsor = null;
             if ($sponsor) {
                 $maskedSponsor = (object) [
-                    'name'   => $this->maskString($sponsor->name),
+                    'name'   => $sponsor->name,
                     'mobile' => $this->maskString($sponsor->mobile, 'mobile')
                 ];
             }
@@ -131,7 +131,7 @@ class RegistrationFlowController extends Controller
             if ($sponsor) {
                 return response()->json([
                     'status' => 'valid',
-                    'name'   => $this->maskString($sponsor->name),
+                    'name'   => $sponsor->name,
                     'mobile' => $this->maskString($sponsor->mobile, 'mobile'),
                 ]);
             }

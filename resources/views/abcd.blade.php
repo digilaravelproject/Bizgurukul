@@ -126,7 +126,7 @@
             <div class="flex-1 overflow-y-auto p-6 flex flex-col space-y-8">
                 <div class="flex flex-col space-y-6">
                     <a href="#home" @click="open = false" class="text-lg font-bold text-secondary">Home</a>
-                    <a href="#courses" @click="open = false" class="text-lg font-bold text-secondary">Programs</a>
+                    <a href="#bundles" @click="open = false" class="text-lg font-bold text-secondary">Programs</a>
                     <a href="#about" @click="open = false" class="text-lg font-bold text-secondary">About</a>
                     <a href="#refer" @click="open = false" class="text-lg font-bold text-secondary">Refer & Earn</a>
                 </div>
@@ -163,7 +163,7 @@
                     </p>
 
                     <div class="flex flex-col sm:flex-row items-center gap-4">
-                        <a href="#courses" class="w-full sm:w-auto px-8 py-4 bg-primary text-white font-bold rounded-xl hover:bg-orange-500 transition-colors text-center shadow-sm">
+                        <a href="#bundles" class="w-full sm:w-auto px-8 py-4 bg-primary text-white font-bold rounded-xl hover:bg-orange-500 transition-colors text-center shadow-sm">
                             Start Your Journey
                         </a>
                         <button class="w-full sm:w-auto px-8 py-4 bg-white border border-gray-200 text-secondary font-bold rounded-xl hover:bg-gray-50 flex items-center justify-center gap-3 transition-colors">
@@ -329,7 +329,7 @@
                 <div>
                     <h4 class="text-sm font-bold text-secondary mb-6 tracking-wide">Navigation</h4>
                     <ul class="space-y-4">
-                        <li><a href="#courses" class="text-gray-500 hover:text-secondary font-medium transition-colors">Top Courses</a></li>
+                        <li><a href="#bundles" class="text-gray-500 hover:text-secondary font-medium transition-colors">Top Courses</a></li>
                         <li><a href="#" class="text-gray-500 hover:text-secondary font-medium transition-colors">Join as Mentor</a></li>
                         <li><a href="#refer" class="text-gray-500 hover:text-secondary font-medium transition-colors">Referral Portal</a></li>
                     </ul>

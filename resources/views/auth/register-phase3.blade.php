@@ -14,6 +14,7 @@
                 couponStatus: '',
                 loadingCoupon: false,
                 processingPayment: false,
+                acceptedTerms: false,
 
                 async applyCoupon() {
                     if (!this.couponCode) return;
@@ -62,7 +63,7 @@
                 },
 
                 async initiatePayment() {
-                    if (this.processingPayment) return;
+                    if (this.processingPayment || !this.acceptedTerms) return;
                     this.processingPayment = true;
 
                     try {
@@ -246,11 +247,23 @@
             </div>
         </div>
 
-        <div>
-            <button type="button"
-                @click="initiatePayment()"
-                :disabled="processingPayment"
-                class="w-full py-4 rounded-xl text-white font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform active:scale-95 brand-gradient flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+         <div class="space-y-4">
+             <!-- Terms and Conditions -->
+             <div class="flex items-start gap-3 p-3 bg-gray-50 border border-gray-100 rounded-xl">
+                 <div class="flex items-center h-5 mt-0.5">
+                     <input id="terms" type="checkbox" x-model="acceptedTerms"
+                         class="w-4 h-4 text-[rgb(var(--color-primary))] border-gray-300 rounded focus:ring-[rgb(var(--color-primary))] cursor-pointer">
+                 </div>
+                 <label for="terms" class="text-xs text-[rgb(var(--color-text-muted))] leading-normal cursor-pointer">
+                     I agree to the <a href="{{ route('web.terms') }}" class="font-bold text-[rgb(var(--color-primary))] hover:underline">Terms and Conditions</a>,
+                     Refund Policy, and Privacy Policy. I confirm all provided details are correct.
+                 </label>
+             </div>
+
+             <button type="button"
+                 @click="initiatePayment()"
+                 :disabled="processingPayment || !acceptedTerms"
+                 class="w-full py-4 rounded-xl text-white font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform active:scale-95 brand-gradient flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
 
                 <span x-show="!processingPayment">Pay ₹<span x-text="Number(total).toFixed(2)"></span> & Join</span>
 

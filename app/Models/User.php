@@ -287,13 +287,7 @@ class User extends Authenticatable
 
     public function canUpgradeBundles()
     {
-        $payment = $this->maxBundlePayment();
-        if (!$payment) return false;
-
-        $hours = (int) Setting::get('upgrade_window_hours', 24);
-        if ($hours <= 0) return false; // Disabled
-
-        return now()->diffInHours($payment->created_at) < $hours;
+        return $this->upgradeTimeLeftSeconds() > 0;
     }
 
     public function upgradeTimeLeftSeconds()
