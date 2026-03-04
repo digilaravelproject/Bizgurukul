@@ -40,7 +40,7 @@
                         About SkillsPehle
                     </h2>
                     <p class="text-mutedText leading-relaxed">
-                        SkillsPehle (“Company”, “we”, “our”, or “us”) operates the website and provides digital educational programs, training materials, and related services (collectively referred to as “Services”). By accessing our website, enrolling in a course, or participating in any offer through the platform, you agree to comply with these Terms and Conditions along with our Privacy Policy and Refund Policy. If you do not agree, you should not use the platform.
+                        SkillsPehle (“Company”, “we”, “our”, or “us”) operates the website and provides digital educational programs, training materials, and related services (collectively referred to as “Services”). By accessing our website, enrolling in a course, or participating in any offer through the platform, you agree to comply with these Terms and Conditions along with our Privacy Policy. If you do not agree, you should not use the platform.
                     </p>
                 </section>
 
@@ -111,10 +111,10 @@
                 <section>
                     <h2 class="text-2xl font-black text-mainText mb-4 flex items-center gap-3">
                         <span class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm">5</span>
-                        Payments and Refund
+                        Payments
                     </h2>
                     <p class="text-mutedText leading-relaxed">
-                        All payments must be paid according to the pricing plans described on the website. We use secure third-party payment gateways. By making a purchase, you confirm that you are authorized to use the payment method. Refunds are governed by our separate Refund Policy.
+                        All payments must be paid according to the pricing plans described on the website. We use secure third-party payment gateways. By making a purchase, you confirm that you are authorized to use the payment method.
                     </p>
                 </section>
 

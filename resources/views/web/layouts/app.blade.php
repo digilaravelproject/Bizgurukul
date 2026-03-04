@@ -66,12 +66,6 @@
                             <span class="absolute bottom-0 left-0 h-0.5 bg-primary transition-all duration-300 rounded-full {{ request()->routeIs('web.privacy') ? 'w-full' : 'w-0 group-hover:w-full' }}"></span>
                         </a>
 
-                        <a href="{{ route('web.refund') }}"
-                            class="text-sm font-bold uppercase tracking-wide relative group transition-colors py-2 {{ request()->routeIs('web.refund') ? 'text-primary' : 'text-mainText hover:text-primary' }}">
-                            Refunds
-                            <span class="absolute bottom-0 left-0 h-0.5 bg-primary transition-all duration-300 rounded-full {{ request()->routeIs('web.refund') ? 'w-full' : 'w-0 group-hover:w-full' }}"></span>
-                        </a>
-
                     </div>
 
                     <div class="pl-8 border-l-2 border-gray-100 flex items-center gap-4">
@@ -137,11 +131,6 @@
                 <a href="{{ route('web.privacy') }}"
                     class="block px-4 py-3.5 rounded-xl text-base font-bold transition-all border {{ request()->routeIs('web.privacy') ? 'bg-primary/10 text-primary border-primary/20' : 'text-mainText border-transparent hover:bg-primary/5 hover:text-primary hover:border-primary/10' }}">
                     Privacy Policy
-                </a>
-
-                <a href="{{ route('web.refund') }}"
-                    class="block px-4 py-3.5 rounded-xl text-base font-bold transition-all border {{ request()->routeIs('web.refund') ? 'bg-primary/10 text-primary border-primary/20' : 'text-mainText border-transparent hover:bg-primary/5 hover:text-primary hover:border-primary/10' }}">
-                    Refund Policy
                 </a>
 
                 <div class="pt-6 mt-4 border-t border-gray-100 flex flex-col gap-4">
@@ -225,9 +214,6 @@
                         </li>
                         <li><a href="{{ route('web.terms') }}" class="text-mutedText font-medium hover:text-primary flex items-center gap-2 group transition-colors">
                             <span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span>Terms of Service</a>
-                        </li>
-                        <li><a href="{{ route('web.refund') }}" class="text-mutedText font-medium hover:text-primary flex items-center gap-2 group transition-colors">
-                            <span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span>Refund Policy</a>
                         </li>
                         <li><a href="{{ route('web.contact') }}" class="text-mutedText font-medium hover:text-primary flex items-center gap-2 group transition-colors">
                             <span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span>Help Center</a>

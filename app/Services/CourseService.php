@@ -144,20 +144,27 @@ class CourseService
                     $extension = pathinfo($data['assembled_video_path'], PATHINFO_EXTENSION) ?: 'mp4';
                     $finalPath = 'lessons/videos/'.$filename.'.'.$extension;
 
-                    // Move assembled file from temp raw to final location
-                    $assembledStoragePath = storage_path('app/public/'.ltrim($data['assembled_video_path'], '/'));
-                    $finalStoragePath = storage_path('app/public/'.ltrim($finalPath, '/'));
+                    // Use Storage::disk()->path() for environment-safe absolute path resolution
+                    // Strips any leading slash or 'public/' prefix from the assembled path
+                    $assembledRelative = ltrim(str_replace('public/', '', $data['assembled_video_path']), '/');
+                    $assembledAbsolutePath = Storage::disk('public')->path($assembledRelative);
+                    $finalAbsolutePath = Storage::disk('public')->path($finalPath);
 
-                    if (file_exists($assembledStoragePath)) {
+                    if (file_exists($assembledAbsolutePath)) {
                         // Ensure parent directory exists
-                        $dir = dirname($finalStoragePath);
+                        $dir = dirname($finalAbsolutePath);
                         if (! file_exists($dir)) {
                             mkdir($dir, 0755, true);
                         }
-                        // Use raw OS rename instead of loaded RAM transfer
-                        rename($assembledStoragePath, $finalStoragePath);
+                        // Use raw OS rename — no RAM loading, even for multi-GB files
+                        rename($assembledAbsolutePath, $finalAbsolutePath);
+
+                        // Verify the move succeeded before saving to DB
+                        if (! Storage::disk('public')->exists($finalPath)) {
+                            throw new Exception("Video rename failed. Source: {$assembledAbsolutePath} → Dest: {$finalAbsolutePath}");
+                        }
                     } else {
-                        throw new Exception('Assembled video file not found on disk.');
+                        throw new Exception('Assembled video file not found on disk. Expected at: '.$assembledAbsolutePath);
                     }
 
                     $lesson->update(['video_path' => $finalPath]);

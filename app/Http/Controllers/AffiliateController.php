@@ -63,9 +63,10 @@ class AffiliateController extends Controller
             /** @var \App\Models\User $user */
             $user = Auth::user();
 
-            $this->affiliateService->generateLink($user, $validatedData);
+            $link = $this->affiliateService->generateLink($user, $validatedData);
 
-            return redirect()->back()->with('success', 'Affiliate link generated successfully.');
+            return redirect()->back()
+                ->with('generated_link_url', url('/u/' . $link->slug));
         } catch (Exception $e) {
             Log::error("AffiliateController Error [generateLink]: " . $e->getMessage());
             return redirect()->back()->with('error', $e->getMessage());

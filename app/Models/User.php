@@ -274,7 +274,8 @@ class User extends Authenticatable
     public function highestPurchasedBundle()
     {
         $maxPref = $this->maxBundlePreferenceIndex();
-        if ($maxPref <= 0) return null;
+        if ($maxPref <= 0)
+            return null;
 
         foreach ($this->bundles as $bundle) {
             if ($bundle->preference_index == $maxPref) {
@@ -287,7 +288,8 @@ class User extends Authenticatable
     public function maxBundlePayment()
     {
         $highestBundle = $this->highestPurchasedBundle();
-        if (!$highestBundle) return null;
+        if (!$highestBundle)
+            return null;
 
         return Payment::where('user_id', $this->id)
             ->where('status', 'success')
@@ -304,13 +306,25 @@ class User extends Authenticatable
     public function upgradeTimeLeftSeconds()
     {
         $payment = $this->maxBundlePayment();
-        if (!$payment) return 0;
+        if (!$payment)
+            return 0;
 
         $hours = (int) Setting::get('upgrade_window_hours', 24);
-        if ($hours <= 0) return 0;
+        if ($hours <= 0)
+            return 0;
 
         $expiresAt = (clone $payment->created_at)->addHours($hours);
         $seconds = now()->diffInSeconds($expiresAt, false);
         return $seconds > 0 ? $seconds : 0;
+    }
+
+   // Name Attribute Accessor and Mutator
+    public function getNameAttribute($value): string
+    {
+        return ucwords(strtolower($value));
+    }
+    protected function setNameAttribute($value)
+    {
+        $this->attributes['name'] = ucwords(strtolower($value));
     }
 }

@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Models\Lesson;
-use FFMpeg\Format\Video\X264;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -20,7 +19,7 @@ class ProcessLessonVideo implements ShouldQueue
     public $lesson;
     public $timeout = 3600; // 1 hour
     public $tries = 3;
-    public $backoff = [60, 300]; // wait 1 minute, then 5 minutes
+    public $backoff = [60, 300];
 
     public function __construct(Lesson $lesson)
     {
@@ -38,21 +37,14 @@ class ProcessLessonVideo implements ShouldQueue
         }
 
         try {
-            /*
-            |--------------------------------------------------------------------------
-            | 0. Debug Configurations (For Production)
-            |--------------------------------------------------------------------------
-            */
-            $ffmpegPath = config('laravel-ffmpeg.ffmpeg.binaries');
-            $ffprobePath = config('laravel-ffmpeg.ffprobe.binaries');
-            Log::info("ProcessLessonVideo [ID: {$this->lesson->id}] starting. FFmpeg Path: {$ffmpegPath}, FFprobe Path: {$ffprobePath}");
 
             /*
             |--------------------------------------------------------------------------
-            | Force FFmpeg Threads (Helpful for Shared Hosting)
+            | 1. Basic Config
             |--------------------------------------------------------------------------
             */
-            config(['laravel-ffmpeg.ffmpeg.threads' => 2]);
+
+            config(['laravel-ffmpeg.ffmpeg.threads' => 2]); // safer for shared hosting
 
             $disk = 'public';
             $originalPath = $this->lesson->video_path;
@@ -61,121 +53,151 @@ class ProcessLessonVideo implements ShouldQueue
                 throw new \Exception("Original video not found: {$originalPath}");
             }
 
+            Log::info("Processing Lesson ID {$lessonId}");
+
             /*
             |--------------------------------------------------------------------------
-            | 1. Generate Thumbnail (if not exists)
+            | 2. Generate Thumbnail
             |--------------------------------------------------------------------------
             */
+
             if (empty($this->lesson->thumbnail)) {
 
-                $thumbName = 'lessons/thumbnails/' . $this->lesson->id . '_auto.jpg';
+                $thumbnailPath = "lessons/thumbnails/{$lessonId}_auto.jpg";
 
                 FFMpeg::fromDisk($disk)
                     ->open($originalPath)
                     ->getFrameFromSeconds(2)
                     ->export()
                     ->toDisk($disk)
-                    ->save($thumbName);
+                    ->save($thumbnailPath);
 
-                $this->lesson->update(['thumbnail' => $thumbName]);
+                $this->lesson->update([
+                    'thumbnail' => $thumbnailPath
+                ]);
             }
 
             /*
             |--------------------------------------------------------------------------
-            | 2. HLS + Encryption Setup
+            | 3. Prepare HLS Paths
             |--------------------------------------------------------------------------
             */
+
             $filename = pathinfo($originalPath, PATHINFO_FILENAME);
 
             $hlsDirectory = "lessons/hls/{$filename}";
-            $hlsPath = "{$hlsDirectory}/playlist.m3u8";
+            $playlistPath = "{$hlsDirectory}/playlist.m3u8";
 
-            // Generate AES-128 encryption key
+            /*
+            |--------------------------------------------------------------------------
+            | 4. Generate AES-128 Encryption Key
+            |--------------------------------------------------------------------------
+            */
+
             $encryptionKey = random_bytes(16);
 
-            $keyFilename = $filename . '.key';
-            $keyStoragePath = 'lessons/keys/' . $keyFilename;
+            $keyFilename = "{$filename}.key";
+            $keyStoragePath = "lessons/keys/{$keyFilename}";
 
-            // Store key privately
+            // Store key privately (local disk)
             Storage::disk('local')->put($keyStoragePath, $encryptionKey);
 
-            // Route that serves key securely
+            // Secure route for serving key
             $keyUrl = route('student.video.key', [
-                'lesson' => $this->lesson->id
-            ], false); // Use relative URL to avoid hostname mismatch issues (localhost vs 127.0.0.1)
-
-            Log::info("Starting Encrypted HLS Processing for Lesson ID: {$this->lesson->id}");
+                'lesson' => $lessonId
+            ], false);
 
             /*
             |--------------------------------------------------------------------------
-            | 3. Configure Video Format
+            | 5. Create Key Info File for FFmpeg
             |--------------------------------------------------------------------------
             */
-            $videoFormat = (new X264('aac', 'libx264'))
-                ->setKiloBitrate(1200);
+            $keyFullPath = storage_path('app/' . $keyStoragePath);
+
+            $keyInfoFilename = "{$filename}.keyinfo";
+            $keyInfoStoragePath = "lessons/keys/{$keyInfoFilename}";
+            $keyInfoFullPath = storage_path('app/' . $keyInfoStoragePath);
+
+            // The format requires:
+            // 1. URL to fetch key (embedded in .m3u8)
+            // 2. Absolute local path to actual key file
+            $keyInfoContent = "{$keyUrl}\n{$keyFullPath}\n";
+            Storage::disk('local')->put($keyInfoStoragePath, $keyInfoContent);
 
             /*
             |--------------------------------------------------------------------------
-            | 4. Export Encrypted HLS
+            | 6. Export Encrypted HLS via Raw FFmpeg Process
             |--------------------------------------------------------------------------
+            |
+            | Using Symfony Process directly to avoid api incompatibilities with
+            | pbmedia/laravel-ffmpeg package versions on the server.
             */
 
-            // NOTE: exportForHLS() uses ComplexFilters, which does NOT support ->resize().
-            // We use a raw FFmpeg scale filter string instead, which works in all contexts.
-            $hlsExporter = FFMpeg::fromDisk($disk)
-                ->open($originalPath)
-                ->exportForHLS()
-                ->toDisk($disk)
-                ->withEncryptionKey($encryptionKey, 'video.key');
+            // Fallback to "ffmpeg" if config empty
+            $ffmpegPath = config('laravel-ffmpeg.ffmpeg.binaries', 'ffmpeg');
 
-            try {
-                // The addFormat() callback receives HLSVideoFilters, which has ->resize($w, $h) directly.
-                // Do NOT nest inside addFilter() — that exposes ComplexFilters which has NO resize().
-                $hlsExporter->addFormat($videoFormat, function ($media) {
-                    $media->resize(1280, 720);
-                });
-            } catch (\Throwable $filterException) {
-                Log::warning("Could not add resize filter for Lesson ID: {$this->lesson->id}. Falling back to no scaling. Error: " . $filterException->getMessage());
-                // Fallback: export without any scaling (original resolution)
-                $hlsExporter->addFormat($videoFormat);
+            $sourceFullPath = Storage::disk($disk)->path($originalPath);
+            $playlistFullPath = Storage::disk($disk)->path($playlistPath);
+            $segmentFullPath = Storage::disk($disk)->path("{$hlsDirectory}/%03d.ts");
+
+            // Ensure HLS directory exists locally in the public disk
+            $hlsDirFullPath = dirname($playlistFullPath);
+            if (!file_exists($hlsDirFullPath)) {
+                mkdir($hlsDirFullPath, 0755, true);
             }
 
-            try {
-                $hlsExporter->save($hlsPath);
-            } catch (\Throwable $hlsException) {
-                Log::error("HLS save failed for Lesson ID: {$this->lesson->id}. Error: " . $hlsException->getMessage());
-                throw $hlsException;
+            // Construct exact FFmpeg command
+            $ffmpegCommand = [
+                $ffmpegPath,
+                '-y', // Overwrite
+                '-i', $sourceFullPath,
+                '-vf', 'scale=-2:720,format=yuv420p',
+                '-c:v', 'libx264',
+                '-b:v', '1200k',
+                '-maxrate', '1200k',
+                '-bufsize', '2400k',
+                '-c:a', 'aac',
+                '-b:a', '128k',
+                '-hls_time', '10',
+                '-hls_playlist_type', 'vod',
+                '-hls_key_info_file', $keyInfoFullPath,
+                '-hls_segment_filename', $segmentFullPath,
+                $playlistFullPath
+            ];
+
+            Log::info("Executing FFmpeg CLI for Lesson ID {$lessonId}: " . implode(' ', $ffmpegCommand));
+
+            // Run process with 2 hours timeout
+            $process = new \Symfony\Component\Process\Process($ffmpegCommand);
+            $process->setTimeout(7200);
+            $process->run();
+
+            if (!$process->isSuccessful()) {
+                throw new \Symfony\Component\Process\Exception\ProcessFailedException($process);
             }
+
+            // Cleanup temp keyinfo file
+            Storage::disk('local')->delete($keyInfoStoragePath);
 
             /*
             |--------------------------------------------------------------------------
-            | 5. Replace Key Placeholder in Playlist Files
+            | 8. Save HLS Path
             |--------------------------------------------------------------------------
             */
-            $files = Storage::disk($disk)->files($hlsDirectory);
 
-            foreach ($files as $file) {
-                if (pathinfo($file, PATHINFO_EXTENSION) === 'm3u8') {
-                    $content = Storage::disk($disk)->get($file);
-                    $content = str_replace('video.key', $keyUrl, $content);
-                    Storage::disk($disk)->put($file, $content);
-                }
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | 6. Update Lesson Record
-            |--------------------------------------------------------------------------
-            */
             $this->lesson->update([
-                'hls_path' => $hlsPath,
+                'hls_path' => $playlistPath,
             ]);
 
-            Log::info("Encrypted HLS conversion successful for Lesson ID: {$this->lesson->id}");
+            Log::info("Encrypted HLS conversion successful for Lesson ID {$lessonId}");
 
-        } catch (\Exception $e) {
-            $this->lesson->update(['hls_path' => 'failed']);
-            Log::error("Video Processing Failed ID {$this->lesson->id}: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+        } catch (\Throwable $e) {
+
+            $this->lesson->update([
+                'hls_path' => 'failed'
+            ]);
+
+            Log::error("Video Processing Failed ID {$lessonId}: " . $e->getMessage());
             throw $e;
         }
     }

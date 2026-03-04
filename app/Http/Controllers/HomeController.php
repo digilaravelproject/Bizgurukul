@@ -66,11 +66,6 @@ class HomeController extends Controller
         return view('web.privacy');
     }
 
-    public function refund()
-    {
-        return view('web.refund');
-    }
-
     public function courseShow($slug)
     {
         try {

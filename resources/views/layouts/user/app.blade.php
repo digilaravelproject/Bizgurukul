@@ -27,13 +27,13 @@
 </head>
 
 <body class="font-sans antialiased bg-navy text-mainText" x-data="{ sidebarOpen: false }">
-    <div class="h-screen flex overflow-hidden">
+    <div class="min-h-screen flex flex-col">
+        <main class="flex-grow">
+            {{-- 1. SIDEBAR SECTION --}}
 
-        {{-- 1. SIDEBAR SECTION --}}
-
-        @include('layouts.user.sidebar')
-        {{-- 2. MAIN CONTENT AREA --}}
-        <div class="flex-1 flex flex-col min-w-0 bg-navy relative md:ml-64">
+            @include('layouts.user.sidebar')
+            {{-- 2. MAIN CONTENT AREA --}}
+            <div class="flex-1 flex flex-col min-w-0 bg-navy relative md:ml-64">
 
             {{-- Navbar / Header --}}
             @include('layouts.user.header')
@@ -48,6 +48,7 @@
             {{-- Footer --}}
             @include('layouts.user.footer')
         </div>
+        </main>
     </div>
 
     {{-- Mobile Overlay --}}

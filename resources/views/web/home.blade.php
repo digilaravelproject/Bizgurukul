@@ -454,20 +454,6 @@
                     </div>
                 </div>
 
-                <div class="bg-surface border border-gray-200 rounded-2xl overflow-hidden transition-all duration-300 hover:border-primary/30" :class="{ 'shadow-md border-primary/50 ring-1 ring-primary/5': activeAccordion === 2 }">
-                    <button @click="activeAccordion = activeAccordion === 2 ? null : 2" class="w-full px-5 py-4 text-left flex justify-between items-center focus:outline-none">
-                        <span class="font-bold text-mainText text-base" :class="{ 'text-primary': activeAccordion === 2 }">Is there a refund policy?</span>
-                        <div class="w-7 h-7 rounded-full flex items-center justify-center transition-colors duration-300" :class="{ 'bg-primary/10': activeAccordion === 2, 'bg-gray-50': activeAccordion !== 2 }">
-                            <svg class="w-4 h-4 text-mutedText transform transition-transform duration-300" :class="{ 'rotate-180 text-primary': activeAccordion === 2 }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </div>
-                    </button>
-                    <div x-show="activeAccordion === 2" x-collapse>
-                        <div class="px-5 pb-5 text-sm text-mutedText leading-relaxed">
-                            Absolutely. We offer a 7-day, no-questions-asked money-back guarantee. If you log in and realize the teaching style or content isn't exactly what you need right now, just email our support team and we'll process the refund immediately.
-                        </div>
-                    </div>
-                </div>
-
                 <div class="bg-surface border border-gray-200 rounded-2xl overflow-hidden transition-all duration-300 hover:border-primary/30" :class="{ 'shadow-md border-primary/50 ring-1 ring-primary/5': activeAccordion === 3 }">
                     <button @click="activeAccordion = activeAccordion === 3 ? null : 3" class="w-full px-5 py-4 text-left flex justify-between items-center focus:outline-none">
                         <span class="font-bold text-mainText text-base" :class="{ 'text-primary': activeAccordion === 3 }">Do I need prior experience?</span>

@@ -341,7 +341,6 @@
                     <ul class="space-y-4">
                         <li><a href="#" class="text-gray-500 hover:text-secondary font-medium transition-colors">Terms of Use</a></li>
                         <li><a href="#" class="text-gray-500 hover:text-secondary font-medium transition-colors">Privacy Policy</a></li>
-                        <li><a href="#" class="text-gray-500 hover:text-secondary font-medium transition-colors">Refund Terms</a></li>
                     </ul>
                 </div>
 

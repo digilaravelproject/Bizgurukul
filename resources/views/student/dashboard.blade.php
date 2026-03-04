@@ -232,7 +232,7 @@
                 </div>
 
                 {{-- Generate Button --}}
-                <button type="submit" class="w-full bg-secondary text-navy hover:bg-white hover:text-navy py-3 rounded-xl font-black uppercase text-[11px] tracking-[3px] shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 mt-2">
+                <button type="submit" class="w-full bg-secondary text-navy hover:bg-primary/35 hover:text-primary py-3 rounded-xl font-black uppercase text-[11px] tracking-[3px] shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 mt-2">
                     <i class="fas fa-magic"></i> Generate Link
                 </button>
             </form>
@@ -482,4 +482,60 @@
         });
     }
 </script>
+
+@if(session('generated_link_url'))
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const generatedUrl = @json(session('generated_link_url'));
+
+        if (generatedUrl) {
+            navigator.clipboard.writeText(generatedUrl).then(() => {
+                const el = document.createElement('div');
+                el.innerHTML = `
+                    <div class="fixed top-6 right-6 bg-surface text-mainText px-6 py-4 rounded-2xl shadow-2xl border border-primary/20 flex items-center gap-4 z-50" style="animation: slideInRight 0.4s ease-out both;">
+                        <div class="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-secondary text-lg flex-shrink-0">
+                            <i class="fas fa-copy"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-black text-sm uppercase tracking-widest text-mainText">Link Generated!</h4>
+                            <p class="text-xs font-semibold text-mutedText mt-0.5">Successfully generated and it's copied to your clipboard!</p>
+                        </div>
+                    </div>`;
+                document.body.appendChild(el);
+                setTimeout(() => {
+                    el.firstElementChild.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                    el.firstElementChild.style.opacity = '0';
+                    el.firstElementChild.style.transform = 'translateX(20px)';
+                    setTimeout(() => el.remove(), 400);
+                }, 3500);
+            }).catch(() => {
+                // Fallback: clipboard not available, still show toast without "copied" text
+                const el = document.createElement('div');
+                el.innerHTML = `
+                    <div class="fixed top-6 right-6 bg-surface text-mainText px-6 py-4 rounded-2xl shadow-2xl border border-primary/20 flex items-center gap-4 z-50" style="animation: slideInRight 0.4s ease-out both;">
+                        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary text-lg flex-shrink-0">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-black text-sm uppercase tracking-widest text-mainText">Link Generated!</h4>
+                            <p class="text-xs font-semibold text-mutedText mt-0.5">Your affiliate link has been created successfully.</p>
+                        </div>
+                    </div>`;
+                document.body.appendChild(el);
+                setTimeout(() => {
+                    el.firstElementChild.style.transition = 'opacity 0.4s ease';
+                    el.firstElementChild.style.opacity = '0';
+                    setTimeout(() => el.remove(), 400);
+                }, 3500);
+            });
+        }
+    });
+</script>
+<style>
+    @keyframes slideInRight {
+        from { opacity: 0; transform: translateX(40px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+</style>
+@endif
 @endsection

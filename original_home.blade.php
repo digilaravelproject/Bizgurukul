@@ -303,7 +303,6 @@
                     <ul class="space-y-4 text-sm font-bold uppercase tracking-tighter text-gray-400">
                         <li><a href="#" class="hover:text-primary transition-all">Terms of Use</a></li>
                         <li><a href="#" class="hover:text-primary transition-all">Privacy Policy</a></li>
-                        <li><a href="#" class="hover:text-primary transition-all">Refund Terms</a></li>
                     </ul>
                 </div>
             </div>

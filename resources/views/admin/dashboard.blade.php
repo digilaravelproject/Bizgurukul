@@ -263,8 +263,30 @@
     document.addEventListener('alpine:init', () => {
         Alpine.data('dashboard', () => ({
             loading: false,
+            period: 'month',
+            lastUpdated: new Date().toLocaleTimeString(),
+            stats: {
+                total_revenue: 0,
+                revenue_growth: 0,
+                total_users: 0,
+                new_users_today: 0,
+                total_courses: 0,
+                active_courses: 0,
+                pending_commission: 0,
+                today_revenue: 0,
+                seven_days_revenue: 0,
+                thirty_days_revenue: 0,
+                all_time_revenue: 0,
+                top_courses: [],
+                recent_registrations: [],
+                recent_transactions: [],
+                chart: {}
+            },
+
             init() {
-                this.$nextTick(() => { this.renderChart(this.stats.chart || {}); });
+                this.$nextTick(() => {
+                    this.fetchStats();
+                });
                 setInterval(() => { this.fetchStats(); }, 300000);
             },
 
@@ -274,42 +296,40 @@
                     const response = await fetch(`{{ route('admin.dashboard.stats') }}?period=${this.period}`);
                     if (!response.ok) throw new Error('Network error');
                     const data = await response.json();
-                    this.stats = data.aggregate;
+                    this.stats = { ...this.stats, ...data.aggregate };
                     this.lastUpdated = new Date().toLocaleTimeString();
-                    this.renderChart(data.chart);
+                    this.renderChart(data.chart || {});
                 } catch (error) {
-                    console.error('Error:', error);
+                    console.error('Dashboard fetch error:', error);
                 } finally {
                     this.loading = false;
                 }
             },
 
-
-
             formatCurrency(value) {
                 return new Intl.NumberFormat('en-IN', {
                     style: 'currency', currency: 'INR', maximumFractionDigits: 0
-                }).format(value);
+                }).format(value || 0);
             },
 
             renderChart(chartData) {
                 const canvas = document.getElementById('salesChart');
-                if (!canvas) return;
+                if (!canvas) return; // Chart section hidden for users without permission
                 const ctx = canvas.getContext('2d');
                 if (window.salesChartInstance) window.salesChartInstance.destroy();
 
                 const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-                gradient.addColorStop(0, 'rgba(247, 148, 29, 0.2)'); // Brand Orange Low Opacity
+                gradient.addColorStop(0, 'rgba(247, 148, 29, 0.2)');
                 gradient.addColorStop(1, 'rgba(247, 148, 29, 0.0)');
 
                 window.salesChartInstance = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: chartData.labels,
+                        labels: chartData.labels || [],
                         datasets: [{
                             label: 'Revenue',
-                            data: chartData.data,
-                            borderColor: '#F7941D', // Brand Primary
+                            data: chartData.data || [],
+                            borderColor: '#F7941D',
                             backgroundColor: gradient,
                             borderWidth: 2,
                             pointBackgroundColor: '#FFFFFF',
