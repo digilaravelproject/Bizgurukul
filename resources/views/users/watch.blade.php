@@ -45,9 +45,17 @@
             -ms-user-select: none !important;
         }
 
+        /* Prevent selection and drag */
+        .no-select {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
     </style>
 
-    <div class="max-w-[1600px] mx-auto pb-12">
+    <div class="max-w-[1600px] mx-auto pb-12 no-select">
         {{-- Slim Breadcrumb --}}
         <div class="flex items-center gap-2 mb-6 text-[10px] font-bold uppercase tracking-widest text-mutedText">
             <a href="{{ route('student.my-courses') }}" class="hover:text-primary transition-colors">My Learning</a>
@@ -62,13 +70,27 @@
                 <div class="relative group rounded-2xl overflow-hidden shadow-2xl bg-black w-full aspect-video border border-gray-200/10">
                     @if($currentLesson && ($currentLesson->bunny_video_id || $currentLesson->bunny_embed_url))
                         @php
-                            $bunnySrc = $currentLesson->bunny_embed_url ?: "https://iframe.mediadelivery.net/embed/" . config('services.bunny.library_id') . "/" . $currentLesson->bunny_video_id;
+                            $libraryId = config('services.bunny.library_id');
+                            $videoId = $currentLesson->bunny_video_id;
+
+                            // Generate Secure Token (Pseudo-code implementation for Bunny Token Auth)
+                            // Note: Add BUNNY_SECURITY_KEY to your .env file
+                            $securityKey = env('BUNNY_SECURITY_KEY', '');
+                            $expires = time() + 14400; // 4 hours from now
+                            $token = hash('sha256', $securityKey . $videoId . $expires);
+
+                            if($currentLesson->bunny_embed_url && empty($currentLesson->bunny_video_id)) {
+                                $bunnySrc = $currentLesson->bunny_embed_url;
+                            } else {
+                                $bunnySrc = "https://iframe.mediadelivery.net/embed/{$libraryId}/{$videoId}?token={$token}&expires={$expires}";
+                            }
+
                             // Add parameters for autoplay, preload, etc. if required
                             $bunnySrc .= (str_contains($bunnySrc, '?') ? '&' : '?') . 'autoplay=true&loop=false&muted=false&preload=true&responsive=true';
                         @endphp
                         {{-- iframe fallback with 16:9 intrinsic ratio container --}}
                         <div style="position:relative;padding-top:56.25%;">
-                            <iframe src="{{ $bunnySrc }}"
+                            <iframe id="bunny-player" src="{{ $bunnySrc }}"
                                 loading="lazy"
                                 style="border:0;position:absolute;top:0;height:100%;width:100%;"
                                 allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
@@ -116,11 +138,9 @@
                     {{-- Blackout Overlay (Soft DRM) --}}
                     <div id="video-blackout" class="absolute inset-0 bg-black z-[100] flex flex-col items-center justify-center text-white text-center p-6" style="display: none;">
                          <div class="space-y-4">
-                            <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto">
-                                <i class="fas fa-shield-alt text-2xl text-primary"></i>
-                            </div>
-                            <p class="font-bold text-lg">Screen Protection Active</p>
-                            <p class="text-xs opacity-60">Playback is disabled while screen sharing or tab is inactive.</p>
+                            <i class="fas fa-user-shield text-4xl text-primary mb-2"></i>
+                            <p class="font-bold text-lg">Protected Content</p>
+                            <p class="text-xs opacity-60">Screen recording or sharing is strictly prohibited.</p>
                             <p class="text-[10px] uppercase tracking-widest text-primary font-bold mt-4">Focus to Resume</p>
                         </div>
                     </div>
@@ -281,11 +301,17 @@
 
             // Soft DRM Protection Logic
             const blackout = document.getElementById('video-blackout');
+            const bunnyIframe = document.getElementById('bunny-player');
 
             function showBlackout() {
                 blackout.style.display = 'flex';
-                if (player && !player.paused()) {
+                // Pause legacy video.js if exists
+                if (typeof player !== 'undefined' && player && !player.paused()) {
                     player.pause();
+                }
+                // Pause Bunny.net iframe via postMessage if exists
+                if (bunnyIframe && bunnyIframe.contentWindow) {
+                    bunnyIframe.contentWindow.postMessage('{"method":"pause"}', '*');
                 }
             }
 
@@ -293,8 +319,23 @@
                 blackout.style.display = 'none';
             }
 
+            // 0. Advanced Action: DevTools Detector
+            const devtoolsThreshold = 160;
+            setInterval(() => {
+                if (window.outerWidth - window.innerWidth > devtoolsThreshold ||
+                    window.outerHeight - window.innerHeight > devtoolsThreshold) {
+                    showBlackout();
+                }
+            }, 1000);
+
             // 1. Focus Tracking
-            window.addEventListener('blur', showBlackout);
+            window.addEventListener('blur', function() {
+                // If focus moved to the iframe (user clicked the video), do not blackout
+                if (document.activeElement && document.activeElement.tagName.toLowerCase() === 'iframe') {
+                    return;
+                }
+                showBlackout();
+            });
             window.addEventListener('focus', hideBlackout);
 
             // 2. Visibility API (Tab Switching)
@@ -306,56 +347,45 @@
                 }
             });
 
-            // 3. Screen Capture Shortcut (PrintScreen)
-            window.addEventListener('keyup', function(e) {
-                if (e.key === 'PrintScreen') {
-                    showBlackout();
-                    setTimeout(hideBlackout, 2000);
-                    // Add to clipboard empty string if possible (hacky)
-                    navigator.clipboard.writeText("");
-                }
-            });
-
-            // Keyboard Shortcuts & Protection
-            document.addEventListener('keydown', function(e) {
-                // Prevention: Block Save, Inspect, and Source view
-                if (e.ctrlKey && (e.key === 's' || e.key === 'u' || (e.shiftKey && (e.key === 'I' || e.key === 'C' || e.key === 'J')))) {
+            // 3. Complete Keyboard Block & Shortcuts
+            window.addEventListener('keydown', function(e) {
+                // Prevention: Block Screen Capture, Save, Inspect, Print and Source view
+                if (
+                    e.key === 'PrintScreen' ||
+                    (e.ctrlKey && (e.key === 'p' || e.key === 's' || e.key === 'u')) ||
+                    (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
+                    e.key === 'F12'
+                ) {
                     e.preventDefault();
-                    return false;
-                }
-                if (e.key === 'F12' || e.key === 'PrintScreen') {
                     showBlackout();
-                    setTimeout(hideBlackout, 1000);
-                    e.preventDefault();
+                    setTimeout(hideBlackout, 3000);
+                    // Add to clipboard empty string if possible (hacky snippet preventions)
+                    try { navigator.clipboard.writeText(""); } catch(err) {}
                     return false;
                 }
 
-                // Playback shortcuts
-                if(e.code === 'Space' && e.target === document.body) {
-                    e.preventDefault();
-                    player.paused() ? player.play() : player.pause();
+                // Playback shortcuts (only if video player exists and body is target)
+                if(typeof player !== 'undefined' && e.target === document.body) {
+                    if(e.code === 'Space') { e.preventDefault(); player.paused() ? player.play() : player.pause(); }
+                    if(e.code === 'ArrowRight') { player.currentTime(player.currentTime() + 10); }
+                    if(e.code === 'ArrowLeft') { player.currentTime(player.currentTime() - 10); }
                 }
-                if(e.code === 'ArrowRight' && e.target === document.body) player.currentTime(player.currentTime() + 10);
-                if(e.code === 'ArrowLeft' && e.target === document.body) player.currentTime(player.currentTime() - 10);
             });
 
-            // Watermark Logic - Moves every 8 seconds to a new random spot
+            // 4. Moving Watermark (Advanced Random X/Y)
             const watermark = document.getElementById('video-watermark');
 
             function moveWatermark() {
-                const container = document.querySelector('.video-js');
-                if(!container) return;
-                const maxX = container.offsetWidth - watermark.offsetWidth - 40;
-                const maxY = container.offsetHeight - watermark.offsetHeight - 40;
-                const randomX = Math.floor(Math.random() * maxX) + 20;
-                const randomY = Math.floor(Math.random() * maxY) + 20;
+                const container = document.querySelector('.video-js') || document.querySelector('.aspect-video');
+                if(!container || !watermark) return;
 
-                watermark.style.transition = 'all 1s ease-in-out';
-                watermark.style.left = randomX + 'px';
-                watermark.style.top = randomY + 'px';
-                watermark.style.opacity = Math.random() * (0.3 - 0.1) + 0.1; // Pulsing opacity
+                const x = Math.random() * (container.offsetWidth - 150);
+                const y = Math.random() * (container.offsetHeight - 50);
+
+                watermark.style.transform = `translate(${x}px, ${y}px)`;
+                watermark.style.opacity = Math.random() * (0.4 - 0.1) + 0.1;
             }
-            setInterval(moveWatermark, 8000);
+            setInterval(moveWatermark, 5000);
             moveWatermark();
 
             // Progress Tracking

@@ -258,19 +258,49 @@
         }
 
         /* --- Print Media Query --- */
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+
         @media print {
             body {
                 background-color: #fff;
                 padding: 0;
+                margin: 0;
+                font-size: 12px; /* Slightly smaller font for better fit */
             }
 
             .invoice-wrapper {
                 box-shadow: none;
                 border-top: 4px solid var(--color-text-main);
-                /* Fallback for print */
                 margin: 0;
                 padding: 0;
                 max-width: 100%;
+                width: 100%;
+            }
+
+            .header-top {
+                margin-bottom: 15px; /* Reduced gap */
+            }
+
+            .invoice-meta-box {
+                margin-bottom: 15px; /* Reduced gap */
+                padding: 10px 15px; /* Compact padding */
+                background-color: #fcfcfc !important;
+                border: 1px solid #eaeaea !important;
+            }
+
+            .billed-to {
+                margin-bottom: 15px; /* Reduced gap */
+            }
+
+            table {
+                margin-bottom: 10px; /* Reduced gap */
+            }
+
+            th, td {
+                padding: 8px 10px; /* More compact cells */
             }
 
             .bottom-actions {
@@ -279,12 +309,85 @@
 
             /* Ensure background colors print properly */
             th,
-            .invoice-meta-box,
             .tax-row td,
             .declaration-row td,
             .computer-generated-row td {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
+                background-color: #fafafa !important;
+            }
+        }
+
+        /* --- Responsive Media Query --- */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .invoice-wrapper {
+                padding: 20px;
+            }
+
+            .header-top {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .company-details {
+                text-align: center;
+                margin-top: 20px;
+            }
+
+            .invoice-meta-box {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .invoice-meta-box div {
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+                border-bottom: 1px solid #f0f0f0;
+                padding-bottom: 5px;
+            }
+
+            .invoice-meta-box div:last-child {
+                border-bottom: none;
+            }
+
+            /* Responsive Table */
+            .table-responsive {
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            table {
+                font-size: 12px;
+                min-width: 600px; /* Allow horizontal scroll for table stability */
+            }
+
+            .tax-flex-container {
+                flex-wrap: wrap;
+            }
+
+            .tax-col {
+                flex: none;
+                width: 50%;
+                border-bottom: 1px solid #eaeaea;
+            }
+
+            .tax-col:nth-child(even) {
+                border-right: none;
+            }
+
+            .tax-label-col {
+                width: 100%;
+                justify-content: center;
+                padding-right: 0;
+                background-color: #f5f5f5;
             }
         }
     </style>
@@ -358,79 +461,81 @@
         </div>
 
         <!-- Items Table -->
-        <table>
-            <thead>
-                <tr>
-                    <th class="text-left" style="width: 40%;">Description</th>
-                    <th style="width: 15%;">Qty</th>
-                    <th style="width: 20%;">HSN/SAC</th>
-                    <th class="text-right" style="width: 25%;">Amount</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Item Row -->
-                <tr>
-                    <td class="text-left">
-                        @if ($invoice->bundle)
-                            <strong>{{ $invoice->bundle->title }}</strong>
-                        @elseif($invoice->course)
-                            <strong>{{ $invoice->course->title }}</strong>
-                        @elseif($invoice->paymentable)
-                            <strong>{{ $invoice->paymentable->title ?? ($invoice->paymentable->name ?? 'Finance Mastery') }}</strong>
-                        @else
-                            <strong>Finance Mastery</strong>
-                        @endif
-                    </td>
-                    <td>1</td>
-                    <td>999293</td>
-                    <td class="text-right">₹{{ number_format($subTotal, 2) }}</td>
-                </tr>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="text-left" style="width: 40%;">Description</th>
+                        <th style="width: 15%;">Qty</th>
+                        <th style="width: 20%;">HSN/SAC</th>
+                        <th class="text-right" style="width: 25%;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Item Row -->
+                    <tr>
+                        <td class="text-left">
+                            @if ($invoice->bundle)
+                                <strong>{{ $invoice->bundle->title }}</strong>
+                            @elseif($invoice->course)
+                                <strong>{{ $invoice->course->title }}</strong>
+                            @elseif($invoice->paymentable)
+                                <strong>{{ $invoice->paymentable->title ?? ($invoice->paymentable->name ?? 'Finance Mastery') }}</strong>
+                            @else
+                                <strong>Finance Mastery</strong>
+                            @endif
+                        </td>
+                        <td>1</td>
+                        <td>999293</td>
+                        <td class="text-right">₹{{ number_format($subTotal, 2) }}</td>
+                    </tr>
 
-                <!-- Sub Total Row -->
-                <tr>
-                    <td colspan="3" class="text-right"><strong>Sub Total:</strong></td>
-                    <td class="text-right"><strong>₹{{ number_format($subTotal, 2) }}</strong></td>
-                </tr>
+                    <!-- Sub Total Row -->
+                    <tr>
+                        <td colspan="3" class="text-right"><strong>Sub Total:</strong></td>
+                        <td class="text-right"><strong>₹{{ number_format($subTotal, 2) }}</strong></td>
+                    </tr>
 
-                <!-- Tax Split Row (Exactly as per image layout) -->
-                <tr class="tax-row">
-                    <td colspan="3">
-                        <div class="tax-flex-container">
-                            <div class="tax-col tax-label-col">Tax 18%:</div>
-                            <div class="tax-col">CGST: 9%</div>
-                            <div class="tax-col">CGST Amt: ₹{{ number_format($cgst, 2) }}</div>
-                            <div class="tax-col">SGST: 9%</div>
-                            <div class="tax-col">SGST Amt: ₹{{ number_format($sgst, 2) }}</div>
-                        </div>
-                    </td>
-                    <td class="text-right" style="vertical-align: middle;">
-                        <strong>₹{{ number_format($taxAmount, 2) }}</strong>
-                    </td>
-                </tr>
+                    <!-- Tax Split Row (Exactly as per image layout) -->
+                    <tr class="tax-row">
+                        <td colspan="3">
+                            <div class="tax-flex-container">
+                                <div class="tax-col tax-label-col">Tax 18%:</div>
+                                <div class="tax-col">CGST: 9%</div>
+                                <div class="tax-col">CGST Amt: ₹{{ number_format($cgst, 2) }}</div>
+                                <div class="tax-col">SGST: 9%</div>
+                                <div class="tax-col">SGST Amt: ₹{{ number_format($sgst, 2) }}</div>
+                            </div>
+                        </td>
+                        <td class="text-center" style="vertical-align: middle;">
+                            <strong>₹{{ number_format($taxAmount, 2) }}</strong>
+                        </td>
+                    </tr>
 
-                <!-- Total Row -->
-                <tr>
-                    <td colspan="3" class="text-right" style="font-size: 16px;"><strong>Total:</strong></td>
-                    <td class="text-right" style="font-size: 16px;">
-                        <strong>₹{{ number_format($totalAmount, 2) }}</strong></td>
-                </tr>
+                    <!-- Total Row -->
+                    <tr>
+                        <td colspan="3" class="text-right" style="font-size: 16px;"><strong>Total:</strong></td>
+                        <td class="text-right" style="font-size: 16px;">
+                            <strong>₹{{ number_format($totalAmount, 2) }}</strong></td>
+                    </tr>
 
-                <!-- Declaration -->
-                <tr class="declaration-row">
-                    <td colspan="4">
-                        <strong>Declaration: We declare that this invoice shows the actual price of the goods/ services
-                            described and that all particulars are true and correct.</strong>
-                    </td>
-                </tr>
+                    <!-- Declaration -->
+                    <tr class="declaration-row">
+                        <td colspan="4">
+                            <strong>Declaration: We declare that this invoice shows the actual price of the goods/ services
+                                described and that all particulars are true and correct.</strong>
+                        </td>
+                    </tr>
 
-                <!-- Computer Generated Note -->
-                <tr class="computer-generated-row">
-                    <td colspan="4">
-                        This is a Computer Generated Invoice No Signature Required.
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+                    <!-- Computer Generated Note -->
+                    <tr class="computer-generated-row">
+                        <td colspan="4">
+                            This is a Computer Generated Invoice No Signature Required.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
         <!-- Print Action -->
         <div class="bottom-actions">
