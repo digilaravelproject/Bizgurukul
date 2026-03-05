@@ -20,6 +20,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Force IST timezone globally (PHP + Carbon)
+        date_default_timezone_set(config('app.timezone', 'Asia/Kolkata'));
+        \Carbon\Carbon::setLocale('en');
+
+
         Gate::before(function ($user, $ability) {
             return $user->hasRole('Admin') ? true : null;
         });

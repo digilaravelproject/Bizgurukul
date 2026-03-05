@@ -10,7 +10,7 @@ class SettingsSeeder extends Seeder
     public function run(): void
     {
         $settings = [
-            'site_name' => 'Skills Pahle',
+            'site_name' => 'SKILLS PEHLE',
             'site_description' => 'Learn and Earn',
             'affiliate_module_enabled' => true,
             'course_selling_enabled' => true,

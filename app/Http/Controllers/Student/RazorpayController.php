@@ -76,7 +76,7 @@ class RazorpayController extends Controller
 
         if ($type === 'course') {
             $product = Course::findOrFail($id);
-            $amount = $product->final_price;
+            $amount = ($user && $user->referrer) ? $product->affiliate_price : $product->final_price;
         } else {
             $product = \App\Models\Bundle::findOrFail($id);
             $amount = $product->getEffectivePriceForUser($user);
@@ -108,7 +108,7 @@ class RazorpayController extends Controller
 
             if ($type === 'course') {
                 $course = Course::findOrFail($id);
-                $amount = $course->final_price;
+                $amount = ($user && $user->referrer) ? $course->affiliate_price : $course->final_price;
                 $productName = $course->title;
             } else {
                 $bundle = \App\Models\Bundle::findOrFail($id);
@@ -206,25 +206,43 @@ class RazorpayController extends Controller
             $payment = Payment::with(['course', 'bundle'])->where('razorpay_order_id', $orderId)->lockForUpdate()->firstOrFail();
 
             if ($payment->status !== 'success') {
+                $user = Auth::user();
+                $product = $payment->bundle ?? $payment->course;
+
+                // --- 🚨 DETECT UPGRADE BEFORE STATUS UPDATE 🚨 ---
+                $isUpgrade = false;
+                $previousBundle = null;
+
+                if ($product instanceof \App\Models\Bundle && $user) {
+                    $previousBundle = $user->highestPurchasedBundle();
+                    if ($previousBundle && $previousBundle->id !== $product->id
+                        && $previousBundle->preference_index < $product->preference_index) {
+                        $isUpgrade = true;
+                    }
+                }
+                // --------------------------------------------------
+
                 $payment->update([
                     'status' => 'success',
                     'razorpay_payment_id' => $paymentId
                 ]);
 
-                // Determine Product
-                $product = $payment->bundle ?? $payment->course;
-
                 // Commission Logic
-                $user = Auth::user();
-                // Check if referred (either by direct referrer or via cookie/affiliate link logic)
-                // Assuming user->referred_by serves as the sponsor
                 if ($user && $user->referrer) {
                     $sponsor = $user->referrer;
 
                     // Calculate Commission
                     $commissionAmount = 0;
                     if ($product instanceof \App\Models\Bundle) {
-                         $commissionAmount = $this->commissionService->calculateCommission($sponsor, $product, $payment->amount);
+                        if ($isUpgrade && $previousBundle) {
+                            // UPGRADE: Sponsor gets differential
+                            $newCommission = $this->commissionService->calculateCommission($sponsor, $product, $product->affiliate_price);
+                            $oldCommission = $this->commissionService->calculateCommission($sponsor, $previousBundle, $previousBundle->affiliate_price);
+                            $commissionAmount = max(0, $newCommission - $oldCommission);
+                        } else {
+                            // Fresh purchase
+                            $commissionAmount = $this->commissionService->calculateCommission($sponsor, $product, $payment->amount);
+                        }
                     } elseif ($product instanceof Course) {
                          $commissionAmount = $product->commission_value ?? 0;
                     }
@@ -237,7 +255,7 @@ class RazorpayController extends Controller
                             // Status is handled by processCommission
                             'reference_id' => $product->id,
                             'reference_type' => get_class($product),
-                            'notes' => 'Commission for ' . class_basename($product) . ': ' . $product->title,
+                            'notes' => ($isUpgrade ? 'Upgrade Commission' : 'Commission') . ' for ' . class_basename($product) . ': ' . $product->title,
                         ]);
                     }
                 }

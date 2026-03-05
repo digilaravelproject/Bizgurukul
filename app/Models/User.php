@@ -117,7 +117,7 @@ class User extends Authenticatable
     {
         return $this->profile_picture
             ? asset('storage/' . $this->profile_picture)
-            : asset('assets/images/default-avatar.png');
+            : 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=6366f1&color=fff&size=128&bold=true';
     }
     public function kyc()
     {
@@ -309,7 +309,7 @@ class User extends Authenticatable
         if (!$payment)
             return 0;
 
-        $hours = (int) Setting::get('upgrade_window_hours', 24);
+        $hours = (int) Setting::get('upgrade_window_hours', 72);
         if ($hours <= 0)
             return 0;
 

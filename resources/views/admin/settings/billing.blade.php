@@ -121,7 +121,7 @@
                             file:rounded-xl file:border-0
                             file:text-sm file:font-bold file:uppercase file:tracking-widest
                             file:bg-primary/10 file:text-primary
-                            hover:file:bg-primary border border-primary/10 rounded-xl bg-navy transition-all cursor-pointer">
+                            hover:file:bg-primary hover:file:text-white border border-primary/10 rounded-xl bg-navy transition-all cursor-pointer">
                         <p class="text-[11px] text-mutedText mt-3 bg-navy p-3 rounded-xl border border-primary/5 inline-block">
                             <i class="fas fa-info-circle text-primary mr-1"></i> Recommended: PNG with transparent background. Max size: 2MB.
                         </p>

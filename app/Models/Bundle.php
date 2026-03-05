@@ -113,7 +113,9 @@ class Bundle extends Model
      */
     public function getEffectivePriceForUser($user)
     {
-        $price = $this->final_price;
+        // Base price depends on whether user was referred
+        $basePrice = ($user && $user->referrer) ? $this->affiliate_price : $this->final_price;
+        $price = $basePrice;
 
         if ($user) {
             $maxPref = $user->maxBundlePreferenceIndex();
@@ -122,7 +124,8 @@ class Bundle extends Model
                 if ($user->canUpgradeBundles()) {
                     $highestBundle = $user->highestPurchasedBundle();
                     if ($highestBundle) {
-                        $diff = $this->final_price - $highestBundle->final_price;
+                        $paidBasePrice = ($user->referrer) ? $highestBundle->affiliate_price : $highestBundle->final_price;
+                        $diff = $basePrice - $paidBasePrice;
                         $price = max(0, $diff);
                     }
                 }

@@ -45,7 +45,7 @@
                             auth()->user()->canUpgradeBundles() &&
                             $bundle->preference_index > auth()->user()->maxBundlePreferenceIndex();
                         $effectivePrice = $bundle->getEffectivePriceForUser(auth()->user());
-                        $originalPrice = $bundle->final_price;
+                        $originalPrice = (auth()->check() && auth()->user()->referrer) ? $bundle->affiliate_price : $bundle->final_price;
                         $upgradeTimeLeft = auth()->check() ? auth()->user()->upgradeTimeLeftSeconds() : 0;
                     @endphp
 
@@ -56,7 +56,7 @@
                             originalPrice: '₹{{ number_format($originalPrice, 0) }}'
                         }"
                         x-init="if (time > 0) setInterval(() => { if (time > 0) time--; }, 1000)"
-                        class="bg-surface rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full group relative">
+                        class="bg-surface rounded-2xl border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full group relative">
                         {{-- Countdown Overlay if Upgradable --}}
                         @if (!$isUnlocked && $canUpgrade && $upgradeTimeLeft > 0)
                             <div x-show="time > 0"
@@ -92,36 +92,21 @@
                                 {{ strip_tags($bundle->description) }}
                             </p>
 
-                            {{-- Footer Meta --}}
-                            <div class="mt-auto pt-4 flex items-center justify-between border-t border-gray-50">
-                                <div>
-                                    <span
-                                        class="text-[9px] font-bold text-mutedText uppercase tracking-widest block mb-0.5">Price</span>
-                                    <div class="flex items-end gap-2">
-                                        <span
-                                            class="text-lg font-bold text-primary"
-                                            @if($canUpgrade) x-text="time > 0 ? effectivePrice : originalPrice" @endif>₹{{ number_format($effectivePrice, 0) }}</span>
-                                        @if ($canUpgrade && $effectivePrice < $originalPrice)
-                                            <span
-                                                x-show="time > 0"
-                                                class="text-[10px] text-mutedText line-through font-semibold mb-1">₹{{ number_format($originalPrice, 0) }}</span>
-                                        @endif
-                                    </div>
-                                </div>
-
+                            {{-- Footer Meta (Price hidden, Buttons Full Width) --}}
+                            <div class="mt-auto pt-5 border-t border-gray-50">
                                 @if ($isUnlocked)
                                     <a href="{{ route('student.my-courses') }}"
-                                        class="bg-green-50 text-green-600 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-green-100 transition-colors">
-                                        View
+                                        class="w-full flex items-center justify-center bg-green-50 text-green-700 border border-green-200 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-green-100 hover:shadow-sm transition-all duration-300 transform hover:-translate-y-0.5">
+                                        <i class="fas fa-play-circle mr-2 text-sm"></i> View Course
                                     </a>
                                 @else
                                     <a href="{{ route('student.checkout', ['type' => 'bundle', 'id' => $bundle->id]) }}"
-                                        class="bg-primary text-white px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-secondary transition-colors shadow-sm flex items-center gap-1">
+                                        class="w-full flex items-center justify-center bg-primary text-white px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-secondary hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
                                         @if ($canUpgrade)
-                                            <i x-show="time > 0" class="fas fa-arrow-up text-[9px]"></i>
-                                            <span x-text="time > 0 ? 'Upgrade' : 'Unlock'">Upgrade</span>
+                                            <i x-show="time > 0" class="fas fa-arrow-up mr-2"></i>
+                                            <span x-text="time > 0 ? 'Upgrade Now' : 'Unlock Now'">Upgrade Now</span>
                                         @else
-                                            Unlock
+                                            <i class="fas fa-unlock-alt mr-2"></i> Unlock Now
                                         @endif
                                     </a>
                                 @endif
@@ -142,10 +127,13 @@
                 class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 
                 @forelse($courses as $course)
-                    @php $isUnlocked = auth()->check() && $course->isPurchasedBy(auth()->id()); @endphp
+                    @php
+                        $isUnlocked = auth()->check() && $course->isPurchasedBy(auth()->id());
+                        $coursePrice = (auth()->check() && auth()->user()->referrer) ? $course->affiliate_price : $course->final_price;
+                    @endphp
 
                     <div
-                        class="bg-surface rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full group relative">
+                        class="bg-surface rounded-2xl border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full group relative">
                         {{-- Image Container --}}
                         <div class="relative h-40 overflow-hidden bg-gray-100">
                             <img src="{{ $course->thumbnail_url }}"
@@ -164,8 +152,8 @@
                             <div
                                 class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-mainText/40 backdrop-blur-[1px]">
                                 <button @click="videoModal = true; activeVideo = '{{ $course->demo_video_url }}'"
-                                    class="bg-white text-primary h-10 w-10 rounded-full flex items-center justify-center shadow-lg transform scale-75 group-hover:scale-100 transition-all z-20">
-                                    <i class="fas fa-play text-xs ml-0.5"></i>
+                                    class="bg-white text-primary h-12 w-12 rounded-full flex items-center justify-center shadow-lg transform scale-75 group-hover:scale-100 transition-all z-20">
+                                    <i class="fas fa-play text-sm ml-1"></i>
                                 </button>
                             </div>
 
@@ -187,24 +175,18 @@
                                 {{ strip_tags($course->description) }}
                             </p>
 
-                            <div class="mt-auto pt-4 flex items-center justify-between border-t border-gray-50">
-                                <div>
-                                    <span
-                                        class="text-[9px] font-bold text-mutedText uppercase tracking-widest block mb-0.5">Enroll</span>
-                                    <span
-                                        class="text-lg font-bold text-mainText">₹{{ number_format($course->final_price, 0) }}</span>
-                                </div>
-
+                            {{-- Footer Meta (Price hidden, Buttons Full Width) --}}
+                            <div class="mt-auto pt-5 border-t border-gray-50">
                                 {{-- Conditional Start/Unlock button layout --}}
                                 @if ($isUnlocked)
                                     <a href="{{ route('student.watch', $course->id) }}"
-                                        class="bg-green-50 text-green-600 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-green-100 transition-colors">
-                                        Start
+                                        class="w-full flex items-center justify-center bg-green-50 text-green-700 border border-green-200 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-green-100 hover:shadow-sm transition-all duration-300 transform hover:-translate-y-0.5">
+                                        <i class="fas fa-play mr-2 text-sm"></i> Start Learning
                                     </a>
                                 @else
                                     <a href="{{ route('student.courses.show', $course->id) }}"
-                                        class="bg-primary text-white px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-secondary transition-colors shadow-sm">
-                                        Unlock
+                                        class="w-full flex items-center justify-center bg-primary text-white px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-secondary hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
+                                        <i class="fas fa-unlock-alt mr-2"></i> Unlock Now
                                     </a>
                                 @endif
                             </div>

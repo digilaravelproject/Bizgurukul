@@ -108,7 +108,7 @@
             $isUnlocked = auth()->check() && $bundle->isPurchasedBy(auth()->id());
             $canUpgrade = auth()->check() && auth()->user()->canUpgradeBundles() && $bundle->preference_index > auth()->user()->maxBundlePreferenceIndex();
             $effectivePrice = $bundle->getEffectivePriceForUser(auth()->user());
-            $originalPrice = $bundle->final_price;
+            $originalPrice = (auth()->check() && auth()->user()->referrer) ? $bundle->affiliate_price : $bundle->final_price;
             $upgradeTimeLeft = auth()->check() ? auth()->user()->upgradeTimeLeftSeconds() : 0;
         @endphp
         <div class="group flex flex-col rounded-[2rem] bg-surface shadow-sm border border-primary/5 overflow-hidden hover:border-secondary/40 transition-all duration-500 hover:-translate-y-2 relative">
@@ -162,6 +162,9 @@
 
         {{-- COURSES --}}
         @foreach($filteredCourses as $course)
+        @php
+            $coursePrice = (auth()->check() && auth()->user()->referrer) ? $course->affiliate_price : $course->final_price;
+        @endphp
         <div class="group flex flex-col rounded-[2rem] bg-surface shadow-sm border border-primary/5 overflow-hidden hover:border-primary/40 transition-all duration-500 hover:-translate-y-2">
             <div class="aspect-[4/3] w-full relative overflow-hidden bg-navy">
                 @php
@@ -178,7 +181,7 @@
                 <div class="mt-auto pt-6 border-t border-primary/10 flex items-center justify-between">
                     <div>
                         <p class="text-[10px] font-bold text-mutedText uppercase mb-1 tracking-widest">Investment</p>
-                        <p class="text-3xl font-black text-primary tracking-tighter">₹{{ number_format($course->final_price ?? $course->price, 0) }}</p>
+                        <p class="text-3xl font-black text-primary tracking-tighter">₹{{ number_format($coursePrice, 0) }}</p>
                     </div>
                     <a href="{{ route('student.courses.show', $course->id) }}" class="w-14 h-14 rounded-2xl bg-navy flex items-center justify-center text-customWhite shadow-lg hover:brand-gradient transition-all group/btn">
                         <i class="fas fa-arrow-right transition-transform group-hover/btn:translate-x-1"></i>
