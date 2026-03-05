@@ -6,13 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Skills Pehle') }} - Student</title>
-
+    <link rel="icon" type="image/png" href="{{ asset('storage/site_images/logo.png') }}">
     {{-- CSS Frameworks --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     {{-- Alpine.js --}}
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+        integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
         [x-cloak] {
@@ -27,13 +29,12 @@
 </head>
 
 <body class="font-sans antialiased bg-navy text-mainText" x-data="{ sidebarOpen: false }">
-    <div class="min-h-screen flex flex-col">
-        <main class="flex-grow">
-            {{-- 1. SIDEBAR SECTION --}}
+    <div class="h-screen flex overflow-hidden">
+        {{-- 1. SIDEBAR SECTION --}}
 
-            @include('layouts.user.sidebar')
-            {{-- 2. MAIN CONTENT AREA --}}
-            <div class="flex-1 flex flex-col min-w-0 bg-navy relative md:ml-64">
+        @include('layouts.user.sidebar')
+        {{-- 2. MAIN CONTENT AREA --}}
+        <div class="flex-1 flex flex-col min-w-0 bg-navy relative md:ml-64">
 
             {{-- Navbar / Header --}}
             @include('layouts.user.header')
@@ -48,7 +49,7 @@
             {{-- Footer --}}
             @include('layouts.user.footer')
         </div>
-        </main>
+        {{-- </main> --}}
     </div>
 
     {{-- Mobile Overlay --}}

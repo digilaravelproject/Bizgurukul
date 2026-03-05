@@ -97,9 +97,84 @@
         @endcan
     </div>
 
-    {{-- Revenue Metrics Grid (Today, 7 Days, 30 Days, All Time) --}}
+    {{-- ═══════════════════════════════════════════════════════════ --}}
+    {{-- PROFIT CARDS (Today / 7 Days / 30 Days / All Time)        --}}
+    {{-- Formula: Revenue − GST(18%) − Affiliate Commission − GW(2%) --}}
+    {{-- ═══════════════════════════════════════════════════════════ --}}
     @can('manage-transactions')
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+
+        {{-- Today Profit --}}
+        <div class="bg-surface rounded-2xl p-6 shadow-sm border border-emerald-500/10 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-emerald-50 rounded-full group-hover:bg-emerald-100 transition-colors"></div>
+            <div class="relative z-10">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">Net</span>
+                </div>
+                <p class="text-xs font-semibold text-mutedText uppercase tracking-wider">Today Profit</p>
+                <h3 class="text-2xl font-bold text-emerald-600 mt-1" x-text="formatCurrency(stats.today_profit)"></h3>
+                <p class="text-[10px] text-mutedText mt-2 leading-relaxed">After GST · Commission · 2% GW</p>
+            </div>
+        </div>
+
+        {{-- 7 Days Profit --}}
+        <div class="bg-surface rounded-2xl p-6 shadow-sm border border-blue-500/10 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-blue-50 rounded-full group-hover:bg-blue-100 transition-colors"></div>
+            <div class="relative z-10">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="p-2 bg-blue-50 rounded-lg text-blue-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-blue-100 text-blue-700">Net</span>
+                </div>
+                <p class="text-xs font-semibold text-mutedText uppercase tracking-wider">7 Days Profit</p>
+                <h3 class="text-2xl font-bold text-blue-600 mt-1" x-text="formatCurrency(stats.seven_days_profit)"></h3>
+                <p class="text-[10px] text-mutedText mt-2 leading-relaxed">After GST · Commission · 2% GW</p>
+            </div>
+        </div>
+
+        {{-- 30 Days Profit --}}
+        <div class="bg-surface rounded-2xl p-6 shadow-sm border border-violet-500/10 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-violet-50 rounded-full group-hover:bg-violet-100 transition-colors"></div>
+            <div class="relative z-10">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="p-2 bg-violet-50 rounded-lg text-violet-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-violet-100 text-violet-700">Net</span>
+                </div>
+                <p class="text-xs font-semibold text-mutedText uppercase tracking-wider">30 Days Profit</p>
+                <h3 class="text-2xl font-bold text-violet-600 mt-1" x-text="formatCurrency(stats.thirty_days_profit)"></h3>
+                <p class="text-[10px] text-mutedText mt-2 leading-relaxed">After GST · Commission · 2% GW</p>
+            </div>
+        </div>
+
+        {{-- All Time Profit --}}
+        <div class="bg-surface rounded-2xl p-6 shadow-sm border border-amber-500/10 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-amber-50 rounded-full group-hover:bg-amber-100 transition-colors"></div>
+            <div class="relative z-10">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="p-2 bg-amber-50 rounded-lg text-amber-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-amber-100 text-amber-700">Net</span>
+                </div>
+                <p class="text-xs font-semibold text-mutedText uppercase tracking-wider">All Time Profit</p>
+                <h3 class="text-2xl font-bold text-amber-600 mt-1" x-text="formatCurrency(stats.all_time_profit)"></h3>
+                <p class="text-[10px] text-mutedText mt-2 leading-relaxed">After GST · Commission · 2% GW</p>
+            </div>
+        </div>
+
+    </div>
+    @endcan
+
+    {{-- Revenue Metrics Grid (Today, 7 Days, 30 Days, All Time) --}}
+    {{-- HIDDEN: Remove the style attribute below to re-enable this section --}}
+    @can('manage-transactions')
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6" style="display:none">
         {{-- Today Revenue Card --}}
         <div class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300">
             <div class="absolute -right-6 -top-6 w-24 h-24 bg-green-50 rounded-full group-hover:bg-green-100 transition-colors"></div>
@@ -277,6 +352,10 @@
                 seven_days_revenue: 0,
                 thirty_days_revenue: 0,
                 all_time_revenue: 0,
+                today_profit: 0,
+                seven_days_profit: 0,
+                thirty_days_profit: 0,
+                all_time_profit: 0,
                 top_courses: [],
                 recent_registrations: [],
                 recent_transactions: [],

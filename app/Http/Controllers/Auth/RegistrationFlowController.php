@@ -49,7 +49,7 @@ class RegistrationFlowController extends Controller
                 'gender'   => ['nullable', 'string'],
                 'dob'      => ['nullable', 'date'],
                 'state_id' => ['nullable', 'exists:states,id'],
-                'city'     => ['nullable', 'string', 'max:255'],
+                // 'city'     => ['nullable', 'string', 'max:255'],
                 // 'pincode'  => ['nullable', 'numeric', 'digits:6'],
             ]);
 
@@ -62,7 +62,7 @@ class RegistrationFlowController extends Controller
                     'gender'     => $request->gender,
                     'dob'        => $request->dob,
                     'state_id'   => $request->state_id,
-                    'city'       => $request->city,
+                    // 'city'       => $request->city,
                     // 'pincode'    => $request->pincode,
                     'ip_address' => $request->ip(),
                     'referral_code' => Cookie::get('referral_code') ?: session('referral_code'),

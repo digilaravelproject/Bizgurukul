@@ -71,6 +71,12 @@ class DashboardService
                         ->take(6)
                         ->with('user:id,name,profile_picture')
                         ->get(['id', 'amount', 'status', 'created_at', 'user_id']),
+
+                    // ── Profit Cards (GST + Commission + Gateway deducted) ──
+                    'today_profit'        => $this->calculateProfit('today'),
+                    'seven_days_profit'   => $this->calculateProfit('last_7_days'),
+                    'thirty_days_profit'  => $this->calculateProfit('last_30_days'),
+                    'all_time_profit'     => $this->calculateProfit('all_time'),
                 ];
 
             } catch (\Exception $e) {
@@ -92,6 +98,10 @@ class DashboardService
                     'total_paid_commission' => 0,
                     'pending_commission' => 0,
                     'sales_today' => 0,
+                    'today_profit' => 0,
+                    'seven_days_profit' => 0,
+                    'thirty_days_profit' => 0,
+                    'all_time_profit' => 0,
                     'recent_registrations' => [],
                     'top_courses' => [],
                     'recent_transactions' => [],
@@ -99,6 +109,96 @@ class DashboardService
             }
         });
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Profit Calculation (Exact — GST 18% inclusive + Affiliate Comm + 2% GW)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Calculate net admin profit for a given period.
+     *
+     * Formula (per rupee collected, GST inclusive at 18%):
+     *   GST           = amount × 18 / 118
+     *   After GST     = amount − GST
+     *   After Comm    = After GST − affiliate_commissions
+     *   Gateway (2%)  = amount × 2 / 100
+     *   Net Profit    = After Comm − Gateway
+     *
+     * Commission: SUM of all affiliate_commissions (pending + paid) in the window
+     * — commission is earned when sale happens, so we count all regardless of
+     *   payout status.
+     */
+    private function calculateProfit(string $period): float
+    {
+        try {
+            // ── Step 1: Build date filter ──────────────────────────────
+            $dateFilter = match ($period) {
+                'today'        => ['whereDate', Carbon::today()],
+                'last_7_days'  => ['where>=',   Carbon::now()->subDays(7)],
+                'last_30_days' => ['where>=',   Carbon::now()->subDays(30)],
+                default        => null, // 'all_time' — no filter
+            };
+
+            // ── Step 2: SUM of successful payments in the period ───────
+            $paymentQuery = Payment::where('status', 'success');
+            if ($dateFilter) {
+                if ($dateFilter[0] === 'whereDate') {
+                    $paymentQuery->whereDate('created_at', $dateFilter[1]);
+                } else {
+                    $paymentQuery->where('created_at', '>=', $dateFilter[1]);
+                }
+            }
+            $totalPayments = (string) number_format((float) $paymentQuery->sum('amount'), 4, '.', '');
+
+            // ── Step 3: SUM commissions tied to REAL purchases ────────
+            // Real commissions always have a non-empty reference_type
+            // (e.g. App\Models\Bundle or App\Models\Course).
+            // Commissions with empty reference_type are orphaned test data.
+            $commissionQuery = \Illuminate\Support\Facades\DB::table('affiliate_commissions')
+                ->whereNotNull('reference_type')
+                ->where('reference_type', '!=', '')
+                ->whereNull('deleted_at'); // respect SoftDeletes
+
+            if ($dateFilter) {
+                if ($dateFilter[0] === 'whereDate') {
+                    $commissionQuery->whereDate('created_at', $dateFilter[1]);
+                } else {
+                    $commissionQuery->where('created_at', '>=', $dateFilter[1]);
+                }
+            }
+
+            $totalCommission = (string) number_format(
+                (float) $commissionQuery->sum('amount'),
+                4, '.', ''
+            );
+
+
+            // ── Step 4: Safety cap — commission can never exceed payment ─
+            // (Guards against bad data; commission deducted is capped at the
+            //  amount actually remaining after GST)
+            $gst      = bcdiv(bcmul($totalPayments, '18', 4), '118', 4);
+            $afterGst = bcsub($totalPayments, $gst, 4);
+
+            // Cap commission so profit doesn't go negative from data issues
+            $commissionCapped = bccomp($totalCommission, $afterGst, 4) > 0
+                ? $afterGst
+                : $totalCommission;
+
+            $afterComm = bcsub($afterGst, $commissionCapped, 4);
+
+            // Gateway: 2% of total collected amount (inclusive of GST)
+            $gateway = bcdiv(bcmul($totalPayments, '2', 4), '100', 4);
+
+            $profit = bcsub($afterComm, $gateway, 4);
+
+            return (float) round(max(0, (float) $profit), 2);
+
+        } catch (\Exception $e) {
+            Log::error('DashboardService@calculateProfit: ' . $e->getMessage(), ['period' => $period]);
+            return 0.0;
+        }
+    }
+
 
     public function getSalesChartData(string $period = 'month')
     {

@@ -8,6 +8,7 @@ use App\Models\AffiliateCommission;
 use App\Models\User;
 use Carbon\Carbon;
 use Exception;
+use App\Http\Controllers\Student\LeaderboardController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -68,6 +69,9 @@ class AffiliateService
                 // Update commission status
                 $commission->status = 'paid';
                 $this->affiliateRepo->saveCommission($commission);
+
+                // Bust leaderboard cache so fresh data loads on next request
+                LeaderboardController::bustCache(null, $user->id);
 
                 Log::info("Payout processed successfully for Commission ID: {$commissionId}");
                 return true;
@@ -184,14 +188,6 @@ class AffiliateService
                 if ($data['target_type'] == 'specific_course' && !$this->permissionService->canSellCourses($user)) {
                     throw new Exception('You are not authorized to sell courses.');
                 }
-                // Bundle permission is now global, no check needed.
-                /*
-                if ($data['target_type'] == 'bundle') {
-                     if (!$this->permissionService->canSellBundle($user, $data['target_id'])) {
-                         throw new Exception('You are not authorized to sell this bundle.');
-                     }
-                }
-                */
 
                 // Generate Unique Slug
                 $slug = 'ref_' . Str::random(8); // Consider moving slug generation strategy to a helper or config
@@ -237,7 +233,7 @@ class AffiliateService
         }
     }
 
-    public function getLeaderboard($filter = 'last_30_days', $limit = 10)
+public function getLeaderboard($filter = 'last_30_days', $limit = 10)
     {
         try {
             $query = AffiliateCommission::where('status', 'paid')
@@ -253,6 +249,10 @@ class AffiliateService
                 $query->where('created_at', '>=', Carbon::now()->subDays(7));
             } elseif ($filter === 'last_30_days') {
                 $query->where('created_at', '>=', Carbon::now()->subDays(30));
+            } elseif ($filter === 'this_year') {
+                // YEARLY FILTER ADDED HERE
+                $query->where('created_at', '>=', Carbon::now()->startOfYear());
+                // Note: Agar aap 'last 365 days' chahte hain, toh 'Carbon::now()->subDays(365)' use karein
             } // 'all_time' no date filter
 
             return $query->orderByDesc('total_earnings')
@@ -275,6 +275,9 @@ class AffiliateService
                 $userEarningsQuery->where('created_at', '>=', Carbon::now()->subDays(7));
             } elseif ($filter === 'last_30_days') {
                 $userEarningsQuery->where('created_at', '>=', Carbon::now()->subDays(30));
+            } elseif ($filter === 'this_year') {
+                // YEARLY FILTER ADDED HERE
+                $userEarningsQuery->where('created_at', '>=', Carbon::now()->startOfYear());
             }
 
             $userEarnings = (float) $userEarningsQuery->clone()->sum('amount');
@@ -290,6 +293,9 @@ class AffiliateService
                 $query->where('created_at', '>=', Carbon::now()->subDays(7));
             } elseif ($filter === 'last_30_days') {
                 $query->where('created_at', '>=', Carbon::now()->subDays(30));
+            } elseif ($filter === 'this_year') {
+                // YEARLY FILTER ADDED HERE
+                $query->where('created_at', '>=', Carbon::now()->startOfYear());
             }
 
             $usersWithMoreEarnings = DB::query()

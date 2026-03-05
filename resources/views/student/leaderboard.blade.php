@@ -4,251 +4,264 @@
 
 @push('styles')
 <style>
-    .board-bg {
-        background: linear-gradient(135deg, #f0eefd 0%, #fae8eb 100%);
+    /* Clean & Modern Mesh Background using Platform Colors */
+    .dashboard-bg {
+        background-color: rgb(var(--color-bg-body));
+        background-image:
+            radial-gradient(at 0% 0%, rgba(var(--color-primary) / 0.15) 0px, transparent 50%),
+            radial-gradient(at 100% 100%, rgba(var(--color-secondary) / 0.15) 0px, transparent 50%);
+        background-attachment: fixed;
     }
 
-    .glass-card {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.5);
+    /* Premium Bento Box / Glass Cards using Platform Card Colors */
+    .bento-card {
+        background: rgba(var(--color-bg-card) / 0.85);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(var(--color-primary) / 0.08);
+        border-radius: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .glass-card-solid {
-        background: #ffffff;
-        border: 1px solid rgba(0, 0, 0, 0.05);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+    .bento-card:hover {
+        box-shadow: 0 10px 25px -5px rgba(var(--color-primary) / 0.15);
     }
 
-    .avatar-initials {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        color: white;
-        font-weight: 900;
-        text-transform: uppercase;
+    /* Unique Podium Styling */
+    .top-rank-card {
+        position: relative;
+        overflow: hidden;
     }
 
-    .crown-gold { color: #FFB300; filter: drop-shadow(0px 4px 6px rgba(255, 179, 0, 0.4)); }
-    .crown-silver { color: #B0BEC5; filter: drop-shadow(0px 4px 6px rgba(176, 190, 197, 0.4)); }
-    .crown-bronze { color: #BCAAA4; filter: drop-shadow(0px 4px 6px rgba(188, 170, 164, 0.4)); }
-
-    .rank-badge-gold { background-color: #FFB300; color: white; }
-    .rank-badge-silver { background-color: #B0BEC5; color: white; }
-    .rank-badge-bronze { background-color: #BCAAA4; color: white; }
-
-    .border-gold { border-color: #FFB300; }
-    .border-silver { border-color: #B0BEC5; }
-    .border-bronze { border-color: #BCAAA4; }
-
-    .nav-tab.active {
-        color: var(--color-primary);
-        border-bottom: 2px solid var(--color-primary);
-        font-weight: 800;
+    .top-rank-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 4px;
     }
-    .nav-tab {
-        color: var(--color-mutedText);
+
+    /* Keep Medals distinct */
+    .rank-1::before { background: linear-gradient(90deg, #F59E0B, #FBBF24); } /* Gold */
+    .rank-2::before { background: linear-gradient(90deg, #94A3B8, #CBD5E1); } /* Silver */
+    .rank-3::before { background: linear-gradient(90deg, #B45309, #D97706); } /* Bronze */
+
+    /* Glow effect for Rank 1 */
+    .rank-1-glow {
+        position: absolute;
+        inset: -20px;
+        background: radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, transparent 60%);
+        z-index: -1;
+        pointer-events: none;
+        animation: pulse-glow 3s infinite alternate;
+    }
+
+    @keyframes pulse-glow {
+        0% { opacity: 0.5; transform: scale(0.95); }
+        100% { opacity: 1; transform: scale(1.05); }
+    }
+
+    /* Segmented Filters (Pill style) - Padding & Font-size removed for Tailwind usage */
+    .filter-pill {
+        border-radius: 9999px;
         font-weight: 600;
-        border-bottom: 2px solid transparent;
         transition: all 0.2s ease;
-    }
-    .nav-tab:hover:not(.active) {
-        color: var(--color-mainText);
-        border-bottom: 2px solid rgba(0,0,0,0.1);
+        position: relative;
+        z-index: 1;
+        color: var(--color-mutedText);
     }
 
-    .metric-card-orange { background: #ffece5; }
-    .metric-card-blue { background: #e5edff; }
-    .metric-card-pink { background: #ffe5f1; }
+    .filter-pill:hover:not(.filter-active) {
+        color: var(--color-mainText);
+        background: rgba(var(--color-primary) / 0.05);
+    }
+
+    .filter-active {
+        background: rgb(var(--color-primary));
+        color: white !important;
+        box-shadow: 0 4px 14px 0 rgba(var(--color-primary) / 0.3);
+    }
+
+    .brand-gradient-text {
+        background: linear-gradient(135deg, rgb(var(--color-primary)) 0%, rgb(var(--color-secondary)) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
 </style>
 @endpush
 
 @section('content')
-<div class="pb-24 font-sans text-mainText" x-data="leaderboardData()">
+<div class="dashboard-bg min-h-screen pb-20 pt-8" x-data="leaderboardData()">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-    <div class="flex items-center gap-3 mb-6 px-2 md:px-0">
-        <i class="fas fa-trophy text-2xl text-mainText"></i>
-        <h1 class="text-2xl font-black text-mainText">Leaderboard</h1>
-    </div>
-
-    <div class="flex flex-col xl:flex-row gap-6">
-
-        {{-- LEFT COLUMN: THE BOARD --}}
-        <div class="flex-[2] board-bg rounded-[2rem] p-6 md:p-10 relative overflow-hidden shadow-sm">
-
-            {{-- Loading Overlay --}}
-            <div x-show="loading" class="absolute inset-0 bg-white/50 backdrop-blur-sm z-50 flex flex-col items-center justify-center rounded-[2rem]">
-                <i class="fas fa-circle-notch fa-spin text-4xl text-primary mb-4"></i>
-                <p class="font-bold text-mainText tracking-widest uppercase text-xs">Fetching Ranks...</p>
+        {{-- Header Section --}}
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-black text-mainText tracking-tight">
+                    Top <span class="brand-gradient-text">Performers</span>
+                </h1>
+                <p class="text-sm text-mutedText font-medium mt-1">Hall of Fame at Skills Pehle</p>
             </div>
 
-            {{-- Navigation Tabs --}}
-            <div class="flex flex-wrap items-center justify-center gap-6 md:gap-12 mb-16 border-b border-primary/5 pb-2">
+            {{-- Modern Time Filters (Desktop) --}}
+            <div class="hidden md:flex bg-surface p-1 rounded-full shadow-sm border border-primary/10">
                 <template x-for="f in availableFilters" :key="f.value">
                     <button @click="setFilter(f.value)"
-                        :class="filter === f.value ? 'active' : ''"
-                        class="nav-tab pb-3 text-sm md:text-base tracking-wide px-2">
+                            class="filter-pill px-4 lg:px-5 py-2 text-sm"
+                            :class="filter === f.value ? 'filter-active' : 'text-mutedText'">
                         <span x-text="f.label"></span>
                     </button>
                 </template>
             </div>
+        </div>
 
-            {{-- THE ELITE TRIO (Top 3) --}}
-            <div class="flex flex-col md:flex-row justify-center items-end gap-8 md:gap-12 mb-16 relative z-10" x-show="topThree.length > 0">
+        {{-- Mobile Filters (Shows only on small screens, Fits in ONE line without scroll) --}}
+        <div class="flex md:hidden bg-surface p-1 rounded-full shadow-sm border border-primary/10 mb-6 w-full justify-between items-center gap-0.5">
+            <template x-for="f in availableFilters" :key="f.value">
+                <button @click="setFilter(f.value)"
+                        class="filter-pill flex-1 flex items-center justify-center px-0.5 py-2 text-[10px] xs:text-[11px] sm:text-xs leading-none whitespace-nowrap tracking-tight"
+                        :class="filter === f.value ? 'filter-active' : 'text-mutedText'">
+                    <span x-text="f.label"></span>
+                </button>
+            </template>
+        </div>
 
-                {{-- Rank 2 (Silver) --}}
-                <template x-if="topThree[1]">
-                    <div class="flex flex-col items-center order-2 md:order-1 relative w-full md:w-auto animate-fade-in-up" style="animation-delay: 100ms;">
-                        <i class="fas fa-crown text-3xl crown-silver mb-2"></i>
-                        <div class="relative group">
-                            <template x-if="!hasImage(topThree[1].profile_picture)">
-                                <div class="w-24 h-24 rounded-full border-4 border-silver avatar-initials text-3xl shadow-lg z-20 relative" x-text="getInitials(topThree[1].name)"></div>
+        {{-- Loader --}}
+        <div x-show="loading" class="flex flex-col items-center justify-center py-20">
+            <div class="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4"></div>
+            <p class="text-sm font-bold text-mutedText uppercase tracking-widest">Loading Data...</p>
+        </div>
+
+        {{-- Main Grid Layout (Profile Left, Leaderboard Right) --}}
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8" x-show="!loading" style="display: none;">
+
+            {{-- LEFT COLUMN: USER STATS --}}
+            <div class="lg:col-span-4 space-y-6">
+
+                {{-- Main User Profile Card --}}
+                <div class="bento-card p-6 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-5 text-6xl text-primary">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+
+                    <p class="text-xs font-bold text-mutedText uppercase tracking-widest mb-4">Your Profile</p>
+
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="relative">
+                            <template x-if="!hasImage(userData.profile_picture)">
+                                <div class="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-black shadow-inner" x-text="getInitials(userData.name)"></div>
                             </template>
-                            <template x-if="hasImage(topThree[1].profile_picture)">
-                                <img :src="topThree[1].profile_picture" @@error="topThree[1].profile_picture = null" class="w-24 h-24 rounded-full border-4 border-silver object-cover shadow-lg z-20 relative bg-white">
+                            <template x-if="hasImage(userData.profile_picture)">
+                                <img :src="userData.profile_picture" @@error="userData.profile_picture = null" class="w-16 h-16 rounded-full object-cover border-2 border-surface shadow-md">
                             </template>
-                            <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-7 h-7 rounded-sm rank-badge-silver flex items-center justify-center font-black text-xs shadow-md z-30 transform rotate-45">
-                                <span class="-rotate-45 block">2</span>
-                            </div>
+                            <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-surface rounded-full"></div>
                         </div>
-                        <div class="mt-6 text-center">
-                            <h3 class="text-sm font-black text-mainText" x-text="topThree[1].name"></h3>
-                            <p class="text-[11px] font-bold text-mutedText mt-1">₹<span x-text="formatMoney(topThree[1].earnings)"></span></p>
+                        <div>
+                            <h2 class="text-xl font-bold text-mainText truncate max-w-[180px]" x-text="userData.name"></h2>
+                            <p class="text-sm text-mutedText font-medium">Partner</p>
                         </div>
                     </div>
-                </template>
 
-                {{-- Rank 1 (Gold) --}}
-                <template x-if="topThree[0]">
-                    <div class="flex flex-col items-center order-1 md:order-2 relative w-full md:w-auto z-20 animate-fade-in-down mb-6 md:mb-12">
-                        <i class="fas fa-crown text-5xl crown-gold mb-3 animate-bounce"></i>
-                        <div class="relative group">
-                            <template x-if="!hasImage(topThree[0].profile_picture)">
-                                <div class="w-32 h-32 rounded-full border-4 border-gold avatar-initials text-4xl shadow-2xl z-20 relative" x-text="getInitials(topThree[0].name)"></div>
-                            </template>
-                            <template x-if="hasImage(topThree[0].profile_picture)">
-                                <img :src="topThree[0].profile_picture" @@error="topThree[0].profile_picture = null" class="w-32 h-32 rounded-full border-4 border-gold object-cover shadow-2xl z-20 relative bg-white">
-                            </template>
-                            <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 w-9 h-9 rounded-sm rank-badge-gold flex items-center justify-center font-black text-sm shadow-xl z-30 transform rotate-45">
-                                <span class="-rotate-45 block">1</span>
-                            </div>
-                        </div>
-                        <div class="mt-8 text-center bg-white/40 px-6 py-2 rounded-full backdrop-blur-md shadow-sm border border-white/60">
-                            <h3 class="text-base font-black text-mainText" x-text="topThree[0].name"></h3>
-                            <p class="text-sm font-black text-primary mt-0.5">₹<span x-text="formatMoney(topThree[0].earnings)"></span></p>
-                        </div>
+                    <div class="bg-surface rounded-2xl p-5 border border-primary/5 shadow-sm">
+                        <p class="text-xs font-bold text-mutedText mb-1">Total Earnings (<span x-text="getFilterLabel()"></span>)</p>
+                        <h3 class="text-3xl font-black text-mainText">₹<span x-text="formatMoney(userData.earnings)"></span></h3>
                     </div>
-                </template>
+                </div>
 
-                {{-- Rank 3 (Bronze) --}}
-                <template x-if="topThree[2]">
-                    <div class="flex flex-col items-center order-3 relative w-full md:w-auto animate-fade-in-up" style="animation-delay: 200ms;">
-                        <i class="fas fa-crown text-2xl crown-bronze mb-2"></i>
-                        <div class="relative group">
-                            <template x-if="!hasImage(topThree[2].profile_picture)">
-                                <div class="w-20 h-20 rounded-full border-4 border-bronze avatar-initials text-2xl shadow-md z-20 relative" x-text="getInitials(topThree[2].name)"></div>
-                            </template>
-                            <template x-if="hasImage(topThree[2].profile_picture)">
-                                <img :src="topThree[2].profile_picture" @@error="topThree[2].profile_picture = null" class="w-20 h-20 rounded-full border-4 border-bronze object-cover shadow-md z-20 relative bg-white">
-                            </template>
-                            <div class="absolute -bottom-2 lg:-bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-sm rank-badge-bronze flex items-center justify-center font-black text-[10px] shadow-sm z-30 transform rotate-45">
-                                <span class="-rotate-45 block">3</span>
-                            </div>
-                        </div>
-                        <div class="mt-5 lg:mt-6 text-center">
-                            <h3 class="text-xs font-black text-mainText" x-text="topThree[2].name"></h3>
-                            <p class="text-[10px] font-bold text-mutedText mt-0.5">₹<span x-text="formatMoney(topThree[2].earnings)"></span></p>
-                        </div>
+                {{-- Mini Stats Grid --}}
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bento-card p-5 text-center flex flex-col justify-center">
+                        <i class="fas fa-trophy text-primary text-xl mb-2"></i>
+                        <p class="text-xs font-bold text-mutedText mb-1">Your Rank</p>
+                        <p class="text-2xl font-black text-mainText">#<span x-text="userData.rank"></span></p>
                     </div>
-                </template>
+                    <div class="bento-card p-5 text-center flex flex-col justify-center">
+                        <i class="fas fa-bolt text-secondary text-xl mb-2"></i>
+                        <p class="text-xs font-bold text-mutedText mb-1">Total Sales</p>
+                        <p class="text-2xl font-black text-mainText" x-text="userData.sale_count || 0"></p>
+                    </div>
+                </div>
 
             </div>
 
-            {{-- EMPTY STATE --}}
-            <div x-show="topThree.length === 0 && !loading" style="display: none;" class="text-center py-20 opacity-60">
-                <i class="fas fa-ghost text-5xl mb-4"></i>
-                <h3 class="text-xl font-bold">No High Scores Yet!</h3>
-                <p class="text-sm mt-2">Check back later or change the time filter.</p>
-            </div>
+            {{-- RIGHT COLUMN: LEADERBOARD SHOWCASE --}}
+            <div class="lg:col-span-8">
 
-            {{-- LIST (4 to 10) --}}
-            <div class="glass-card-solid rounded-[1.5rem] overflow-hidden relative z-10" x-show="restOfTopTen.length > 0">
-                <div class="divide-y divide-gray-100">
+                {{-- TOP 3 CREATIVE SHOWCASE (Unique Horizontal Layout) --}}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 items-end" x-show="topThree.length > 0">
+
+                    {{-- Rank 2 (Left) --}}
+                    <template x-if="topThree[1]">
+                        <div class="bento-card top-rank-card rank-2 p-5 text-center flex flex-col items-center md:mb-4">
+                            <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-black text-xs flex items-center justify-center mb-3">#2</div>
+                            <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-slate-200 mb-3 shadow-sm bg-surface">
+                                <template x-if="!hasImage(topThree[1].profile_picture)"><div class="w-full h-full flex items-center justify-center font-bold text-slate-400" x-text="getInitials(topThree[1].name)"></div></template>
+                                <template x-if="hasImage(topThree[1].profile_picture)"><img :src="topThree[1].profile_picture" class="w-full h-full object-cover"></template>
+                            </div>
+                            <h3 class="text-sm font-bold text-mainText truncate w-full" x-text="topThree[1].name"></h3>
+                            <p class="text-sm font-black text-slate-500 mt-1">₹<span x-text="formatMoney(topThree[1].earnings)"></span></p>
+                        </div>
+                    </template>
+
+                    {{-- Rank 1 (Center - Elevated) --}}
+                    <template x-if="topThree[0]">
+                        <div class="bento-card top-rank-card rank-1 p-6 text-center flex flex-col items-center relative z-10 border-amber-200/50 shadow-xl">
+                            <div class="rank-1-glow"></div>
+                            <i class="fas fa-crown text-amber-500 text-2xl mb-2 animate-bounce"></i>
+                            <div class="w-20 h-20 rounded-full overflow-hidden border-4 border-amber-400 mb-4 shadow-md bg-surface">
+                                <template x-if="!hasImage(topThree[0].profile_picture)"><div class="w-full h-full flex items-center justify-center font-bold text-2xl text-amber-500" x-text="getInitials(topThree[0].name)"></div></template>
+                                <template x-if="hasImage(topThree[0].profile_picture)"><img :src="topThree[0].profile_picture" class="w-full h-full object-cover"></template>
+                            </div>
+                            <h3 class="text-base font-black text-mainText truncate w-full" x-text="topThree[0].name"></h3>
+                            <div class="mt-2 bg-amber-50 text-amber-700 px-4 py-1.5 rounded-lg text-sm font-black border border-amber-200/60 inline-block">
+                                ₹<span x-text="formatMoney(topThree[0].earnings)"></span>
+                            </div>
+                        </div>
+                    </template>
+
+                    {{-- Rank 3 (Right) --}}
+                    <template x-if="topThree[2]">
+                        <div class="bento-card top-rank-card rank-3 p-5 text-center flex flex-col items-center md:mb-4">
+                            <div class="w-8 h-8 rounded-full bg-orange-50 text-orange-600 font-black text-xs flex items-center justify-center mb-3">#3</div>
+                            <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-orange-200/60 mb-3 shadow-sm bg-surface">
+                                <template x-if="!hasImage(topThree[2].profile_picture)"><div class="w-full h-full flex items-center justify-center font-bold text-orange-400" x-text="getInitials(topThree[2].name)"></div></template>
+                                <template x-if="hasImage(topThree[2].profile_picture)"><img :src="topThree[2].profile_picture" class="w-full h-full object-cover"></template>
+                            </div>
+                            <h3 class="text-sm font-bold text-mainText truncate w-full" x-text="topThree[2].name"></h3>
+                            <p class="text-sm font-black text-orange-600/80 mt-1">₹<span x-text="formatMoney(topThree[2].earnings)"></span></p>
+                        </div>
+                    </template>
+                </div>
+
+                {{-- REST OF THE LEADERBOARD (2-Column Compact Grid) --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3" x-show="restOfTopTen.length > 0">
                     <template x-for="user in restOfTopTen" :key="user.rank">
-                        <div class="flex items-center justify-between p-4 md:px-6 md:py-4 hover:bg-gray-50 transition-colors">
-                            <div class="flex items-center gap-4 md:gap-6">
-                                <span class="text-sm font-black text-mainText w-4 text-center" x-text="user.rank"></span>
+                        <div class="bento-card p-3 flex items-center justify-between hover:bg-surface/50 cursor-default">
+                            <div class="flex items-center gap-3">
+                                <div class="w-7 text-center text-xs font-black text-mutedText" x-text="user.rank"></div>
 
-                                <template x-if="!hasImage(user.profile_picture)">
-                                    <div class="w-10 h-10 rounded-full avatar-initials text-sm shadow-sm" x-text="getInitials(user.name)"></div>
-                                </template>
-                                <template x-if="hasImage(user.profile_picture)">
-                                    <img :src="user.profile_picture" @@error="user.profile_picture = null" class="w-10 h-10 rounded-full object-cover shadow-sm bg-gray-100">
-                                </template>
+                                <div class="relative w-10 h-10 rounded-full overflow-hidden bg-primary/5">
+                                    <template x-if="!hasImage(user.profile_picture)">
+                                        <div class="w-full h-full flex items-center justify-center text-xs font-bold text-primary" x-text="getInitials(user.name)"></div>
+                                    </template>
+                                    <template x-if="hasImage(user.profile_picture)">
+                                        <img :src="user.profile_picture" class="w-full h-full object-cover">
+                                    </template>
+                                </div>
 
-                                <span class="text-sm font-black text-mainText uppercase tracking-wide" x-text="user.name"></span>
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-bold text-mainText leading-tight max-w-[100px] sm:max-w-[120px] truncate" x-text="user.name"></span>
+                                </div>
                             </div>
-                            <div class="text-right">
-                                <span class="text-sm font-black text-mainText">₹<span x-text="formatMoney(user.earnings)"></span></span>
+
+                            <div class="text-right pl-2">
+                                <span class="text-sm font-black text-primary">₹<span x-text="formatMoney(user.earnings)"></span></span>
                             </div>
                         </div>
                     </template>
                 </div>
-            </div>
 
+            </div>
         </div>
-
-        {{-- RIGHT COLUMN: USER SNAPSHOT --}}
-        <div class="flex-1 flex flex-col gap-4">
-
-            {{-- Profile Card --}}
-            <div class="glass-card-solid rounded-[1.5rem] p-8 text-center flex flex-col items-center justify-center min-h-[200px]">
-                <template x-if="!hasImage(userData.profile_picture)">
-                    <div class="w-24 h-24 rounded-full avatar-initials text-3xl shadow-sm mb-4" x-text="getInitials(userData.name)"></div>
-                </template>
-                <template x-if="hasImage(userData.profile_picture)">
-                    <img :src="userData.profile_picture" @@error="userData.profile_picture = null" class="w-24 h-24 rounded-full object-cover shadow-sm bg-gray-100 mb-4">
-                </template>
-
-                <h2 class="text-lg font-black text-mainText uppercase tracking-widest" x-text="userData.name"></h2>
-                <p class="text-xs font-bold text-mutedText uppercase tracking-widest mt-1">Platform Partner</p>
-            </div>
-
-            {{-- Total Earnings --}}
-            <div class="metric-card-orange rounded-[1.5rem] p-6 shadow-sm border border-orange-100/50 flex">
-                <div class="bg-white w-10 h-10 flex items-center justify-center rounded-xl shadow-sm text-mainText mr-4 shrink-0">
-                    <i class="fas fa-wallet"></i>
-                </div>
-                <div class="flex-1">
-                    <p class="text-xs font-bold text-mainText mb-1 uppercase tracking-wider">Earnings (<span x-text="getFilterLabel()"></span>)</p>
-                    <h3 class="text-2xl font-black text-[#ff6b35]">₹<span x-text="formatMoney(userData.earnings)"></span></h3>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                {{-- Rank --}}
-                <div class="metric-card-blue rounded-[1.5rem] p-6 shadow-sm border border-blue-100/50 flex flex-col justify-center">
-                    <div class="flex items-center gap-3 mb-2">
-                        <i class="fas fa-chart-line text-mainText"></i>
-                        <p class="text-[10px] md:text-xs font-bold text-mainText uppercase tracking-wider">Your Rank</p>
-                    </div>
-                    <h3 class="text-xl md:text-2xl font-black text-[#3f7cf6]" x-text="userData.rank"></h3>
-                </div>
-
-                {{-- Sale Count --}}
-                <div class="metric-card-pink rounded-[1.5rem] p-6 shadow-sm border border-pink-100/50 flex flex-col justify-center">
-                    <div class="flex items-center gap-3 mb-2">
-                        <i class="fas fa-tags text-mainText"></i>
-                        <p class="text-[10px] md:text-xs font-bold text-mainText uppercase tracking-wider">Sale Count</p>
-                    </div>
-                    <h3 class="text-xl md:text-2xl font-black text-[#f63f82]" x-text="userData.sale_count || 0"></h3>
-                </div>
-            </div>
-
-        </div>
-
     </div>
 </div>
 
@@ -272,8 +285,12 @@
                 { label: 'Daily', value: 'today' },
                 { label: 'Weekly', value: 'last_7_days' },
                 { label: 'Monthly', value: 'last_30_days' },
+                { label: 'Yearly', value: 'this_year' },
                 { label: 'All Time', value: 'all_time' }
             ],
+
+            // LOCAL CACHE MEMORY - Stores fetched data so it loads in 0ms on next click
+            dataCache: {},
 
             init() {
                 this.fetchData();
@@ -291,23 +308,22 @@
             },
 
             fetchData() {
+                // Agar data pehle se cache mein hai, toh INSTANT load karein (0.000ms)
+                if (this.dataCache[this.filter]) {
+                    this.renderData(this.dataCache[this.filter]);
+                    return;
+                }
+
+                // Agar data nahi hai, toh Loading spinner dikhayein aur fetch karein
                 this.loading = true;
 
                 fetch(`{{ route('student.leaderboard.data') }}?filter=${this.filter}`)
                     .then(res => res.json())
                     .then(data => {
                         if (data.success) {
-                            const lb = data.leaderboard || [];
-                            this.topThree = lb.slice(0, 3);
-                            this.restOfTopTen = lb.slice(3, 10);
-
-                            this.userData = {
-                                name: data.user_name,
-                                rank: data.user_rank,
-                                earnings: data.user_earnings,
-                                sale_count: data.user_sale_count,
-                                profile_picture: data.user_profile_picture
-                            };
+                            // Fetch hone ke baad data ko cache mein save kar lein
+                            this.dataCache[this.filter] = data;
+                            this.renderData(data);
                         }
                     })
                     .catch(err => {
@@ -316,6 +332,20 @@
                     .finally(() => {
                         this.loading = false;
                     });
+            },
+
+            renderData(data) {
+                const lb = data.leaderboard || [];
+                this.topThree = lb.slice(0, 3);
+                this.restOfTopTen = lb.slice(3, 10);
+
+                this.userData = {
+                    name: data.user_name,
+                    rank: data.user_rank,
+                    earnings: data.user_earnings,
+                    sale_count: data.user_sale_count,
+                    profile_picture: data.user_profile_picture
+                };
             },
 
             formatMoney(amount) {
