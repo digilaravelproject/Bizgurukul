@@ -66,10 +66,10 @@
     <div class="stagger-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         @php
             $earningCards = [
-                ['title' => "Today's Revenue", 'amount' => $earningsStats['today'], 'icon' => 'fa-calendar-day'],
-                ['title' => "7 Day Performance", 'amount' => $earningsStats['last_7_days'], 'icon' => 'fa-chart-line'],
-                ['title' => "30 Day Overview", 'amount' => $earningsStats['last_30_days'], 'icon' => 'fa-calendar-alt'],
-                ['title' => "Lifetime Wealth", 'amount' => $earningsStats['all_time'], 'icon' => 'fa-trophy']
+                ['title' => "Today's Revenue", 'amount' => $earningsStats['today'], 'icon' => 'fa-calendar-day', 'bg' => 'bg-blue-500/10', 'text' => 'text-blue-500'],
+                ['title' => "7 Day Performance", 'amount' => $earningsStats['last_7_days'], 'icon' => 'fa-chart-line', 'bg' => 'bg-emerald-500/10', 'text' => 'text-emerald-500'],
+                ['title' => "30 Day Overview", 'amount' => $earningsStats['last_30_days'], 'icon' => 'fa-calendar-alt', 'bg' => 'bg-purple-500/10', 'text' => 'text-purple-500'],
+                ['title' => "Lifetime Wealth", 'amount' => $earningsStats['all_time'], 'icon' => 'fa-trophy', 'bg' => 'bg-amber-500/10', 'text' => 'text-amber-500']
             ];
         @endphp
 
@@ -82,7 +82,7 @@
                     <p class="text-[10px] md:text-xs font-bold text-mutedText uppercase tracking-widest mb-1">{{ $card['title'] }}</p>
                     <h3 class="text-2xl md:text-3xl font-black text-mainText tracking-tight">₹{{ number_format($card['amount']) }}</h3>
                 </div>
-                <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-base md:text-xl group-hover:rotate-12 transition-transform duration-300">
+                <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl {{ $card['bg'] }} flex items-center justify-center {{ $card['text'] }} text-base md:text-xl group-hover:rotate-12 transition-transform duration-300">
                     <i class="fas {{ $card['icon'] }}"></i>
                 </div>
             </div>
