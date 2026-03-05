@@ -67,6 +67,7 @@ Route::middleware(['auth'])
         Route::middleware(['permission:manage-transactions'])->group(function () {
             // Order History
             Route::get('/orders', [\App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
+            Route::get('/orders/export', [\App\Http\Controllers\Admin\OrderController::class, 'export'])->name('orders.export');
             Route::get('/orders/{id}/invoice', [\App\Http\Controllers\Admin\OrderController::class, 'invoice'])->name('orders.invoice');
         });
 

@@ -9,6 +9,8 @@ use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\OrdersExport;
 use Exception;
 
 class OrderController extends Controller
@@ -62,6 +64,17 @@ class OrderController extends Controller
         }
 
         return view('admin.orders.index', compact('orders'));
+    }
+
+    /**
+     * Export orders to Excel (using professional Export class).
+     */
+    public function export(Request $request)
+    {
+        $filters = $request->only(['search', 'filter', 'start_date', 'end_date']);
+        $filename = "orders_" . now()->format('Y-m-d_H-i-s') . ".xlsx";
+
+        return Excel::download(new OrdersExport($filters), $filename);
     }
 
     /**
