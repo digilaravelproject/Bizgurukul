@@ -59,28 +59,52 @@
             {{-- LEFT: Player & Info --}}
             <div class="lg:col-span-8 space-y-8">
                 {{-- 1. Custom Player --}}
-                <div class="relative group rounded-2xl overflow-hidden shadow-2xl bg-black aspect-video border border-gray-200/10">
-                    <video id="course-video" class="video-js vjs-big-play-button vjs-fluid"
-                        controls
-                        preload="auto"
-                        poster="{{ optional($currentLesson)->thumbnail_url ?? $course->thumbnail_url }}"
-                        oncontextmenu="return false;">
-                        @if($currentLesson)
-                            @php
-                                $hlsUrl = $currentLesson->lesson_file_url;
-                                $mp4Url = $currentLesson->video_path ? Storage::url($currentLesson->video_path) : null;
-                                $isHls = str_ends_with($hlsUrl, '.m3u8');
-                            @endphp
+                <div class="relative group rounded-2xl overflow-hidden shadow-2xl bg-black w-full aspect-video border border-gray-200/10">
+                    @if($currentLesson && ($currentLesson->bunny_video_id || $currentLesson->bunny_embed_url))
+                        @php
+                            $bunnySrc = $currentLesson->bunny_embed_url ?: "https://iframe.mediadelivery.net/embed/" . config('services.bunny.library_id') . "/" . $currentLesson->bunny_video_id;
+                            // Add parameters for autoplay, preload, etc. if required
+                            $bunnySrc .= (str_contains($bunnySrc, '?') ? '&' : '?') . 'autoplay=true&loop=false&muted=false&preload=true&responsive=true';
+                        @endphp
+                        {{-- iframe fallback with 16:9 intrinsic ratio container --}}
+                        <div style="position:relative;padding-top:56.25%;">
+                            <iframe src="{{ $bunnySrc }}"
+                                loading="lazy"
+                                style="border:0;position:absolute;top:0;height:100%;width:100%;"
+                                allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
+                                allowfullscreen="true">
+                            </iframe>
+                        </div>
 
-                            @if($isHls)
-                                <source src="{{ $hlsUrl }}" type="application/x-mpegURL">
-                            @endif
+                    @else
+                        {{-- Legacy video.js player for old lessons that have video_path or hls_path --}}
+                        <video id="course-video" class="video-js vjs-big-play-button vjs-fluid h-full w-full"
+                            controls
+                            preload="auto"
+                            poster="{{ optional($currentLesson)->thumbnail_url ?? $course->thumbnail_url }}"
+                            oncontextmenu="return false;">
+                            @if($currentLesson)
+                                @php
+                                    $hlsUrl = $currentLesson->lesson_file_url;
+                                    $mp4Url = $currentLesson->video_path ? Storage::url($currentLesson->video_path) : null;
+                                    $isHls = str_ends_with($hlsUrl, '.m3u8');
+                                @endphp
 
-                            @if($mp4Url)
-                                <source src="{{ $mp4Url }}" type="video/mp4">
+                                @if($isHls)
+                                    <source src="{{ $hlsUrl }}" type="application/x-mpegURL">
+                                @endif
+
+                                @if($mp4Url)
+                                    <source src="{{ $mp4Url }}" type="video/mp4">
+                                @endif
                             @endif
-                        @endif
-                    </video>
+                        </video>
+
+                        {{-- Dynamic Watermark Container for Video.js ONLY --}}
+                        <div id="video-watermark" class="video-watermark">
+                            {{ auth()->user()->email }} ({{ auth()->id() }})
+                        </div>
+                    @endif
 
 
 
@@ -197,57 +221,61 @@
         document.addEventListener('DOMContentLoaded', function() {
             if (!window.videojs) return console.error("Video.js not loaded");
 
-            const player = videojs('course-video', {
-                fluid: true,
-                playbackRates: [0.5, 1, 1.25, 1.5, 2],
-                html5: {
-                    vhs: {
-                        withCredentials: true
+            @if(!$currentLesson || (!$currentLesson->bunny_video_id && !$currentLesson->bunny_embed_url))
+                const player = videojs('course-video', {
+                    fluid: true,
+                    playbackRates: [0.5, 1, 1.25, 1.5, 2],
+                    html5: {
+                        vhs: {
+                            withCredentials: true
+                        },
+                        nativeVideoTracks: false,
+                        nativeAudioTracks: false,
+                        nativeTextTracks: false
                     },
-                    nativeVideoTracks: false,
-                    nativeAudioTracks: false,
-                    nativeTextTracks: false
-                },
-                controlBar: {
-                    children: [
-                        'playToggle',
-                        'volumePanel',
-                        'currentTimeDisplay',
-                        'timeDivider',
-                        'durationDisplay',
-                        'progressControl',
-                        'liveDisplay',
-                        'remainingTimeDisplay',
-                        'customControlSpacer',
-                        'playbackRateMenuButton',
-                        'chaptersButton',
-                        'descriptionsButton',
-                        'subsCapsButton',
-                        'audioTrackButton',
-                        'fullscreenToggle'
-                    ]
-                }
-            });
+                    controlBar: {
+                        children: [
+                            'playToggle',
+                            'volumePanel',
+                            'currentTimeDisplay',
+                            'timeDivider',
+                            'durationDisplay',
+                            'progressControl',
+                            'liveDisplay',
+                            'remainingTimeDisplay',
+                            'customControlSpacer',
+                            'playbackRateMenuButton',
+                            'chaptersButton',
+                            'descriptionsButton',
+                            'subsCapsButton',
+                            'audioTrackButton',
+                            'fullscreenToggle'
+                        ]
+                    }
+                });
 
-            player.on('error', function() {
-                const error = player.error();
-                const errorDisplay = document.createElement('div');
-                errorDisplay.className = 'absolute inset-0 flex items-center justify-center bg-black/90 text-white p-6 text-center z-50';
-                errorDisplay.innerHTML = `
-                    <div class="space-y-4">
-                        <div class="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-play text-2xl text-red-500"></i>
+                player.on('error', function() {
+                    const error = player.error();
+                    const errorDisplay = document.createElement('div');
+                    errorDisplay.className = 'absolute inset-0 flex items-center justify-center bg-black/90 text-white p-6 text-center z-50';
+                    errorDisplay.innerHTML = `
+                        <div class="space-y-4">
+                            <div class="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-play text-2xl text-red-500"></i>
+                            </div>
+                            <p class="font-bold text-lg">Unable to play video</p>
+                            <p class="text-sm opacity-60">This video might be restricted or your session may have expired.</p>
+                            <button onclick="location.reload()" class="px-6 py-2 bg-primary text-white rounded-full text-sm font-bold mt-4 hover:scale-105 transition-transform">Reload Player</button>
                         </div>
-                        <p class="font-bold text-lg">Unable to play video</p>
-                        <p class="text-sm opacity-60">This video might be restricted or your session may have expired.</p>
-                        <button onclick="location.reload()" class="px-6 py-2 bg-primary text-white rounded-full text-sm font-bold mt-4 hover:scale-105 transition-transform">Reload Player</button>
-                    </div>
-                `;
-                document.querySelector('.video-js').appendChild(errorDisplay);
-            });
+                    `;
+                    document.querySelector('.video-js').appendChild(errorDisplay);
+                });
+            @endif
 
-            // Prevent standard download right-click
-            player.on('contextmenu', function(e) { e.preventDefault(); });
+            @if(!$currentLesson || (!$currentLesson->bunny_video_id && !$currentLesson->bunny_embed_url))
+                // Prevent standard download right-click for video.js
+                player.on('contextmenu', function(e) { e.preventDefault(); });
+            @endif
 
 
 
@@ -335,21 +363,23 @@
             const lessonId = "{{ $currentLesson ? $currentLesson->id : '' }}";
             let isAlreadyCompleted = "{{ ($progress && $progress->is_completed) ? 1 : 0 }}" == 1;
 
-            player.on('timeupdate', function() {
-                if (isAlreadyCompleted) return;
-                const now = Math.floor(player.currentTime());
-                if (now % 10 === 0 && now !== lastSaved) {
-                    lastSaved = now;
-                    saveProgress(now, false);
-                }
-            });
+            @if(!$currentLesson || (!$currentLesson->bunny_video_id && !$currentLesson->bunny_embed_url))
+                player.on('timeupdate', function() {
+                    if (isAlreadyCompleted) return;
+                    const now = Math.floor(player.currentTime());
+                    if (now % 10 === 0 && now !== lastSaved) {
+                        lastSaved = now;
+                        saveProgress(now, false);
+                    }
+                });
 
-            player.on('ended', function() {
-                if (!isAlreadyCompleted) {
-                    saveProgress(Math.floor(player.duration()), true);
-                    location.reload(); // Refresh to update list
-                }
-            });
+                player.on('ended', function() {
+                    if (!isAlreadyCompleted) {
+                        saveProgress(Math.floor(player.duration()), true);
+                        location.reload(); // Refresh to update list
+                    }
+                });
+            @endif
 
             document.getElementById('mark-complete')?.addEventListener('click', function() {
                 saveProgress(Math.floor(player.duration()), true);

@@ -102,6 +102,7 @@ Route::middleware(['auth'])
                 Route::delete('/lesson/{id}/delete', [CourseController::class, 'destroyLesson'])->name('lesson.delete');
                 Route::delete('/resource/{id}/delete', [CourseController::class, 'destroyResource'])->name('resource.delete');
                 Route::post('/{id}/lesson/store', [CourseController::class, 'storeLesson'])->name('lesson.store');
+                Route::post('/lesson/{id}/update', [CourseController::class, 'updateLesson'])->name('lesson.update');
                 Route::post('/{id}/resource/store', [CourseController::class, 'storeResource'])->name('resource.store');
                 Route::post('/lessons/upload-chunk', [VideoUploadController::class, 'uploadChunk'])->name('lesson.upload-chunk');
             });

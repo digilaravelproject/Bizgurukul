@@ -39,4 +39,8 @@ return [
         'secret' => env('RAZORPAY_SECRET'),
     ],
 
+    'bunny' => [
+        'library_id' => env('BUNNY_LIBRARY_ID'),
+    ],
+
 ];

@@ -2,12 +2,10 @@
 
 namespace App\Services;
 
-use App\Jobs\ProcessLessonVideo;
 use App\Repositories\CourseRepository;
 use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class CourseService
@@ -136,57 +134,34 @@ class CourseService
             $lesson = $this->repo->createLesson($lessonData);
 
             if ($data['type'] === 'video') {
-                $filename = time().'_'.$lesson->id;
-                $extension = 'mp4'; // default fallback or try to extract from original
-
-                if (isset($data['assembled_video_path'])) {
-                    // Extract extension from the path, fallback to mp4
-                    $extension = pathinfo($data['assembled_video_path'], PATHINFO_EXTENSION) ?: 'mp4';
-                    $finalPath = 'lessons/videos/'.$filename.'.'.$extension;
-
-                    // Use Storage::disk()->path() for environment-safe absolute path resolution
-                    // Strips any leading slash or 'public/' prefix from the assembled path
-                    $assembledRelative = ltrim(str_replace('public/', '', $data['assembled_video_path']), '/');
-                    $assembledAbsolutePath = Storage::disk('public')->path($assembledRelative);
-                    $finalAbsolutePath = Storage::disk('public')->path($finalPath);
-
-                    if (file_exists($assembledAbsolutePath)) {
-                        // Ensure parent directory exists
-                        $dir = dirname($finalAbsolutePath);
-                        if (! file_exists($dir)) {
-                            mkdir($dir, 0755, true);
-                        }
-                        // Use raw OS rename — no RAM loading, even for multi-GB files
-                        rename($assembledAbsolutePath, $finalAbsolutePath);
-
-                        // Verify the move succeeded before saving to DB
-                        if (! Storage::disk('public')->exists($finalPath)) {
-                            throw new Exception("Video rename failed. Source: {$assembledAbsolutePath} → Dest: {$finalAbsolutePath}");
-                        }
-                    } else {
-                        throw new Exception('Assembled video file not found on disk. Expected at: '.$assembledAbsolutePath);
-                    }
-
-                    $lesson->update(['video_path' => $finalPath]);
-
-                    Log::info('Dispatching ProcessLessonVideo Job for Lesson ID: '.$lesson->id.' from CourseService (Chunked)');
-                    ProcessLessonVideo::dispatch($lesson)->afterCommit();
-
-                } elseif (isset($data['video_file'])) {
-                    // Standard fallback
-                    $video = $data['video_file'];
-                    $originalPath = 'lessons/videos/'.$filename.'.'.$video->getClientOriginalExtension();
-
-                    Storage::disk('public')->put($originalPath, file_get_contents($video));
-
-                    $lesson->update(['video_path' => $originalPath]);
-
-                    Log::info('Dispatching ProcessLessonVideo Job for Lesson ID: '.$lesson->id.' from CourseService (Direct)');
-                    ProcessLessonVideo::dispatch($lesson)->afterCommit();
-                }
+                $lesson->update([
+                    'bunny_video_id' => $data['bunny_video_id'] ?? null,
+                    'bunny_embed_url' => $data['bunny_embed_url'] ?? null,
+                ]);
             }
 
             return $lesson;
+
+            // End of Add Lesson function
+        });
+    }
+
+    public function updateLessonMeta($id, array $data)
+    {
+        return DB::transaction(function () use ($id, $data) {
+            $lesson = $this->repo->findLesson($id);
+
+            $updateData = ['title' => $data['title']];
+
+            if (isset($data['thumbnail']) && $data['thumbnail'] instanceof UploadedFile) {
+                // Delete old thumbnail if exists
+                if ($lesson->getRawOriginal('thumbnail')) {
+                    Storage::disk($this->disk)->delete($lesson->getRawOriginal('thumbnail'));
+                }
+                $updateData['thumbnail'] = $this->mediaService->compressAndConvertToWebP($data['thumbnail'], 'lessons/thumbnails');
+            }
+
+            return $this->repo->updateLesson($lesson, $updateData);
         });
     }
 

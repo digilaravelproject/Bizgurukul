@@ -61,32 +61,33 @@
                             class="w-full rounded-xl border-slate-200 px-4 py-3 focus:ring-2 focus:ring-[#0777be]/20">{{ old('description', $lesson->description ?? '') }}</textarea>
                     </div>
 
-                    {{-- 4. Video Upload Logic --}}
+                    {{-- 4. Bunny.net Fields --}}
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2">Lesson Video</label>
-                        <div
-                            class="relative group border-2 border-dashed {{ $errors->has('video') ? 'border-red-300 bg-red-50' : 'border-slate-200' }} rounded-2xl p-8 hover:border-[#0777be] hover:bg-slate-50 transition-all text-center">
-                            <input type="file" name="video" accept="video/*" id="videoInput"
-                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-                            <div class="space-y-2">
-                                <svg class="w-12 h-12 {{ $errors->has('video') ? 'text-red-400' : 'text-slate-400' }} mx-auto"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
-                                    </path>
-                                </svg>
-                                <p class="text-sm font-bold text-slate-600" id="videoFileName">Drag video here or click to
-                                    upload</p>
-                                <p class="text-[10px] text-slate-400 uppercase font-black">MP4, MOV up to 100MB</p>
-                            </div>
-                        </div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Bunny Video ID (Required for Video Lessons)</label>
+                        <input type="text" name="bunny_video_id" value="{{ old('bunny_video_id', $lesson->bunny_video_id ?? '') }}"
+                            class="w-full rounded-xl {{ $errors->has('bunny_video_id') ? 'border-red-500' : 'border-slate-200' }} px-4 py-3 focus:ring-2 focus:ring-[#0777be]/20"
+                            placeholder="e.g. 5f3e7a...">
+                        @error('bunny_video_id')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Bunny Embed URL or Full Iframe Tag (Recommended)</label>
+                        <input type="text" name="bunny_embed_url" value="{{ old('bunny_embed_url', $lesson->bunny_embed_url ?? '') }}"
+                            class="w-full rounded-xl {{ $errors->has('bunny_embed_url') ? 'border-red-500' : 'border-slate-200' }} px-4 py-3 focus:ring-2 focus:ring-[#0777be]/20"
+                            placeholder="Paste direct link or full <iframe...> tag here">
+                        @error('bunny_embed_url')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                        <p class="text-[10px] text-slate-400 mt-1">Copy "Embed Code" from Bunny Dashboard and paste it here. We will handle the rest.</p>
                     </div>
 
                     {{-- Submit Button with Processing Log --}}
                     <div class="pt-6 border-t border-slate-100 flex gap-4">
                         <button type="submit" id="submitBtn"
                             class="flex-1 bg-[#0777be] text-white py-4 rounded-2xl font-black shadow-lg shadow-blue-100 hover:bg-[#0666a3] active:scale-95 transition-all uppercase tracking-widest">
-                            {{ isset($lesson) ? 'UPDATE LESSON' : 'SAVE & PROCESS VIDEO' }}
+                            {{ isset($lesson) ? 'UPDATE LESSON' : 'SAVE LESSON' }}
                         </button>
                     </div>
                 </div>
@@ -94,25 +95,7 @@
         </div>
     </div>
 
-    {{-- Full Screen Processing Loader --}}
-    <div id="loaderOverlay"
-        class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[9999] hidden items-center justify-center text-center p-4">
-        <div class="space-y-6">
-            <div class="relative flex items-center justify-center">
-                <div class="animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-white"></div>
-                <div class="absolute text-white font-black text-xs">FFMPEG</div>
-            </div>
-            <div class="space-y-2">
-                <p class="text-white font-black text-2xl uppercase tracking-tighter" id="loaderText">Processing Your
-                    Video...</p>
-                <p class="text-white/60 text-sm font-medium italic">Bhai, thoda wait karo. Video encode ho rahi hai...</p>
-            </div>
-            {{-- Real-time Submission Log Placeholder --}}
-            <div class="bg-black/40 border border-white/10 rounded-xl p-4 max-w-xs mx-auto text-left">
-                <p class="text-[10px] text-green-400 font-mono" id="logText">> Initializing Upload...</p>
-            </div>
-        </div>
-    </div>
+    {{-- Loader logic has been removed as it's no longer necessary with Bunny.net direct links --}}
 @endsection
 
 @push('scripts')
@@ -140,40 +123,6 @@
                 toastr.error("{{ session('error') }}");
             @endif
         });
-
-        // 2. Video Input Filename Change logic
-        document.getElementById('videoInput').onchange = function() {
-            if (this.files[0]) {
-                document.getElementById('videoFileName').innerHTML =
-                    `Selected: <span class="text-[#0777be]">${this.files[0].name}</span>`;
-            }
-        };
-
-        // 3. Form Submission Log & Loader Logic
-        document.getElementById('lessonForm').onsubmit = function() {
-            // Screen Lock & Loader Show
-            document.getElementById('loaderOverlay').classList.remove('hidden');
-            document.getElementById('loaderOverlay').classList.add('flex');
-
-            const btn = document.getElementById('submitBtn');
-            const log = document.getElementById('logText');
-
-            btn.disabled = true;
-            btn.innerText = "PROCESSING...";
-
-            // Browser Console Log
-            console.log("Form submitted. Lesson processing started...");
-
-            // Simulated step-by-step logs for UI
-            setTimeout(() => {
-                log.innerHTML += "<br>> Uploading to Server...";
-            }, 1000);
-            setTimeout(() => {
-                log.innerHTML += "<br>> Starting HLS Transcoding...";
-            }, 3000);
-            setTimeout(() => {
-                log.innerHTML += "<br>> Running FFmpeg X264 Filter...";
-            }, 5000);
-        };
+        // Removed JS loader logic since no files are being uploaded
     </script>
 @endpush

@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Jobs\ProcessLessonVideo;
 use App\Repositories\LmsRepository;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -145,11 +144,9 @@ class LmsService
                 $lessonData['document_path'] = $data['document_file']->store('lessons/docs', $this->disk);
             }
 
-            if ($data['type'] === 'video' && isset($data['video_file'])) {
-                $lessonData['video_path'] = $data['video_file']->store('lessons/raw', $this->disk);
-                $lesson = $this->repo->createLesson($lessonData);
-                ProcessLessonVideo::dispatch($lesson); // Background Job
-                return $lesson;
+            if ($data['type'] === 'video') {
+                $lessonData['bunny_video_id'] = $data['bunny_video_id'] ?? null;
+                $lessonData['bunny_embed_url'] = $data['bunny_embed_url'] ?? null;
             }
 
             return $this->repo->createLesson($lessonData);

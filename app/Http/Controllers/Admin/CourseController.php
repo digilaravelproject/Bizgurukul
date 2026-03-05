@@ -169,8 +169,8 @@ class CourseController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'type' => 'required|in:video,document',
-            'video_file' => 'required_without:assembled_video_path|mimetypes:video/mp4,video/quicktime,video/x-msvideo,video/x-ms-wmv|max:5242880',
-            'assembled_video_path' => 'nullable|string',
+            'bunny_video_id' => 'required_without:bunny_embed_url|nullable|string',
+            'bunny_embed_url' => 'required_without:bunny_video_id|nullable|string',
             'document_file' => 'required_if:type,document|mimes:pdf,docx,zip|max:20480',
             'thumbnail' => 'nullable|image|max:5120',
         ]);
@@ -189,7 +189,32 @@ class CourseController extends Controller
             }
 
             return redirect()->route('admin.courses.edit', ['id' => $id, 'tab' => 'lessons'])
-                ->with('success', 'Lesson added. Video processing started in background.');
+                ->with('success', 'Lesson added successfully!');
+        } catch (Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['message' => $e->getMessage()], 500);
+            }
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    // Update lesson title and thumbnail inline from card
+    public function updateLesson(Request $request, $id)
+    {
+        $request->validate([
+            'title'     => 'required|string|max:255',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+        ]);
+
+        try {
+            $lesson = $this->courseService->updateLessonMeta($id, $request->all());
+
+            if ($request->ajax() || $request->wantsJson()) {
+                $html = view('admin.courses.partials._lesson_card', compact('lesson'))->render();
+                return response()->json(['success' => true, 'html' => $html, 'message' => 'Lesson updated.']);
+            }
+
+            return back()->with('success', 'Lesson updated successfully!');
         } catch (Exception $e) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['message' => $e->getMessage()], 500);

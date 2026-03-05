@@ -43,6 +43,11 @@
             {{-- Video Player Container --}}
             <div x-show="type === 'video'" class="w-full h-full flex items-center justify-center bg-black rounded-xl overflow-hidden shadow-inner min-h-[50vh] md:min-h-[60vh]" id="preview-video-container"></div>
 
+            {{-- Bunny Video Viewer --}}
+            <template x-if="show && type === 'bunny_video' && url">
+                <iframe :src="url" class="w-full h-full rounded-xl border border-gray-200 bg-black min-h-[50vh] md:min-h-[60vh]" allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" allowfullscreen="true" @load="loading = false"></iframe>
+            </template>
+
             {{-- Image Viewer --}}
             <template x-if="show && type === 'image' && url">
                 <div class="w-full h-full flex items-center justify-center">
@@ -87,6 +92,9 @@ document.addEventListener('alpine:init', () => {
                 if (this.type === 'video') {
                     // Delay slightly to ensure modal is visible before mounting player
                     setTimeout(() => { this.initPlayer(); }, 100);
+                } else if (this.type === 'bunny_video') {
+                    // Avoid stuck loading
+                    const iframeTimeout = setTimeout(() => { this.loading = false; }, 3000);
                 } else {
                     setTimeout(() => { this.loading = false; }, 3000);
                 }

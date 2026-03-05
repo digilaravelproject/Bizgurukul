@@ -46,7 +46,8 @@ class LessonController extends Controller
         $request->validate([
             'course_id' => 'required|exists:courses,id',
             'title' => 'required|string|max:255',
-            'video' => 'nullable|mimes:mp4,mov,avi,wmv|max:5242880', // 5GB limit
+            'bunny_video_id' => 'nullable|string',
+            'bunny_embed_url' => 'nullable|string',
         ]);
 
         try {
@@ -57,23 +58,12 @@ class LessonController extends Controller
                     'title' => $request->title,
                     'description' => $request->description,
                     'order_column' => $request->order_column ?? 0,
+                    'bunny_video_id' => $request->bunny_video_id,
+                    'bunny_embed_url' => $request->bunny_embed_url,
                 ]
             );
 
-            if ($request->hasFile('video')) {
-                $video = $request->file('video');
-                $filename = time() . '_' . $lesson->id;
-                $originalPath = 'lessons/videos/' . $filename . '.' . $video->getClientOriginalExtension();
-
-                Storage::disk('public')->put($originalPath, file_get_contents($video));
-                $lesson->update(['video_path' => $originalPath]);
-
-                // Dispatch Job instead of synchronous processing
-                Log::info("Dispatching ProcessLessonVideo Job for Lesson ID: " . $lesson->id);
-                \App\Jobs\ProcessLessonVideo::dispatch($lesson);
-            }
-
-            return redirect()->route('admin.courses.index')->with('success', 'Lesson saved! Video format conversion is processing in background.');
+            return redirect()->route('admin.courses.index')->with('success', 'Lesson saved successfully!');
         } catch (Exception $e) {
             // Log Error
             Log::error("Lesson Store Error: " . $e->getMessage());

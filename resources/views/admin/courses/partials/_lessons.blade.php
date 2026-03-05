@@ -79,10 +79,17 @@
                     <p class="text-[10px] text-mutedText mt-1 ml-1">If empty, a frame will be auto-selected. Max 5MB (Auto-compressed).</p>
                 </div>
 
-                {{-- File Inputs --}}
-                <div x-show="lType === 'video'" class="animate-fade-in">
-                    <label class="block text-xs font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Video File (MP4) - Max 5GB</label>
-                    <input type="file" name="video_file" accept="video/*" class="w-full text-xs text-mutedText file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary/20 file:text-primary hover:file:bg-primary hover:file:text-customWhite cursor-pointer transition-all">
+                {{-- Video Inputs (Bunny.net) --}}
+                <div x-show="lType === 'video'" class="animate-fade-in space-y-4">
+                    <div>
+                        <label class="block text-xs font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Bunny Embed URL / Iframe Tag</label>
+                        <input type="text" name="bunny_embed_url" class="w-full h-12 rounded-xl bg-white px-4 text-sm font-bold text-mainText border border-gray-300 focus:border-primary focus:ring-0 transition-all outline-none" placeholder="Paste link or <iframe...> tag">
+                        <p class="text-[9px] text-primary font-bold mt-1 ml-1 uppercase">Best Method: Paste the "Embed Code" from Bunny.</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Bunny Video ID (Alternative)</label>
+                        <input type="text" name="bunny_video_id" class="w-full h-12 rounded-xl bg-white px-4 text-sm font-bold text-mainText border border-gray-300 focus:border-primary focus:ring-0 transition-all outline-none" placeholder="e.g. 5f3e...">
+                    </div>
                 </div>
                 <div x-show="lType === 'document'" class="animate-fade-in">
                     <label class="block text-xs font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Document (PDF/DOCX)</label>
@@ -154,20 +161,17 @@ function deleteLesson(id) {
     // Check every 10 seconds for jobs in processing state
     setInterval(checkProcessingStatus, 10000);
 
-    // AJAX Form Submission for uploading video without blocking UI
+    // AJAX Form Submission without blocking UI
     document.getElementById('addLessonForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
         const form = this;
         let formData = new FormData(form);
         const submitBtn = form.querySelector('button[type="submit"]');
-        const videoFileInput = form.querySelector('input[name="video_file"]');
-        const lType = document.querySelector('input[name="type"]:checked').value;
 
         // Hide Modal
         window.dispatchEvent(new CustomEvent('close-lesson-modal'));
 
-        // Disable button while preparing request
         if(submitBtn) {
             submitBtn.disabled = true;
             submitBtn.innerHTML = 'Starting...';
@@ -190,103 +194,21 @@ function deleteLesson(id) {
             const placeholderHTML = `
             <div id="${placeholderId}" class="group relative bg-surface rounded-[1.5rem] border border-secondary shadow-sm overflow-hidden flex flex-col h-full animate-fade-in-up border-dashed">
                 <div class="relative h-44 w-full bg-secondary/10 flex items-center justify-center flex-col gap-2">
-                    <svg class="w-10 h-10 text-secondary animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                    <span class="text-xs font-black text-secondary uppercase tracking-widest text-center px-4">Uploading<br><span id="${placeholderId}-percent" class="text-xl">0%</span></span>
+                    <svg class="w-10 h-10 text-secondary animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    <span class="text-xs font-black text-secondary uppercase tracking-widest text-center px-4">Saving...</span>
                 </div>
                 <div class="p-5 flex flex-col flex-1">
                     <h4 class="text-sm font-bold text-mainText line-clamp-2 leading-snug mb-2">${formData.get('title') || 'New Lesson'}</h4>
-                    <div class="mt-auto pt-4 border-t border-dashed border-primary flex items-center justify-between">
-                        <span class="flex items-center gap-1 text-[10px] font-black uppercase text-secondary bg-secondary/10 px-2 py-1 rounded-md">
-                            <span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span> Uploading
-                        </span>
-                    </div>
                 </div>
             </div>`;
             grid.insertAdjacentHTML('afterbegin', placeholderHTML);
         }
 
-        // --- Execute Document / Non-video Upload (Standard Single Request) ---
-        if (lType !== 'video' || !videoFileInput.files.length) {
-            sendStandardForm(form, formData, submitBtn, placeholderId);
-            return;
-        }
-
-        // --- Execute Chunked Video Upload Approach ---
-        const file = videoFileInput.files[0];
-        const chunkSize = 10 * 1024 * 1024; // 10MB Chunks
-        const totalChunks = Math.ceil(file.size / chunkSize);
-        const identifier = Date.now() + '-' + file.name.replace(/[^a-zA-Z0-9.\-]/g, "");
-
-        let assembledVideoPath = null;
-
-        for (let i = 0; i < totalChunks; i++) {
-            const start = i * chunkSize;
-            const end = Math.min(start + chunkSize, file.size);
-            const chunk = file.slice(start, end);
-
-            const chunkData = new FormData();
-            chunkData.append('video_file', chunk);
-            chunkData.append('resumableChunkNumber', i + 1);
-            chunkData.append('resumableTotalChunks', totalChunks);
-            chunkData.append('resumableIdentifier', identifier);
-            chunkData.append('resumableFilename', file.name);
-            chunkData.append('_token', form.querySelector('input[name="_token"]').value);
-
-            try {
-                const chunkResult = await uploadChunkRequest('{{ route('admin.courses.lesson.upload-chunk') }}', chunkData, i, totalChunks, placeholderId);
-
-                if (chunkResult.status === 'completed') {
-                    assembledVideoPath = chunkResult.path;
-                }
-            } catch (err) {
-                if(typeof toastr !== 'undefined') toastr.error('Chunk upload interrupted or failed.');
-                cleanupPlaceholder(submitBtn, placeholderId);
-                return; // Stop upload loop.
-            }
-        }
-
-        if (assembledVideoPath) {
-            // Replace the actual File object with the generated assembled path
-            formData.delete('video_file');
-            formData.append('assembled_video_path', assembledVideoPath);
-            // Finally submit the rest of the form indicating the video has already been transferred
-            sendStandardForm(form, formData, submitBtn, placeholderId);
-        }
+        // Send immediately to store endpoint
+        sendStandardForm(form, formData, submitBtn, placeholderId);
     });
 
-    // Handle Upload Promise
-    function uploadChunkRequest(url, formData, chunkIndex, totalChunks, placeholderId) {
-        return new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', url, true);
-            xhr.setRequestHeader('Accept', 'application/json');
-            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-
-            xhr.upload.onprogress = function(event) {
-                if (event.lengthComputable) {
-                    const chunkContribution = (event.loaded / event.total) / totalChunks;
-                    const baseProgress = chunkIndex / totalChunks;
-                    const percentComplete = Math.round((baseProgress + chunkContribution) * 100);
-
-                    const percentEl = document.getElementById(`${placeholderId}-percent`);
-                    if (percentEl) percentEl.innerText = percentComplete + '%';
-                }
-            };
-
-            xhr.onload = function() {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    resolve(JSON.parse(xhr.responseText));
-                } else {
-                    reject(xhr.responseText);
-                }
-            };
-
-            xhr.onerror = () => reject('Network Error');
-            xhr.send(formData);
-        });
-    }
-
-    // Handles the actual lesson creation after chunks finish or if it is just a document
+    // Handles the actual lesson creation
     function sendStandardForm(form, formData, submitBtn, placeholderId) {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', form.action, true);
