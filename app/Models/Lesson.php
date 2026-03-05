@@ -31,8 +31,14 @@ class Lesson extends Model
 
     public function getBunnyThumbnailUrlAttribute(): ?string
     {
-        // Bunny Stream lacks a public thumbnail URL without a CDN Pull Zone hostname.
-        // Returning null here forces the blade view to show a styled placeholder instead.
+        if (!$this->getRawOriginal('bunny_video_id') && !$this->getRawOriginal('bunny_embed_url')) {
+            return null;
+        }
+
+        if ($this->id) {
+            return route('admin.courses.lesson.thumbnail', $this->id);
+        }
+
         return null;
     }
 

@@ -4,9 +4,20 @@
     <div class="relative h-44 w-full bg-primary/5 overflow-hidden">
 
         @if($lesson->thumbnail_url)
-            <img src="{{ $lesson->thumbnail_url }}" loading="lazy" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" alt="{{ $lesson->title }}">
+            {{-- Manual upload OR Bunny proxy thumbnail --}}
+            <img src="{{ $lesson->thumbnail_url }}" loading="lazy"
+                 class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                 alt="{{ $lesson->title }}"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            {{-- Fallback if proxy fails --}}
+            <div style="display:none" class="h-full w-full flex flex-col items-center justify-center gap-2" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);">
+                <div class="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center border border-orange-400/30">
+                    <svg class="w-6 h-6 ml-1 text-orange-400" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+                <span class="text-[10px] font-bold text-orange-300/70 uppercase tracking-widest">🐰 Bunny Stream</span>
+            </div>
         @elseif($lesson->type == 'video' && $lesson->is_bunny)
-            {{-- Bunny video - no public thumbnail URL available, show branded placeholder --}}
+            {{-- Bunny video with no thumbnail yet — styled placeholder --}}
             <div class="h-full w-full flex flex-col items-center justify-center gap-2" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);">
                 <div class="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center border border-orange-400/30">
                     <svg class="w-6 h-6 ml-1 text-orange-400" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>

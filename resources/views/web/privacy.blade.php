@@ -28,7 +28,7 @@
                 </div>
                 <div>
                     <p class="text-sm font-bold text-mutedText uppercase tracking-wider mb-1">Company</p>
-                    <p class="text-mainText font-bold">SkillsPehle</p>
+                    <p class="text-mainText font-bold">Skillspehle</p>
                 </div>
             </div>
 

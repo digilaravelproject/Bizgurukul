@@ -133,6 +133,11 @@
                     Privacy Policy
                 </a>
 
+                <a href="{{ route('web.refund-policy') }}"
+                    class="block px-4 py-3.5 rounded-xl text-base font-bold transition-all border {{ request()->routeIs('web.refund-policy') ? 'bg-primary/10 text-primary border-primary/20' : 'text-mainText border-transparent hover:bg-primary/5 hover:text-primary hover:border-primary/10' }}">
+                    Refund Policy
+                </a>
+
                 <div class="pt-6 mt-4 border-t border-gray-100 flex flex-col gap-4">
                     @auth
                         <a href="{{ route('dashboard') }}" class="block text-center px-4 py-4 rounded-xl brand-gradient text-white font-bold shadow-lg shadow-primary/20">
@@ -200,6 +205,7 @@
                         <li><a href="{{ route('web.about') }}" class="text-mutedText font-medium hover:text-primary flex items-center gap-2 group transition-colors">
                             <span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span>About Us</a>
                         </li>
+
                         <li><a href="{{ route('web.contact') }}" class="text-mutedText font-medium hover:text-primary flex items-center gap-2 group transition-colors">
                             <span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span>Contact</a>
                         </li>
@@ -214,6 +220,9 @@
                         </li>
                         <li><a href="{{ route('web.terms') }}" class="text-mutedText font-medium hover:text-primary flex items-center gap-2 group transition-colors">
                             <span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span>Terms of Service</a>
+                        </li>
+                        <li><a href="{{ route('web.refund-policy') }}" class="text-mutedText font-medium hover:text-primary flex items-center gap-2 group transition-colors">
+                            <span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span>Refund Policy</a>
                         </li>
                         <li><a href="{{ route('web.contact') }}" class="text-mutedText font-medium hover:text-primary flex items-center gap-2 group transition-colors">
                             <span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span>Help Center</a>

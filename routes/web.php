@@ -22,6 +22,7 @@ Route::get('/about', [HomeController::class, 'about'])->name('web.about');
 Route::get('/terms', [HomeController::class, 'terms'])->name('web.terms');
 Route::get('/contact', [HomeController::class, 'contact'])->name('web.contact');
 Route::get('/privacy', [HomeController::class, 'privacy'])->name('web.privacy');
+Route::get('/refund-policy', [HomeController::class, 'refundPolicy'])->name('web.refund-policy');
 Route::get('/course/{slug}', [HomeController::class, 'courseShow'])->name('course.show');
 Route::get('/bundle/{slug}', [HomeController::class, 'bundleShow'])->name('bundles.show');
 Route::get('/communities', [\App\Http\Controllers\CommunityController::class, 'index'])->name('communities');

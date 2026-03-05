@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Lesson;
 use App\Services\LmsService;
-use App\Services\CourseService; // Added
+use App\Services\CourseService;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class CourseController extends Controller
 {
@@ -232,6 +235,66 @@ class CourseController extends Controller
             return back()->with('success', 'Lesson deleted successfully.');
         } catch (Exception $e) {
             return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Proxy: Fetch lesson thumbnail from Bunny API server-side
+     * Avoids CDN 403 / 404 issues by using the API key.
+     */
+    public function lessonThumbnail($id)
+    {
+        try {
+            $lesson  = Lesson::findOrFail($id);
+            $videoId = $lesson->getRawOriginal('bunny_video_id');
+            $embed   = $lesson->getRawOriginal('bunny_embed_url');
+
+            if (!$videoId && $embed) {
+                if (preg_match('/\/embed\/[\d]+\/([a-f0-9\-]+)/i', $embed, $m)) {
+                    $videoId = $m[1];
+                } elseif (preg_match('/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $embed, $m)) {
+                    $videoId = $m[1];
+                }
+            }
+
+            if (!$videoId) {
+                Log::error("Bunny Thumbnail Proxy: No video ID for Lesson #{$id}");
+                abort(404);
+            }
+
+            $libId  = config('services.bunny.library_id');
+            $apiKey = config('services.bunny.api_key');
+            $host   = config('services.bunny.stream_host');
+
+            // 1. Resolve Filename (1 Week cache)
+            $thumbName = Cache::remember("bunny_tn_{$videoId}", 604800, function () use ($apiKey, $libId, $videoId) {
+                /** @var \Illuminate\Http\Client\Response $r */
+                $r = Http::withHeaders(['AccessKey' => $apiKey])->get("https://video.bunnycdn.com/library/{$libId}/videos/{$videoId}");
+                return $r->successful() ? ($r->json()['thumbnailFileName'] ?? 'thumbnail.jpg') : 'thumbnail.jpg';
+            });
+
+            $url = "https://{$host}/{$videoId}/{$thumbName}";
+
+            // 2. Resolve Binary (24 Hour cache)
+            $cached = Cache::remember("bunny_bin_v5_{$videoId}", 86400, function () use ($url) {
+                /** @var \Illuminate\Http\Client\Response $r */
+                $r = Http::withHeaders([
+                    'Referer' => request()->getSchemeAndHttpHost(),
+                    'User-Agent' => 'Mozilla/5.0'
+                ])->timeout(10)->get($url);
+
+                return $r->successful() ? ['b' => base64_encode($r->body()), 't' => $r->header('Content-Type') ?? 'image/jpeg'] : null;
+            });
+
+            if ($cached) {
+                return response(base64_decode($cached['b']), 200)
+                    ->header('Content-Type', $cached['t'])
+                    ->header('Cache-Control', 'public, max-age=604800');
+            }
+            abort(404);
+        } catch (Exception $e) {
+            Log::error("Bunny Proxy Exception: " . $e->getMessage());
+            abort(404);
         }
     }
 

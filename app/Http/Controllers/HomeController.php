@@ -34,17 +34,6 @@ class HomeController extends Controller
         }
     }
 
-    public function variant(Request $request)
-    {
-        try {
-            $courses = $this->lmsService->getFilteredCourses(['is_published' => 1]);
-            $bundles = $this->bundleService->getBundles(['is_published' => 1]);
-            return view('web.home-variant', compact('courses', 'bundles'));
-        } catch (Exception $e) {
-            Log::error("HomeController Error [variant]: " . $e->getMessage());
-            return response()->view('errors.500', [], 500);
-        }
-    }
 
     public function about()
     {
@@ -64,6 +53,11 @@ class HomeController extends Controller
     public function privacy()
     {
         return view('web.privacy');
+    }
+
+    public function refundPolicy()
+    {
+        return view('web.refund');
     }
 
     public function courseShow($slug)

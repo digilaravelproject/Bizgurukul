@@ -13,7 +13,7 @@
 
         <div class="text-center mb-20 animate-fade-in-down max-w-3xl mx-auto">
             <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold text-xs tracking-widest uppercase mb-6 shadow-sm">
-                Welcome to SkillsPehle
+                Welcome to Skillspehle
             </div>
             <h1 class="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-mainText mb-6 leading-tight">
                 Real Skills for the <br />
@@ -31,7 +31,7 @@
                 <div>
                     <h2 class="text-3xl font-black text-mainText mb-6">Our "No-Fluff" Promise</h2>
                     <p class="text-mutedText leading-relaxed mb-6">
-                        At SkillsPehle, we believe that education should be measured by the results you can generate, not just the certificates you collect.
+                        At Skillspehle, we believe that education should be measured by the results you can generate, not just the certificates you collect.
                     </p>
                     <p class="text-mutedText leading-relaxed mb-6">
                         While other platforms focus on visually cinematic productions, <strong>we prioritize actionable insights and depth of content.</strong> Our lessons are purely practical and expert-led, designed to help you develop real business knowledge that you can apply from day one.
@@ -73,7 +73,7 @@
         <div class="mb-16">
             <div class="text-center mb-12">
                 <h2 class="text-3xl font-black text-mainText mb-4">What Drives Us</h2>
-                <p class="text-mutedText">The core principles that shape the SkillsPehle ecosystem.</p>
+                <p class="text-mutedText">The core principles that shape the Skillspehle ecosystem.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -103,7 +103,7 @@
                     </div>
                     <h3 class="text-xl font-bold text-mainText mb-3">Community Driven</h3>
                     <p class="text-mutedText text-sm leading-relaxed">
-                        When you join SkillsPehle, you aren't just buying a course. You are entering an ecosystem of like-minded individuals, unlocking powerful networking and affiliate earning opportunities.
+                        When you join Skillspehle, you aren't just buying a course. You are entering an ecosystem of like-minded individuals, unlocking powerful networking and affiliate earning opportunities.
                     </p>
                 </div>
             </div>
@@ -126,11 +126,11 @@
                 </div>
 
                 <div class="border-t border-gray-200/60 pt-6 flex flex-col md:flex-row justify-center items-center gap-4 text-sm font-medium">
-                    <span class="text-mutedText"><strong>Company:</strong> SkillsPehle</span>
+                    <span class="text-mutedText"><strong>Company:</strong> Skillspehle</span>
                     <span class="hidden md:inline text-gray-300">•</span>
                     <span class="text-mutedText"><strong>HQ:</strong> Mumbai, Maharashtra, India</span>
                     <span class="hidden md:inline text-gray-300">•</span>
-                    {{-- <span class="text-mutedText"><strong>GSTIN:</strong> 27HCHPS9578D1ZS</span> --}}
+                    <span class="text-mutedText"><strong>GSTIN:</strong> 27HCHPS9578D1ZS</span>
                 </div>
             </div>
         </div>

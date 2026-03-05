@@ -33,6 +33,9 @@ Route::middleware(['auth'])
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard/stats', [DashboardController::class, 'stats'])->name('dashboard.stats');
 
+        // Bunny thumbnail proxy — accessible to any authenticated admin (just serves an image)
+        Route::get('/courses/lesson/{id}/thumbnail', [CourseController::class, 'lessonThumbnail'])->name('courses.lesson.thumbnail');
+
         // Settings (managed by manage-settings)
         Route::middleware(['permission:manage-settings'])->group(function () {
             Route::post('/settings/update', [AdminController::class, 'updateSettings'])->name('settings.update');
