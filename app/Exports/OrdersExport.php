@@ -94,10 +94,10 @@ class OrdersExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSi
         $sgst = round($taxAmount / 2, 2);
 
         return [
-            $order->razorpay_order_id,
+            $order->invoice_no,
             $order->created_at->format('d-m-Y'),
             $order->user->name ?? 'N/A',
-            '999293', // Hardcoded HSN
+            '999293', // Hardcoded HSN (updated by user)
             number_format($baseAmount, 2, '.', ''),
             number_format($cgst, 2, '.', ''),
             number_format($sgst, 2, '.', ''),

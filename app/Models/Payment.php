@@ -65,4 +65,31 @@ class Payment extends Model
     {
         return $this->belongsTo(Bundle::class);
     }
+
+    /**
+     * Get the formatted invoice number (e.g., Dec/25-26/115)
+     */
+    public function getInvoiceNoAttribute()
+    {
+        $date = $this->created_at ?? now();
+        $month = $date->format('M');
+
+        $year = (int) $date->format('Y');
+        $monthNum = (int) $date->format('n');
+
+        if ($monthNum <= 3) {
+            $fyStart = $year - 1;
+            $fyEnd = $year;
+        } else {
+            $fyStart = $year;
+            $fyEnd = $year + 1;
+        }
+
+        $fyRange = substr($fyStart, -2) . '-' . substr($fyEnd, -2);
+
+        // Sequence starts from 115 (ID + 114)
+        $sequence = $this->id + 114;
+
+        return "{$month}/{$fyRange}/{$sequence}";
+    }
 }

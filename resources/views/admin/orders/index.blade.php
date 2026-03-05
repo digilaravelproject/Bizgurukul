@@ -67,7 +67,7 @@
                 <thead class="bg-primary/5 text-xs uppercase text-primary font-bold tracking-wider">
                     <tr>
                         <th class="px-6 py-4">Date & Time</th>
-                        <th class="px-6 py-4">Order ID</th>
+                        <th class="px-6 py-4">Invoice & Order ID</th>
                         <th class="px-6 py-4">User</th>
                         <th class="px-6 py-4">Product</th>
                         <th class="px-6 py-4 text-right">Amount</th>

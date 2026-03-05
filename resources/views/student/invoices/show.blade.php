@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice #{{ $invoice->razorpay_order_id ?? $invoice->id }}</title>
+    <title>Invoice #{{ $invoice->invoice_no }}</title>
 
     <!-- Importing your custom fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -340,7 +340,8 @@
 
         <!-- Invoice Meta Data -->
         <div class="invoice-meta-box">
-            <div><strong>Invoice#:</strong> {{ $invoice->razorpay_order_id ?? $invoice->id }}</div>
+            <div><strong>Invoice Number:</strong> {{ $invoice->invoice_no }}</div>
+            <div><strong>Order ID:</strong> {{ $invoice->razorpay_order_id ?? $invoice->id }}</div>
             <div><strong>Invoice Date:</strong> {{ $invoice->created_at->format('d-m-Y') }}</div>
             <div>
                 <strong>Status:</strong>

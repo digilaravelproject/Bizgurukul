@@ -8,9 +8,10 @@
         </td>
 
         <td class="px-6 py-4 whitespace-nowrap">
-            <span class="text-sm font-bold text-mainText">{{ $order->razorpay_order_id ?? $order->id }}</span>
+            <div class="text-sm font-bold text-mainText">{{ $order->invoice_no }}</div>
+            <div class="text-[10px] text-mutedText mt-1">Order ID: {{ $order->razorpay_order_id ?? $order->id }}</div>
             @if($order->razorpay_payment_id)
-                <div class="text-[10px] text-mutedText mt-1">{{ $order->razorpay_payment_id }}</div>
+                <div class="text-[10px] text-mutedText mt-0.5">Pay ID: {{ $order->razorpay_payment_id }}</div>
             @endif
         </td>
 
