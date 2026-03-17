@@ -8,18 +8,21 @@
             </svg>
         </button>
 
-        <div class="hidden md:flex ms-4 items-center bg-slate-100 rounded-md px-3 py-1.5 w-64">
+        {{-- <div class="hidden md:flex ms-4 items-center bg-slate-100 rounded-md px-3 py-1.5 w-64">
             <span class="text-slate-400">🔍</span>
             <input type="text" placeholder="Search..."
                 class="bg-transparent border-none outline-none text-sm ms-2 w-full text-slate-600">
-        </div>
+        </div> --}}
 
         <div class="ms-auto flex items-center gap-3">
 
+            {{-- Notification Bell Hidden --}}
+            {{--
             <button class="relative p-2 text-slate-500 hover:text-indigo-600 transition">
                 🔔
                 <span class="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
             </button>
+            --}}
 
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
