@@ -12,12 +12,14 @@ class BeginnerGuideVideo extends Model
         'description',
         'resources',
         'video_path',
+        'bunny_video_id',
+        'bunny_embed_url',
         'order_column'
     ];
 
     // Accessor for video URL
     public function getVideoUrlAttribute()
     {
-        return $this->video_path ? \Illuminate\Support\Facades\Storage::url($this->video_path) : null;
+        return $this->bunny_video_id ?: ($this->bunny_embed_url ?: ($this->video_path ? \Illuminate\Support\Facades\Storage::url($this->video_path) : null));
     }
 }

@@ -90,18 +90,30 @@
                         <p class="text-mutedText font-medium">Fill out the form below and we'll be in touch.</p>
                     </div>
 
-                    <form action="#" method="POST" class="space-y-6">
+                    @if(session('success'))
+                        <div class="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 font-bold text-sm animate-fade-in">
+                            <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
+                        </div>
+                    @endif
+
+                    @if(session('error'))
+                        <div class="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 font-bold text-sm animate-fade-in">
+                            <i class="fas fa-exclamation-circle mr-2"></i> {{ session('error') }}
+                        </div>
+                    @endif
+
+                    <form action="{{ route('web.contact.submit') }}" method="POST" class="space-y-6">
                         @csrf
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label for="name" class="block text-sm font-bold text-mainText mb-2 ml-1">Full Name</label>
-                                <input type="text" id="name" name="name" placeholder="John Doe" class="w-full bg-navy border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-mainText px-5 py-3.5 font-medium placeholder-gray-400" required>
+                                <input type="text" id="name" name="name" value="{{ old('name') }}" placeholder="John Doe" class="w-full bg-navy border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-mainText px-5 py-3.5 font-medium placeholder-gray-400" required>
                             </div>
 
                             <div>
                                 <label for="email" class="block text-sm font-bold text-mainText mb-2 ml-1">Email Address</label>
-                                <input type="email" id="email" name="email" placeholder="john@example.com" class="w-full bg-navy border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-mainText px-5 py-3.5 font-medium placeholder-gray-400" required>
+                                <input type="email" id="email" name="email" value="{{ old('email') }}" placeholder="john@example.com" class="w-full bg-navy border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-mainText px-5 py-3.5 font-medium placeholder-gray-400" required>
                             </div>
                         </div>
 
@@ -119,7 +131,7 @@
 
                         <div>
                             <label for="message" class="block text-sm font-bold text-mainText mb-2 ml-1">Your Message</label>
-                            <textarea id="message" name="message" rows="5" placeholder="How can we help you today?" class="w-full bg-navy border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-mainText px-5 py-3.5 font-medium placeholder-gray-400 resize-none" required></textarea>
+                            <textarea id="message" name="message" rows="5" placeholder="How can we help you today?" class="w-full bg-navy border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-mainText px-5 py-3.5 font-medium placeholder-gray-400 resize-none" required>{{ old('message') }}</textarea>
                         </div>
 
                         <button type="submit" class="w-full brand-gradient hover:shadow-lg hover:shadow-primary/30 text-white font-bold py-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 group hover:-translate-y-0.5 mt-4">

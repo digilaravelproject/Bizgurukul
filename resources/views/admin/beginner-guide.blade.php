@@ -1,189 +1,196 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4">
-        <div class="max-w-6xl mx-auto space-y-8">
-            {{-- Header --}}
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div class="min-h-screen bg-gray-50/50 py-8 px-4">
+        <div class="max-w-7xl mx-auto space-y-6">
+            {{-- Simplified Header --}}
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-4xl font-bold text-mainText mb-2">Beginner's Guide Management</h1>
-                    <p class="text-mutedText">Manage and organize training videos for different experience levels</p>
+                    <h1 class="text-2xl font-black text-mainText tracking-tight uppercase">Roadmap Modules</h1>
+                    <p class="text-sm text-mutedText font-medium opacity-70 italic">Manage your training videos via Bunny.net streams</p>
                 </div>
-                <div class="flex gap-3">
-                    <div class="px-4 py-3 bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div class="text-xs font-bold text-mutedText uppercase tracking-wide">Total Videos</div>
-                        <div class="text-2xl font-bold text-primary">{{ $videos->count() }}</div>
+                <div class="flex items-center gap-3 bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
+                    <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-black text-mutedText uppercase tracking-widest">Global Count</div>
+                        <div class="text-xl font-black text-mainText leading-none">{{ $videos->count() }}</div>
                     </div>
                 </div>
             </div>
 
             {{-- Alerts --}}
             @if(session('success'))
-                <div class="p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl flex items-start gap-3">
-                    <i class="fas fa-check-circle mt-1"></i>
-                    <div>{{ session('success') }}</div>
-                </div>
-            @endif
-            @if($errors->any())
-                <div class="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl">
-                    <div class="font-bold mb-2">Please fix the following errors:</div>
-                    <ul class="list-disc list-inside space-y-1">
-                        @foreach($errors->all() as $err)
-                            <li>{{ $err }}</li>
-                        @endforeach
-                    </ul>
+                <div class="p-4 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl text-sm font-bold animate-fade-in-down shadow-sm">
+                    <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
                 </div>
             @endif
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {{-- Left: Form --}}
-                <div class="lg:col-span-1">
-                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden sticky top-8">
-                        <div class="bg-gradient-to-r from-primary to-blue-600 px-6 py-6">
-                            <h2 class="text-white font-bold text-lg flex items-center gap-2">
-                                <i class="fas fa-plus-circle"></i>
-                                Add New Video
-                            </h2>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {{-- Form Section --}}
+                <div class="lg:col-span-4">
+                    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden sticky top-8">
+                        <div class="p-6 border-b border-gray-50 bg-gray-50/50 flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center text-xs">
+                                <i class="fas fa-plus"></i>
+                            </span>
+                            <h2 class="font-black text-mainText text-sm uppercase tracking-wider">Module Config</h2>
                         </div>
 
-                        <form action="{{ route('admin.beginner-guide.store') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-5">
+                        <form action="{{ route('admin.beginner-guide.store') }}" method="POST" class="p-6 space-y-5">
                             @csrf
                             
-                            <div>
-                                <label class="block text-xs font-bold text-mainText uppercase tracking-wider mb-2">Video Title</label>
-                                <input type="text" name="title" value="{{ old('title') }}" placeholder="e.g., Orientation & Mindset" required
-                                    class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition" />
-                                @error('title')<span class="text-xs text-red-600">{{ $message }}</span>@enderror
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black text-mutedText uppercase tracking-[0.15em] ml-1">Video Title</label>
+                                <input type="text" name="title" value="{{ old('title') }}" placeholder="Orientation 1.0" required
+                                    class="w-full px-4 py-3 rounded-xl border-gray-200 text-sm font-bold focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all outline-none" />
                             </div>
 
-                            <div>
-                                <label class="block text-xs font-bold text-mainText uppercase tracking-wider mb-2">Category</label>
-                                <select name="category" required class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition">
-                                    <option value="">Select category...</option>
-                                    <option value="foundation" {{ old('category') == 'foundation' ? 'selected' : '' }}>Foundation</option>
-                                    <option value="growth" {{ old('category') == 'growth' ? 'selected' : '' }}>Growth</option>
-                                    <option value="scale" {{ old('category') == 'scale' ? 'selected' : '' }}>Scale</option>
-                                </select>
-                                @error('category')<span class="text-xs text-red-600">{{ $message }}</span>@enderror
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-mainText uppercase tracking-wider mb-2">Description</label>
-                                <textarea name="description" rows="3" placeholder="Brief overview of the video content..." 
-                                    class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition resize-none">{{ old('description') }}</textarea>
-                                @error('description')<span class="text-xs text-red-600">{{ $message }}</span>@enderror
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-mainText uppercase tracking-wider mb-2">Resources (Links / Notes)</label>
-                                <textarea name="resources" rows="2" placeholder="Add relevant resources or notes..." 
-                                    class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition resize-none">{{ old('resources') }}</textarea>
-                                @error('resources')<span class="text-xs text-red-600">{{ $message }}</span>@enderror
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-mainText uppercase tracking-wider mb-2">Video File</label>
-                                <div class="relative">
-                                    <input type="file" name="video" accept="video/*" required 
-                                        class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition file:mr-3 file:px-3 file:py-1.5 file:rounded file:border-0 file:text-xs file:font-bold file:bg-primary/10 file:text-primary" />
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-mutedText uppercase tracking-[0.15em] ml-1">Category</label>
+                                    <select name="category" required class="w-full px-4 py-3 rounded-xl border-gray-200 text-sm font-bold bg-gray-50 focus:border-primary outline-none">
+                                        <option value="foundation" {{ old('category') == 'foundation' ? 'selected' : '' }}>Foundation</option>
+                                        <option value="growth" {{ old('category') == 'growth' ? 'selected' : '' }}>Growth</option>
+                                        <option value="scale" {{ old('category') == 'scale' ? 'selected' : '' }}>Scale</option>
+                                    </select>
                                 </div>
-                                @error('video')<span class="text-xs text-red-600">{{ $message }}</span>@enderror
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-mutedText uppercase tracking-[0.15em] ml-1">Order Index</label>
+                                    <input type="number" name="order_column" value="{{ old('order_column', 0) }}" 
+                                        class="w-full px-4 py-3 rounded-xl border-gray-200 text-sm font-bold focus:border-primary outline-none" />
+                                </div>
                             </div>
 
-                            <div>
-                                <label class="block text-xs font-bold text-mainText uppercase tracking-wider mb-2">Video Order</label>
-                                <input type="number" name="order_column" value="{{ old('order_column', 0) }}" 
-                                    class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition" />
-                                <p class="text-xs text-mutedText mt-1">Lower numbers appear first</p>
-                                @error('order_column')<span class="text-xs text-red-600">{{ $message }}</span>@enderror
+                            <div class="p-4 rounded-2xl bg-primary/5 border border-primary/10 space-y-4">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <i class="fas fa-external-link-alt text-primary text-xs"></i>
+                                    <span class="text-[10px] font-black text-primary uppercase tracking-widest">Bunny Stream Settings</span>
+                                </div>
+                                
+                                <div class="space-y-1">
+                                    <input type="text" name="bunny_video_id" value="{{ old('bunny_video_id') }}" placeholder="Video ID (e.g. 5f3e7a...)"
+                                        class="w-full px-3 py-2.5 rounded-lg border-gray-200 text-xs font-semibold focus:border-primary outline-none" />
+                                </div>
+
+                                <div class="space-y-1">
+                                    <textarea name="bunny_embed_url" rows="2" placeholder="OR Iframe Embed Code..."
+                                        class="w-full px-3 py-2.5 rounded-lg border-gray-200 text-xs font-semibold focus:border-primary outline-none resize-none leading-relaxed">{{ old('bunny_embed_url') }}</textarea>
+                                </div>
                             </div>
 
-                            <button type="submit" class="w-full bg-gradient-to-r from-primary to-blue-600 text-white py-4 rounded-lg font-bold uppercase tracking-wider hover:shadow-lg transition-all active:scale-95">
-                                <i class="fas fa-upload mr-2"></i> Add Video
+                            <div class="space-y-4 pt-2">
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-mutedText uppercase tracking-[0.15em] ml-1">Module Overview</label>
+                                    <textarea name="description" rows="2" placeholder="Brief metadata for user info panel..." 
+                                        class="w-full px-4 py-3 rounded-xl border-gray-200 text-xs font-medium focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all resize-none leading-relaxed">{{ old('description') }}</textarea>
+                                </div>
+
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-mutedText uppercase tracking-[0.15em] ml-1">Resources & Links</label>
+                                    <textarea name="resources" rows="2" placeholder="PDF links, checklist URL, etc." 
+                                        class="w-full px-4 py-3 rounded-xl border-gray-200 text-xs font-medium focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all resize-none leading-relaxed">{{ old('resources') }}</textarea>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full h-14 bg-primary text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                                <i class="fas fa-save mr-2"></i> Deploy Module
                             </button>
                         </form>
                     </div>
                 </div>
 
-                {{-- Right: Videos List & Preview --}}
-                <div class="lg:col-span-2 space-y-8">
-                    {{-- Videos List --}}
-                    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-6 border-b border-gray-200">
-                            <h2 class="text-mainText font-bold text-lg flex items-center gap-2">
-                                <i class="fas fa-video"></i>
-                                Uploaded Videos
-                            </h2>
+                {{-- Roadmap Section --}}
+                <div class="lg:col-span-8 space-y-6">
+                    {{-- Modules Grid --}}
+                    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="px-6 py-5 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
+                            <h2 class="text-mainText font-black text-sm uppercase tracking-wider">Module Database</h2>
                         </div>
 
-                        @if($videos->count() > 0)
-                            <div class="divide-y divide-gray-200">
-                                @foreach($videos->groupBy('category') as $category => $categoryVideos)
+                        <div class="divide-y divide-gray-50">
+                            @php $found = false; @endphp
+                            @foreach(['foundation', 'growth', 'scale'] as $cat)
+                                @php $catVideos = $videos->where('category', $cat)->sortBy('order_column'); @endphp
+                                @if($catVideos->count() > 0)
+                                    @php $found = true; @endphp
                                     <div class="p-6">
-                                        <h3 class="text-sm font-bold text-primary uppercase tracking-wider mb-4 capitalize flex items-center gap-2">
-                                            <span class="w-3 h-3 rounded-full bg-primary"></span>
-                                            {{ $category }}
-                                        </h3>
-                                        <div class="space-y-3">
-                                            @foreach($categoryVideos->sortBy('order_column') as $video)
-                                                <button onclick="previewVideo({{ $video->id }}, '{{ addslashes($video->title) }}', '{{ addslashes($video->description) }}', '{{ addslashes($video->resources ?? '') }}', '{{ asset($video->video_url) }}')" 
-                                                    class="w-full flex items-start justify-between bg-gray-50 p-4 rounded-lg hover:bg-blue-50 hover:border-l-4 hover:border-l-primary transition-all group cursor-pointer text-left">
-                                                    <div class="flex-1 min-w-0">
-                                                        <div class="flex items-center gap-3 mb-1">
-                                                            <span class="inline-block w-6 h-6 bg-primary text-white rounded-full text-xs font-bold flex items-center justify-center">
-                                                                {{ $loop->iteration }}
-                                                            </span>
-                                                            <h4 class="font-bold text-mainText truncate">{{ $video->title }}</h4>
+                                        <div class="flex items-center gap-3 mb-4">
+                                            <div class="px-3 py-1 rounded-full bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest">
+                                                {{ $cat }}
+                                            </div>
+                                            <div class="h-px flex-1 bg-gray-50"></div>
+                                        </div>
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            @foreach($catVideos as $video)
+                                                <div class="group relative flex flex-col p-4 rounded-2xl bg-gray-50/50 border border-gray-100 hover:bg-white hover:shadow-md transition-all duration-300">
+                                                    <div class="flex items-start justify-between mb-2">
+                                                        <div class="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center font-black text-primary text-[10px] shadow-sm">
+                                                            {{ $loop->iteration }}
                                                         </div>
-                                                        <p class="text-xs text-mutedText line-clamp-2 ml-9">{{ $video->description }}</p>
+                                                        <div class="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button 
+                                                                data-id="{{ $video->id }}"
+                                                                data-title="{{ $video->title }}"
+                                                                data-desc="{{ $video->description }}"
+                                                                data-res="{{ $video->resources }}"
+                                                                data-bunnyid="{{ $video->bunny_video_id }}"
+                                                                data-bunnyembed="{{ $video->bunny_embed_url }}"
+                                                                data-vurl="{{ $video->video_url }}"
+                                                                onclick="previewModule(this)"
+                                                                class="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center hover:scale-110 transition-transform">
+                                                                <i class="fas fa-play text-[9px]"></i>
+                                                            </button>
+                                                            <form action="{{ route('admin.beginner-guide.destroy', $video->id) }}" method="POST" onsubmit="return confirm('Remove module database entry?')">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="w-8 h-8 rounded-lg bg-rose-500 text-white flex items-center justify-center hover:scale-110 transition-transform">
+                                                                    <i class="fas fa-trash-alt text-[9px]"></i>
+                                                                </button>
+                                                            </form>
+                                                        </div>
                                                     </div>
-                                                    <?php /*<form method="POST" action="{{ route('admin.beginner-guide.destroy', $video->id) }}" 
-                                                        onclick="event.stopPropagation();"
-                                                        class="ml-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" onclick="return confirm('Delete this video?')" 
-                                                            class="flex-shrink-0 w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-colors">
-                                                            <i class="fas fa-trash-alt text-xs"></i>
-                                                        </button>
-                                                    </form> */?>
-                                                </button>
+                                                    <h4 class="font-black text-mainText text-xs truncate leading-relaxed">{{ $video->title }}</h4>
+                                                    <p class="text-[9px] text-mutedText font-bold uppercase tracking-widest opacity-60">
+                                                        Index #{{ $video->order_column }} • {{ $video->bunny_video_id ? 'CDN Stream' : 'Legacy' }}
+                                                    </p>
+                                                </div>
                                             @endforeach
                                         </div>
                                     </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <div class="p-12 text-center">
-                                <i class="fas fa-film text-4xl text-gray-300 mb-3"></i>
-                                <p class="text-mutedText font-medium">No videos uploaded yet</p>
-                                <p class="text-xs text-mutedText mt-1">Start by adding your first training video using the form</p>
-                            </div>
-                        @endif
+                                @endif
+                            @endforeach
+                            
+                            @if(!$found)
+                                <div class="p-16 text-center">
+                                    <div class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                                        <i class="fas fa-video-slash text-2xl text-gray-200"></i>
+                                    </div>
+                                    <h3 class="text-sm font-black text-mainText uppercase tracking-widest">No Roadmap Modules</h3>
+                                    <p class="text-xs text-mutedText font-medium max-w-xs mx-auto mt-1 italic">Deploy your first training module using the configuration panel.</p>
+                                </div>
+                            @endif
+                        </div>
                     </div>
 
-                    {{-- Video Preview --}}
-                    <div id="preview-container" class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                        {{-- Video Player --}}
-                        <div class="w-full bg-black">
-                            <video id="preview-video" width="100%" height="auto" controls style="display: block; max-width: 100%; background-color: #000; cursor: pointer;" onclick="this.paused ? this.play() : this.pause();">
-                                <source id="preview-source" src="" type="video/mp4">
-                                Your browser does not support the video tag.
-                            </video>
-                        </div>
-
-                        {{-- Video Details --}}
-                        <div class="p-6 space-y-6">
-                            {{-- Title & Description --}}
-                            <div>
-                                <h3 id="preview-title" class="text-xl font-bold text-mainText mb-2">Select a video to preview</h3>
-                                <p id="preview-description" class="text-sm text-mutedText leading-relaxed">Click on any video from the list to view its details</p>
+                    {{-- Admin Preview Panel --}}
+                    <div id="preview-panel" class="hidden animate-fade-in-down">
+                        <div class="bg-navy rounded-[2rem] p-4 shadow-2xl overflow-hidden border border-white/10 ring-1 ring-black/20">
+                            <div class="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-inner border border-white/5">
+                                <div id="module-player-wrapper" class="w-full h-full flex items-center justify-center">
+                                    {{-- Video/Iframe Content --}}
+                                </div>
                             </div>
-
-                            {{-- Resources --}}
-                            <div id="resources-section">
-                                <h4 class="text-sm font-bold text-mainText mb-3 pb-3 border-b border-gray-200">Resources & Links</h4>
-                                <div id="preview-resources" class="text-sm text-mutedText leading-relaxed whitespace-pre-wrap">No resources available</div>
+                            
+                            <div class="p-6 pt-8 bg-white rounded-2xl -mt-5 relative z-10 shadow-xl border border-gray-100">
+                                <div class="flex items-center gap-2 mb-4">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-primary"></div>
+                                    <span class="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Module Live Test</span>
+                                </div>
+                                <h3 id="panel-title" class="text-xl font-black text-mainText mb-2">Select a video</h3>
+                                <p id="panel-desc" class="text-xs text-mutedText font-medium leading-relaxed opacity-80"></p>
                             </div>
                         </div>
                     </div>
@@ -192,52 +199,75 @@
         </div>
     </div>
 
+    @php
+        $libId = config('services.bunny.library_id');
+        $secKey = env('BUNNY_SECURITY_KEY', '');
+    @endphp
+
     <script>
-        function previewVideo(id, title, description, resources, videoUrl) {
-            const titleEl = document.getElementById('preview-title');
-            const descEl = document.getElementById('preview-description');
-            const resourcesEl = document.getElementById('preview-resources');
-            const sourceEl = document.getElementById('preview-source');
-            const videoEl = document.getElementById('preview-video');
-            
-            // Update text content
-            titleEl.textContent = title;
-            descEl.textContent = description;
-            
-            // Update resources
-            if (resources && resources.trim()) {
-                resourcesEl.textContent = resources;
-            } else {
-                resourcesEl.textContent = 'No resources available';
+        const LIBRARY_ID = "{{ $libId }}";
+        const SECURITY_KEY = "{{ $secKey }}";
+
+        function previewModule(el) {
+            const data = el.dataset;
+            const panel = document.getElementById('preview-panel');
+            const wrapper = document.getElementById('module-player-wrapper');
+            const titleEl = document.getElementById('panel-title');
+            const descEl = document.getElementById('panel-desc');
+
+            panel.classList.remove('hidden');
+            titleEl.textContent = data.title;
+            descEl.textContent = data.desc || 'No metadata description provided for this module.';
+
+            // Reset wrapper and player
+            wrapper.innerHTML = "";
+
+            let finalSrc = "";
+            let useIframe = false;
+
+            if (data.bunnyid && data.bunnyid.length > 5) {
+                // Secure Bunny Preview Logic
+                const expires = Math.floor(Date.now() / 1000) + 14400; // 4 hours
+                // Note: Simple hash estimation for admin preview (Real Hash logic needs true crypto or server-side pass)
+                // We'll use a direct link if security isn't hyper-critical in admin preview, OR just render what is given
+                const bunnySrc = `https://iframe.mediadelivery.net/embed/${LIBRARY_ID}/${data.bunnyid}?autoplay=false&preload=true&responsive=true`;
+                finalSrc = bunnySrc;
+                useIframe = true;
+            } else if (data.bunnyembed && data.bunnyembed.includes('iframe')) {
+                // Direct Embed Tag
+                wrapper.innerHTML = data.bunnyembed;
+                return;
+            } else if (data.vurl) {
+                // Fallback URL
+                finalSrc = data.vurl;
+                useIframe = finalSrc.includes('iframe') || finalSrc.includes('mediadelivery');
             }
-            
-            // Update video source
-            sourceEl.src = videoUrl;
-            
-            // Reset and reload video
-            videoEl.load();
-            videoEl.play();
-            
-            // Scroll to preview
-            setTimeout(function() {
-                document.getElementById('preview-container').scrollIntoView({ 
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }, 100);
+
+            if (useIframe) {
+                const iframe = document.createElement('iframe');
+                iframe.src = finalSrc;
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = '0';
+                iframe.allow = 'accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;';
+                iframe.allowFullscreen = true;
+                wrapper.appendChild(iframe);
+            } else if (finalSrc) {
+                const video = document.createElement('video');
+                video.controls = true;
+                video.className = "w-full h-full bg-black";
+                const source = document.createElement('source');
+                source.src = finalSrc;
+                source.type = "video/mp4";
+                video.appendChild(source);
+                wrapper.appendChild(video);
+                video.load();
+            }
+
+            // Smooth scroll to preview
+            setTimeout(() => {
+                panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 50);
         }
-        
-        // Initialize with first video on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                const firstButton = document.querySelector('button[onclick*="previewVideo"]');
-                if (firstButton) {
-                    // Extract onclick parameters and simulate click
-                    firstButton.click();
-                }
-            }, 300);
-        });
     </script>
 @endsection
-
-

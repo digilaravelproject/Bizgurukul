@@ -24,7 +24,7 @@
         <nav class="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar" x-data="{
             lmsOpen: {{ request()->routeIs('admin.courses.*', 'admin.categories.*', 'admin.lessons.*', 'admin.bundles.*', 'admin.beginner-guide', 'admin.resources', 'admin.certificate.*') ? 'true' : 'false' }},
             promoOpen: {{ request()->routeIs('admin.coupons.*', 'admin.coupon-packages.*') ? 'true' : 'false' }},
-            userOpen: {{ request()->routeIs('admin.users.*', 'admin.kyc.*', 'admin.verifications.*', 'admin.communities.*') ? 'true' : 'false' }},
+            userOpen: {{ request()->routeIs('admin.users.*', 'admin.kyc.*', 'admin.verifications.*', 'admin.communities.*', 'admin.contact-inquiries.*') ? 'true' : 'false' }},
             affiliateOpen: {{ request()->routeIs('admin.affiliate.*', 'admin.payouts.*', 'admin.achievements.*') ? 'true' : 'false' }},
             settingsOpen: {{ request()->routeIs('admin.settings.*', 'admin.taxes.*', 'admin.email-templates.*', 'admin.roles.*', 'admin.activity-logs.*') ? 'true' : 'false' }}
         }">
@@ -162,6 +162,10 @@
                     <a href="{{ route('admin.communities.index') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.communities.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
                         <i class="fas fa-users text-[12px]"></i>
                         Community Hub
+                    </a>
+                    <a href="{{ route('admin.contact-inquiries.index') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.contact-inquiries.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                        <i class="fas fa-envelope-open-text text-[12px]"></i>
+                        Contact Inquiries
                     </a>
                 </div>
             </div>

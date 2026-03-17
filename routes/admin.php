@@ -174,6 +174,14 @@ Route::middleware(['auth'])
                 Route::post('/{community}/toggle', [CommunityController::class, 'toggleStatus'])->name('toggle');
                 Route::delete('/{community}', [CommunityController::class, 'destroy'])->name('destroy');
             });
+
+            // Contact Inquiries
+            Route::prefix('contact-inquiries')->name('contact-inquiries.')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Admin\ContactInquiryController::class, 'index'])->name('index');
+                Route::get('/{id}', [\App\Http\Controllers\Admin\ContactInquiryController::class, 'show'])->name('show');
+                Route::post('/{id}/reply', [\App\Http\Controllers\Admin\ContactInquiryController::class, 'markReplied'])->name('mark-replied');
+                Route::delete('/{id}', [\App\Http\Controllers\Admin\ContactInquiryController::class, 'destroy'])->name('destroy');
+            });
         });
 
         // KYC Management (managed by manage-kyc)

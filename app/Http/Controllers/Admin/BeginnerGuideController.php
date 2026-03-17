@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Setting;
 use App\Models\BeginnerGuideVideo;
 use Illuminate\Support\Facades\Storage;
 
@@ -28,14 +27,14 @@ class BeginnerGuideController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'category' => 'required|in:foundation,growth,scale',
-            'video' => 'required|mimetypes:video/mp4,video/ogg,video/webm,video/mov|max:512000',
+            'bunny_video_id' => 'nullable|string',
+            'bunny_embed_url' => 'nullable|string',
             'description' => 'nullable|string',
             'resources' => 'nullable|string',
             'order_column' => 'nullable|integer'
         ]);
 
-        $file = $request->file('video');
-        $path = $file->store('public/beginner-guide');
+        $path = null;
 
         BeginnerGuideVideo::create([
             'title' => $request->title,
@@ -43,10 +42,12 @@ class BeginnerGuideController extends Controller
             'description' => $request->description,
             'resources' => $request->resources,
             'video_path' => $path,
+            'bunny_video_id' => $request->bunny_video_id,
+            'bunny_embed_url' => $request->bunny_embed_url,
             'order_column' => $request->order_column ?? 0,
         ]);
 
-        return redirect()->route('admin.beginner-guide')->with('success', 'Video added successfully.');
+        return redirect()->back()->with('success', 'Video record saved successfully.');
     }
 
     /**
@@ -86,7 +87,7 @@ class BeginnerGuideController extends Controller
     public function resources(Request $request)
     {
         $productKnowledge = \App\Models\CourseResource::orderBy('created_at', 'desc')->get();
-        $beginnersGuide = \App\Models\BeginnerGuideVideo::orderBy('category')->orderBy('order_column')->get();
+        $beginnersGuide = BeginnerGuideVideo::orderBy('category')->orderBy('order_column')->get();
 
         return view('admin.resources', compact('productKnowledge', 'beginnersGuide'));
     }
