@@ -89,12 +89,27 @@ class CertificateController extends Controller
 
         // Just return a view showing the certificate for now.
         // A PDF library can be integrated later to download.
-        $templateUrl = \Illuminate\Support\Facades\Storage::url($templateData->value);
+        // Robust path resolution for Base64 conversion
+        $cleanedPath = ltrim($templateData->value, '/');
+        if (str_starts_with($cleanedPath, 'storage/')) {
+            $cleanedPath = substr($cleanedPath, 8);
+        }
+        $templatePath = storage_path('app/public/' . $cleanedPath);
+        $base64Template = '';
+        
+        if (file_exists($templatePath)) {
+            $imageData = file_get_contents($templatePath);
+            $mimeType = mime_content_type($templatePath);
+            $base64Template = 'data:' . $mimeType . ';base64,' . base64_encode($imageData);
+        } else {
+            // Fallback to URL with proper storage formatting
+            $base64Template = \Illuminate\Support\Facades\Storage::url($templateData->value);
+        }
 
         return view('student.certificates.generate', [
             'course' => $course,
             'user' => $user,
-            'templateUrl' => $templateUrl
+            'templateUrl' => $base64Template
         ]);
     }
 }

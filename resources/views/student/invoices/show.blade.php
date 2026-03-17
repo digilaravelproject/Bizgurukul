@@ -25,28 +25,40 @@
         }
 
         body {
-            font-family: @if(isset($is_pdf) && $is_pdf) 'Helvetica', 'Arial', sans-serif @else 'Outfit', sans-serif @endif;
+            font-family: @if(isset($is_pdf) && $is_pdf) 'DejaVu Sans', sans-serif @else 'Outfit', sans-serif @endif;
             color: var(--color-text-main);
-            line-height: 1.5;
+            line-height: @if(isset($is_pdf) && $is_pdf) 1.2 @else 1.5 @endif;
             padding: @if(isset($is_pdf) && $is_pdf) 0 @else 40px 20px @endif;
-            background-color: var(--color-bg-body);
+            margin: 0;
+            background-color: @if(isset($is_pdf) && $is_pdf) #fff @else var(--color-bg-body) @endif;
             font-size: 14px;
             -webkit-font-smoothing: antialiased;
+            width: 100%;
         }
 
+        @if(isset($is_pdf) && $is_pdf)
+        * {
+            font-family: 'DejaVu Sans', sans-serif !important;
+        }
+        @endif
+
         .invoice-wrapper {
-            max-width: @if(isset($is_pdf) && $is_pdf) none @else 900px @endif;
-            width: @if(isset($is_pdf) && $is_pdf) 100% @else auto @endif;
-            margin: 0 auto;
-            background: var(--color-bg-card);
-            padding: @if(isset($is_pdf) && $is_pdf) 35px @else 40px @endif;
-            box-shadow: @if(isset($is_pdf) && $is_pdf) none @else 0 10px 25px rgba(0, 0, 0, 0.05) @endif;
-            border-top: @if(isset($is_pdf) && $is_pdf) 0 @else 6px solid var(--color-primary) @endif;
-            /* Professional accent color */
-            border-radius: @if(isset($is_pdf) && $is_pdf) 0 @else 4px @endif;
             @if(isset($is_pdf) && $is_pdf)
-            display: block;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                border: none;
+            @else
+                max-width: 900px;
+                width: auto;
+                margin: 20px auto;
+                padding: 40px;
+                border-top: 6px solid var(--color-primary);
             @endif
+            background: var(--color-bg-card);
+            box-shadow: @if(isset($is_pdf) && $is_pdf) none @else 0 10px 25px rgba(0, 0, 0, 0.05) @endif;
+            border-radius: @if(isset($is_pdf) && $is_pdf) 0 @else 4px @endif;
+            overflow: visible;
         }
 
         /* --- Header Section --- */
@@ -267,24 +279,28 @@
         /* --- Print Media Query --- */
         @page {
             size: A4;
-            margin: 0 !important;
+            margin: 15mm;
         }
 
         @media print {
             body {
                 background-color: #fff;
-                padding: 0;
-                margin: 0;
-                font-size: 12px; /* Slightly smaller font for better fit */
+                padding: 0 !important;
+                margin: 0 !important;
+                font-size: 11pt; /* Better for A4 */
+                width: 210mm;
+                height: 297mm;
             }
 
             .invoice-wrapper {
-                box-shadow: none;
-                border-top: 4px solid var(--color-text-main);
-                margin: 0;
-                padding: 0;
-                max-width: 100%;
-                width: 100%;
+                box-shadow: none !important;
+                border: none !important;
+                margin: 0 auto !important;
+                padding: 15mm !important; /* Balanced padding on ALL sides */
+                width: 180mm !important; /* Centered width */
+                max-width: 180mm !important;
+                box-sizing: border-box;
+                display: block;
             }
 
             .header-top {
@@ -510,13 +526,13 @@
                         </td>
                         <td>1</td>
                         <td>999293</td>
-                        <td class="text-right">&#8377;{{ number_format($subTotal, 2) }}</td>
+                        <td class="text-right">INR {{ number_format($subTotal, 2) }}</td>
                     </tr>
 
                     <!-- Sub Total Row -->
                     <tr>
                         <td colspan="3" class="text-right"><strong>Sub Total:</strong></td>
-                        <td class="text-right"><strong>&#8377;{{ number_format($subTotal, 2) }}</strong></td>
+                        <td class="text-right"><strong>INR {{ number_format($subTotal, 2) }}</strong></td>
                     </tr>
 
                     <!-- Tax Split Row (Table structure for strict PDF printing compatibility) -->
@@ -526,14 +542,14 @@
                                 <tr>
                                     <td style="width: 35%; text-align: right; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-weight: 600; color: #2D2D2D; font-size: 12px;">Tax 18%:</td>
                                     <td style="width: 15%; text-align: center; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-size: 12px; color: #555555;">CGST: 9%</td>
-                                    <td style="width: 20%; text-align: center; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-size: 12px; color: #555555;">CGST: &#8377;{{ number_format($cgst, 2) }}</td>
+                                    <td style="width: 20%; text-align: center; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-size: 12px; color: #555555;">CGST: INR {{ number_format($cgst, 2) }}</td>
                                     <td style="width: 10%; text-align: center; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-size: 12px; color: #555555;">SGST: 9%</td>
-                                    <td style="width: 20%; text-align: center; padding: 12px; border: none; font-size: 12px; color: #555555;">SGST: &#8377;{{ number_format($sgst, 2) }}</td>
+                                    <td style="width: 20%; text-align: center; padding: 12px; border: none; font-size: 12px; color: #555555;">SGST: INR {{ number_format($sgst, 2) }}</td>
                                 </tr>
                             </table>
                         </td>
                         <td class="text-center" style="vertical-align: middle; background-color: #fafafa;">
-                            <strong>&#8377;{{ number_format($taxAmount, 2) }}</strong>
+                            <strong>INR {{ number_format($taxAmount, 2) }}</strong>
                         </td>
                     </tr>
 
@@ -541,7 +557,7 @@
                     <tr>
                         <td colspan="3" class="text-right" style="font-size: 16px;"><strong>Total:</strong></td>
                         <td class="text-right" style="font-size: 16px;">
-                            <strong>&#8377;{{ number_format($totalAmount, 2) }}</strong></td>
+                            <strong>INR {{ number_format($totalAmount, 2) }}</strong></td>
                     </tr>
 
                     <!-- Declaration -->
