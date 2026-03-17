@@ -143,4 +143,38 @@ class SettingController extends Controller
             return response()->json(['success' => false, 'message' => 'Failed: ' . $e->getMessage()], 500);
         }
     }
+
+    // ──────────────────────────────────────
+    // Wallet Settings
+    // ──────────────────────────────────────
+
+    public function wallet()
+    {
+        $settings = [
+            'commission_holding_hours'   => Setting::get('commission_holding_hours', 24),
+        ];
+
+        return view('admin.settings.wallet', compact('settings'));
+    }
+
+    public function updateWallet(Request $request)
+    {
+        $request->validate([
+            'commission_holding_hours'   => 'required|numeric|min:0',
+        ]);
+
+        try {
+            Setting::set('commission_holding_hours', $request->input('commission_holding_hours'));
+
+            // Refresh existing data based on the new setting
+            app(\App\Services\WalletService::class)->recalculateHoldPeriod();
+
+            return redirect()->route('admin.settings.wallet')
+                ->with('success', 'Wallet settings updated successfully.');
+
+        } catch (Exception $e) {
+            Log::error('Wallet config update error: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to save wallet settings.');
+        }
+    }
 }

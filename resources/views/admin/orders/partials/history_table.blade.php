@@ -64,7 +64,7 @@
                     Failed
                 </span>
             @elseif($order->status === 'pending')
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-orange-100 text-orange-700">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-orange-100 text-orange-700 cursor-help" title="User started checkout but payment not confirmed by Razorpay.">
                     <i class="fas fa-clock mr-1"></i> Pending
                 </span>
             @else

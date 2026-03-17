@@ -17,6 +17,7 @@ Route::get('/u/{slug}', [App\Http\Controllers\Student\AffiliateLinkController::c
 
 // 2. Public Pages
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/courses-ajax', [HomeController::class, 'coursesAjax'])->name('courses.ajax');
 Route::get('/home-variant', [HomeController::class, 'variant'])->name('web.variant');
 Route::get('/about', [HomeController::class, 'about'])->name('web.about');
 Route::get('/terms', [HomeController::class, 'terms'])->name('web.terms');

@@ -5,16 +5,16 @@
         {{-- Sidebar Logo (Fixed) --}}
         <div class="p-6 flex justify-between items-center h-20 border-b border-navy shrink-0">
             <div class="flex items-center space-x-3">
-                <div class="w-auto h-9 flex items-center justify-center">
-                    @if (file_exists(public_path('storage/site_images/logo1.png')))
-                        <img src="{{ asset('storage/site_images/logo1.png') }}" alt="Logo"
-                            class="h-full w-auto object-contain group-hover:scale-110 transition-transform" loading="lazy">
+                <a href="{{ route('student.dashboard') }}" class="w-auto h-9 flex items-center justify-center group/logo">
+                    @if (Storage::exists('site_images/logo1.png'))
+                        <img src="{{ Storage::url('site_images/logo1.png') }}" alt="Logo"
+                            class="h-full w-auto object-contain group-hover/logo:scale-105 transition-transform" loading="lazy">
                     @else
                         <div class="h-full flex items-center justify-center font-bold text-lg text-primary">
                             SKILLS PEHLE
                         </div>
                     @endif
-                </div>
+                </a>
             </div>
             <button @click="sidebarOpen = false" class="md:hidden text-mutedText hover:text-primary transition p-2">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

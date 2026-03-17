@@ -140,7 +140,7 @@
 
                 <div class="bg-white rounded-2xl border border-gray-200 shadow-lg p-6 mb-6">
                     <div class="text-center mb-6">
-                        <div class="text-[10px] font-bold text-mutedText uppercase tracking-widest mb-1">Total Investment</div>
+                        <div class="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">{{ $bundle->title }} Investment</div>
                         <div class="flex justify-center items-end gap-2">
                             <span class="text-4xl font-black text-mainText tracking-tight">₹{{ number_format($effectivePrice, 0) }}</span>
                             @if ($effectivePrice < $bundle->website_price)

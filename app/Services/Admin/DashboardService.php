@@ -14,8 +14,8 @@ class DashboardService
 {
     public function getAggregateStats()
     {
-        // Cache for 5 minutes (300 seconds)
-        return Cache::remember('admin_dashboard_stats', 300, function () {
+        // Cache for 30 seconds
+        return Cache::remember('admin_dashboard_stats', 30, function () {
             try {
                 $today = Carbon::today();
                 $startOfMonth = Carbon::now()->startOfMonth();
@@ -23,7 +23,7 @@ class DashboardService
                 $startOfLastMonth = Carbon::now()->subMonth()->startOfMonth();
                 $endOfLastMonth = Carbon::now()->subMonth()->endOfMonth();
 
-                // Revenue Calculations
+                // Revenue Calculations (Always filter by 'success')
                 $totalRevenue = (float) Payment::where('status', 'success')->sum('amount');
                 $revenueThisMonth = (float) Payment::where('status', 'success')->whereBetween('created_at', [$startOfMonth, $endOfMonth])->sum('amount');
                 $revenueLastMonth = (float) Payment::where('status', 'success')->whereBetween('created_at', [$startOfLastMonth, $endOfLastMonth])->sum('amount');
@@ -37,17 +37,16 @@ class DashboardService
                     $growthPercentage = (($revenueThisMonth - $revenueLastMonth) / $revenueLastMonth) * 100;
                 }
 
-                // Top Courses (Handling the missing relationship)
+                // Top Courses
                 $topCourses = [];
                 try {
-                    // CHANGED: 'users' to 'students' (Ensure this exists in Course Model)
                     $topCourses = Course::withCount('students')
                         ->orderBy('students_count', 'desc')
                         ->take(4)
-                        ->get(['id', 'title', 'website_price', 'thumbnail']); // changed 'price' to 'website_price'
+                        ->get(['id', 'title', 'website_price', 'thumbnail']);
                 } catch (\Exception $e) {
                     Log::error('Dashboard Top Courses Error: ' . $e->getMessage());
-                    $topCourses = []; // Return empty array if relation fails
+                    $topCourses = [];
                 }
 
                 return [
@@ -136,10 +135,10 @@ class DashboardService
                 'today'        => ['whereDate', Carbon::today()],
                 'last_7_days'  => ['where>=',   Carbon::now()->subDays(7)],
                 'last_30_days' => ['where>=',   Carbon::now()->subDays(30)],
-                default        => null, // 'all_time' — no filter
+                default        => null,
             };
 
-            // ── Step 2: SUM of successful payments in the period ───────
+            // ── Step 2: Query successful payments ──────────────────────
             $paymentQuery = Payment::where('status', 'success');
             if ($dateFilter) {
                 if ($dateFilter[0] === 'whereDate') {
@@ -148,50 +147,43 @@ class DashboardService
                     $paymentQuery->where('created_at', '>=', $dateFilter[1]);
                 }
             }
-            $totalPayments = (string) number_format((float) $paymentQuery->sum('amount'), 4, '.', '');
 
-            // ── Step 3: SUM commissions tied to REAL purchases ────────
-            // Real commissions always have a non-empty reference_type
-            // (e.g. App\Models\Bundle or App\Models\Course).
-            // Commissions with empty reference_type are orphaned test data.
-            $commissionQuery = \Illuminate\Support\Facades\DB::table('affiliate_commissions')
-                ->whereNotNull('reference_type')
-                ->where('reference_type', '!=', '')
-                ->whereNull('deleted_at'); // respect SoftDeletes
+            $payments = $paymentQuery->get(['id', 'amount', 'user_id', 'course_id', 'bundle_id', 'created_at']);
 
-            if ($dateFilter) {
-                if ($dateFilter[0] === 'whereDate') {
-                    $commissionQuery->whereDate('created_at', $dateFilter[1]);
-                } else {
-                    $commissionQuery->where('created_at', '>=', $dateFilter[1]);
-                }
+            $totalNetProfit = 0;
+
+            foreach ($payments as $payment) {
+                $amount = (float) $payment->amount;
+                if ($amount <= 0) continue;
+
+                // 1. GST (18% inclusive)
+                $gst = ($amount * 18) / 118;
+                $afterGst = $amount - $gst;
+
+                // 2. Gateway Fee (2% of total amount)
+                $gatewayFee = ($amount * 2) / 100;
+
+                // 3. Commission (Find commission for this specific purchase)
+                // We look for commission where referred_user_id = payment->user_id
+                // and reference matches bundle/course.
+                $refId = $payment->bundle_id ?? $payment->course_id;
+                $refType = $payment->bundle_id ? \App\Models\Bundle::class : Course::class;
+
+                $commissionAmount = AffiliateCommission::where('referred_user_id', $payment->user_id)
+                    ->where('reference_id', $refId)
+                    ->where('reference_type', $refType)
+                    // We assume commission created around the same time as payment
+                    ->whereBetween('created_at', [
+                        $payment->created_at->subMinutes(5),
+                        $payment->created_at->addMinutes(5)
+                    ])
+                    ->sum('amount');
+
+                $netProfit = $afterGst - $gatewayFee - $commissionAmount;
+                $totalNetProfit += max(0, $netProfit);
             }
 
-            $totalCommission = (string) number_format(
-                (float) $commissionQuery->sum('amount'),
-                4, '.', ''
-            );
-
-
-            // ── Step 4: Safety cap — commission can never exceed payment ─
-            // (Guards against bad data; commission deducted is capped at the
-            //  amount actually remaining after GST)
-            $gst      = bcdiv(bcmul($totalPayments, '18', 4), '118', 4);
-            $afterGst = bcsub($totalPayments, $gst, 4);
-
-            // Cap commission so profit doesn't go negative from data issues
-            $commissionCapped = bccomp($totalCommission, $afterGst, 4) > 0
-                ? $afterGst
-                : $totalCommission;
-
-            $afterComm = bcsub($afterGst, $commissionCapped, 4);
-
-            // Gateway: 2% of total collected amount (inclusive of GST)
-            $gateway = bcdiv(bcmul($totalPayments, '2', 4), '100', 4);
-
-            $profit = bcsub($afterComm, $gateway, 4);
-
-            return (float) round(max(0, (float) $profit), 2);
+            return (float) round($totalNetProfit, 2);
 
         } catch (\Exception $e) {
             Log::error('DashboardService@calculateProfit: ' . $e->getMessage(), ['period' => $period]);

@@ -10,10 +10,13 @@
             isLocked: {{ $email ? 'true' : 'false' }},
             oldName: {{ Js::from(old('name')) }},
             oldMobile: {{ Js::from(old('mobile')) }},
-            oldDob: {{ Js::from(old('dob')) }},
-            oldPincode: {{ Js::from(old('pincode')) }}
+            intent: {{ Js::from($intent ?? old('intent')) }},
+            target_bundle_id: {{ Js::from($target_bundle_id ?? old('target_bundle_id')) }}
         })" @submit="loading = true">
         @csrf
+
+        <input type="hidden" name="intent" :value="intent">
+        <input type="hidden" name="target_bundle_id" :value="target_bundle_id">
 
         <div class="space-y-6">
             {{-- Full Name --}}
@@ -25,13 +28,12 @@
                 <x-input-error :messages="$errors->get('name')" class="mt-1" />
             </div>
 
-            {{-- Email Group --}}
+            {{-- Row 1: Email & Confirm Email --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label class="block text-xs font-bold text-mutedText uppercase tracking-widest mb-2">Email Address <span class="text-red-500">*</span></label>
                     <div class="relative">
                         <input type="hidden" name="email" :value="email">
-
                         <input id="email_real" type="email"
                             x-show="!showMasked"
                             x-model="email"
@@ -79,18 +81,18 @@
                     <template x-if="email && confirmEmail && !emailMatchError && !emailError">
                         <p class="text-[10px] text-green-500 font-bold mt-1.5 flex items-center bg-green-500/5 py-1 px-2 rounded-lg w-fit">
                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                            Emails match perfectly!
+                            Emails match!
                         </p>
                     </template>
                 </div>
             </div>
 
-            {{-- Mobile & Gender --}}
+            {{-- Row 2: Mobile & Gender --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label for="mobile" class="block text-xs font-bold text-mutedText uppercase tracking-widest mb-2">Mobile Number <span class="text-red-500">*</span></label>
-                    <div class="flex">
-                        <span class="inline-flex items-center px-4 rounded-l-xl border border-r-0 border-primary/10 bg-navy/40 text-primary text-sm font-black">
+                    <div class="flex group">
+                        <span class="inline-flex items-center px-4 rounded-l-xl border border-r-0 border-primary/10 bg-navy/40 text-primary text-sm font-black transition-colors group-focus-within:border-primary group-focus-within:bg-primary/10">
                             +91
                         </span>
                         <input id="mobile" type="text" name="mobile" x-model="mobile" required
@@ -102,71 +104,72 @@
 
                 <div>
                     <label for="gender" class="block text-xs font-bold text-mutedText uppercase tracking-widest mb-2">Gender <span class="text-red-500">*</span></label>
-                    <div class="relative">
-                        <select id="gender" name="gender" required class="w-full px-4 py-3.5 bg-navy/20 border border-primary/10 rounded-xl text-mainText focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm appearance-none cursor-pointer">
-                            <option value="">Select Gender</option>
-                            <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>Male</option>
-                            <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>Female</option>
-                            <option value="other" {{ old('gender') == 'other' ? 'selected' : '' }}>Other</option>
+                    <div class="relative group">
+                        <select id="gender" name="gender" required 
+                            class="w-full px-4 py-3.5 bg-navy/20 border border-primary/10 rounded-xl text-mainText focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm appearance-none cursor-pointer hover:bg-navy/30 hover:border-primary/30">
+                            <option value="" class="bg-navy">Select Gender</option>
+                            <option value="male" class="bg-navy" {{ old('gender') == 'male' ? 'selected' : '' }}>Male</option>
+                            <option value="female" class="bg-navy" {{ old('gender') == 'female' ? 'selected' : '' }}>Female</option>
+                            <option value="other" class="bg-navy" {{ old('gender') == 'other' ? 'selected' : '' }}>Other</option>
                         </select>
-                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-mutedText text-xs pointer-events-none"></i>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-mutedText group-hover:text-primary transition-colors">
+                            <svg class="w-4 h-4 transition-transform duration-300 group-focus-within:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
                     </div>
+                    <x-input-error :messages="$errors->get('gender')" class="mt-1" />
                 </div>
             </div>
 
-            {{-- DOB & State --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                    <label for="dob" class="block text-xs font-bold text-mutedText uppercase tracking-widest mb-2">Date of Birth <span class="text-red-500">*</span></label>
-                    <input id="dob" type="date" name="dob" x-model="dob" required
-                        class="w-full px-4 py-3.5 bg-navy/20 border border-primary/10 rounded-xl text-mainText focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm">
-                </div>
-
+            {{-- Row 3: State & Password --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5" x-data="{ showPass: false }">
                 <div>
                     <label for="state_id" class="block text-xs font-bold text-mutedText uppercase tracking-widest mb-2">State/Region <span class="text-red-500">*</span></label>
-                    <div class="relative">
-                        <select id="state_id" name="state_id" required class="w-full px-4 py-3.5 bg-navy/20 border border-primary/10 rounded-xl text-mainText focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm appearance-none cursor-pointer">
-                            <option value="">Select State</option>
+                    <div class="relative group">
+                        <select id="state_id" name="state_id" required 
+                            class="w-full px-4 py-3.5 bg-navy/20 border border-primary/10 rounded-xl text-mainText focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm appearance-none cursor-pointer hover:bg-navy/30 hover:border-primary/30">
+                            <option value="" class="bg-navy">Select State</option>
                             @foreach($states as $state)
-                                <option value="{{ $state->id }}" {{ old('state_id') == $state->id ? 'selected' : '' }}>{{ $state->name }}</option>
+                                <option value="{{ $state->id }}" class="bg-navy" {{ old('state_id') == $state->id ? 'selected' : '' }}>{{ $state->name }}</option>
                             @endforeach
                         </select>
-                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-mutedText text-xs pointer-events-none"></i>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Passwords --}}
-            <div x-data="{ showPass: false }" class="space-y-5">
-                <div class="grid grid-cols-1 gap-5">
-                    <div>
-                        <label for="password" class="block text-xs font-bold text-mutedText uppercase tracking-widest mb-2">Create Password <span class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <input id="password" :type="showPass ? 'text' : 'password'" name="password" required
-                                placeholder="Min 8 characters"
-                                x-model="password"
-                                @input.debounce.500ms="checkPasswordStrength()"
-                                class="w-full px-4 py-3.5 bg-navy/20 border border-primary/10 rounded-xl text-mainText placeholder-slate-500 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm"
-                                :class="{'ring-1 ring-red-500 border-red-500': passwordError}">
-                            <button type="button" @click="showPass = !showPass" class="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-primary transition-all">
-                                 <svg x-show="!showPass" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                 <svg x-show="showPass" x-cloak class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
-                            </button>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-mutedText group-hover:text-primary transition-colors">
+                            <svg class="w-4 h-4 transition-transform duration-300 group-focus-within:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </div>
-                        <template x-if="passwordError">
-                             <p class="text-[10px] text-red-500 font-bold mt-1.5" x-text="passwordError"></p>
-                        </template>
-                        <template x-if="passwordStrength && !passwordError && password.length > 0">
-                            <p class="text-[10px] mt-1.5 font-black uppercase tracking-wider" :class="{
-                                'text-red-500': passwordStrength === 'Weak',
-                                'text-yellow-500': passwordStrength === 'Medium',
-                                'text-green-500': passwordStrength === 'Strong'
-                            }">Strength: <span x-text="passwordStrength"></span></p>
-                        </template>
                     </div>
+                    <x-input-error :messages="$errors->get('state_id')" class="mt-1" />
+                </div>
 
+                <div>
+                    <label for="password" class="block text-xs font-bold text-mutedText uppercase tracking-widest mb-2">Create Password <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <input id="password" :type="showPass ? 'text' : 'password'" name="password" required
+                            placeholder="Min 8 characters"
+                            x-model="password"
+                            @input.debounce.500ms="checkPasswordStrength()"
+                            class="w-full px-4 py-3.5 bg-navy/20 border border-primary/10 rounded-xl text-mainText placeholder-slate-500 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm"
+                            :class="{'ring-1 ring-red-500 border-red-500': passwordError}">
+                        <button type="button" @click="showPass = !showPass" class="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-primary transition-all">
+                             <svg x-show="!showPass" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                             <svg x-show="showPass" x-cloak class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                        </button>
+                    </div>
+                    <template x-if="passwordError">
+                         <p class="text-[10px] text-red-500 font-bold mt-1.5" x-text="passwordError"></p>
+                    </template>
+                    <template x-if="passwordStrength && !passwordError && password.length > 0">
+                        <p class="text-[10px] mt-1.5 font-black uppercase tracking-wider" :class="{
+                            'text-red-500': passwordStrength === 'Weak',
+                            'text-yellow-500': passwordStrength === 'Medium',
+                            'text-green-500': passwordStrength === 'Strong'
+                        }">Strength: <span x-text="passwordStrength"></span></p>
+                    </template>
                 </div>
             </div>
+
         </div>
 
         <button type="submit"
@@ -206,10 +209,12 @@
                 emailError: '',
                 emailMatchError: '',
 
+                // Intent fields
+                intent: config.intent || '',
+                target_bundle_id: config.target_bundle_id || '',
+
                 // Other details
                 mobile: config.oldMobile || '',
-                dob: config.oldDob || '',
-                pincode: config.oldPincode || '',
 
                 // Password fields
                 password: '',

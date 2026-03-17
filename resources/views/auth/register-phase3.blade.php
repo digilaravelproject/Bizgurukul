@@ -89,6 +89,7 @@
                                 "currency": "INR",
                                 "name": "{{ config('app.name') }}",
                                 "description": "Course Bundle Purchase",
+                                "image": "{{ Storage::url('site_images/logo1.png') }}",
                                 "order_id": data.order_id,
                                 "handler": (response) => {
                                     this.verifyPayment(response);
@@ -254,9 +255,9 @@
                      <input id="terms" type="checkbox" x-model="acceptedTerms"
                          class="w-4 h-4 text-[rgb(var(--color-primary))] border-gray-300 rounded focus:ring-[rgb(var(--color-primary))] cursor-pointer">
                  </div>
-                 <label for="terms" class="text-xs text-[rgb(var(--color-text-muted))] leading-normal cursor-pointer">
-                     I agree to the <a href="{{ route('web.terms') }}" class="font-bold text-[rgb(var(--color-primary))] hover:underline">Terms and Conditions</a> and Privacy Policy. I confirm all provided details are correct.
-                 </label>
+                <label for="terms" class="text-xs text-[rgb(var(--color-text-muted))] leading-normal cursor-pointer">
+                    I agree to the <a href="{{ route('web.terms') }}" class="font-bold text-[rgb(var(--color-primary))] hover:underline" target="_blank">Terms and Conditions</a>, <a href="{{ route('web.privacy-policy') }}" class="font-bold text-[rgb(var(--color-primary))] hover:underline" target="_blank">Privacy Policy</a> and <a href="{{ route('web.refund-policy') }}" class="font-bold text-[rgb(var(--color-primary))] hover:underline" target="_blank">Refund Policy</a>. I confirm all provided details are correct.
+                </label>
              </div>
 
              <button type="button"

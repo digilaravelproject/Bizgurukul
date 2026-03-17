@@ -52,6 +52,10 @@ Route::middleware(['auth'])
             Route::post('/settings/email', [SettingController::class, 'updateEmailConfig'])->name('settings.email.update');
             Route::post('/settings/email/test', [SettingController::class, 'testEmail'])->name('settings.email.test');
 
+            // Wallet Settings
+            Route::get('/settings/wallet', [SettingController::class, 'wallet'])->name('settings.wallet');
+            Route::post('/settings/wallet', [SettingController::class, 'updateWallet'])->name('settings.wallet.update');
+
             // Email Templates
             Route::prefix('email-templates')->name('email-templates.')->group(function () {
                 Route::get('/', [EmailTemplateController::class, 'index'])->name('index');

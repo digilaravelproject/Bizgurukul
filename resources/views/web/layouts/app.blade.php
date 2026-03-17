@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth scroll-pt-20 md:scroll-pt-24">
 
 <head>
     <meta charset="utf-8">
@@ -8,7 +8,9 @@
 
     <title>@yield('title', config('app.name', 'Skills Pehle'))</title>
 
-    <link rel="icon" type="image/png" href="{{ asset('storage/site_images/logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ Storage::url('site_images/logo.png') }}">
+    <link rel="preload" as="image" href="{{ Storage::url('site_images/logo1.png') }}">
+    <link rel="preload" as="image" href="{{ Storage::url('site_images/logo.png') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -27,7 +29,7 @@
                     <a href="{{ route('home') }}" class="flex items-center gap-3 group">
                         <div class="p-1.5 bg-primary/5 rounded-lg group-hover:bg-primary/10 transition-colors">
                             <img class="h-10 md:h-12 w-auto object-contain transform group-hover:scale-105 transition-transform duration-300"
-                                src="{{ asset('storage/site_images/logo1.png') }}" alt="{{ config('app.name') }}"
+                                src="{{ Storage::url('site_images/logo1.png') }}" alt="{{ config('app.name') }}"
                                 onerror="this.src='https://ui-avatars.com/api/?name=SP&background=F7941D&color=fff'">
                         </div>
                     </a>
@@ -169,7 +171,7 @@
                 <div class="md:col-span-5 lg:col-span-4">
                     <a href="{{ route('home') }}" class="flex items-center gap-3 mb-6 group w-max">
                         <img class="h-10 md:h-12 w-auto object-contain transform group-hover:scale-105 transition-transform duration-300"
-                            src="{{ asset('storage/site_images/logo1.png') }}"
+                            src="{{ Storage::url('site_images/logo1.png') }}"
                             alt="{{ config('app.name') }}"
                             onerror="this.src='https://ui-avatars.com/api/?name=SP&background=F7941D&color=fff'">
                     </a>

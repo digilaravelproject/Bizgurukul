@@ -5,6 +5,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/png" href="{{ Storage::url('site_images/logo.png') }}">
+    <link rel="preload" as="image" href="{{ Storage::url('site_images/logo1.png') }}">
+    <link rel="preload" as="image" href="{{ Storage::url('site_images/logo.png') }}">
 
     <title>{{ config('app.name', 'Skills Pehle') }}</title>
 
@@ -30,15 +33,15 @@
                 <div class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-secondary rounded-full blur-3xl"></div>
             </div>
 
-            <div class="relative z-10 text-center">
-                @if (file_exists(public_path('storage/site_images/logo1.png')))
+                <a href="{{ route('home') }}" class="relative z-10 text-center block group">
+                @if (Storage::exists('site_images/logo1.png'))
                     {{-- 1. Image agar file system mein exist karti hai --}}
-                    <img src="{{ asset('storage/site_images/logo1.png') }}" alt="Logo"
-                        class="h-[100px] w-auto transform hover:scale-105 transition duration-500 object-contain">
+                    <img src="{{ Storage::url('site_images/logo1.png') }}" alt="Logo"
+                        class="h-[100px] w-auto transform group-hover:scale-105 transition duration-500 object-contain mx-auto">
                 @else
                     {{-- 2. Agar image nahi hai toh ye CSS wala logo dikhega --}}
                     <div
-                        class="inline-flex items-center bg-white border-2 border-primary p-1 shadow-2xl transform hover:scale-105 transition duration-500">
+                        class="inline-flex items-center bg-white border-2 border-primary p-1 shadow-2xl transform group-hover:scale-105 transition duration-500">
                         <div
                             class="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 font-extrabold text-4xl tracking-tight">
                             SKILLS
@@ -54,6 +57,7 @@
                         </div>
                     </div>
                 @endif
+                </a>
 
                 <div class="mt-12 space-y-4">
                     <h2 class="text-3xl font-bold text-mainText">Master New Skills</h2>
@@ -68,24 +72,16 @@
             class="w-full lg:w-1/2 bg-surface flex flex-col justify-center items-center p-6 sm:p-12 lg:p-8 shadow-2xl lg:shadow-none border-l border-slate-100">
             <div class="w-full max-w-xl space-y-8">
                 <!-- Mobile Logo (Visible only on small screens) -->
-                {{-- <div class="lg:hidden flex justify-center mb-8">
-                    <div class="inline-flex items-center border border-primary p-0.5 shadow-md scale-75 origin-center">
-                        <div class="bg-gradient-to-r from-primary to-secondary text-white px-3 py-1 font-bold text-xl">
-                            SKILLS
-                        </div>
-                        <div class="px-3 py-1 bg-white text-secondary font-bold text-xl">
-                            P<span class="text-primary">₹</span>HLE
-                        </div>
-                    </div>
-                </div> --}}
-                @if (file_exists(public_path('storage/site_images/logo1.png')))
+                @if (Storage::exists('site_images/logo1.png'))
                     <div class="lg:hidden flex justify-center mb-8">
-                        <img src="{{ asset('storage/site_images/logo1.png') }}" alt="Logo"
-                            class="h-[100px] w-auto transform hover:scale-105 transition duration-500 object-contain">
+                        <a href="{{ route('home') }}">
+                            <img src="{{ Storage::url('site_images/logo1.png') }}" alt="Logo"
+                                class="h-[80px] w-auto transform hover:scale-105 transition duration-500 object-contain">
+                        </a>
                     </div>
                 @else
                     <div class="lg:hidden flex justify-center mb-8">
-                        <div
+                        <a href="{{ route('home') }}"
                             class="inline-flex items-center border border-primary p-0.5 shadow-md scale-75 origin-center">
                             <div
                                 class="bg-gradient-to-r from-primary to-secondary text-white px-3 py-1 font-bold text-xl">
@@ -94,7 +90,7 @@
                             <div class="px-3 py-1 bg-white text-secondary font-bold text-xl">
                                 P<span class="text-primary">₹</span>HLE
                             </div>
-                        </div>
+                        </a>
                     </div>
                 @endif
 

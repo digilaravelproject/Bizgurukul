@@ -174,7 +174,7 @@
     {{-- Revenue Metrics Grid (Today, 7 Days, 30 Days, All Time) --}}
     {{-- HIDDEN: Remove the style attribute below to re-enable this section --}}
     @can('manage-transactions')
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6" style="display:none">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
         {{-- Today Revenue Card --}}
         <div class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300">
             <div class="absolute -right-6 -top-6 w-24 h-24 bg-green-50 rounded-full group-hover:bg-green-100 transition-colors"></div>

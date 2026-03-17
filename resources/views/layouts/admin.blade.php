@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Skills Pehle') }} - Admin</title>
-    <link rel="icon" type="image/png" href="{{ asset('storage/site_images/logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ Storage::url('site_images/logo.png') }}">
+    <link rel="preload" as="image" href="{{ Storage::url('site_images/logo1.png') }}">
+    <link rel="preload" as="image" href="{{ Storage::url('site_images/logo.png') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -40,6 +42,13 @@
                     <button @click="sidebarOpen = true" class="md:hidden mr-4 p-2 bg-primary/5 text-primary rounded-xl hover:bg-primary/10 transition">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     </button>
+
+                    {{-- Mobile Logo --}}
+                    <div class="md:hidden flex items-center">
+                        <a href="{{ route('admin.dashboard') }}" class="h-10 w-auto">
+                            <img src="{{ Storage::url('site_images/logo1.png') }}" alt="Logo" class="h-full w-auto object-contain">
+                        </a>
+                    </div>
 
                     <div class="hidden md:block">
                         <h2 class="text-xl font-extrabold text-mainText tracking-tight">

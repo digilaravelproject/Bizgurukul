@@ -345,7 +345,7 @@
             <a href="{{ url('/course/learn/'.$course->id) }}" class="group block hover-lift">
                 <div class="bg-surface rounded-[2rem] overflow-hidden border border-primary/10 premium-shadow h-full flex flex-col">
                     <div class="relative h-44 overflow-hidden">
-                        <img src="{{ $course->thumbnail_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                        <img src="{{ $course->thumbnail_url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
                         <div class="absolute top-4 left-4 bg-surface/90 backdrop-blur-sm px-4 py-1.5 rounded-full shadow-sm">
                             <p class="text-[10px] font-bold uppercase text-primary tracking-widest">{{ $course->category->name ?? 'Course' }}</p>

@@ -66,6 +66,21 @@ class WalletService
         $query->update(['status' => 'available']);
     }
 
+    /**
+     * Recalculate 'available_at' for all On-Hold commissions when admin settings change.
+     */
+    public function recalculateHoldPeriod()
+    {
+        $hours = (int) Setting::get('commission_holding_hours', 24);
+        $commissions = \App\Models\AffiliateCommission::where('status', 'on_hold')->get();
+
+        foreach ($commissions as $comm) {
+            $comm->update([
+                'available_at' => $comm->created_at->addHours($hours)
+            ]);
+        }
+    }
+
     public function manuallyApproveCommission($commissionId)
     {
         $commission = $this->walletRepo->getCommissionById($commissionId);

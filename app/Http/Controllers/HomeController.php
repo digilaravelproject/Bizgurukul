@@ -30,7 +30,27 @@ class HomeController extends Controller
             return view('web.home', compact('courses', 'bundles'));
         } catch (Exception $e) {
             Log::error("HomeController Error [index]: " . $e->getMessage());
-            return response()->view('errors.500', [], 500); // Or handle gracefully
+            return response()->view('errors.500', [], 500);
+        }
+    }
+
+    public function coursesAjax(Request $request)
+    {
+        try {
+            $courses = $this->lmsService->getFilteredCourses(['is_published' => 1]);
+            
+            $html = '';
+            foreach ($courses as $course) {
+                $html .= view('web.partials.course_card', compact('course'))->render();
+            }
+
+            return response()->json([
+                'html' => $html,
+                'hasMore' => $courses->hasMorePages(),
+            ]);
+        } catch (Exception $e) {
+            Log::error("HomeController AJAX Error: " . $e->getMessage());
+            return response()->json(['error' => 'Internal Server Error'], 500);
         }
     }
 
@@ -63,8 +83,10 @@ class HomeController extends Controller
     public function courseShow($slug)
     {
         try {
-            // Find by slug or ID
-            $course = Course::where('id', $slug)->first();
+            // Find by slug or ID (only if published)
+            $course = Course::where(function($q) use ($slug) {
+                $q->where('slug', $slug)->orWhere('id', $slug);
+            })->where('is_published', 1)->first();
 
             // Re-fetch with relations
             if ($course) {
@@ -75,8 +97,8 @@ class HomeController extends Controller
                 abort(404, 'Course not found');
             }
 
-            // check if linked to bundle for "Save More" offer
-            $bundle = $course->bundles()->first();
+            // check if linked to bundle for "Save More" offer (only if bundle is published)
+            $bundle = $course->bundles()->where('is_published', 1)->first();
 
             return view('web.course_details', compact('course', 'bundle'));
 
@@ -89,14 +111,18 @@ class HomeController extends Controller
     public function bundleShow($slug)
     {
         try {
-            $bundle = Bundle::where('slug', $slug)->orWhere('id', $slug)->first();
+            $bundle = Bundle::where(function($q) use ($slug) {
+                $q->where('slug', $slug)->orWhere('id', $slug);
+            })->where('is_published', 1)->first();
 
             if (!$bundle) {
                 abort(404, 'Bundle not found');
             }
 
-            // Load courses
-            $bundle->load('courses');
+            // Load only published courses
+            $bundle->load(['courses' => function($q) {
+                $q->where('is_published', 1);
+            }]);
 
             // Calculate effective price if user is logged in
             $user = Auth::user();

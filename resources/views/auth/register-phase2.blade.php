@@ -14,6 +14,8 @@
               isLocked: {{ $maskedSponsor ? 'true' : 'false' }},
               selectedBundle: null,
               errorMessage: '',
+              showModal: false,
+              modalBundle: null,
 
               checkSponsor() {
                   this.errorMessage = '';
@@ -49,8 +51,6 @@
               },
 
               getFinalPrice(websitePrice, affiliatePrice) {
-                  // If Valid Referral: Affiliate Price (e.g. 7000)
-                  // If No Referral: Website Price
                   if (this.isValidSponsor) {
                       return affiliatePrice;
                   }
@@ -59,6 +59,11 @@
 
               formatPrice(price) {
                   return '₹' + new Intl.NumberFormat('en-IN').format(price);
+              },
+
+              openModal(bundle) {
+                  this.modalBundle = bundle;
+                  this.showModal = true;
               }
           }">
         @csrf
@@ -149,16 +154,24 @@
                                 </svg>
                             </div>
                         @endif
-                        <!-- Recommended Badge -->
-                        {{-- @if($loop->first)
-                            <div class="absolute top-3 left-3 bg-secondary text-white text-xs font-bold px-2 py-1 rounded shadow">RECOMMENDED</div>
-                        @endif --}}
                     </div>
 
                     <!-- Content -->
                     <div class="p-5 flex-1 flex flex-col justify-between">
                         <div>
-                            <h4 class="text-lg font-bold text-mainText group-hover:text-primary transition-colors">{{ $bundle->title }}</h4>
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="text-lg font-bold text-mainText group-hover:text-primary transition-colors">{{ $bundle->title }}</h4>
+                            </div>
+                            <!-- View Courses Button -->
+                            <button type="button" 
+                                    @click.stop="openModal({{ json_encode(['title' => $bundle->title, 'courses' => $bundle->courses->map(fn($c) => ['title' => $c->title])]) }})"
+                                    class="text-xs font-bold text-primary hover:underline flex items-center bg-primary/5 px-2 py-1 rounded">
+                                <svg class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                View Details
+                            </button>
                         </div>
 
                         <div class="mt-4 pt-4 border-t border-slate-100">
@@ -168,9 +181,6 @@
                                 <div class="flex items-baseline space-x-2 flex-wrap gap-y-1 mt-1">
                                     <span class="text-2xl font-extrabold text-primary" x-text="formatPrice(getFinalPrice({{ $bundle->website_price }}, {{ $bundle->affiliate_price }}))">
                                         ₹{{ number_format($bundle->website_price, 2) }}
-                                    </span>
-                                    <span class="text-[10px] sm:text-xs font-bold px-2 py-1 rounded bg-primary/10 text-primary" x-show="isValidSponsor && {{ $bundle->website_price }} > {{ $bundle->affiliate_price }}" x-cloak>
-                                        REFERRAL OFFER
                                     </span>
                                 </div>
                             </div>
@@ -192,5 +202,63 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
         </button>
+
+        <!-- Course Details Modal -->
+        <div x-show="showModal" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-[100] overflow-y-auto" 
+             x-cloak>
+            
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="showModal = false">
+                    <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm"></div>
+                </div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-100"
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100">
+                    
+                    <div class="bg-white px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                        <h3 class="text-xl font-black text-mainText" x-text="modalBundle ? modalBundle.title : ''"></h3>
+                        <button type="button" @click="showModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="px-6 py-6">
+                        <p class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Included Courses:</p>
+                        <div class="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                            <template x-for="(course, index) in (modalBundle ? modalBundle.courses : [])" :key="index">
+                                <div class="flex items-start bg-navy/5 p-3 rounded-xl border border-navy/10 group hover:border-primary/30 transition-colors">
+                                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold mr-3 mt-0.5">
+                                        <span x-text="index + 1"></span>
+                                    </div>
+                                    <span class="text-mainText font-semibold text-sm leading-tight group-hover:text-primary transition-colors" x-text="course.title"></span>
+                                </div>
+                            </template>
+                            <div x-show="modalBundle && modalBundle.courses.length === 0" class="text-center py-4 text-slate-400 italic">
+                                No specific courses listed for this bundle.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 px-6 py-4 flex flex-col sm:flex-row-reverse gap-3">
+                        <button type="button" @click="showModal = false" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-bold text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </form>
 </x-guest-layout>

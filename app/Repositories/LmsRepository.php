@@ -15,6 +15,7 @@ class LmsRepository
     {
         $searchTerm = isset($filters['search']) ? trim($filters['search']) : null;
         $categoryId = $filters['category_id'] ?? null;
+        $isPublished = $filters['is_published'] ?? null;
 
         return Course::query()
             ->select('id', 'title', 'thumbnail', 'category_id', 'final_price', 'is_published')
@@ -26,8 +27,11 @@ class LmsRepository
             ->when($categoryId, function ($query) use ($categoryId) {
                 $query->where('category_id', $categoryId);
             })
+            ->when($isPublished !== null, function ($query) use ($isPublished) {
+                $query->where('is_published', $isPublished);
+            })
             ->latest()
-            ->paginate(10);
+            ->paginate(12);
     }
 
     public function getAllCategories()

@@ -13,3 +13,7 @@ Artisan::command('inspire', function () {
 Schedule::command('queue:work --stop-when-empty --timeout=7200 --tries=3')
     ->everyMinute()
     ->withoutOverlapping();
+
+Schedule::command('wallet:process')
+    ->everyMinute()
+    ->withoutOverlapping();

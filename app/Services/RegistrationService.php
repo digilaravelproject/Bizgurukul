@@ -7,13 +7,10 @@ use App\Models\Coupon;
 use App\Models\Lead;
 use App\Models\Payment;
 use App\Models\User;
-use App\Models\AffiliateCommission;
 use App\Models\Tax;
 use Razorpay\Api\Api;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cookie;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Exception;
 
 class RegistrationService
@@ -33,9 +30,9 @@ class RegistrationService
         return DB::transaction(function () use ($data) {
             // 1. Verify Signature
             $attributes = [
-                'razorpay_order_id'   => $data['razorpay_order_id'],
+                'razorpay_order_id' => $data['razorpay_order_id'],
                 'razorpay_payment_id' => $data['razorpay_payment_id'],
-                'razorpay_signature'  => $data['razorpay_signature']
+                'razorpay_signature' => $data['razorpay_signature']
             ];
             $this->api->utility->verifyPaymentSignature($attributes);
 
@@ -50,7 +47,7 @@ class RegistrationService
             $user = $this->createUser($lead, $referrer);
 
             // 5. Finalize Pricing and Coupons
-            $pricing = $this->calculatePricing($bundle, $data['coupon_code'] ?? null, (bool)$referrer);
+            $pricing = $this->calculatePricing($bundle, $data['coupon_code'] ?? null, (bool) $referrer);
             $coupon = $this->handleCouponUsage($data['coupon_code'] ?? null);
 
             // 6. Record Payment
@@ -140,15 +137,15 @@ class RegistrationService
         $pureSubtotal = $baseAmountDue - $inclusiveTaxRateAmount;
 
         return [
-            'basePrice'      => $basePrice,
-            'websitePrice'   => $bundle->website_price,
+            'basePrice' => $basePrice,
+            'websitePrice' => $bundle->website_price,
             'affiliatePrice' => $bundle->affiliate_price,
-            'discount'       => $discountAmount,
-            'taxableAmount'  => $pureSubtotal,
-            'taxAmount'      => $totalTaxAmount,
-            'taxes'          => $taxes,
+            'discount' => $discountAmount,
+            'taxableAmount' => $pureSubtotal,
+            'taxAmount' => $totalTaxAmount,
+            'taxes' => $taxes,
             // Total amount is the base amount due plus any *exclusive* taxes added on top
-            'totalAmount'    => $baseAmountDue + $totalExclusiveTaxAmount
+            'totalAmount' => $baseAmountDue + $totalExclusiveTaxAmount
         ];
     }
 
@@ -164,17 +161,16 @@ class RegistrationService
     protected function createUser(Lead $lead, ?User $referrer)
     {
         $user = User::create([
-            'name'          => $lead->name,
-            'email'         => $lead->email,
-            'mobile'        => $lead->mobile,
-            'password'      => $lead->password,
-            'gender'        => $lead->gender,
-            'dob'           => $lead->dob,
-            'state_id'      => $lead->state_id,
-            'city'          => $lead->city,
-            'referral_code' => Str::upper(Str::random(8)),
-            'referred_by'   => $referrer ? $referrer->id : null,
-            'is_active'     => true,
+            'name' => $lead->name,
+            'email' => $lead->email,
+            'mobile' => $lead->mobile,
+            'password' => $lead->password,
+            'gender' => $lead->gender,
+            'dob' => $lead->dob,
+            'state_id' => $lead->state_id,
+            'city' => $lead->city,
+            'referred_by' => $referrer ? $referrer->id : null,
+            'is_active' => true,
         ]);
 
         $user->assignRole('Student');
@@ -183,7 +179,8 @@ class RegistrationService
 
     protected function handleCouponUsage(?string $couponCode)
     {
-        if (!$couponCode) return null;
+        if (!$couponCode)
+            return null;
 
         $coupon = Coupon::where('code', $couponCode)->active()->first();
         if ($coupon) {
@@ -196,14 +193,14 @@ class RegistrationService
     protected function recordPayment(User $user, Bundle $bundle, array $data, array $pricing, ?Coupon $coupon)
     {
         return Payment::create([
-            'user_id'             => $user->id,
-            'bundle_id'           => $bundle->id,
-            'razorpay_order_id'   => $data['razorpay_order_id'],
+            'user_id' => $user->id,
+            'bundle_id' => $bundle->id,
+            'razorpay_order_id' => $data['razorpay_order_id'],
             'razorpay_payment_id' => $data['razorpay_payment_id'],
-            'subtotal'            => $pricing['taxableAmount'],
-            'discount_amount'     => $pricing['discount'],
-            'tax_amount'          => $pricing['taxAmount'],
-            'tax_details'         => collect($pricing['taxes'])->map(function($tax) {
+            'subtotal' => $pricing['taxableAmount'],
+            'discount_amount' => $pricing['discount'],
+            'tax_amount' => $pricing['taxAmount'],
+            'tax_details' => collect($pricing['taxes'])->map(function ($tax) {
                 return [
                     'name' => $tax->name,
                     'value' => $tax->value,
@@ -212,10 +209,10 @@ class RegistrationService
                     'calculated_amount' => $tax->calculated_amount ?? 0,
                 ];
             })->toArray(),
-            'total_amount'        => $pricing['totalAmount'],
-            'amount'              => $pricing['totalAmount'],
-            'coupon_id'           => $coupon ? $coupon->id : null,
-            'status'              => 'success',
+            'total_amount' => $pricing['totalAmount'],
+            'amount' => $pricing['totalAmount'],
+            'coupon_id' => $coupon ? $coupon->id : null,
+            'status' => 'success',
         ]);
     }
 
@@ -227,12 +224,12 @@ class RegistrationService
 
             if ($commissionAmount > 0) {
                 app(\App\Services\WalletService::class)->processCommission([
-                    'affiliate_id'     => $referrer->id,
+                    'affiliate_id' => $referrer->id,
                     'referred_user_id' => $user->id,
-                    'amount'           => $commissionAmount,
-                    'reference_id'     => $bundle->id,
-                    'reference_type'   => get_class($bundle),
-                    'notes'            => 'Commission for Bundle: ' . $bundle->title,
+                    'amount' => $commissionAmount,
+                    'reference_id' => $bundle->id,
+                    'reference_type' => get_class($bundle),
+                    'notes' => 'Commission for Bundle: ' . $bundle->title,
                 ]);
             }
         }

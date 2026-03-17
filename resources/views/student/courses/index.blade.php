@@ -70,7 +70,7 @@
                         {{-- Compact Image --}}
                         <div class="relative h-40 overflow-hidden bg-gray-100">
                             <img src="{{ $bundle->thumbnail_url }}"
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
 
                             @if ($isUnlocked)
                                 <div
@@ -137,7 +137,7 @@
                         {{-- Image Container --}}
                         <div class="relative h-40 overflow-hidden bg-gray-100">
                             <img src="{{ $course->thumbnail_url }}"
-                                class="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 transition-all duration-500">
+                                class="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 transition-all duration-500" loading="lazy">
 
                             {{-- PURCHASED Badge (Same as Bundle) --}}
                             @if ($isUnlocked)

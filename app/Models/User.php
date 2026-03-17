@@ -7,7 +7,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -84,17 +83,25 @@ class User extends Authenticatable
 
         static::creating(function ($user) {
             if (empty($user->referral_code)) {
-                $user->referral_code = self::generateUniqueReferralCode();
+                $user->referral_code = self::generateUniqueReferralCode($user->name ?? 'USER');
             }
         });
     }
 
-    private static function generateUniqueReferralCode(): string
+    private static function generateUniqueReferralCode($name): string
     {
+        $cleanName = strtoupper(str_replace(' ', '', $name));
+        $prefixLength = strlen($cleanName) > 4 ? 5 : strlen($cleanName);
+        $namePart = substr($cleanName, 0, $prefixLength);
+        $randomLength = 8 - strlen($namePart);
         do {
-            $code = strtoupper(Str::random(8));
-        } while (self::where('referral_code', $code)->exists());
+            $numberPart = '';
+            for ($i = 0; $i < $randomLength; $i++) {
+                $numberPart .= mt_rand(0, 9);
+            }
+            $code = $namePart . $numberPart;
 
+        } while (self::where('referral_code', $code)->exists());
         return $code;
     }
 
@@ -318,7 +325,7 @@ class User extends Authenticatable
         return $seconds > 0 ? $seconds : 0;
     }
 
-   // Name Attribute Accessor and Mutator
+    // Name Attribute Accessor and Mutator
     public function getNameAttribute($value): string
     {
         return ucwords(strtolower($value));

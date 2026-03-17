@@ -58,11 +58,11 @@
 
                 <div class="flex items-center gap-5">
                     <div class="flex -space-x-3">
-                        <img class="w-10 h-10 rounded-full border-2 border-surface object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop" alt="Student">
-                        <img class="w-10 h-10 rounded-full border-2 border-surface object-cover" src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=150&auto=format&fit=crop" alt="Student">
-                        <img class="w-10 h-10 rounded-full border-2 border-surface object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop" alt="Student">
+                        <img class="w-10 h-10 rounded-full border-2 border-surface object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop" alt="Student" loading="lazy">
+                        <img class="w-10 h-10 rounded-full border-2 border-surface object-cover" src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=150&auto=format&fit=crop" alt="Student" loading="lazy">
+                        <img class="w-10 h-10 rounded-full border-2 border-surface object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop" alt="Student" loading="lazy">
                         <div class="w-10 h-10 rounded-full border-2 border-surface bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
-                            12k+
+                            900+
                         </div>
                     </div>
                     <div class="text-sm">
@@ -76,7 +76,7 @@
 
             <div class="w-full lg:w-1/2 relative h-[500px] hidden md:block">
                 <div class="absolute inset-0 rounded-[2rem] overflow-hidden bg-surface shadow-2xl shadow-primary/10 z-10 p-2 transform rotate-2 hover:rotate-0 transition-all duration-700 border border-white">
-                    <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1000&auto=format&fit=crop" alt="Platform Overview" class="w-full h-full object-cover rounded-[1.5rem]">
+                    <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1000&auto=format&fit=crop" alt="Platform Overview" class="w-full h-full object-cover rounded-[1.5rem]" loading="lazy">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent rounded-[1.5rem]"></div>
                 </div>
 
@@ -107,7 +107,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-gray-100 bg-navy rounded-3xl p-6 md:p-8 border border-primary/10">
                 <div class="text-center px-4">
-                    <div class="text-3xl md:text-4xl font-black text-white bg-clip-text brand-gradient mb-1" x-text="stats.students + '+'"></div>
+                    <div class="text-3xl md:text-4xl font-black text-white bg-clip-text brand-gradient mb-1" x-text="stats.students + 'k+'"></div>
                     <div class="text-xs font-bold text-mutedText uppercase tracking-wider">Enrolled Students</div>
                 </div>
                 <div class="text-center px-4">
@@ -115,7 +115,7 @@
                     <div class="text-xs font-bold text-mutedText uppercase tracking-wider">Premium Courses</div>
                 </div>
                 <div class="text-center px-4">
-                    <div class="text-3xl md:text-4xl font-black text-white bg-clip-text brand-gradient mb-1" x-text="stats.reviews + 'k'"></div>
+                    <div class="text-3xl md:text-4xl font-black text-white bg-clip-text brand-gradient mb-1" x-text="stats.reviews + 'k+'"></div>
                     <div class="text-xs font-bold text-mutedText uppercase tracking-wider">5-Star Reviews</div>
                 </div>
                 <div class="text-center px-4">
@@ -225,7 +225,7 @@
                     <div class="rounded-2xl border {{ $index === 1 ? 'border-primary shadow-xl shadow-primary/10 bg-surface lg:-translate-y-2 ring-2 ring-primary/10' : 'border-gray-200 hover:border-primary/50 group bg-surface hover:shadow-lg' }} p-5 transition-all duration-300 flex flex-col relative overflow-hidden">
 
                         <div class="relative h-40 mb-5 rounded-xl overflow-hidden bg-gray-100 border border-gray-100">
-                            <img src="{{ $bundle->thumbnail_url ?? 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop' }}" alt="{{ $bundle->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                            <img src="{{ $bundle->thumbnail_url ?? 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop' }}" alt="{{ $bundle->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
                         </div>
 
                         <div class="mb-5 relative z-10 flex-grow">
@@ -253,7 +253,38 @@
         </div>
     </section>
 
-    <section class="py-20 bg-surface border-y border-gray-100" id="courses" x-data="{ activeTab: 'all' }">
+    <section class="py-20 bg-surface border-y border-gray-100" id="courses" 
+        x-data="{ 
+            activeTab: 'all',
+            currentPage: 1,
+            hasMore: {{ $courses->hasMorePages() ? 'true' : 'false' }},
+            loading: false,
+            loadMore() {
+                if(this.loading || !this.hasMore) return;
+                this.loading = true;
+                this.currentPage++;
+                
+                fetch('{{ route('courses.ajax') }}?page=' + this.currentPage)
+                    .then(res => res.json())
+                    .then(data => {
+                        const container = document.getElementById('course-grid');
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = data.html;
+                        
+                        // Append each new card
+                        Array.from(tempDiv.children).forEach(card => {
+                            container.appendChild(card);
+                        });
+                        
+                        this.hasMore = data.hasMore;
+                        this.loading = false;
+                    })
+                    .catch(e => {
+                        console.error(e);
+                        this.loading = false;
+                    });
+            }
+        }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-10">
                 <h2 class="text-3xl font-black text-mainText mb-3">Explore Our Catalog</h2>
@@ -270,37 +301,9 @@
                 @endforeach
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" id="course-grid">
                 @forelse($courses as $course)
-                    @php
-                        $catName = strtolower($course->category->name ?? 'uncategorized');
-                        $imageTag = match(true) {
-                            str_contains($catName, 'design') => 'photo-1561070791-2526d30994b5',
-                            str_contains($catName, 'marketing') => 'photo-1460925895917-afdab827c52f',
-                            str_contains($catName, 'code') || str_contains($catName, 'dev') => 'photo-1498050108023-c5249f4df085',
-                            default => 'photo-1516321318423-f06f85e504b3'
-                        };
-                    @endphp
-                    <div x-show="activeTab === 'all' || activeTab === '{{ $catName }}'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 border border-gray-100 flex flex-col group hover:-translate-y-1">
-                        <div class="relative h-40 overflow-hidden bg-gray-100">
-                            <img src="{{ $course->thumbnail_url ?? 'https://images.unsplash.com/'.$imageTag.'?q=80&w=600&auto=format&fit=crop' }}" alt="{{ $course->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                            <div class="absolute top-3 right-3 bg-white/95 backdrop-blur-md px-2 py-1 rounded text-[10px] font-black text-secondary shadow-sm uppercase tracking-wider">{{ $course->subCategory->name ?? 'All Levels' }}</div>
-                        </div>
-                        <div class="p-4 flex flex-col flex-grow relative">
-                            <div class="flex items-center gap-1 mb-2 text-[11px] text-mutedText font-bold bg-navy w-max px-2 py-0.5 rounded border border-gray-100">
-                                <span class="flex items-center gap-1 text-yellow-500"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>4.9</span>
-                            </div>
-                            <h3 class="text-base font-bold text-mainText mb-2 group-hover:text-primary transition-colors line-clamp-2 leading-tight">{{ $course->title }}</h3>
-                            <p class="text-xs text-mutedText mb-4 line-clamp-2 leading-relaxed">{{ Str::limit(strip_tags($course->description), 80) }}</p>
-
-                            <div class="mt-auto pt-3 border-t border-gray-100">
-                                <a href="{{ route('course.show', $course->slug ?? $course->id) }}" class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary/10 text-primary font-bold text-sm group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                                    View Course
-                                    <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+                    @include('web.partials.course_card', ['course' => $course])
                 @empty
                     <div class="col-span-full text-center py-10 bg-white rounded-2xl border border-gray-100">
                         <p class="text-mutedText text-base">No courses available at the moment.</p>
@@ -308,12 +311,20 @@
                 @endforelse
             </div>
 
-            <div class="mt-10 text-center">
-                <a href="#" class="inline-flex items-center justify-center px-6 py-2.5 rounded-xl border-2 border-gray-200 text-mainText text-sm font-bold hover:border-primary hover:text-primary transition-all duration-300 gap-2 group">
-                    View All Courses
-                    <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                </a>
+            <div class="mt-10 text-center" x-show="hasMore">
+                <button @click="loadMore()" 
+                    :disabled="loading"
+                    class="inline-flex items-center justify-center px-6 py-2.5 rounded-xl border-2 border-gray-200 text-mainText text-sm font-bold hover:border-primary hover:text-primary transition-all duration-300 gap-2 group disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span x-text="loading ? 'Loading...' : 'View All Courses'"></span>
+                    <svg x-show="!loading" class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                    <svg x-show="loading" class="animate-spin h-4 w-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
             </div>
+        </div>
+    </section>
         </div>
     </section>
 
@@ -329,7 +340,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="text-center group bg-surface p-5 rounded-2xl border border-gray-100 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-1">
                     <div class="relative w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-[3px] border-navy shadow-inner group-hover:border-primary transition-colors duration-300">
-                        <img src="https://ui-avatars.com/api/?name=R+S&size=512&background=F7941D&color=fff" alt="Instructor" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <img src="https://ui-avatars.com/api/?name=R+S&size=512&background=F7941D&color=fff" alt="Instructor" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy">
                     </div>
                     <h3 class="text-base font-bold text-mainText mb-1">Rahul Sharma</h3>
                     <p class="text-primary font-bold text-[10px] uppercase tracking-wider mb-2">Performance Marketing</p>
@@ -338,7 +349,7 @@
 
                 <div class="text-center group bg-surface p-5 rounded-2xl border border-gray-100 hover:shadow-lg hover:shadow-secondary/5 transition-all duration-300 hover:-translate-y-1">
                     <div class="relative w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-[3px] border-navy shadow-inner group-hover:border-secondary transition-colors duration-300">
-                        <img src="https://ui-avatars.com/api/?name=P+G&size=512&background=D04A02&color=fff" alt="Instructor" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <img src="https://ui-avatars.com/api/?name=P+G&size=512&background=D04A02&color=fff" alt="Instructor" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy">
                     </div>
                     <h3 class="text-base font-bold text-mainText mb-1">Priya Gupta</h3>
                     <p class="text-secondary font-bold text-[10px] uppercase tracking-wider mb-2">UI/UX Architect</p>
@@ -347,7 +358,7 @@
 
                 <div class="text-center group bg-surface p-5 rounded-2xl border border-gray-100 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-1">
                     <div class="relative w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-[3px] border-navy shadow-inner group-hover:border-primary transition-colors duration-300">
-                        <img src="https://ui-avatars.com/api/?name=A+S&size=512&background=F7941D&color=fff" alt="Instructor" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <img src="https://ui-avatars.com/api/?name=A+S&size=512&background=F7941D&color=fff" alt="Instructor" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy">
                     </div>
                     <h3 class="text-base font-bold text-mainText mb-1">Aman Singh</h3>
                     <p class="text-primary font-bold text-[10px] uppercase tracking-wider mb-2">Fullstack Engineer</p>
@@ -356,7 +367,7 @@
 
                 <div class="text-center group bg-surface p-5 rounded-2xl border border-gray-100 hover:shadow-lg hover:shadow-secondary/5 transition-all duration-300 hover:-translate-y-1">
                     <div class="relative w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-[3px] border-navy shadow-inner group-hover:border-secondary transition-colors duration-300">
-                        <img src="https://ui-avatars.com/api/?name=R+M&size=512&background=D04A02&color=fff" alt="Instructor" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <img src="https://ui-avatars.com/api/?name=R+M&size=512&background=D04A02&color=fff" alt="Instructor" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy">
                     </div>
                     <h3 class="text-base font-bold text-mainText mb-1">Rohit Mehra</h3>
                     <p class="text-secondary font-bold text-[10px] uppercase tracking-wider mb-2">Agency Scaling</p>
@@ -378,7 +389,7 @@
 
                         <div class="w-full flex-shrink-0 px-4">
                             <div class="bg-navy rounded-3xl p-8 border border-primary/10 flex flex-col md:flex-row gap-6 items-center shadow-lg shadow-primary/5">
-                                <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop" alt="User" class="w-24 h-24 rounded-full shadow-md shrink-0 object-cover border-[3px] border-white">
+                                <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop" alt="User" class="w-24 h-24 rounded-full shadow-md shrink-0 object-cover border-[3px] border-white" loading="lazy">
                                 <div>
                                     <div class="flex gap-1 text-yellow-400 mb-2">
                                         @for($i=0; $i<5; $i++) <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118z"/></svg> @endfor
@@ -392,7 +403,7 @@
 
                         <div class="w-full flex-shrink-0 px-4">
                             <div class="bg-navy rounded-3xl p-8 border border-primary/10 flex flex-col md:flex-row gap-6 items-center shadow-lg shadow-primary/5">
-                                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop" alt="User" class="w-24 h-24 rounded-full shadow-md shrink-0 object-cover border-[3px] border-white">
+                                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop" alt="User" class="w-24 h-24 rounded-full shadow-md shrink-0 object-cover border-[3px] border-white" loading="lazy">
                                 <div>
                                     <div class="flex gap-1 text-yellow-400 mb-2">
                                         @for($i=0; $i<5; $i++) <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118z"/></svg> @endfor
@@ -406,7 +417,7 @@
 
                         <div class="w-full flex-shrink-0 px-4">
                             <div class="bg-navy rounded-3xl p-8 border border-primary/10 flex flex-col md:flex-row gap-6 items-center shadow-lg shadow-primary/5">
-                                <img src="https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=200&auto=format&fit=crop" alt="User" class="w-24 h-24 rounded-full shadow-md shrink-0 object-cover border-[3px] border-white">
+                                <img src="https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=200&auto=format&fit=crop" alt="User" class="w-24 h-24 rounded-full shadow-md shrink-0 object-cover border-[3px] border-white" loading="lazy">
                                 <div>
                                     <div class="flex gap-1 text-yellow-400 mb-2">
                                         @for($i=0; $i<5; $i++) <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118z"/></svg> @endfor
@@ -505,35 +516,6 @@
                     </a>
                 </div>
             </div>
-
-            {{-- <div class="bg-surface rounded-3xl p-6 md:p-10 shadow-xl shadow-primary/5 border border-primary/10 relative overflow-hidden text-left">
-                <div class="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-bl-full -mr-12 -mt-12 z-0"></div>
-
-                <div class="relative z-10 flex flex-col md:flex-row items-center gap-8">
-                    <div class="md:w-1/2">
-                        <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-4">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                        </div>
-                        <h3 class="text-2xl font-black text-mainText mb-2">The Weekly Edge</h3>
-                        <p class="text-sm text-mutedText leading-relaxed">Get 1 actionable tip on marketing, design, or coding delivered to your inbox every Tuesday.</p>
-                    </div>
-
-                    <div class="md:w-1/2 w-full">
-                        <form class="flex flex-col gap-3">
-                            <input type="email" placeholder="Enter your email address" class="w-full px-4 py-3 bg-navy border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-mainText text-sm placeholder-gray-400 font-medium" required>
-                            <button type="submit" class="w-full px-4 py-3 bg-mainText text-white font-bold text-sm rounded-xl hover:bg-black transition-all duration-300 flex justify-center items-center gap-2 group shadow-md">
-                                Subscribe Now
-                                <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                            </button>
-                        </form>
-                        <p class="text-[11px] text-center text-mutedText mt-3 flex items-center justify-center gap-1 font-medium">
-                            <svg class="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
-                            No spam. Unsubscribe anytime.
-                        </p>
-                    </div>
-                </div>
-            </div> --}}
-
         </div>
     </section>
 
@@ -548,8 +530,8 @@
 
         Alpine.data('statsCounter', () => ({
             started: false,
-            stats: { students: 0, courses: 0, reviews: 0, years: 0 },
-            target: { students: 50, courses: 30, reviews: 10, years: 5 }, // Adjust values as needed
+            stats: { students: 10, courses: 27, reviews: 9, years: 5 },
+            target: { students: 10, courses: 27, reviews: 9, years: 5 }, // Adjust values as needed
 
             startCounters() {
                 if(this.started) return;

@@ -21,14 +21,14 @@
     </div>
 
     <div class="md:hidden flex-[2] flex justify-center items-center">
-        <div class="h-12 w-auto py-1">
-            @if (file_exists(public_path('storage/site_images/logo1.png')))
-                <img src="{{ asset('storage/site_images/logo1.png') }}" alt="Logo"
+        <a href="{{ route('student.dashboard') }}" class="h-12 w-auto py-1">
+            @if (Storage::exists('site_images/logo1.png'))
+                <img src="{{ Storage::url('site_images/logo1.png') }}" alt="Logo"
                     class="h-full w-auto object-contain" loading="lazy">
             @else
                 <span class="font-bold text-base text-primary">SKILLS PEHLE</span>
             @endif
-        </div>
+        </a>
     </div>
 
     {{-- Right Side: Profile Dropdown --}}

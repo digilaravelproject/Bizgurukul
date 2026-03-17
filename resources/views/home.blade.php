@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ config('app.name', 'Skills Pehle') }} | The Future of Digital Learning</title>
 
-    <link rel="icon" type="image/png" href="{{ asset('storage/site_images/logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ Storage::url('site_images/logo.png') }}">
 
     <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])

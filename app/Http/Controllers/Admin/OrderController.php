@@ -22,14 +22,22 @@ class OrderController extends Controller
     {
         $query = Payment::with(['user', 'bundle', 'course', 'paymentable']);
 
+        // Applying Status Filter
+        $status = $request->input('status');
+        if ($status && $status !== 'all') {
+            $query->where('status', $status);
+        }
+
         // Applying Search
         if ($search = $request->input('search')) {
-            $query->whereHas('user', function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('mobile', 'like', "%{$search}%");
-            })->orWhere('razorpay_order_id', 'like', "%{$search}%")
-              ->orWhere('razorpay_payment_id', 'like', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->whereHas('user', function($uq) use ($search) {
+                    $uq->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('mobile', 'like', "%{$search}%");
+                })->orWhere('razorpay_order_id', 'like', "%{$search}%")
+                  ->orWhere('razorpay_payment_id', 'like', "%{$search}%");
+            });
         }
 
         // Applying Date Filter

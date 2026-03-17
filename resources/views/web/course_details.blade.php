@@ -160,33 +160,57 @@
 
                 <div class="bg-white rounded-2xl border border-gray-200 shadow-lg p-6 mb-6">
                     <div class="text-center mb-6">
-                        <div class="text-[10px] font-bold text-mutedText uppercase tracking-widest mb-1">Total Investment</div>
-                        <div class="flex justify-center items-end gap-2">
-                            <span class="text-4xl font-black text-mainText tracking-tight">₹{{ number_format($course->final_price, 0) }}</span>
-                            @if ($course->final_price < $course->website_price)
-                                <span class="text-lg text-gray-400 line-through mb-1">₹{{ number_format($course->website_price, 0) }}</span>
-                            @endif
-                        </div>
-                        @if ($course->website_price > 0 && $course->final_price < $course->website_price)
-                            <div class="mt-2 inline-block px-2.5 py-1 bg-green-50 text-green-600 font-bold text-[10px] rounded uppercase tracking-wider">
-                                {{ round((($course->website_price - $course->final_price) / $course->website_price) * 100) }}% OFF
+                        @if($bundle)
+                            <div class="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">{{ $bundle->title }} Bundle Membership</div>
+                            <div class="flex justify-center items-end gap-2">
+                                <span class="text-4xl font-black text-mainText tracking-tight">₹{{ number_format($bundle->final_price, 0) }}</span>
+                                @if ($bundle->final_price < $bundle->website_price)
+                                    <span class="text-lg text-gray-400 line-through mb-1">₹{{ number_format($bundle->website_price, 0) }}</span>
+                                @endif
+                            </div>
+                            <p class="text-[10px] text-mutedText font-bold mt-2 uppercase tracking-tight">Get this course + {{ $bundle->courses->count() - 1 }} more</p>
+                        @else
+                            <div class="text-[10px] font-bold text-mutedText uppercase tracking-widest mb-1">Total Investment</div>
+                            <div class="flex justify-center items-end gap-2">
+                                <span class="text-4xl font-black text-mainText tracking-tight">₹{{ number_format($course->final_price, 0) }}</span>
+                                @if ($course->final_price < $course->website_price)
+                                    <span class="text-lg text-gray-400 line-through mb-1">₹{{ number_format($course->website_price, 0) }}</span>
+                                @endif
                             </div>
                         @endif
                     </div>
 
                     <div class="space-y-3 mb-6">
                         @auth
-                            <a href="{{ route('student.checkout', ['type' => 'course', 'id' => $course->id]) }}" class="w-full flex justify-center items-center py-3.5 rounded-xl brand-gradient text-white font-bold text-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
-                                Enroll Now
-                            </a>
+                            @if($bundle)
+                                <a href="{{ route('student.checkout', ['type' => 'bundle', 'id' => $bundle->id]) }}" class="w-full flex justify-center items-center py-3.5 rounded-xl brand-gradient text-white font-bold text-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                                    Enroll in Bundle
+                                </a>
+                            @else
+                                <a href="{{ route('student.checkout', ['type' => 'course', 'id' => $course->id]) }}" class="w-full flex justify-center items-center py-3.5 rounded-xl brand-gradient text-white font-bold text-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                                    Enroll in Course
+                                </a>
+                            @endif
                         @else
-                            <a href="{{ route('register', ['intent' => 'course', 'id' => $course->id]) }}" class="w-full flex justify-center items-center py-3.5 rounded-xl brand-gradient text-white font-bold text-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
-                                Register & Enroll
-                            </a>
+                            @if($bundle)
+                                <a href="{{ route('register', ['intent' => 'bundle', 'id' => $bundle->id]) }}" class="w-full flex justify-center items-center py-3.5 rounded-xl brand-gradient text-white font-bold text-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                                    Get Bundle Access
+                                </a>
+                            @else
+                                <a href="{{ route('register', ['intent' => 'course', 'id' => $course->id]) }}" class="w-full flex justify-center items-center py-3.5 rounded-xl brand-gradient text-white font-bold text-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                                    Register & Enroll
+                                </a>
+                            @endif
                         @endauth
                     </div>
 
                     <ul class="space-y-3 pt-4 border-t border-gray-100">
+                        @if($bundle)
+                            <li class="flex items-start gap-2.5 text-sm text-mainText font-medium">
+                                <svg class="w-4 h-4 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                Includes All {{ $bundle->courses->count() }} Courses
+                            </li>
+                        @endif
                         <li class="flex items-start gap-2.5 text-sm text-mainText font-medium">
                             <svg class="w-4 h-4 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                             {{ $course->lessons_count ?? $course->lessons->count() }} On-demand videos
@@ -197,14 +221,11 @@
                         </li>
                         <li class="flex items-start gap-2.5 text-sm text-mainText font-medium">
                             <svg class="w-4 h-4 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            Access on mobile and TV
-                        </li>
-                        <li class="flex items-start gap-2.5 text-sm text-mainText font-medium">
-                            <svg class="w-4 h-4 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            Certificate of completion
+                            Official Certification
                         </li>
                     </ul>
                 </div>
+
 
                 <div class="bg-navy rounded-2xl border border-gray-200 p-5 flex items-center gap-4 mb-6">
                     <img src="https://ui-avatars.com/api/?name=Expert+Instructor&background=F7941D&color=fff" alt="Instructor" class="w-12 h-12 rounded-full object-cover border-2 border-white shrink-0 shadow-sm">

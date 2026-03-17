@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bundle;
+use App\Models\Course;
 use App\Models\Lead;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -31,7 +32,9 @@ class RegistrationFlowController extends Controller
         $states = \App\Models\State::orderBy('name')->get();
         return view('auth.register-phase1', [
             'email' => $request->query('email'),
-            'states' => $states
+            'states' => $states,
+            'intent' => $request->query('intent'),
+            'target_bundle_id' => $request->query('id')
         ]);
     }
 
@@ -47,11 +50,26 @@ class RegistrationFlowController extends Controller
                 'mobile'   => ['required', 'numeric', 'digits_between:10,15'],
                 'password' => ['required', Password::defaults()],
                 'gender'   => ['nullable', 'string'],
-                'dob'      => ['nullable', 'date'],
                 'state_id' => ['nullable', 'exists:states,id'],
-                // 'city'     => ['nullable', 'string', 'max:255'],
-                // 'pincode'  => ['nullable', 'numeric', 'digits:6'],
+                'intent'   => ['nullable', 'string'],
+                'target_bundle_id' => ['nullable'] // Validated manually below to handle course/bundle mix
             ]);
+
+            $productPreference = null;
+            if ($request->intent === 'bundle' && $request->target_bundle_id) {
+                if (Bundle::where('id', $request->target_bundle_id)->exists()) {
+                    $productPreference = ['bundle_id' => $request->target_bundle_id];
+                }
+            } elseif ($request->intent === 'course' && $request->target_bundle_id) {
+                /** @var Course|null $course */
+                $course = Course::find($request->target_bundle_id);
+                if ($course) {
+                    $bundle = $course->bundles()->first();
+                    if ($bundle) {
+                        $productPreference = ['bundle_id' => $bundle->id];
+                    }
+                }
+            }
 
             $lead = Lead::updateOrCreate(
                 ['email' => $request->email],
@@ -60,11 +78,9 @@ class RegistrationFlowController extends Controller
                     'mobile'     => $request->mobile,
                     'password'   => Hash::make($request->password), // Hashed here
                     'gender'     => $request->gender,
-                    'dob'        => $request->dob,
                     'state_id'   => $request->state_id,
-                    // 'city'       => $request->city,
-                    // 'pincode'    => $request->pincode,
                     'ip_address' => $request->ip(),
+                    'product_preference' => $productPreference,
                     'referral_code' => Cookie::get('referral_code') ?: session('referral_code'),
                 ]
             );
@@ -99,14 +115,25 @@ class RegistrationFlowController extends Controller
 
             // Affiliate link logic
 
-            $bundles = Bundle::where('is_active', true)->ordered()->get();
+            $bundles = Bundle::with(['courses' => function($q) {
+                $q->where('is_published', 1);
+            }])->where('is_active', true)->where('is_published', 1)->ordered()->get();
+
+            // Filter if lead has a preference
+            if (!empty($lead->product_preference['bundle_id'])) {
+                $preferredBundle = Bundle::find($lead->product_preference['bundle_id']);
+                if ($preferredBundle && $preferredBundle->is_active && $preferredBundle->is_published) {
+                    $bundles = collect([$preferredBundle]);
+                }
+            }
+
             $affiliateLinkSlug = session('affiliate_link_slug');
 
             if ($affiliateLinkSlug) {
                 $affiliateLink = \App\Models\AffiliateLink::where('slug', $affiliateLinkSlug)->first();
                 if ($affiliateLink && $affiliateLink->target_type === 'specific_bundle') {
                     $specificBundle = Bundle::find($affiliateLink->target_id);
-                    if ($specificBundle && $specificBundle->is_active) {
+                    if ($specificBundle && $specificBundle->is_active && $specificBundle->is_published) {
                         $bundles = collect([$specificBundle]);
                     }
                 }

@@ -8,10 +8,15 @@ class BundleRepository
 {
     public function getAllBundles($filters = [])
     {
+        $isPublished = $filters['is_published'] ?? null;
+
         return Bundle::query()
             ->withCount(['courses', 'childBundles']) // Performance optimization
             ->when(isset($filters['search']), function ($q) use ($filters) {
                 $q->where('title', 'like', '%' . $filters['search'] . '%');
+            })
+            ->when($isPublished !== null, function ($q) use ($isPublished) {
+                $q->where('is_published', $isPublished);
             })
             ->orderByDesc('preference_index')
             ->latest()

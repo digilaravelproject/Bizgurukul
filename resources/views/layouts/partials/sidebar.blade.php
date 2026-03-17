@@ -6,10 +6,10 @@
         {{-- 1. Logo Section (Fixed at Top) --}}
         <div class="p-6 flex justify-between items-center h-20 border-b border-navy flex-shrink-0">
             <div class="flex items-center space-x-3">
-                <div class="w-auto h-9 flex items-center justify-center">
-                    <img src="{{ asset('storage/site_images/logo1.png') }}" alt="Logo"
-                        class="h-full w-auto object-contain group-hover:scale-110 transition-transform" loading="lazy">
-                </div>
+                <a href="{{ route('admin.dashboard') }}" class="w-auto h-9 flex items-center justify-center group/logo">
+                    <img src="{{ Storage::url('site_images/logo1.png') }}" alt="Logo"
+                        class="h-full w-auto object-contain group-hover/logo:scale-105 transition-transform" loading="lazy">
+                </a>
             </div>
 
             {{-- Mobile Close Button --}}
@@ -228,6 +228,10 @@
                     <a href="{{ route('admin.settings.billing') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.settings.billing') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                         Billing / Company
+                    </a>
+                    <a href="{{ route('admin.settings.wallet') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.settings.wallet') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                        <i class="fas fa-wallet text-[11px]"></i>
+                        Wallet Settings
                     </a>
                     <a href="{{ route('admin.settings.email') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.settings.email*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
                         <i class="fas fa-envelope text-[11px]"></i>

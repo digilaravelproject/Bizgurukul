@@ -113,7 +113,7 @@
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-500">
                                                 <i class="fas fa-hourglass-half"></i> Hold
                                             </span>
-                                            <span class="block text-[9px] text-mutedText mt-1">Available: {{ $comm->available_at->format('d M') }}</span>
+                                            <span class="block text-[10px] text-mutedText mt-1">Available: {{ $comm->available_at->format('d M, Y') }}</span>
                                         @elseif($comm->status === 'available')
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500">
                                                 <i class="fas fa-check"></i> Available
@@ -169,15 +169,15 @@
                                 </td>
                                 <td class="px-6 py-4 text-right text-mainText font-black">₹{{ number_format($withdrawal->payable_amount, 2) }}</td>
                                 <td class="px-6 py-4 text-center">
-                                    @if($withdrawal->status === 'pending')
-                                        <span class="inline-flex px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-500">Pending</span>
-                                    @elseif($withdrawal->status === 'processing')
-                                        <span class="inline-flex px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-blue-500/10 text-blue-500">Processing</span>
-                                    @elseif($withdrawal->status === 'approved')
-                                        <span class="inline-flex px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500">Approved</span>
-                                    @elseif($withdrawal->status === 'rejected')
-                                        <span class="inline-flex px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-red-500/10 text-red-500">Rejected</span>
-                                    @endif
+                                @if($withdrawal->status === 'pending' || $withdrawal->status === 'processing')
+                                    <span class="inline-flex px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest {{ $withdrawal->status === 'pending' ? 'bg-amber-500/10 text-amber-500' : 'bg-blue-500/10 text-blue-500' }}">
+                                        {{ ucfirst($withdrawal->status) }}
+                                    </span>
+                                @elseif($withdrawal->status === 'approved')
+                                    <span class="inline-flex px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500">Approved</span>
+                                @elseif($withdrawal->status === 'rejected')
+                                    <span class="inline-flex px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-red-500/10 text-red-500">Rejected</span>
+                                @endif
                                 </td>
                                 <td class="px-6 py-4">
                                     @if($withdrawal->transaction_id)

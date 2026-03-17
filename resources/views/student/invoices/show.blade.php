@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
         :root {
@@ -538,12 +539,63 @@
         </div>
 
         <!-- Print Action -->
-        <div class="bottom-actions">
-            <button onclick="window.print()" class="print-btn">Download/Print Invoice</button>
+        <div class="bottom-actions" id="action-area">
+            <button onclick="downloadAsPDF()" class="print-btn" id="dl-btn">Download Invoice (PDF)</button>
+            <button onclick="window.print()" style="background:none; border:none; text-decoration:underline; cursor:pointer; color:var(--color-text-muted); font-size:12px; margin-top:5px;">Print Instead</button>
             <span>Generated on {{ now()->format('d-m-Y H:i:s') }}</span>
         </div>
 
     </div>
+
+    <!-- html2pdf Library for direct PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        function downloadAsPDF() {
+            const element = document.querySelector('.invoice-wrapper');
+            const actionArea = document.getElementById('action-area');
+            const btn = document.getElementById('dl-btn');
+            const originalText = btn.innerHTML;
+
+            // Update button state
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+
+            // Temporarily hide the action buttons from being included in the PDF
+            actionArea.style.opacity = '0';
+
+            const opt = {
+                margin: [10, 5, 10, 5], // top, left, bottom, right
+                filename: 'Invoice-{{ str_replace("#", "", $invoice->invoice_no) }}.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    letterRendering: true,
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Run generation
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Restore UI
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                actionArea.style.opacity = '1';
+            }).catch(err => {
+                console.error('PDF generation error:', err);
+                // Restoration on error
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                actionArea.style.opacity = '1';
+                // Fallback to print dialog
+                window.print();
+            });
+        }
+    </script>
 
 </body>
 

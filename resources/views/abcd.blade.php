@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ config('app.name', 'Skills Pehle') }} | The Future of Digital Learning</title>
 
-    <link rel="icon" type="image/png" href="{{ asset('storage/site_images/logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ Storage::url('site_images/logo.png') }}">
 
     <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -61,7 +61,7 @@
          :class="scrolled ? 'border-gray-200 shadow-sm py-4' : 'border-transparent py-6'">
         <div class="container mx-auto px-6 max-w-7xl flex items-center justify-between">
             <a href="#" class="block focus:outline-none">
-                <img src="{{ asset('storage/site_images/logo1.png') }}" alt="Skills Pehle Logo" class="h-8 md:h-9 w-auto">
+                <img src="{{ Storage::url('site_images/logo1.png') }}" alt="Skills Pehle Logo" class="h-8 md:h-9 w-auto">
             </a>
 
             <!-- Desktop Menu -->
@@ -120,7 +120,7 @@
         <div x-show="open" class="fixed inset-0 bg-secondary/40 backdrop-blur-sm transition-opacity" @click="open = false" x-transition.opacity></div>
         <div x-show="open" class="fixed inset-y-0 right-0 w-full max-w-sm bg-white shadow-2xl flex flex-col" x-transition:enter="transition ease-out duration-300 transform" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in duration-200 transform" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full">
             <div class="p-6 flex items-center justify-between border-b border-gray-100">
-                <img src="{{ asset('storage/site_images/logo1.png') }}" alt="Logo" class="h-8 w-auto">
+                <img src="{{ Storage::url('site_images/logo1.png') }}" alt="Logo" class="h-8 w-auto">
                 <button @click="open = false" class="p-2 text-gray-400 hover:text-secondary focus:outline-none"><i class="fas fa-times text-xl"></i></button>
             </div>
             <div class="flex-1 overflow-y-auto p-6 flex flex-col space-y-8">
@@ -314,7 +314,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 lg:gap-8 mb-16">
                 <!-- Branding -->
                 <div class="lg:col-span-2">
-                    <img src="{{ asset('storage/site_images/logo1.png') }}" alt="Skills Pehle" class="h-8 w-auto mb-8">
+                    <img src="{{ Storage::url('site_images/logo1.png') }}" alt="Skills Pehle" class="h-8 w-auto mb-8">
                     <h3 class="text-2xl font-bold text-secondary mb-8 max-w-sm tracking-tight leading-snug">
                         Empowering the next Generation.
                     </h3>
