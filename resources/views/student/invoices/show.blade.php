@@ -6,11 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice #{{ $invoice->invoice_no }}</title>
 
-    <!-- Importing your custom fonts -->
+    @if(!isset($is_pdf) || !$is_pdf)
+    <!-- Importing your custom fonts normally -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    @endif
 
     <style>
         :root {
@@ -23,24 +25,28 @@
         }
 
         body {
-            font-family: 'Outfit', sans-serif;
+            font-family: @if(isset($is_pdf) && $is_pdf) 'Helvetica', 'Arial', sans-serif @else 'Outfit', sans-serif @endif;
             color: var(--color-text-main);
             line-height: 1.5;
-            padding: 40px 20px;
+            padding: @if(isset($is_pdf) && $is_pdf) 0 @else 40px 20px @endif;
             background-color: var(--color-bg-body);
             font-size: 14px;
             -webkit-font-smoothing: antialiased;
         }
 
         .invoice-wrapper {
-            max-width: 900px;
-            margin: auto;
+            max-width: @if(isset($is_pdf) && $is_pdf) none @else 900px @endif;
+            width: @if(isset($is_pdf) && $is_pdf) 100% @else auto @endif;
+            margin: 0 auto;
             background: var(--color-bg-card);
-            padding: 40px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-            border-top: 6px solid var(--color-primary);
+            padding: @if(isset($is_pdf) && $is_pdf) 35px @else 40px @endif;
+            box-shadow: @if(isset($is_pdf) && $is_pdf) none @else 0 10px 25px rgba(0, 0, 0, 0.05) @endif;
+            border-top: @if(isset($is_pdf) && $is_pdf) 0 @else 6px solid var(--color-primary) @endif;
             /* Professional accent color */
-            border-radius: 4px;
+            border-radius: @if(isset($is_pdf) && $is_pdf) 0 @else 4px @endif;
+            @if(isset($is_pdf) && $is_pdf)
+            display: block;
+            @endif
         }
 
         /* --- Header Section --- */
@@ -261,7 +267,7 @@
         /* --- Print Media Query --- */
         @page {
             size: A4;
-            margin: 15mm;
+            margin: 0 !important;
         }
 
         @media print {
@@ -421,37 +427,53 @@
     <div class="invoice-wrapper">
 
         <!-- Header -->
-        <div class="header-top">
-            <div class="logo-container">
-                @if (isset($settings->company_logo) && $settings->company_logo)
-                    <img src="{{ asset('storage/' . $settings->company_logo) }}"
-                        alt="{{ $settings->site_name ?? 'Logo' }}">
-                @else
-                    <!-- Fallback if no logo -->
-                    <h1>{{ $settings->site_name ?? 'SKILLS PEHLE' }}</h1>
-                @endif
-            </div>
-            <div class="company-details">
-                <strong>{{ strtoupper($settings->site_name ?? 'SKILLS PEHLE PRIVATE LIMITED') }}</strong><br>
-                Regd. Add: {{ $settings->company_address ?? '123 Business Park, Tech Hub' }}<br>
-                {{ $settings->company_city ?? 'Mumbai' }}<br>
-                {{ $settings->company_state ?? 'Maharashtra' }}, India - {{ $settings->company_zip ?? '400001' }}<br>
-                GSTIN: {{ $settings->company_gstin ?? '27HCHPS9578D1ZS' }}<br>
-                State Name: {{ $settings->company_state ?? 'Maharashtra' }}, Code : 27<br>
-                PAN: {{ $settings->company_pan ?? 'HCHPS9578D' }}
-            </div>
-        </div>
+        <table style="width: 100%; margin-bottom: 30px; border: none; border-collapse: collapse;">
+            <tr style="border: none;">
+                <td style="border: none; text-align: left; padding: 0; vertical-align: top; width: 50%;">
+                    <div class="logo-container">
+                        @if (isset($settings->company_logo) && $settings->company_logo)
+                            @php
+                                $logoPath = (isset($is_pdf) && $is_pdf) ? public_path('storage/' . $settings->company_logo) : asset('storage/' . $settings->company_logo);
+                            @endphp
+                            <img src="{{ $logoPath }}" alt="{{ $settings->site_name ?? 'Logo' }}" style="max-height: 70px; width: auto; object-fit: contain;">
+                        @else
+                            <!-- Fallback if no logo -->
+                            <h1 style="margin: 0; color: #F7941D; font-size: 28px; font-weight: 700;">{{ $settings->site_name ?? 'SKILLS PEHLE' }}</h1>
+                        @endif
+                    </div>
+                </td>
+                <td style="border: none; text-align: right; padding: 0; vertical-align: top; width: 50%;">
+                    <div style="line-height: 1.5; color: #555555; font-size: 13px;">
+                        <strong style="color: #2D2D2D; font-size: 15px; margin-bottom: 4px; display: inline-block;">{{ strtoupper($settings->site_name ?? 'SKILLS PEHLE PRIVATE LIMITED') }}</strong><br>
+                        Regd. Add: {{ $settings->company_address ?? '123 Business Park, Tech Hub' }}<br>
+                        {{ $settings->company_city ?? 'Mumbai' }}<br>
+                        {{ $settings->company_state ?? 'Maharashtra' }}, India - {{ $settings->company_zip ?? '400001' }}<br>
+                        GSTIN: {{ $settings->company_gstin ?? '27HCHPS9578D1ZS' }}<br>
+                        State Name: {{ $settings->company_state ?? 'Maharashtra' }}, Code : 27<br>
+                        PAN: {{ $settings->company_pan ?? 'HCHPS9578D' }}
+                    </div>
+                </td>
+            </tr>
+        </table>
 
         <!-- Invoice Meta Data -->
-        <div class="invoice-meta-box">
-            <div><strong>Invoice Number:</strong> {{ $invoice->invoice_no }}</div>
-            <div><strong>Order ID:</strong> {{ $invoice->razorpay_order_id ?? $invoice->id }}</div>
-            <div><strong>Invoice Date:</strong> {{ $invoice->created_at->format('d-m-Y') }}</div>
-            <div>
-                <strong>Status:</strong>
-                <span class="status-badge">{{ $displayStatus }}</span>
-            </div>
-        </div>
+        <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #fcfcfc; border: 1px solid #eaeaea; border-radius: 6px; margin-bottom: 30px; font-size: 13px; color: #555555;">
+            <tr style="border: none;">
+                <td style="padding: 15px 20px; border-right: 1px solid #eaeaea; border-bottom: none; border-top: none; border-left: none; width: 25%; text-align: left; vertical-align: middle;">
+                    <strong style="color: #2D2D2D; display: block; margin-bottom: 3px;">Invoice Number:</strong> {{ $invoice->invoice_no }}
+                </td>
+                <td style="padding: 15px 20px; border-right: 1px solid #eaeaea; border-bottom: none; border-top: none; border-left: none; width: 25%; text-align: left; vertical-align: middle;">
+                    <strong style="color: #2D2D2D; display: block; margin-bottom: 3px;">Order ID:</strong> {{ $invoice->razorpay_order_id ?? $invoice->id }}
+                </td>
+                <td style="padding: 15px 20px; border-right: 1px solid #eaeaea; border-bottom: none; border-top: none; border-left: none; width: 25%; text-align: left; vertical-align: middle;">
+                    <strong style="color: #2D2D2D; display: block; margin-bottom: 3px;">Invoice Date:</strong> {{ $invoice->created_at->format('d-m-Y') }}
+                </td>
+                <td style="padding: 15px 20px; border: none; width: 25%; text-align: left; vertical-align: middle;">
+                    <strong style="color: #2D2D2D; display: block; margin-bottom: 3px;">Status:</strong>
+                    <span class="status-badge" style="background-color: #10b981; color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px;">{{ $displayStatus }}</span>
+                </td>
+            </tr>
+        </table>
 
         <!-- Billed To -->
         <div class="billed-to">
@@ -488,28 +510,30 @@
                         </td>
                         <td>1</td>
                         <td>999293</td>
-                        <td class="text-right">₹{{ number_format($subTotal, 2) }}</td>
+                        <td class="text-right">&#8377;{{ number_format($subTotal, 2) }}</td>
                     </tr>
 
                     <!-- Sub Total Row -->
                     <tr>
                         <td colspan="3" class="text-right"><strong>Sub Total:</strong></td>
-                        <td class="text-right"><strong>₹{{ number_format($subTotal, 2) }}</strong></td>
+                        <td class="text-right"><strong>&#8377;{{ number_format($subTotal, 2) }}</strong></td>
                     </tr>
 
-                    <!-- Tax Split Row (Exactly as per image layout) -->
+                    <!-- Tax Split Row (Table structure for strict PDF printing compatibility) -->
                     <tr class="tax-row">
-                        <td colspan="3">
-                            <div class="tax-flex-container">
-                                <div class="tax-col tax-label-col">Tax 18%:</div>
-                                <div class="tax-col">CGST: 9%</div>
-                                <div class="tax-col">CGST Amt: ₹{{ number_format($cgst, 2) }}</div>
-                                <div class="tax-col">SGST: 9%</div>
-                                <div class="tax-col">SGST Amt: ₹{{ number_format($sgst, 2) }}</div>
-                            </div>
+                        <td colspan="3" style="padding: 0; background-color: #fafafa; border: 1px solid #eaeaea;">
+                            <table style="width: 100%; border-collapse: collapse; margin: 0; border: none;">
+                                <tr>
+                                    <td style="width: 35%; text-align: right; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-weight: 600; color: #2D2D2D; font-size: 12px;">Tax 18%:</td>
+                                    <td style="width: 15%; text-align: center; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-size: 12px; color: #555555;">CGST: 9%</td>
+                                    <td style="width: 20%; text-align: center; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-size: 12px; color: #555555;">CGST: &#8377;{{ number_format($cgst, 2) }}</td>
+                                    <td style="width: 10%; text-align: center; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-size: 12px; color: #555555;">SGST: 9%</td>
+                                    <td style="width: 20%; text-align: center; padding: 12px; border: none; font-size: 12px; color: #555555;">SGST: &#8377;{{ number_format($sgst, 2) }}</td>
+                                </tr>
+                            </table>
                         </td>
-                        <td class="text-center" style="vertical-align: middle;">
-                            <strong>₹{{ number_format($taxAmount, 2) }}</strong>
+                        <td class="text-center" style="vertical-align: middle; background-color: #fafafa;">
+                            <strong>&#8377;{{ number_format($taxAmount, 2) }}</strong>
                         </td>
                     </tr>
 
@@ -517,7 +541,7 @@
                     <tr>
                         <td colspan="3" class="text-right" style="font-size: 16px;"><strong>Total:</strong></td>
                         <td class="text-right" style="font-size: 16px;">
-                            <strong>₹{{ number_format($totalAmount, 2) }}</strong></td>
+                            <strong>&#8377;{{ number_format($totalAmount, 2) }}</strong></td>
                     </tr>
 
                     <!-- Declaration -->
@@ -539,63 +563,19 @@
         </div>
 
         <!-- Print Action -->
+        @if(!isset($is_pdf) || !$is_pdf)
         <div class="bottom-actions" id="action-area">
-            <button onclick="downloadAsPDF()" class="print-btn" id="dl-btn">Download Invoice (PDF)</button>
+            @if(isset($downloadUrl))
+                <a href="{{ $downloadUrl }}" class="print-btn" style="text-decoration: none; display: inline-block;">Download Invoice (PDF)</a>
+            @else
+                <button onclick="window.print()" class="print-btn">Print Invoice</button>
+            @endif
             <button onclick="window.print()" style="background:none; border:none; text-decoration:underline; cursor:pointer; color:var(--color-text-muted); font-size:12px; margin-top:5px;">Print Instead</button>
             <span>Generated on {{ now()->format('d-m-Y H:i:s') }}</span>
         </div>
+        @endif
 
     </div>
-
-    <!-- html2pdf Library for direct PDF generation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-    <script>
-        function downloadAsPDF() {
-            const element = document.querySelector('.invoice-wrapper');
-            const actionArea = document.getElementById('action-area');
-            const btn = document.getElementById('dl-btn');
-            const originalText = btn.innerHTML;
-
-            // Update button state
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-            btn.disabled = true;
-            btn.style.opacity = '0.7';
-
-            // Temporarily hide the action buttons from being included in the PDF
-            actionArea.style.opacity = '0';
-
-            const opt = {
-                margin: [10, 5, 10, 5], // top, left, bottom, right
-                filename: 'Invoice-{{ str_replace("#", "", $invoice->invoice_no) }}.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: {
-                    scale: 2,
-                    useCORS: true,
-                    letterRendering: true,
-                },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            // Run generation
-            html2pdf().set(opt).from(element).save().then(() => {
-                // Restore UI
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                btn.style.opacity = '1';
-                actionArea.style.opacity = '1';
-            }).catch(err => {
-                console.error('PDF generation error:', err);
-                // Restoration on error
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                btn.style.opacity = '1';
-                actionArea.style.opacity = '1';
-                // Fallback to print dialog
-                window.print();
-            });
-        }
-    </script>
 
 </body>
 

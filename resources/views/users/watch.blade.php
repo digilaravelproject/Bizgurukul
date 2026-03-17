@@ -412,8 +412,10 @@
             @endif
 
             document.getElementById('mark-complete')?.addEventListener('click', function() {
-                saveProgress(Math.floor(player.duration()), true);
-                location.reload();
+                const duration = (typeof player !== 'undefined' && player) ? Math.floor(player.duration() || 0) : 0;
+                saveProgress(duration, true);
+                // Don't wait for completion strictly, just small delay then reload
+                setTimeout(() => location.reload(), 500);
             });
 
             function saveProgress(seconds, completed) {

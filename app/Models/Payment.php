@@ -9,7 +9,7 @@ class Payment extends Model
 {
     use HasFactory;
 
-    // Mass assignment se bachne ke liye fillable fields
+    // Fillable fields for mass assignment protection
     protected $fillable = [
         'user_id',
         'course_id',
@@ -46,7 +46,7 @@ class Payment extends Model
     }
 
     /**
-     * Payment kis user ne kiya
+     * The user who made this payment
      */
     public function user()
     {
@@ -54,7 +54,7 @@ class Payment extends Model
     }
 
     /**
-     * Payment kis course ke liye tha
+     * The course this payment was for
      */
     public function course()
     {

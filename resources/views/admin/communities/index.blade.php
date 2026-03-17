@@ -62,7 +62,7 @@
                                 </button>
 
                                 @if($item->is_custom)
-                                    <form action="{{ route('admin.communities.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Bhai, are you sure? It will delete this link forever.');">
+                                    <form action="{{ route('admin.communities.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Are you sure? This will delete the link forever.');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="text-red-500 hover:text-red-700 transition-colors">

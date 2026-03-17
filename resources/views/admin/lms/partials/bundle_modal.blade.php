@@ -36,18 +36,18 @@
                         <div
                             class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-52 overflow-y-auto p-4 bg-slate-50 rounded-2xl border border-slate-100 no-scrollbar">
                             @php
-                                // Saare published courses fetch karein unke bundles relationship ke sath
+                                // Fetch all published courses with their bundles relationship
                                 $allCourses = \App\Models\Course::where('is_published', true)->with('bundles')->get();
                             @endphp
 
                             @foreach ($allCourses as $course)
                                 @php
-                                    // Check karein ki ye course kisi bundle ka hissa hai ya nahi
+                                    // Check if this course is already part of any bundle
                                     $isAlreadyBundled = $course->bundles->isNotEmpty();
                                 @endphp
 
-                                {{-- Logic: Agar course free hai (kisime nahi hai) TOH dikhao --}}
-                                {{-- YA fir agar hum EDIT mode mein hain aur ye course isi bundle ka part hai TOH dikhao --}}
+                                {{-- Logic: Show if the course is free (not in any bundle) --}}
+                                {{-- OR if we are in EDIT mode and this course is part of the current bundle --}}
                                 <template
                                     x-if="!{{ $isAlreadyBundled ? 'true' : 'false' }} || isCourseInCurrentBundle({{ $course->id }})">
                                     <label
@@ -102,9 +102,9 @@
                     this.bundleId = data.id;
                     this.title = data.title;
                     this.bundlePrice = data.price;
-                    // String IDs ko numbers mein convert karna zaroori hai comparison ke liye
+                    // Convert string IDs to numbers for proper comparison
                     this.selectedCourseIds = Array.isArray(data.courseIds) ? data.courseIds.map(Number) : [];
-                    // Total value recalculate karein edit mode mein
+                    // Recalculate total value in edit mode
                     this.totalValue = Array.isArray(data.coursePrices) ? data.coursePrices.map(Number).reduce((a, b) =>
                         a + b, 0) : 0;
                 } else {
@@ -136,7 +136,7 @@
                 }
 
                 this.totalValue = parseFloat(this.totalValue.toFixed(2));
-                // Package price ko auto-update karein total ke barabar
+                // Auto-update package price to match the total
                 this.bundlePrice = this.totalValue;
             }
         }

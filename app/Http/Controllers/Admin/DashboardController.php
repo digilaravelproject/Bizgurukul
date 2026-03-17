@@ -23,6 +23,10 @@ class DashboardController extends Controller
 
     public function stats(Request $request)
     {
+        if ($request->has('refresh')) {
+            \Illuminate\Support\Facades\Cache::forget('admin_dashboard_stats');
+        }
+
         $period = $request->input('period', 'month');
         return response()->json([
             'aggregate' => $this->dashboardService->getAggregateStats(),

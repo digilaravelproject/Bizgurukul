@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\KycDetail;
 use App\Models\BankDetail;
+use App\Http\Controllers\Student\LeaderboardController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
@@ -28,7 +29,37 @@ class ProfileService
 
         // Only allow updating non-locked fields
         $user->update($updateData);
+
+        // Bust leaderboard cache to update name/changes
+        LeaderboardController::bustCache(null, $user->id);
+
         return $user;
+    }
+
+    public function updateProfilePhoto($userId, $file)
+    {
+        $user = User::findOrFail($userId);
+
+        if ($file && $file->isValid()) {
+            // Delete old photo if it exists
+            if ($user->profile_photo_url) {
+                Storage::disk('public')->delete($user->profile_photo_url);
+            }
+
+            // Store new photo
+            $path = $file->store('profile_photos', 'public');
+            
+            $user->update([
+                'profile_photo_url' => $path
+            ]);
+
+            // Bust leaderboard cache to update photo
+            LeaderboardController::bustCache(null, $user->id);
+
+            return $user;
+        }
+
+        throw new \Exception('Invalid photo file.');
     }
 
     // --- STUDENT: Change Password ---

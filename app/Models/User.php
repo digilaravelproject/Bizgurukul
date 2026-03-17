@@ -58,6 +58,8 @@ class User extends Authenticatable
         'kyc_status',
         'is_banned',
         'banned_at',
+        'hide_from_leaderboard',
+        'profile_photo_url',
         'deleted_at',
     ];
 
@@ -73,6 +75,7 @@ class User extends Authenticatable
         'dob' => 'date:Y-m-d',
         'kyc_status' => 'string',
         'is_banned' => 'boolean',
+        'hide_from_leaderboard' => 'boolean',
         'banned_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
@@ -122,6 +125,10 @@ class User extends Authenticatable
 
     public function getProfileImageUrlAttribute(): string
     {
+        if ($this->profile_photo_url) {
+            return asset('storage/' . $this->profile_photo_url);
+        }
+
         return $this->profile_picture
             ? asset('storage/' . $this->profile_picture)
             : 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=6366f1&color=fff&size=128&bold=true';

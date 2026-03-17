@@ -38,6 +38,7 @@ Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')
     // Profile & KYC
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::post('/profile/update', [ProfileController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/profile/update-photo', [ProfileController::class, 'updatePhoto'])->name('profile.update_photo');
     Route::post('/kyc/submit', [ProfileController::class, 'submitKyc'])->name('kyc.submit');
     Route::post('/bank/save', [ProfileController::class, 'saveBank'])->name('bank.save');
     Route::post('/update/password', [ProfileController::class, 'changePassword'])->name('password.change');
@@ -93,6 +94,7 @@ Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')
         // Invoices
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('invoices.show');
+        Route::get('/invoices/{id}/download', [InvoiceController::class, 'download'])->name('invoices.download');
 
         // Browse Courses
         Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');

@@ -50,7 +50,7 @@
 
 @push('scripts')
     <script>
-        // 1. Toastr Options Configure karein
+        // 1. Configure Toastr Options
         toastr.options = {
             "closeButton": true,
             "progressBar": true,

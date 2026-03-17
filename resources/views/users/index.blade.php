@@ -31,7 +31,7 @@
             $(document).ready(function() {
                 table = $('#users-table').DataTable({
                     processing: true,
-                    serverSide: false, // True karein agar Yajra use kar rahe hain
+                    serverSide: false, // Set to true if using Yajra DataTables
                     ajax: "{{ route('users.index') }}", // AJAX URL
                     columns: [{
                             data: 'id',

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\OrdersExport;
 use Exception;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class OrderController extends Controller
 {
@@ -106,7 +107,9 @@ class OrderController extends Controller
                 'company_logo' => Setting::get('company_logo', null),
             ];
 
-            return view('student.invoices.show', compact('invoice', 'settings'));
+            $downloadUrl = route('admin.orders.invoice.download', $id);
+
+            return view('student.invoices.show', compact('invoice', 'settings', 'downloadUrl'));
 
         } catch (ModelNotFoundException $e) {
             Log::warning('Invoice access attempt for non-existent invoice ID ' . $id);
@@ -114,6 +117,39 @@ class OrderController extends Controller
         } catch (Exception $e) {
             Log::error('Error loading invoice ID ' . $id . ' in admin: ' . $e->getMessage());
             return back()->with('error', 'Unable to load the invoice right now. Please try again.');
+        }
+    }
+
+    /**
+     * Download a specific invoice for an order.
+     */
+    public function downloadInvoice($id)
+    {
+        try {
+            $invoice = Payment::with(['bundle', 'course', 'paymentable', 'user'])
+                ->findOrFail($id);
+
+            $settings = (object) [
+                'site_name' => Setting::get('site_name', 'Skills Pehle'),
+                'company_address' => Setting::get('company_address', '123 Business Park, Tech Hub'),
+                'company_city' => Setting::get('company_city', 'New Delhi'),
+                'company_state' => Setting::get('company_state', 'Delhi'),
+                'company_zip' => Setting::get('company_zip', '110001'),
+                'company_email' => Setting::get('company_email', 'support@Skills Pehle.com'),
+                'company_phone' => Setting::get('company_phone', '+91 9876543210'),
+                'company_logo' => Setting::get('company_logo', null),
+            ];
+
+            $is_pdf = true;
+            $pdf = Pdf::loadView('student.invoices.show', compact('invoice', 'settings', 'is_pdf'));
+            $safeFilename = str_replace(['#', '/', '\\'], '-', $invoice->invoice_no);
+            return $pdf->download('Invoice-' . $safeFilename . '.pdf');
+
+        } catch (ModelNotFoundException $e) {
+            return abort(404, 'Invoice not found.');
+        } catch (Exception $e) {
+            Log::error('Error downloading invoice ID ' . $id . ' in admin: ' . $e->getMessage());
+            return back()->with('error', 'Unable to download the invoice right now. Please try again.');
         }
     }
 }

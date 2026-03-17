@@ -78,7 +78,6 @@
             border-color: #94a3b8;
         }
 
-        /* Certificate Container: A4 Landscape Proportion (297mm x 210mm) */
         .certificate-wrapper {
             position: relative;
             width: 297mm;
@@ -90,10 +89,6 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background-image: url('{{ $templateUrl }}');
-            background-size: 100% 100%; /* forces bg to stretch fully without leaving empty edges */
-            background-position: center center;
-            background-repeat: no-repeat;
             margin: 0 auto;
         }
 
@@ -228,14 +223,23 @@
             <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             Back to Certificates
         </a>
-        <button onclick="window.print()" class="btn">
-            <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-            Save as PDF
-        </button>
+        <div style="display: flex; gap: 10px;">
+            <button id="downloadPdfBtn" onclick="downloadPDF()" class="btn" style="background-color: #0f172a;">
+                <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                Download PDF
+            </button>
+            <button onclick="window.print()" class="btn btn-outline" style="border-color: #ff5e14; color: #ff5e14;">
+                <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                Print
+            </button>
+        </div>
     </div>
 
     <!-- Certificate Render Area -->
     <div class="certificate-wrapper" id="certificate">
+
+        <!-- Physical Image for PDF reliability -->
+        <img src="{{ $templateUrl }}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; z-index: 1;" id="certificateBg">
 
         <!-- Editable Overlay Content -->
         <div class="certificate-content">
@@ -265,5 +269,52 @@
         </div>
     </div>
 
+    <!-- Include html2pdf.js for client-side PDF generation on mobile devices -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        function downloadPDF() {
+            // Update button state to show loading
+            const btn = document.getElementById('downloadPdfBtn');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<svg class="animate-spin" style="width:20px;height:20px;" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating...';
+            btn.style.opacity = '0.7';
+            btn.style.pointerEvents = 'none';
+
+            const element = document.getElementById('certificate');
+
+            // Fix viewport scaling/zoom issues on mobile during capture
+            const originalZoom = element.style.zoom;
+            element.style.zoom = 1;
+
+            const opt = {
+                margin:       0,
+                filename:     'Certificate-{{ str_replace(" ", "-", $course->title) }}.pdf',
+                image:        { type: 'jpeg', quality: 1 },
+                html2canvas:  { 
+                    scale: 3, 
+                    useCORS: true, 
+                    allowTaint: true,
+                    letterRendering: true,
+                    logging: true 
+                },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(function() {
+                // Restore original state
+                element.style.zoom = originalZoom;
+                btn.innerHTML = originalContent;
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+            }).catch(function(err) {
+                console.error('PDF Generation Error:', err);
+                element.style.zoom = originalZoom;
+                btn.innerHTML = originalContent;
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+                alert('Something went wrong while generating the PDF. Please try again.');
+            });
+        }
+    </script>
 </body>
 </html>

@@ -31,7 +31,7 @@ class CourseControllerOld extends Controller
     public function index(Request $request)
     {
         $search = $request->search;
-        $tab = $request->tab; // Alpine.js se tab name aayega
+        $tab = $request->tab; // Tab name from Alpine.js
 
         // 1. Single Courses
         $courseQuery = Course::withCount('lessons')->latest();
@@ -57,7 +57,7 @@ class CourseControllerOld extends Controller
         }
         $lessons = $lessonQuery->paginate(10, ['*'], 'lessons_page');
 
-        // AJAX Response: Sirf wahi partial bhejenge jiski zarurat hai
+        // AJAX Response: Only send the partial that is needed
         if ($request->ajax()) {
             return response()->json([
                 'courses' => view('admin.lms.partials.table', compact('courses'))->render(),
@@ -78,14 +78,14 @@ class CourseControllerOld extends Controller
     /**
      * Store or Update Bundle
      */
-    // Create Page: Sirf wahi courses jo kisi bundle mein nahi hain
+    // Create Page: Only show courses not already in a bundle
     public function createBundle()
     {
         $availableCourses = Course::where('is_published', true)->get();
         return view('admin.lms.bundle_create', compact('availableCourses'));
     }
 
-    // Edit Page: Isme bhi saare courses dikhenge
+    // Edit Page: Show all courses here as well
     public function editBundle($id)
     {
         $bundle = Bundle::with('courses')->findOrFail($id);
@@ -103,7 +103,7 @@ class CourseControllerOld extends Controller
             'price' => 'required|numeric',
         ]);
 
-        // Error logic: Agar edit mode mein saare courses hata diye
+        // Error logic: If all courses were removed in edit mode
         if ($request->id && (!$request->has('course_ids') || count($request->course_ids) == 0)) {
             return back()
                 ->withInput()
@@ -188,16 +188,16 @@ class CourseControllerOld extends Controller
     public function deleteBundle($id)
     {
         try {
-            // 1. Bundle find karein
+            // 1. Find the bundle
             $bundle = Bundle::findOrFail($id);
 
-            // 2. Pivot table data automatically delete ho jayega (cascade ki wajah se)
-            // Aur bundle delete hote hi courses doosre bundles ke liye available ho jayenge.
+            // 2. Pivot table data will be automatically deleted (due to cascade)
+            // Once the bundle is deleted, courses become available for other bundles.
             $bundle->delete();
 
             return redirect()->route('admin.courses.index')->with('success', 'Bundle removed successfully! Courses are now available for other packages.');
         } catch (\Exception $e) {
-            // Agar koi error aati hai toh back bhejien message ke sath
+            // If an error occurs, redirect back with the error message
             return back()->with('error', 'Delete Failed: ' . $e->getMessage());
         }
     }

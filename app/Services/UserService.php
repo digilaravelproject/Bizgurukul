@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Repositories\UserRepository;
+use App\Http\Controllers\Student\LeaderboardController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -86,6 +87,9 @@ class UserService
                 if (!empty($data['role'])) {
                     $user->syncRoles([$data['role']]);
                 }
+
+                // Bust leaderboard cache so changes (like Hide from Leaderboard) reflect immediately
+                LeaderboardController::bustCache(null, $user->id);
 
                 return $user;
 

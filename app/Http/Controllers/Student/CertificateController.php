@@ -40,13 +40,14 @@ class CertificateController extends Controller
 
                 // Special case for courses with 0 lessons (e.g. test courses)
                 if ($course->lessons_count == 0) {
-                     $course->progress_percent = 100;
+                     $course->progress_percent = 0; // Fix: 0 instead of 100 to prevent false completion
                 }
 
                 return $course;
             });
 
         return view('student.certificates.index', compact('myCourses'));
+
     }
 
     /**
@@ -73,7 +74,8 @@ class CertificateController extends Controller
         $completed = $course->lessons->pluck('id')->intersect($completedLessonIds)->count();
         $totalLessons = $course->lessons->count();
 
-        $progress_percent = $totalLessons > 0 ? round(($completed / $totalLessons) * 100) : 100;
+
+        $progress_percent = $totalLessons > 0 ? round(($completed / $totalLessons) * 100) : 0; // Fix: 0 instead of 100 for zero lessons
 
         if ($progress_percent < 90) {
             return redirect()->back()->with('error', 'You must complete at least 90% of the course to generate a certificate.');

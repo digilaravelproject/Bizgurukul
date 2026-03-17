@@ -59,6 +59,8 @@ class UserController extends Controller
                     'kyc_status' => $user->kyc_status,
                     'joined_at' => $user->created_at->format('d M, Y'),
                     'profile_picture' => $user->profile_picture ? asset('storage/' . $user->profile_picture) : null,
+                    'profile_photo_url' => $user->profile_photo_url ? asset('storage/' . $user->profile_photo_url) : null,
+                    'hide_from_leaderboard' => $user->hide_from_leaderboard,
                     'initials' => strtoupper(substr($user->name, 0, 1)),
 
                     // Affiliate Stats
@@ -114,6 +116,7 @@ class UserController extends Controller
             'gender' => 'nullable|in:male,female,other',
             'dob' => 'nullable|date',
             'state_id' => 'nullable|integer',
+            'hide_from_leaderboard' => 'nullable',
         ]);
 
         try {

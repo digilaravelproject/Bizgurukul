@@ -6,8 +6,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Skills Pehle') }} - Admin</title>
     <link rel="icon" type="image/png" href="{{ Storage::url('site_images/logo.png') }}">
-    <link rel="preload" as="image" href="{{ Storage::url('site_images/logo1.png') }}">
-    <link rel="preload" as="image" href="{{ Storage::url('site_images/logo.png') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>

@@ -184,6 +184,15 @@
                                                 :class="user.is_banned == 1 ? 'bg-secondary' : 'bg-green-500'"></span>
                                             <span x-text="user.is_banned == 1 ? 'Banned' : 'Active'"></span>
                                         </div>
+                                        <template x-if="user.hide_from_leaderboard">
+                                            <div class="mt-1 text-[9px] font-black text-secondary uppercase flex items-center justify-center">
+                                                <svg class="w-2.5 h-2.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                                                </svg>
+                                                Leaderboard Hidden
+                                            </div>
+                                        </template>
                                     </td>
                                     <td class="px-8 py-5 text-right">
                                         <div
@@ -372,6 +381,18 @@
                                     </select>
                                 </div>
                             </div>
+                            <!-- Leaderboard Control -->
+                            <div class="col-span-2 border-t border-primary/5 pt-6 mt-2">
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <div class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                                        :class="form.hide_from_leaderboard ? 'bg-secondary' : 'bg-navy/50'"
+                                        @click="form.hide_from_leaderboard = !form.hide_from_leaderboard">
+                                        <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                                            :class="form.hide_from_leaderboard ? 'translate-x-5' : 'translate-x-0'"></span>
+                                    </div>
+                                    <span class="text-xs font-bold text-mainText group-hover:text-secondary transition-colors">Hide User from Leaderboard</span>
+                                </label>
+                            </div>
                         </div>
 
                         <div class="mt-8 flex justify-end gap-3 pt-6 border-t border-primary/5">
@@ -559,7 +580,8 @@
                     referral_code: '',
                     password: '',
                     role: '',
-                    kyc_status: 'not_submitted'
+                    kyc_status: 'not_submitted',
+                    hide_from_leaderboard: false
                 },
 
                 init() {
@@ -665,7 +687,8 @@
                         referral_code: '',
                         password: '',
                         role: '',
-                        kyc_status: 'not_submitted'
+                        kyc_status: 'not_submitted',
+                        hide_from_leaderboard: false
                     };
                 },
 

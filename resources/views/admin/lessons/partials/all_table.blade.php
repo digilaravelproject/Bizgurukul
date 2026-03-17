@@ -64,7 +64,7 @@
                                 </svg>
                             </button>
 
-                            {{-- Hidden Form: Iska ID match hona chahiye script se --}}
+                            {{-- Hidden Form: ID must match the script reference --}}
                             <form id="lesson-delete-form-{{ $lesson->id }}"
                                 action="{{ route('admin.lessons.delete', $lesson->id) }}" method="POST" class="hidden">
                                 @csrf
@@ -82,7 +82,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                     d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                             </svg>
-                            <p class="text-slate-400 font-medium italic">Bhai, koi lessons nahi mile. Naya add karein!
+                            <p class="text-slate-400 font-medium italic">No lessons found. Add a new one!
                             </p>
                         </div>
                     </td>

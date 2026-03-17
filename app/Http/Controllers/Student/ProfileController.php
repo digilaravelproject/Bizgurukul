@@ -55,6 +55,29 @@ class ProfileController extends Controller
         }
     }
 
+    public function updatePhoto(Request $request)
+    {
+        try {
+            $request->validate([
+                'photo' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048'
+            ]);
+
+            $this->profileService->updateProfilePhoto(Auth::id(), $request->file('photo'));
+            
+            return response()->json([
+                'status' => true, 
+                'message' => 'Profile photo updated successfully',
+                'image_url' => Auth::user()->profile_image_url
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['status' => false, 'message' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error("Error updating photo for user " . Auth::id() . ": " . $e->getMessage());
+            return response()->json(['status' => false, 'message' => 'Photo upload failed.'], 500);
+        }
+    }
+
     public function changePassword(Request $request)
     {
         try {

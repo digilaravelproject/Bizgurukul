@@ -73,6 +73,7 @@ Route::middleware(['auth'])
             Route::get('/orders', [\App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
             Route::get('/orders/export', [\App\Http\Controllers\Admin\OrderController::class, 'export'])->name('orders.export');
             Route::get('/orders/{id}/invoice', [\App\Http\Controllers\Admin\OrderController::class, 'invoice'])->name('orders.invoice');
+            Route::get('/orders/{id}/invoice/download', [\App\Http\Controllers\Admin\OrderController::class, 'downloadInvoice'])->name('orders.invoice.download');
         });
 
         // Courses & Related (managed by manage-courses)

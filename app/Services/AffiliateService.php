@@ -237,10 +237,13 @@ public function getLeaderboard($filter = 'last_30_days', $limit = 10)
     {
         try {
             $query = AffiliateCommission::where('status', 'paid')
+                ->whereHas('affiliate', function ($q) {
+                    $q->where('hide_from_leaderboard', false);
+                })
                 ->selectRaw('affiliate_id, SUM(amount) as total_earnings')
                 ->groupBy('affiliate_id')
                 ->with(['affiliate' => function ($query) {
-                    $query->select('id', 'name', 'profile_picture');
+                    $query->select('id', 'name', 'profile_picture', 'profile_photo_url');
                 }]);
 
             if ($filter === 'today') {
@@ -252,7 +255,7 @@ public function getLeaderboard($filter = 'last_30_days', $limit = 10)
             } elseif ($filter === 'this_year') {
                 // YEARLY FILTER ADDED HERE
                 $query->where('created_at', '>=', Carbon::now()->startOfYear());
-                // Note: Agar aap 'last 365 days' chahte hain, toh 'Carbon::now()->subDays(365)' use karein
+                // Note: For 'last 365 days', use 'Carbon::now()->subDays(365)'
             } // 'all_time' no date filter
 
             return $query->orderByDesc('total_earnings')
@@ -284,6 +287,9 @@ public function getLeaderboard($filter = 'last_30_days', $limit = 10)
             $userSaleCount = $userEarningsQuery->clone()->count();
 
             $query = AffiliateCommission::where('status', 'paid')
+                ->whereHas('affiliate', function ($q) {
+                    $q->where('hide_from_leaderboard', false);
+                })
                 ->selectRaw('affiliate_id, SUM(amount) as total_earnings')
                 ->groupBy('affiliate_id');
 

@@ -370,9 +370,10 @@
             },
 
             async fetchStats() {
+                if (this.loading) return;
                 this.loading = true;
                 try {
-                    const response = await fetch(`{{ route('admin.dashboard.stats') }}?period=${this.period}`);
+                    const response = await fetch(`{{ route('admin.dashboard.stats') }}?period=${this.period}&refresh=1`);
                     if (!response.ok) throw new Error('Network error');
                     const data = await response.json();
                     this.stats = { ...this.stats, ...data.aggregate };

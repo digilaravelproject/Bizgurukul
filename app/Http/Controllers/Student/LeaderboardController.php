@@ -16,8 +16,8 @@ class LeaderboardController extends Controller
     //  Cache Settings
     // ─────────────────────────────────────────────────────────────
 
-    /** Cache duration: 12 hours (in seconds) */
-    private const CACHE_TTL = 43200;
+    /** Cache duration: 5 minutes (in seconds) */
+    private const CACHE_TTL = 300;
 
     /** Valid filter values accepted from the frontend */
     private const ALLOWED_FILTERS = ['today', 'last_7_days', 'last_30_days', 'this_year', 'all_time'];
@@ -108,7 +108,7 @@ class LeaderboardController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Leaderboard data load karne mein problem aayi. Please retry.',
+                'message' => 'Failed to load leaderboard data. Please retry.',
             ], 500);
         }
     }

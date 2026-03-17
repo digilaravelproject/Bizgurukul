@@ -289,9 +289,6 @@
                 { label: 'All Time', value: 'all_time' }
             ],
 
-            // LOCAL CACHE MEMORY - Stores fetched data so it loads in 0ms on next click
-            dataCache: {},
-
             init() {
                 this.fetchData();
             },
@@ -308,21 +305,13 @@
             },
 
             fetchData() {
-                // Agar data pehle se cache mein hai, toh INSTANT load karein (0.000ms)
-                if (this.dataCache[this.filter]) {
-                    this.renderData(this.dataCache[this.filter]);
-                    return;
-                }
-
-                // Agar data nahi hai, toh Loading spinner dikhayein aur fetch karein
+                // Show loading spinner and fetch fresh data
                 this.loading = true;
 
                 fetch(`{{ route('student.leaderboard.data') }}?filter=${this.filter}`)
                     .then(res => res.json())
                     .then(data => {
                         if (data.success) {
-                            // Fetch hone ke baad data ko cache mein save kar lein
-                            this.dataCache[this.filter] = data;
                             this.renderData(data);
                         }
                     })

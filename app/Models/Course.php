@@ -110,7 +110,7 @@ class Course extends Model
         return $this->hasMany(Payment::class);
     }
 
-    // Check karne ke liye ki current user ne course kharida hai ya nahi
+    // Check if the current user has purchased this course
     public function isPurchasedBy($userId)
     {
         /** @var \App\Models\User $user */

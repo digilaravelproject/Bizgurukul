@@ -12,7 +12,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('coupon_packages', function (Blueprint $table) {
-            // Jo columns missing the, wo add karein
+            // Add the missing columns
             if (!Schema::hasColumn('coupon_packages', 'type')) {
                 $table->string('type')->default('fixed')->after('description');
             }

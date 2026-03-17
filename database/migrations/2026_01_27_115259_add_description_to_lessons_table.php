@@ -12,7 +12,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('lessons', function (Blueprint $table) {
-            // title ke baad description add karein
+            // add description after title
             $table->text('description')->nullable()->after('title');
         });
     }

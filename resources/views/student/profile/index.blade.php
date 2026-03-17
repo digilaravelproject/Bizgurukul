@@ -133,8 +133,31 @@
                     {{-- 1. Custom Profile Edit --}}
                     <div x-show="activeTab === 'profile'" x-transition.opacity>
                         <h2 class="text-xl font-bold text-mainText mb-1">Personal Information</h2>
-                        <p class="text-sm text-mutedText mb-6">Update your account preferences. Core details are locked for
-                            security.</p>
+                        <p class="text-sm text-mutedText mb-6">Update your account preferences. Core details are locked for security.</p>
+
+                        <div class="mb-8 flex flex-col items-center sm:flex-row sm:items-start gap-6 bg-navy/5 p-6 rounded-3xl border border-primary/5">
+                            <div class="relative group">
+                                <div class="w-24 h-24 rounded-2xl overflow-hidden border-2 border-primary/20 bg-white flex items-center justify-center">
+                                    <template x-if="profile_image">
+                                        <img :src="profile_image" class="w-full h-full object-cover" alt="Profile">
+                                    </template>
+                                    <template x-if="!profile_image">
+                                        <span class="text-3xl font-black text-primary" x-text="profile.name.charAt(0)"></span>
+                                    </template>
+                                </div>
+                                <label for="profile_photo_input" class="absolute -bottom-2 -right-2 bg-primary text-white w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer shadow-lg hover:scale-110 transition group-hover:rotate-12">
+                                    <i class="fas fa-camera text-xs"></i>
+                                </label>
+                                <input type="file" id="profile_photo_input" class="hidden" @change="uploadPhoto" accept="image/*">
+                            </div>
+                            <div class="text-center sm:text-left pt-2">
+                                <h4 class="font-bold text-mainText">Profile Photo</h4>
+                                <p class="text-xs text-mutedText mt-1">Click the camera icon to update your photo.<br>Max 2MB (JPG, PNG, WEBP)</p>
+                                <div x-show="isPhotoUploading" class="mt-2 flex items-center gap-2 text-[10px] font-black text-primary uppercase animate-pulse">
+                                    <i class="fas fa-spinner fa-spin"></i> Uploading...
+                                </div>
+                            </div>
+                        </div>
 
                         <form @submit.prevent="updateProfile">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -530,6 +553,8 @@
                 bankStatus: '{{ $user->bank->status ?? 'not_submitted' }}',
                 kycStatus: '{{ $user->kyc_status ?? 'not_submitted' }}',
                 hasUpdatePending: {{ $user->bankUpdateRequests()->where('status', 'pending')->exists() ? 'true' : 'false' }},
+                profile_image: '{{ Auth::user()->profile_image_url }}',
+                isPhotoUploading: false,
 
                 // indianStates: ["Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar",
                 //     "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli", "Daman and Diu", "Delhi", "Goa", "Gujarat",
@@ -663,6 +688,40 @@
                             Swal.fire('Error', err.response.data.message || 'Failed to update password', 'error');
                         })
                         .finally(() => this.isLoading = false);
+                },
+
+                uploadPhoto(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    if (file.size > 2 * 1024 * 1024) {
+                        return Swal.fire('Error', 'Image size should be less than 2MB', 'error');
+                    }
+
+                    this.isPhotoUploading = true;
+                    let fd = new FormData();
+                    fd.append('photo', file);
+
+                    axios.post("{{ route('student.profile.update_photo') }}", fd)
+                        .then(res => {
+                            if (res.data.status) {
+                                this.profile_image = res.data.image_url;
+                                Swal.fire({
+                                    title: 'Success!',
+                                    text: 'Profile photo updated.',
+                                    icon: 'success',
+                                    toast: true,
+                                    position: 'top-end',
+                                    showConfirmButton: false,
+                                    timer: 3000
+                                });
+                            }
+                        })
+                        .catch(err => {
+                            let msg = err.response?.data?.message?.photo ? err.response.data.message.photo[0] : 'Upload failed';
+                            Swal.fire('Error', msg, 'error');
+                        })
+                        .finally(() => this.isPhotoUploading = false);
                 }
             }
         }

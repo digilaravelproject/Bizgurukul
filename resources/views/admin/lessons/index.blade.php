@@ -33,7 +33,7 @@
 
                 fetchData(page = 1) {
                     this.loading = true;
-                    // URL mein page param add karein
+                    // Add page parameter to the URL
                     const fetchUrl = `${this.baseUrl}?page=${page}`;
 
                     fetch(fetchUrl, {
@@ -53,7 +53,7 @@
                 },
 
                 init() {
-                    // Pagination clicks handle karein
+                    // Handle pagination link clicks
                     document.getElementById('lessons-table-container').addEventListener('click', (e) => {
                         const link = e.target.closest('.lesson-pagination a');
                         if (link) {

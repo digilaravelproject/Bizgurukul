@@ -23,13 +23,14 @@ class DashboardService
                 $startOfLastMonth = Carbon::now()->subMonth()->startOfMonth();
                 $endOfLastMonth = Carbon::now()->subMonth()->endOfMonth();
 
-                // Revenue Calculations (Always filter by 'success')
-                $totalRevenue = (float) Payment::where('status', 'success')->sum('amount');
-                $revenueThisMonth = (float) Payment::where('status', 'success')->whereBetween('created_at', [$startOfMonth, $endOfMonth])->sum('amount');
-                $revenueLastMonth = (float) Payment::where('status', 'success')->whereBetween('created_at', [$startOfLastMonth, $endOfLastMonth])->sum('amount');
+                // Revenue Calculations (Include 'captured' for Razorpay compatibility)
+                $successStatuses = ['success', 'captured'];
+                $totalRevenue = (float) Payment::whereIn('status', $successStatuses)->sum('amount');
+                $revenueThisMonth = (float) Payment::whereIn('status', $successStatuses)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->sum('amount');
+                $revenueLastMonth = (float) Payment::whereIn('status', $successStatuses)->whereBetween('created_at', [$startOfLastMonth, $endOfLastMonth])->sum('amount');
 
-                $sevenDaysRevenue = (float) Payment::where('status', 'success')->where('created_at', '>=', Carbon::now()->subDays(7))->sum('amount');
-                $thirtyDaysRevenue = (float) Payment::where('status', 'success')->where('created_at', '>=', Carbon::now()->subDays(30))->sum('amount');
+                $sevenDaysRevenue = (float) Payment::whereIn('status', $successStatuses)->where('created_at', '>=', Carbon::now()->subDays(7))->sum('amount');
+                $thirtyDaysRevenue = (float) Payment::whereIn('status', $successStatuses)->where('created_at', '>=', Carbon::now()->subDays(30))->sum('amount');
 
                 // Growth Calculation (Prevent Division by Zero)
                 $growthPercentage = 0;
@@ -56,7 +57,7 @@ class DashboardService
                     'total_courses'         => Course::count(),
                     'active_courses'        => Course::where('is_published', true)->count(),
                     'total_revenue'         => $totalRevenue,
-                    'today_revenue'         => (float) Payment::where('status', 'success')->whereDate('created_at', $today)->sum('amount'),
+                    'today_revenue'         => (float) Payment::whereIn('status', $successStatuses)->whereDate('created_at', $today)->sum('amount'),
                     'seven_days_revenue'    => $sevenDaysRevenue,
                     'thirty_days_revenue'   => $thirtyDaysRevenue,
                     'all_time_revenue'      => $totalRevenue,
@@ -130,63 +131,41 @@ class DashboardService
     private function calculateProfit(string $period): float
     {
         try {
-            // ── Step 1: Build date filter ──────────────────────────────
-            $dateFilter = match ($period) {
-                'today'        => ['whereDate', Carbon::today()],
-                'last_7_days'  => ['where>=',   Carbon::now()->subDays(7)],
-                'last_30_days' => ['where>=',   Carbon::now()->subDays(30)],
+            $startDate = match ($period) {
+                'today'        => Carbon::today(),
+                'last_7_days'  => Carbon::now()->subDays(7),
+                'last_30_days' => Carbon::now()->subDays(30),
                 default        => null,
             };
 
-            // ── Step 2: Query successful payments ──────────────────────
-            $paymentQuery = Payment::where('status', 'success');
-            if ($dateFilter) {
-                if ($dateFilter[0] === 'whereDate') {
-                    $paymentQuery->whereDate('created_at', $dateFilter[1]);
-                } else {
-                    $paymentQuery->where('created_at', '>=', $dateFilter[1]);
-                }
+            // 1. Total Revenue in period (Captured & Success)
+            $paymentQuery = Payment::whereIn('status', ['success', 'captured']);
+            if ($startDate) {
+                $paymentQuery->where('created_at', '>=', $startDate);
             }
+            $totalAmount = (float) $paymentQuery->sum('amount');
+            if ($totalAmount <= 0) return 0.0;
 
-            $payments = $paymentQuery->get(['id', 'amount', 'user_id', 'course_id', 'bundle_id', 'created_at']);
+            // 2. Deduct GST (18% inclusive)
+            // Revenue After GST = Total / 1.18
+            $afterGst = $totalAmount / 1.18;
 
-            $totalNetProfit = 0;
+            // 3. Deduct Gateway Fee (2% of TOTAL amount)
+            $gatewayFee = $totalAmount * 0.02;
 
-            foreach ($payments as $payment) {
-                $amount = (float) $payment->amount;
-                if ($amount <= 0) continue;
-
-                // 1. GST (18% inclusive)
-                $gst = ($amount * 18) / 118;
-                $afterGst = $amount - $gst;
-
-                // 2. Gateway Fee (2% of total amount)
-                $gatewayFee = ($amount * 2) / 100;
-
-                // 3. Commission (Find commission for this specific purchase)
-                // We look for commission where referred_user_id = payment->user_id
-                // and reference matches bundle/course.
-                $refId = $payment->bundle_id ?? $payment->course_id;
-                $refType = $payment->bundle_id ? \App\Models\Bundle::class : Course::class;
-
-                $commissionAmount = AffiliateCommission::where('referred_user_id', $payment->user_id)
-                    ->where('reference_id', $refId)
-                    ->where('reference_type', $refType)
-                    // We assume commission created around the same time as payment
-                    ->whereBetween('created_at', [
-                        $payment->created_at->subMinutes(5),
-                        $payment->created_at->addMinutes(5)
-                    ])
-                    ->sum('amount');
-
-                $netProfit = $afterGst - $gatewayFee - $commissionAmount;
-                $totalNetProfit += max(0, $netProfit);
+            // 4. Deduct Commissions (Sum of all commissions generated in this period)
+            $commissionQuery = AffiliateCommission::query();
+            if ($startDate) {
+                $commissionQuery->where('created_at', '>=', $startDate);
             }
+            $totalCommission = (float) $commissionQuery->sum('amount');
 
-            return (float) round($totalNetProfit, 2);
+            $netProfit = $afterGst - $gatewayFee - $totalCommission;
+
+            return (float) round(max(0, $netProfit), 2);
 
         } catch (\Exception $e) {
-            Log::error('DashboardService@calculateProfit: ' . $e->getMessage(), ['period' => $period]);
+            Log::error('DashboardService@calculateProfit Optimized: ' . $e->getMessage(), ['period' => $period]);
             return 0.0;
         }
     }
