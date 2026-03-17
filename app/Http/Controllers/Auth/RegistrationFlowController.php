@@ -44,6 +44,13 @@ class RegistrationFlowController extends Controller
     public function storePhase1(Request $request)
     {
         try {
+            // Clean mobile number (remove spaces, dots, hyphens, plus)
+            if ($request->has('mobile')) {
+                $request->merge([
+                    'mobile' => preg_replace('/[^0-9]/', '', $request->mobile)
+                ]);
+            }
+
             $request->validate([
                 'name'     => ['required', 'string', 'max:255'],
                 'email'    => ['required', 'string', 'email', 'max:255', 'unique:users'],
@@ -87,9 +94,14 @@ class RegistrationFlowController extends Controller
 
             return redirect()->route('register.phase2', ['lead_id' => $lead->id]);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+             Log::warning('Phase 1 Validation Error: ', $e->errors());
+             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            Log::error('Phase 1 Error: ' . $e->getMessage());
-            return back()->withErrors(['error' => 'Unable to save details. Please try again.']);
+            Log::error('Phase 1 General Error: ' . $e->getMessage(), [
+                'stack' => $e->getTraceAsString()
+            ]);
+            return back()->withErrors(['error' => 'Unable to save details: ' . $e->getMessage()])->withInput();
         }
     }
 

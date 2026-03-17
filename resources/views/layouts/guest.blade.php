@@ -24,44 +24,43 @@
     <div class="min-h-screen w-full flex">
 
         <!-- Left Side: Branding / Image (Hidden on Mobile, Visible on Desktop) -->
-        <div class="hidden lg:flex w-1/2 bg-navy relative overflow-hidden items-center justify-center p-12">
+        <div class="hidden lg:flex w-1/2 bg-navy relative overflow-hidden flex-col items-center justify-center p-12">
             <!-- Abstract Background Decorations using Brand Colors -->
             <div class="absolute top-0 left-0 w-full h-full opacity-10">
                 <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary rounded-full blur-3xl"></div>
                 <div class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-secondary rounded-full blur-3xl"></div>
             </div>
 
-                <a href="{{ route('home') }}" class="relative z-10 text-center block group">
-                @if (Storage::exists('site_images/logo1.png'))
-                    {{-- 1. Image agar file system mein exist karti hai --}}
-                    <img src="{{ Storage::url('site_images/logo1.png') }}" alt="Logo"
-                        class="h-[100px] w-auto transform group-hover:scale-105 transition duration-500 object-contain mx-auto">
-                @else
-                    {{-- 2. Agar image nahi hai toh ye CSS wala logo dikhega --}}
+            <a href="{{ route('home') }}" class="relative z-10 text-center block group">
+            @if (Storage::exists('site_images/logo1.png'))
+                {{-- 1. Image agar file system mein exist karti hai --}}
+                <img src="{{ Storage::url('site_images/logo1.png') }}" alt="Logo"
+                    class="h-[100px] w-auto transform group-hover:scale-105 transition duration-500 object-contain mx-auto">
+            @else
+                {{-- 2. Agar image nahi hai toh ye CSS wala logo dikhega --}}
+                <div
+                    class="inline-flex items-center bg-white border-2 border-primary p-1 shadow-2xl transform group-hover:scale-105 transition duration-500">
                     <div
-                        class="inline-flex items-center bg-white border-2 border-primary p-1 shadow-2xl transform group-hover:scale-105 transition duration-500">
-                        <div
-                            class="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 font-extrabold text-4xl tracking-tight">
-                            SKILLS
-                        </div>
-                        <div
-                            class="px-6 py-3 bg-white text-secondary font-extrabold text-4xl tracking-tight flex items-center relative">
-                            P<span class="text-primary">₹</span>HLE
-                            <div class="absolute bottom-2 left-6 right-4 h-0.5 bg-secondary"></div>
-                            <svg class="absolute bottom-[5px] right-4 w-3 h-3 text-secondary fill-current"
-                                viewBox="0 0 24 24">
-                                <path d="M24 12l-12-8v16l12-8z" />
-                            </svg>
-                        </div>
+                        class="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 font-extrabold text-4xl tracking-tight">
+                        SKILLS
                     </div>
-                @endif
-                </a>
-
-                <div class="mt-12 space-y-4">
-                    <h2 class="text-3xl font-bold text-mainText">Master New Skills</h2>
-                    <p class="text-mutedText text-lg max-w-md mx-auto">Join the community of learners and earners.
-                        Upgrade your future today.</p>
+                    <div
+                        class="px-6 py-3 bg-white text-secondary font-extrabold text-4xl tracking-tight flex items-center relative">
+                        P<span class="text-primary">₹</span>HLE
+                        <div class="absolute bottom-2 left-6 right-4 h-0.5 bg-secondary"></div>
+                        <svg class="absolute bottom-[5px] right-4 w-3 h-3 text-secondary fill-current"
+                            viewBox="0 0 24 24">
+                            <path d="M24 12l-12-8v16l12-8z" />
+                        </svg>
+                    </div>
                 </div>
+            @endif
+            </a>
+
+            <div class="mt-12 space-y-4 text-center">
+                <h2 class="text-3xl font-bold text-mainText">Master New Skills</h2>
+                <p class="text-mutedText text-lg max-w-md mx-auto">Join the community of learners and earners.
+                    Upgrade your future today.</p>
             </div>
         </div>
 

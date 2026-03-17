@@ -13,24 +13,42 @@ class EmailService
     /**
      * Apply dynamic SMTP configuration from database settings.
      */
-    public static function applyMailConfig(): void
+    public static function applyMailConfig(bool $force = false): void
     {
-        $host = Setting::get('mail_host');
-        if (!$host) return; // No config saved yet — use defaults from .env
+        $currentDefault = config('mail.default');
+        
+        if (!$force && $currentDefault === 'log') {
+            return;
+        }
 
-        Config::set('mail.mailers.smtp.host', $host);
-        Config::set('mail.mailers.smtp.port', Setting::get('mail_port', 587));
-        Config::set('mail.mailers.smtp.username', Setting::get('mail_username'));
-        Config::set('mail.mailers.smtp.password', Setting::get('mail_password'));
-        Config::set('mail.mailers.smtp.encryption', Setting::get('mail_encryption', 'tls'));
+        try {
+            $host = Setting::get('mail_host');
+            if (!$host) {
+                return;
+            }
 
-        Config::set('mail.default', 'smtp');
-        Config::set('mail.from.address', Setting::get('mail_from_address', Setting::get('mail_username')));
-        Config::set('mail.from.name', Setting::get('mail_from_name', config('app.name')));
+            // Only apply if host changed or forced
+            if (!$force && $host === config('mail.mailers.smtp.host')) {
+                return;
+            }
 
-        // EXTREMELY IMPORTANT: Purge the mailer to ensure it re-reads the configuration
-        // This is critical for transitions between log/smtp or when settings change at runtime.
-        Mail::purge();
+            Log::debug("EmailService: Applying DB mail config. Host: {$host}");
+            
+            Config::set('mail.mailers.smtp.host', $host);
+            Config::set('mail.mailers.smtp.port', Setting::get('mail_port', 587));
+            Config::set('mail.mailers.smtp.username', Setting::get('mail_username'));
+            Config::set('mail.mailers.smtp.password', Setting::get('mail_password'));
+            Config::set('mail.mailers.smtp.encryption', Setting::get('mail_encryption', 'tls'));
+
+            Config::set('mail.default', 'smtp');
+            Config::set('mail.from.address', Setting::get('mail_from_address', Setting::get('mail_username')));
+            Config::set('mail.from.name', Setting::get('mail_from_name', config('app.name')));
+
+            Mail::purge();
+        } catch (\Throwable $e) {
+            // Log once but don't crash
+            Log::warning("EmailService: Mail config sync bypassed : " . $e->getMessage());
+        }
     }
 
     /**
@@ -74,7 +92,7 @@ class EmailService
     public static function sendTest(string $toEmail): bool
     {
         try {
-            self::applyMailConfig();
+            self::applyMailConfig(true);
 
             Mail::raw(
                 'This is a test email from ' . config('app.name') . '. Your email configuration is working correctly!',

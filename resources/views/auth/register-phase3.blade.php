@@ -256,7 +256,7 @@
                          class="w-4 h-4 text-[rgb(var(--color-primary))] border-gray-300 rounded focus:ring-[rgb(var(--color-primary))] cursor-pointer">
                  </div>
                 <label for="terms" class="text-xs text-[rgb(var(--color-text-muted))] leading-normal cursor-pointer">
-                    I agree to the <a href="{{ route('web.terms') }}" class="font-bold text-[rgb(var(--color-primary))] hover:underline" target="_blank">Terms and Conditions</a>, <a href="{{ route('web.privacy-policy') }}" class="font-bold text-[rgb(var(--color-primary))] hover:underline" target="_blank">Privacy Policy</a> and <a href="{{ route('web.refund-policy') }}" class="font-bold text-[rgb(var(--color-primary))] hover:underline" target="_blank">Refund Policy</a>. I confirm all provided details are correct.
+                    I agree to the <a href="{{ route('web.terms') }}" class="font-bold text-[rgb(var(--color-primary))] hover:underline" target="_blank">Terms and Conditions</a>, <a href="{{ route('web.privacy') }}" class="font-bold text-[rgb(var(--color-primary))] hover:underline" target="_blank">Privacy Policy</a> and <a href="{{ route('web.refund-policy') }}" class="font-bold text-[rgb(var(--color-primary))] hover:underline" target="_blank">Refund Policy</a>. I confirm all provided details are correct.
                 </label>
              </div>
 

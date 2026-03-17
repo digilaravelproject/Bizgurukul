@@ -20,9 +20,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Force IST timezone globally (PHP + Carbon)
+        // Global IST Timezone
         date_default_timezone_set(config('app.timezone', 'Asia/Kolkata'));
         \Carbon\Carbon::setLocale('en');
+
+        // Apply Dynamic SMTP Configuration from Database
+        \App\Services\EmailService::applyMailConfig();
 
 
         Gate::before(function ($user, $ability) {

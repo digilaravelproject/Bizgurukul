@@ -20,11 +20,6 @@ abstract class BaseMail extends Mailable
     protected function buildFromTemplate(): self
     {
         EmailService::applyMailConfig();
-
-        // Explicitly set the mailer for this mailable to ensure it doesn't
-        // fallback to 'log' if the default was already resolved.
-        $this->mailer('smtp');
-
         $template = EmailService::getTemplate($this->templateKey, $this->templateData);
 
         $this->subject($template['subject']);
