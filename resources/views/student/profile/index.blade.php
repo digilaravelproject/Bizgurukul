@@ -3,19 +3,61 @@
 @section('content')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <div x-data="studentProfile()" x-init="init()" class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 font-sans">
+    <div x-data="studentProfile()" x-init="init()" class="max-w-7xl mx-auto py-4 px-3 sm:px-6 lg:px-8 font-sans">
 
         <div class="md:grid md:grid-cols-4 md:gap-6">
 
-            {{-- Sidebar Tabs --}}
-            <div class="md:col-span-1">
-                <div class="bg-customWhite overflow-hidden shadow-sm rounded-3xl sticky top-6 border border-primary/10">
+            {{-- Sidebar Tabs - Horizontal scroll on mobile, vertical on desktop --}}
+            <div class="md:col-span-1 mb-4 md:mb-0">
+                {{-- Mobile: Horizontal scrollable tabs --}}
+                <div class="md:hidden bg-customWhite overflow-hidden shadow-sm rounded-2xl border border-primary/10">
+                    <div class="flex overflow-x-auto scrollbar-hide gap-1 p-2" style="-webkit-overflow-scrolling: touch; scrollbar-width: none;">
+                        <button @click="activeTab = 'profile'"
+                            :class="activeTab === 'profile' ? 'bg-primary/10 text-primary border-primary/20' : 'text-mutedText hover:bg-navy/5 border-transparent'"
+                            class="flex-shrink-0 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition border whitespace-nowrap">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            Profile
+                        </button>
+                        <button @click="activeTab = 'kyc'"
+                            :class="activeTab === 'kyc' ? 'bg-primary/10 text-primary border-primary/20' : 'text-mutedText hover:bg-navy/5 border-transparent'"
+                            class="flex-shrink-0 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition border whitespace-nowrap">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            KYC
+                            <span class="h-2 w-2 rounded-full flex-shrink-0"
+                                :class="{ 'bg-red-500': kycStatus == 'rejected', 'bg-emerald-500': kycStatus == 'verified', 'bg-amber-500': kycStatus == 'pending', 'bg-slate-300': kycStatus == 'not_submitted' }"></span>
+                        </button>
+                        <button @click="activeTab = 'bank'"
+                            :class="activeTab === 'bank' ? 'bg-primary/10 text-primary border-primary/20' : 'text-mutedText hover:bg-navy/5 border-transparent'"
+                            class="flex-shrink-0 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition border whitespace-nowrap">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                            </svg>
+                            Bank
+                            <span class="h-2 w-2 rounded-full flex-shrink-0"
+                                :class="{ 'bg-red-500': bankStatus == 'rejected', 'bg-emerald-500': bankStatus == 'verified', 'bg-amber-500': bankStatus == 'pending' || hasUpdatePending, 'bg-slate-300': bankStatus == 'not_submitted' }"></span>
+                        </button>
+                        <button @click="activeTab = 'password'"
+                            :class="activeTab === 'password' ? 'bg-primary/10 text-primary border-primary/20' : 'text-mutedText hover:bg-navy/5 border-transparent'"
+                            class="flex-shrink-0 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition border whitespace-nowrap">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                            Password
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Desktop: Original vertical sidebar --}}
+                <div class="hidden md:block bg-customWhite overflow-hidden shadow-sm rounded-3xl sticky top-6 border border-primary/10">
                     <div class="p-4 bg-navy/5 border-b border-primary/5 flex items-center gap-3">
-                        <div
-                            class="h-12 w-12 rounded-xl bg-primary text-white flex items-center justify-center font-bold text-xl shadow-md">
+                        <div class="h-12 w-12 rounded-xl bg-primary text-white flex items-center justify-center font-bold text-xl shadow-md flex-shrink-0">
                             {{ substr($user->name, 0, 1) }}
                         </div>
-                        <div class="overflow-hidden">
+                        <div class="overflow-hidden min-w-0">
                             <h3 class="font-bold text-mainText truncate">{{ $user->name }}</h3>
                             <p class="text-xs text-mutedText truncate">{{ $user->email }}</p>
                         </div>
@@ -24,7 +66,7 @@
                         <button @click="activeTab = 'profile'"
                             :class="activeTab === 'profile' ? 'bg-primary/10 text-primary' : 'text-mutedText hover:bg-navy/5'"
                             class="px-4 py-3 rounded-xl text-sm font-bold text-left flex items-center gap-3 transition">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
@@ -35,14 +77,13 @@
                             :class="activeTab === 'kyc' ? 'bg-primary/10 text-primary' : 'text-mutedText hover:bg-navy/5'"
                             class="px-4 py-3 rounded-xl text-sm font-bold text-left flex items-center gap-3 transition justify-between">
                             <div class="flex items-center gap-3">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                                 KYC Verification
                             </div>
-                            {{-- Status Dot --}}
-                            <span class="h-2.5 w-2.5 rounded-full"
+                            <span class="h-2.5 w-2.5 rounded-full flex-shrink-0"
                                 :class="{
                                     'bg-red-500': kycStatus == 'rejected',
                                     'bg-emerald-500': kycStatus == 'verified',
@@ -55,15 +96,14 @@
                             :class="activeTab === 'bank' ? 'bg-primary/10 text-primary' : 'text-mutedText hover:bg-navy/5'"
                             class="px-4 py-3 rounded-xl text-sm font-bold text-left flex items-center gap-3 transition justify-between">
                             <div class="flex items-center gap-3">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z">
                                     </path>
                                 </svg>
                                 Bank Details
                             </div>
-                            {{-- Status Dot --}}
-                            <span class="h-2.5 w-2.5 rounded-full"
+                            <span class="h-2.5 w-2.5 rounded-full flex-shrink-0"
                                 :class="{
                                     'bg-red-500': bankStatus == 'rejected',
                                     'bg-emerald-500': bankStatus == 'verified',
@@ -75,7 +115,7 @@
                         <button @click="activeTab = 'password'"
                             :class="activeTab === 'password' ? 'bg-primary/10 text-primary' : 'text-mutedText hover:bg-navy/5'"
                             class="px-4 py-3 rounded-xl text-sm font-bold text-left flex items-center gap-3 transition">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
                                 </path>
@@ -87,8 +127,8 @@
             </div>
 
             {{-- Content Area --}}
-            <div class="mt-6 md:mt-0 md:col-span-3">
-                <div class="bg-customWhite shadow-sm rounded-3xl border border-primary/10 p-6 min-h-[500px]">
+            <div class="mt-0 md:mt-0 md:col-span-3">
+                <div class="bg-customWhite shadow-sm rounded-2xl md:rounded-3xl border border-primary/10 p-4 sm:p-6 min-h-[400px] md:min-h-[500px]">
 
                     {{-- Sponsor Details --}}
                     @if ($user->referrer)
@@ -102,7 +142,7 @@
                                 <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
                                 Your Sponsor Details
                             </h3>
-                            <div class="flex flex-col md:flex-row md:items-center gap-6">
+                            <div class="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
                                 <div class="flex items-center gap-4">
                                     <div
                                         class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black border border-primary/20">
@@ -160,9 +200,9 @@
                         </div>
 
                         <form @submit.prevent="updateProfile">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                                 {{-- Name (Locked) --}}
-                                <div class="col-span-2 md:col-span-1">
+                                <div class="col-span-1">
                                     <label class="text-sm font-bold text-mutedText mb-1 flex items-center gap-2">
                                         Full Name
                                         <i class="fas fa-lock text-[10px] text-primary/50"></i>
@@ -172,7 +212,7 @@
                                 </div>
 
                                 {{-- Email Address (Locked) --}}
-                                <div class="col-span-2 md:col-span-1">
+                                <div class="col-span-1">
                                     <label class="text-sm font-bold text-mutedText mb-1 flex items-center gap-2">
                                         Email Address
                                         <i class="fas fa-lock text-[10px] text-primary/50"></i>
@@ -359,7 +399,7 @@
                         {{-- Status Banners --}}
                         @if ($dbBankStatus === 'verified' && !$hasPendingUpdate)
                             <div
-                                class="mb-8 p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 flex justify-between items-center">
+                                class="mb-8 p-4 sm:p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 flex flex-col sm:flex-row gap-4 sm:justify-between sm:items-center">
                                 <div>
                                     <h3 class="text-emerald-600 font-bold mb-1">Verified Account</h3>
                                     <p class="text-sm text-emerald-500">Your bank details are approved. Commission will be
@@ -394,8 +434,8 @@
                         <div x-show="changeBankMode || bankStatus === 'not_submitted' || bankStatus === 'rejected'" x-cloak
                             class="space-y-6">
                             <form @submit.prevent="submitBank">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div class="col-span-2">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                    <div class="col-span-1 md:col-span-2">
                                         <label class="block text-sm font-bold text-mutedText mb-1">Account Holder Name (As
                                             per Bank)</label>
                                         <input type="text" x-model="bank.holder_name" required
@@ -422,13 +462,13 @@
                                         <input type="text" x-model="bank.ifsc_code" required
                                             class="w-full rounded-xl bg-navy border-primary/10 text-mainText focus:ring-primary focus:border-primary uppercase">
                                     </div>
-                                    <div class="col-span-2">
+                                    <div class="col-span-1 md:col-span-2">
                                         <label class="block text-sm font-bold text-mutedText mb-1">UPI ID
                                             (Optional)</label>
                                         <input type="text" x-model="bank.upi_id"
                                             class="w-full rounded-xl bg-navy border-primary/10 text-mainText focus:ring-primary focus:border-primary">
                                     </div>
-                                    <div class="col-span-2">
+                                    <div class="col-span-1 md:col-span-2">
                                         <label class="block text-sm font-bold text-mutedText mb-1">Upload Bank Proof
                                             (Passbook/Cheque/Statement)</label>
                                         <div class="flex items-center justify-center w-full">

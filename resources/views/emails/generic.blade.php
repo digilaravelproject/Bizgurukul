@@ -160,16 +160,9 @@
             <p style="margin-top:12px;">
                 &copy; {{ date('Y') }} <strong>{{ $siteName }}</strong>. All rights reserved.
             </p>
-            @php
-                $address = trim(implode(', ', array_filter([
-                    \App\Models\Setting::get('company_address'),
-                    \App\Models\Setting::get('company_city'),
-                    \App\Models\Setting::get('company_state'),
-                ])));
-            @endphp
-            @if($address)
-                <p>{{ $address }}</p>
-            @endif
+            <p>Regards</p>
+            <p>Team Skillspehle</p>
+            <p>https://skillspehle.com/</p>
             @php $supportEmail = \App\Models\Setting::get('company_email'); @endphp
             @if($supportEmail)
                 <p>Support: <a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a></p>

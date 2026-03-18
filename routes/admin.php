@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\CertificateSettingController;
 use App\Http\Controllers\Admin\EmailTemplateController;
 use App\Http\Controllers\Admin\VideoUploadController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\DatabaseCleanupController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])
@@ -246,5 +247,11 @@ Route::middleware(['auth'])
                 Route::post('/bank/initial/{bankId}/process', [ProfileVerificationController::class, 'verifyInitialBank'])->name('bank.verify-initial');
                 Route::post('/bank/update/{requestId}/process', [ProfileVerificationController::class, 'processBankUpdate'])->name('bank.process-update');
             });
+        });
+
+        // Database Cleanup (Production Prep)
+        Route::middleware(['permission:manage-settings'])->group(function () {
+            Route::get('/database-cleanup', [DatabaseCleanupController::class, 'index'])->name('database-cleanup');
+            Route::post('/database-cleanup/execute', [DatabaseCleanupController::class, 'execute'])->name('database-cleanup.execute');
         });
     });

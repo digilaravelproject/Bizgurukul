@@ -332,46 +332,73 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
                 <div class="max-w-xl">
-                    <h2 class="text-3xl font-black text-mainText mb-2">Meet The Experts</h2>
-                    <p class="text-base text-mutedText mb-0">Learn exclusively from practitioners who have generated millions in revenue and managed top tier products.</p>
+                    <h2 class="text-3xl font-black text-mainText mb-2">What Our Students Say</h2>
+                    <p class="text-base text-mutedText mb-0">Real stories from real learners who transformed their careers with Skills Pehle.</p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="text-center group bg-surface p-5 rounded-2xl border border-gray-100 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-1">
-                    <div class="relative w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-[3px] border-navy shadow-inner group-hover:border-primary transition-colors duration-300">
-                        <img src="https://ui-avatars.com/api/?name=R+S&size=512&background=F7941D&color=fff" alt="Instructor" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {{-- Testimonial 1 - Riya Mehta --}}
+                <div class="bg-surface p-6 rounded-2xl border border-gray-100 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-1 flex flex-col">
+                    <div class="flex gap-0.5 text-yellow-500 mb-4">
+                        @for($i=0; $i<5; $i++) <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118z"/></svg> @endfor
                     </div>
-                    <h3 class="text-base font-bold text-mainText mb-1">Rahul Sharma</h3>
-                    <p class="text-primary font-bold text-[10px] uppercase tracking-wider mb-2">Performance Marketing</p>
-                    <p class="text-mutedText text-xs leading-relaxed">Spent over ₹10Cr in ad spend. Helping students replicate 5x ROAS strategies.</p>
+                    <p class="text-mutedText text-sm leading-relaxed mb-6 flex-grow italic">"Honestly, I was just testing this out… but within 3 weeks of learning dropshipping, I got my first 2 orders. The best part is the step-by-step system — no confusion, no random YouTube gyaan. Now I'm scaling slowly and finally feel like this can actually work."</p>
+                    <div class="flex items-center gap-3 mt-auto pt-4 border-t border-gray-100">
+                        <div class="relative w-12 h-12 rounded-full overflow-hidden border-[3px] border-navy shadow-inner shrink-0">
+                            @if(file_exists(storage_path('app/public/testimonials/riya_mehta.jpg')))
+                                <img src="{{ asset('storage/testimonials/riya_mehta.jpg') }}" alt="Riya Mehta" class="w-full h-full object-cover" loading="lazy">
+                            @else
+                                <img src="https://ui-avatars.com/api/?name=R+M&size=512&background=F7941D&color=fff" alt="Riya Mehta" class="w-full h-full object-cover" loading="lazy">
+                            @endif
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-mainText">Riya Mehta</h3>
+                            <p class="text-primary font-bold text-[10px] uppercase tracking-wider">Dropshipping Beginner</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="text-center group bg-surface p-5 rounded-2xl border border-gray-100 hover:shadow-lg hover:shadow-secondary/5 transition-all duration-300 hover:-translate-y-1">
-                    <div class="relative w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-[3px] border-navy shadow-inner group-hover:border-secondary transition-colors duration-300">
-                        <img src="https://ui-avatars.com/api/?name=P+G&size=512&background=D04A02&color=fff" alt="Instructor" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy">
+                {{-- Testimonial 2 - Aman Verma --}}
+                <div class="bg-surface p-6 rounded-2xl border border-gray-100 hover:shadow-lg hover:shadow-secondary/5 transition-all duration-300 hover:-translate-y-1 flex flex-col">
+                    <div class="flex gap-0.5 text-yellow-500 mb-4">
+                        @for($i=0; $i<5; $i++) <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118z"/></svg> @endfor
                     </div>
-                    <h3 class="text-base font-bold text-mainText mb-1">Priya Gupta</h3>
-                    <p class="text-secondary font-bold text-[10px] uppercase tracking-wider mb-2">UI/UX Architect</p>
-                    <p class="text-mutedText text-xs leading-relaxed">Former lead designer at top startups. Master of design systems and Figma.</p>
+                    <p class="text-mutedText text-sm leading-relaxed mb-6 flex-grow italic">"I had zero knowledge about trading and honestly thought it was risky. But the way risk management and strategy was explained here completely changed my mindset. I'm not gambling anymore — I actually understand what I'm doing."</p>
+                    <div class="flex items-center gap-3 mt-auto pt-4 border-t border-gray-100">
+                        <div class="relative w-12 h-12 rounded-full overflow-hidden border-[3px] border-navy shadow-inner shrink-0">
+                            @if(file_exists(storage_path('app/public/testimonials/aman_verma.jpg')))
+                                <img src="{{ asset('storage/testimonials/aman_verma.jpg') }}" alt="Aman Verma" class="w-full h-full object-cover" loading="lazy">
+                            @else
+                                <img src="https://ui-avatars.com/api/?name=A+V&size=512&background=D04A02&color=fff" alt="Aman Verma" class="w-full h-full object-cover" loading="lazy">
+                            @endif
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-mainText">Aman Verma</h3>
+                            <p class="text-secondary font-bold text-[10px] uppercase tracking-wider">Beginner Trader</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="text-center group bg-surface p-5 rounded-2xl border border-gray-100 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-1">
-                    <div class="relative w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-[3px] border-navy shadow-inner group-hover:border-primary transition-colors duration-300">
-                        <img src="https://ui-avatars.com/api/?name=A+S&size=512&background=F7941D&color=fff" alt="Instructor" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy">
+                {{-- Testimonial 3 - Sneha Patil --}}
+                <div class="bg-surface p-6 rounded-2xl border border-gray-100 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-1 flex flex-col">
+                    <div class="flex gap-0.5 text-yellow-500 mb-4">
+                        @for($i=0; $i<5; $i++) <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118z"/></svg> @endfor
                     </div>
-                    <h3 class="text-base font-bold text-mainText mb-1">Aman Singh</h3>
-                    <p class="text-primary font-bold text-[10px] uppercase tracking-wider mb-2">Fullstack Engineer</p>
-                    <p class="text-mutedText text-xs leading-relaxed">10+ years coding robust backends. Specializes in Laravel and enterprise patterns.</p>
-                </div>
-
-                <div class="text-center group bg-surface p-5 rounded-2xl border border-gray-100 hover:shadow-lg hover:shadow-secondary/5 transition-all duration-300 hover:-translate-y-1">
-                    <div class="relative w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-[3px] border-navy shadow-inner group-hover:border-secondary transition-colors duration-300">
-                        <img src="https://ui-avatars.com/api/?name=R+M&size=512&background=D04A02&color=fff" alt="Instructor" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy">
+                    <p class="text-mutedText text-sm leading-relaxed mb-6 flex-grow italic">"Before this, I was just posting random content with no growth. After learning content strategy and hooks, my reels started getting views consistently. One video crossed 50K and I finally started getting DMs for collaborations."</p>
+                    <div class="flex items-center gap-3 mt-auto pt-4 border-t border-gray-100">
+                        <div class="relative w-12 h-12 rounded-full overflow-hidden border-[3px] border-navy shadow-inner shrink-0">
+                            @if(file_exists(storage_path('app/public/testimonials/sneha_patil.jpg')))
+                                <img src="{{ asset('storage/testimonials/sneha_patil.jpg') }}" alt="Sneha Patil" class="w-full h-full object-cover" loading="lazy">
+                            @else
+                                <img src="https://ui-avatars.com/api/?name=S+P&size=512&background=F7941D&color=fff" alt="Sneha Patil" class="w-full h-full object-cover" loading="lazy">
+                            @endif
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-mainText">Sneha Patil</h3>
+                            <p class="text-primary font-bold text-[10px] uppercase tracking-wider">Content Creator</p>
+                        </div>
                     </div>
-                    <h3 class="text-base font-bold text-mainText mb-1">Rohit Mehra</h3>
-                    <p class="text-secondary font-bold text-[10px] uppercase tracking-wider mb-2">Agency Scaling</p>
-                    <p class="text-mutedText text-xs leading-relaxed">Scaled his digital agency to 7 figures. Now teaching the exact blueprint.</p>
                 </div>
             </div>
         </div>

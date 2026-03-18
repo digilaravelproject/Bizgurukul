@@ -75,10 +75,10 @@
         </div>
     </div>
 
-    {{-- Global Commission Rules --}}
+    {{-- Global Commission Rules (Temporarily Disabled) --}}
+    {{--
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        {{-- Left: Add Rule Form --}}
         <div class="lg:col-span-1">
             <div class="bg-surface rounded-3xl border border-primary/10 shadow-xl shadow-primary/5 overflow-hidden sticky top-6">
                 <div class="p-6 border-b border-primary/5 bg-navy/30">
@@ -90,7 +90,6 @@
                 <div class="p-6">
                     <form action="{{ route('admin.affiliate.rules.store') }}" method="POST" class="space-y-5">
                         @csrf
-                        {{-- Hidden Affiliate ID for Global --}}
                         <input type="hidden" name="affiliate_id" value="">
 
                         <div x-data="{ scope: 'all' }">
@@ -139,7 +138,6 @@
             </div>
         </div>
 
-        {{-- Right: Rules List --}}
         <div class="lg:col-span-2">
             <div class="bg-surface rounded-3xl border border-primary/10 shadow-xl shadow-primary/5 overflow-hidden">
                 <div class="p-6 border-b border-primary/5 bg-navy/30 flex justify-between items-center">
@@ -197,5 +195,6 @@
         </div>
 
     </div>
+    --}}
 </div>
 @endsection

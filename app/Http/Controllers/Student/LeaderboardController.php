@@ -16,8 +16,8 @@ class LeaderboardController extends Controller
     //  Cache Settings
     // ─────────────────────────────────────────────────────────────
 
-    /** Cache duration: 5 minutes (in seconds) */
-    private const CACHE_TTL = 300;
+    /** Cache duration: 30 seconds (near real-time) */
+    private const CACHE_TTL = 30;
 
     /** Valid filter values accepted from the frontend */
     private const ALLOWED_FILTERS = ['today', 'last_7_days', 'last_30_days', 'this_year', 'all_time'];

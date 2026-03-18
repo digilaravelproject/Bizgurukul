@@ -37,6 +37,20 @@
         transform: translateY(-4px);
         box-shadow: 0 15px 40px -10px rgba(var(--color-primary) / 0.25);
     }
+
+    /* Prevent accidental zoom on chart area on mobile */
+    #earningsChart {
+        touch-action: pan-y;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+    #earningsChart .apexcharts-canvas {
+        touch-action: pan-y !important;
+    }
+    /* Ensure chart SVG doesn't overflow on mobile */
+    #earningsChart .apexcharts-svg {
+        overflow: hidden;
+    }
 </style>
 
 <div class="space-y-4 md:space-y-8 pb-12 font-sans text-mainText" x-data="dashboardHandler()">
@@ -102,7 +116,7 @@
                     </h3>
                 </div>
             </div>
-            <div id="earningsChart" class="w-full h-[300px] relative z-10"></div>
+            <div id="earningsChart" class="w-full h-[250px] md:h-[300px] relative z-10"></div>
         </div>
 
         {{-- Reward Gauge (Integrated) --}}
@@ -411,49 +425,105 @@
 <script>
     function dashboardHandler() {
         return {
+            chartInstance: null,
+            resizeTimer: null,
+
             init() {
                 this.renderEarningsChart();
-                // Category Chart removed/replaced by Link Generator
+
+                // Handle window resize - redraw chart with correct dimensions
+                window.addEventListener('resize', () => {
+                    clearTimeout(this.resizeTimer);
+                    this.resizeTimer = setTimeout(() => {
+                        if (this.chartInstance) {
+                            this.chartInstance.destroy();
+                            this.renderEarningsChart();
+                        }
+                    }, 300);
+                });
             },
+
             renderEarningsChart() {
                 const isMobile = window.innerWidth < 768;
+                const chartEl = document.querySelector("#earningsChart");
+                if (!chartEl) return;
+
                 const options = {
                     series: [{ name: 'Earnings', data: @json($graphData['data']) }],
                     chart: {
                         type: 'area',
-                        height: isMobile ? 250 : 350,
+                        height: isMobile ? 220 : 300,
+                        width: '100%',
                         toolbar: { show: false },
                         fontFamily: 'var(--font-main)',
-                        background: 'transparent'
+                        background: 'transparent',
+                        zoom: { enabled: false },
+                        selection: { enabled: false },
+                        sparkline: { enabled: false },
+                        events: {
+                            mounted: function(chartContext, config) {
+                                // Reset any zoom state on mount
+                                chartContext.resetSeries();
+                            }
+                        }
+                    },
+                    states: {
+                        active: { filter: { type: 'none' } }
                     },
                     colors: ['rgb(var(--color-primary))'],
                     fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.0, stops: [0, 100] } },
                     dataLabels: { enabled: false },
-                    stroke: { curve: 'smooth', width: isMobile ? 2 : 4 },
+                    stroke: { curve: 'smooth', width: isMobile ? 2 : 3 },
                     xaxis: {
                         categories: @json($graphData['labels']),
                         labels: {
                             show: !isMobile,
-                            style: { colors: 'rgb(var(--color-text-muted))', fontSize: '11px', fontWeight: 600 }
+                            style: { colors: 'rgb(var(--color-text-muted))', fontSize: '11px', fontWeight: 600 },
+                            rotate: -45,
+                            rotateAlways: false,
+                            trim: true,
+                            maxHeight: 60
                         },
                         axisBorder: { show: false },
                         axisTicks: { show: false }
                     },
                     yaxis: {
                         show: !isMobile,
-                        labels: { style: { colors: 'rgb(var(--color-text-muted))', fontWeight: 600 }, formatter: (val) => "₹" + val.toFixed(0) }
+                        labels: {
+                            style: { colors: 'rgb(var(--color-text-muted))', fontWeight: 600 },
+                            formatter: (val) => "₹" + val.toFixed(0)
+                        }
                     },
                     grid: {
                         borderColor: 'rgba(var(--color-text-muted), 0.1)',
                         strokeDashArray: 4,
                         padding: {
-                            left: isMobile ? -10 : 0,
-                            right: isMobile ? -10 : 0
+                            left: isMobile ? 0 : 10,
+                            right: isMobile ? 5 : 10,
+                            top: 0,
+                            bottom: 0
                         }
                     },
-                    tooltip: { theme: 'light' }
+                    tooltip: {
+                        theme: 'light',
+                        x: { show: true },
+                        y: { formatter: (val) => "₹" + val.toFixed(0) },
+                        marker: { show: true }
+                    },
+                    responsive: [{
+                        breakpoint: 480,
+                        options: {
+                            chart: { height: 200 },
+                            stroke: { width: 2 },
+                            grid: {
+                                padding: { left: 0, right: 0 }
+                            }
+                        }
+                    }]
                 };
-                new ApexCharts(document.querySelector("#earningsChart"), options).render();
+
+                this.chartInstance = new ApexCharts(chartEl, options);
+                this.chartInstance.render();
             },
 
         }
