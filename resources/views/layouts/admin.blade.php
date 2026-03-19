@@ -81,7 +81,7 @@
                             <div class="px-4 py-3 border-b border-navy">
                                 <p class="text-xs font-bold text-mainText">{{ Auth::user()->email ?? 'admin@skillspehle.com' }}</p>
                             </div>
-                            {{-- <a href="#" class="block px-4 py-2 text-xs text-mutedText hover:text-primary hover:bg-navy font-bold">Settings</a> --}}
+                            <a href="{{ route('admin.profile.edit') }}" class="block px-4 py-2 text-xs text-mutedText hover:text-primary hover:bg-navy font-bold">Account Settings</a>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="w-full text-left px-4 py-2 text-xs text-secondary hover:bg-secondary/5 font-bold">Sign Out</button>

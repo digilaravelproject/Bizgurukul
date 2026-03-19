@@ -146,21 +146,21 @@ class DashboardService
             $totalAmount = (float) $paymentQuery->sum('amount');
             if ($totalAmount <= 0) return 0.0;
 
-            // 2. Deduct GST (18% inclusive)
-            // Revenue After GST = Total / 1.18
-            $afterGst = $totalAmount / 1.18;
+            // 2. Deduct GST (User formula: 18% of A)
+            $gst = $totalAmount * 0.18;
 
-            // 3. Deduct Gateway Fee (2% of TOTAL amount)
+            // 3. Deduct Gateway Fee (User formula: 2% of A)
             $gatewayFee = $totalAmount * 0.02;
 
-            // 4. Deduct Commissions (Sum of all commissions generated in this period)
+            // 4. Deduct Commissions (Actual Payout = Commission - 2% TDS)
             $commissionQuery = AffiliateCommission::query();
             if ($startDate) {
                 $commissionQuery->where('created_at', '>=', $startDate);
             }
             $totalCommission = (float) $commissionQuery->sum('amount');
+            $actualCommissionPayout = $totalCommission * 0.98; // C - 2% of C
 
-            $netProfit = $afterGst - $gatewayFee - $totalCommission;
+            $netProfit = $totalAmount - $gst - $gatewayFee - $actualCommissionPayout;
 
             return (float) round(max(0, $netProfit), 2);
 

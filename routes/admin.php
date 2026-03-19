@@ -34,6 +34,11 @@ Route::middleware(['auth'])
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard/stats', [DashboardController::class, 'stats'])->name('dashboard.stats');
 
+        // Admin Profile Management
+        Route::get('/profile', [\App\Http\Controllers\Admin\ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile', [\App\Http\Controllers\Admin\ProfileController::class, 'update'])->name('profile.update');
+        Route::put('/profile/password', [\App\Http\Controllers\Admin\ProfileController::class, 'updatePassword'])->name('profile.password.update');
+
         // Bunny thumbnail proxy — accessible to any authenticated admin (just serves an image)
         Route::get('/courses/lesson/{id}/thumbnail', [CourseController::class, 'lessonThumbnail'])->name('courses.lesson.thumbnail');
 
