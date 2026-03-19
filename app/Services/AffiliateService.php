@@ -71,7 +71,7 @@ class AffiliateService
                 $this->affiliateRepo->saveCommission($commission);
 
                 // Bust leaderboard cache so fresh data loads on next request
-                LeaderboardController::bustCache(null, $user->id);
+                // LeaderboardController::bustCache(null, $user->id);
 
                 Log::info("Payout processed successfully for Commission ID: {$commissionId}");
                 return true;
@@ -236,9 +236,9 @@ class AffiliateService
 public function getLeaderboard($filter = 'last_30_days', $limit = 10)
     {
         try {
-            $query = AffiliateCommission::where('status', 'paid')
+            $query = AffiliateCommission::query()
                 ->whereHas('affiliate', function ($q) {
-                    $q->where('hide_from_leaderboard', false);
+                    $q->where('hide_from_leaderboard', '!=', 1);
                 })
                 ->selectRaw('affiliate_id, SUM(amount) as total_earnings')
                 ->groupBy('affiliate_id')
@@ -270,7 +270,7 @@ public function getLeaderboard($filter = 'last_30_days', $limit = 10)
     public function getUserRank(User $user, $filter = 'last_30_days')
     {
          try {
-            $userEarningsQuery = $user->commissions()->where('status', 'paid');
+            $userEarningsQuery = $user->commissions();
 
             if ($filter === 'today') {
                 $userEarningsQuery->whereDate('created_at', Carbon::today());
@@ -286,9 +286,9 @@ public function getLeaderboard($filter = 'last_30_days', $limit = 10)
             $userEarnings = (float) $userEarningsQuery->clone()->sum('amount');
             $userSaleCount = $userEarningsQuery->clone()->count();
 
-            $query = AffiliateCommission::where('status', 'paid')
+            $query = AffiliateCommission::query()
                 ->whereHas('affiliate', function ($q) {
-                    $q->where('hide_from_leaderboard', false);
+                    $q->where('hide_from_leaderboard', '!=', 1);
                 })
                 ->selectRaw('affiliate_id, SUM(amount) as total_earnings')
                 ->groupBy('affiliate_id');

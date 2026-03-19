@@ -16,7 +16,7 @@ class EmailService
     public static function applyMailConfig(bool $force = false): void
     {
         $currentDefault = config('mail.default');
-        
+
         if (!$force && $currentDefault === 'log') {
             return;
         }
@@ -32,8 +32,8 @@ class EmailService
                 return;
             }
 
-            Log::debug("EmailService: Applying DB mail config. Host: {$host}");
-            
+            // Log::debug("EmailService: Applying DB mail config. Host: {$host}");
+
             Config::set('mail.mailers.smtp.host', $host);
             Config::set('mail.mailers.smtp.port', Setting::get('mail_port', 587));
             Config::set('mail.mailers.smtp.username', Setting::get('mail_username'));

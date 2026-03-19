@@ -274,6 +274,7 @@
             loading: true,
             topThree: [],
             restOfTopTen: [],
+            debounceTimer: null,
             userData: {
                 name: 'Loading...',
                 rank: '-',
@@ -296,7 +297,12 @@
             setFilter(newFilter) {
                 if (this.filter === newFilter) return;
                 this.filter = newFilter;
-                this.fetchData();
+                
+                // Debounced fetch
+                if (this.debounceTimer) clearTimeout(this.debounceTimer);
+                this.debounceTimer = setTimeout(() => {
+                    this.fetchData();
+                }, 300);
             },
 
             getFilterLabel() {
@@ -305,7 +311,6 @@
             },
 
             fetchData() {
-                // Show loading spinner and fetch fresh data
                 this.loading = true;
 
                 fetch(`{{ route('student.leaderboard.data') }}?filter=${this.filter}`)
@@ -330,9 +335,9 @@
 
                 this.userData = {
                     name: data.user_name,
-                    rank: data.user_rank,
-                    earnings: data.user_earnings,
-                    sale_count: data.user_sale_count,
+                    rank: data.user_rank || '-',
+                    earnings: data.user_earnings || 0,
+                    sale_count: data.user_sale_count || 0,
                     profile_picture: data.user_profile_picture
                 };
             },
