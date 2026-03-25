@@ -304,7 +304,11 @@ class RegistrationFlowController extends Controller
                 'receipt'         => 'rcpt_' . $lead->id . '_' . time(),
                 'amount'          => round($pricing['totalAmount'] * 100), // Paise
                 'currency'        => 'INR',
-                'payment_capture' => 1
+                'payment_capture' => 1,
+                'notes'           => [
+                    'lead_id'     => $lead->id,
+                    'coupon_code' => $request->coupon_code,
+                ]
             ];
 
             $razorpayOrder = $api->order->create($orderData);

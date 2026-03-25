@@ -28,13 +28,15 @@ class RegistrationService
     public function verifyAndCompleteRegistration(array $data)
     {
         return DB::transaction(function () use ($data) {
-            // 1. Verify Signature
-            $attributes = [
-                'razorpay_order_id' => $data['razorpay_order_id'],
-                'razorpay_payment_id' => $data['razorpay_payment_id'],
-                'razorpay_signature' => $data['razorpay_signature']
-            ];
-            $this->api->utility->verifyPaymentSignature($attributes);
+            // 1. Verify Signature (Bypass if Webhook)
+            if (empty($data['is_webhook'])) {
+                $attributes = [
+                    'razorpay_order_id' => $data['razorpay_order_id'],
+                    'razorpay_payment_id' => $data['razorpay_payment_id'],
+                    'razorpay_signature' => $data['razorpay_signature']
+                ];
+                $this->api->utility->verifyPaymentSignature($attributes);
+            }
 
             // 2. Retrieve Data with Lock
             $lead = Lead::where('id', $data['lead_id'])->lockForUpdate()->firstOrFail();

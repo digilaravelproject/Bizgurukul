@@ -37,6 +37,9 @@ Route::post('payment/initiate', [\App\Http\Controllers\Auth\RegistrationFlowCont
 Route::post('payment/verify', [\App\Http\Controllers\Auth\RegistrationFlowController::class, 'verifyPayment'])
     ->name('payment.verify'); // URI: domain.com/payment/verify
 
+Route::post('webhook/razorpay', [\App\Http\Controllers\Webhook\RazorpayWebhookController::class, 'handleWebhook'])
+    ->name('webhook.razorpay'); // Webhook endpoint
+
 // 4. Common Profile Routes (For all Auth users: Admin & Student)
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
