@@ -22,13 +22,15 @@ class WalletController extends Controller
         $this->walletRepo = $walletRepo;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
+        $perPage = $request->input('per_page', 15);
+
         $dashboardData = $this->walletService->getWalletDashboardData($user->id);
 
-        $commissions = $this->walletRepo->getEarnedCommissions($user->id, 10);
-        $withdrawals = $this->walletRepo->getWithdrawalRequests($user->id, 10);
+        $commissions = $this->walletRepo->getEarnedCommissions($user->id, $perPage);
+        $withdrawals = $this->walletRepo->getWithdrawalRequests($user->id, $perPage);
 
         return view('student.wallet.index', compact('dashboardData', 'commissions', 'withdrawals'));
     }

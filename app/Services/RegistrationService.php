@@ -31,58 +31,73 @@ class RegistrationService
      */
     public function verifyAndCompleteRegistration(array $data)
     {
-        return DB::transaction(function () use ($data) {
-            // 1. Verify Signature (Bypass if Webhook)
-            if (empty($data['is_webhook'])) {
-                $attributes = [
-                    'razorpay_order_id' => $data['razorpay_order_id'],
-                    'razorpay_payment_id' => $data['razorpay_payment_id'],
-                    'razorpay_signature' => $data['razorpay_signature']
-                ];
-                $this->api->utility->verifyPaymentSignature($attributes);
-            }
+        try {
+            return DB::transaction(function () use ($data) {
+                // 1. Verify Signature (Bypass if Webhook)
+                if (empty($data['is_webhook'])) {
+                    $attributes = [
+                        'razorpay_order_id' => $data['razorpay_order_id'],
+                        'razorpay_payment_id' => $data['razorpay_payment_id'],
+                        'razorpay_signature' => $data['razorpay_signature']
+                    ];
+                    $this->api->utility->verifyPaymentSignature($attributes);
+                }
 
-            // 2. Retrieve Data with Lock
-            $lead = Lead::where('id', $data['lead_id'])->lockForUpdate()->firstOrFail();
-            $bundle = Bundle::findOrFail($lead->product_preference['bundle_id']);
+                // 2. Retrieve Data with Lock
+                $lead = Lead::where('id', $data['lead_id'])->lockForUpdate()->firstOrFail();
 
-            // 3. Resolve Referrer
-            $referrer = $this->resolveReferrer($lead);
+                $bundleId = $lead->product_preference['bundle_id'] ?? null;
+                if (!$bundleId) {
+                    throw new Exception("Product preference (bundle_id) is missing for Lead ID: {$lead->id}");
+                }
 
-            // 4. Create User
-            $user = $this->createUser($lead, $referrer);
+                $bundle = Bundle::findOrFail($bundleId);
 
-            // 5. Finalize Pricing and Coupons
-            $pricing = $this->calculatePricing($bundle, $data['coupon_code'] ?? null, (bool) $referrer);
-            $coupon = $this->handleCouponUsage($data['coupon_code'] ?? null);
+                // 3. Resolve Referrer
+                $referrer = $this->resolveReferrer($lead);
 
-            // 6. Record Payment
-            $payment = $this->recordPayment($user, $bundle, $data, $pricing, $coupon);
+                // 4. Create User
+                $user = $this->createUser($lead, $referrer);
 
-            // 7. Process Affiliate Commission
-            $this->processCommission($referrer, $user, $bundle);
+                // 5. Finalize Pricing and Coupons
+                $pricing = $this->calculatePricing($bundle, $data['coupon_code'] ?? null, (bool) $referrer);
+                $coupon = $this->handleCouponUsage($data['coupon_code'] ?? null);
 
-            // 8. Cleanup Lead
-            $lead->delete();
+                // 6. Record Payment
+                $payment = $this->recordPayment($user, $bundle, $data, $pricing, $coupon);
 
-            // 9. Send Notifications
-            try {
-                // To User
-                Mail::to($user->email)->send(new WelcomeMail($user));
+                // 7. Process Affiliate Commission
+                $this->processCommission($referrer, $user, $bundle);
 
-                // To Admin
-                $adminEmail = config('mail.from.address'); // Or a specific admin setting
-                Mail::to($adminEmail)->send(new AdminNotificationMail(
-                    'New Student Registration',
-                    "A new student {$user->name} ({$user->email}) has successfully registered and purchased the bundle: {$bundle->title}."
-                ));
-            } catch (Exception $e) {
-                // Log error but don't fail registration
-                Log::error("Registration Email Failed: " . $e->getMessage());
-            }
+                // 8. Cleanup Lead
+                $lead->delete();
 
-            return $user;
-        });
+                // 9. Send Notifications
+                try {
+                    // To User
+                    Mail::to($user->email)->send(new WelcomeMail($user));
+
+                    // To Admin
+                    $adminEmail = \App\Services\EmailService::adminEmail() ?: config('mail.from.address');
+                    Mail::to($adminEmail)->send(new AdminNotificationMail(
+                        'New Student Registration',
+                        "A new student {$user->name} ({$user->email}) has successfully registered and purchased the bundle: {$bundle->title}."
+                    ));
+                } catch (Exception $e) {
+                    // Log error but don't fail registration
+                    Log::error("Registration Email Failed: " . $e->getMessage());
+                }
+
+                return $user;
+            });
+        } catch (Exception $e) {
+            Log::error('Registration Verification Failed', [
+                'error' => $e->getMessage(),
+                'data' => $data,
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -182,8 +197,11 @@ class RegistrationService
 
     protected function createUser(Lead $lead, ?User $referrer)
     {
+        // Sanitize name for database safety (remove 4-byte UTF-8 chars like emojis if DB charset is utf8)
+        $sanitizedName = preg_replace('/[^\p{L}\p{N}\s\p{P}]/u', '', $lead->name);
+
         $user = User::create([
-            'name' => $lead->name,
+            'name' => trim($sanitizedName) ?: 'User',
             'email' => $lead->email,
             'mobile' => $lead->mobile,
             'password' => $lead->password,

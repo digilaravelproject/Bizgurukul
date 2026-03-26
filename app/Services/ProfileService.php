@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\KycDetail;
 use App\Models\BankDetail;
-use App\Http\Controllers\Student\LeaderboardController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
@@ -27,11 +26,9 @@ class ProfileService
             'address' => $data['address'] ?? $user->address,
         ];
 
+
         // Only allow updating non-locked fields
         $user->update($updateData);
-
-        // Bust leaderboard cache to update name/changes
-        LeaderboardController::bustCache(null, $user->id);
 
         return $user;
     }
@@ -48,13 +45,10 @@ class ProfileService
 
             // Store new photo
             $path = $file->store('profile_photos', 'public');
-            
+
             $user->update([
                 'profile_photo_url' => $path
             ]);
-
-            // Bust leaderboard cache to update photo
-            LeaderboardController::bustCache(null, $user->id);
 
             return $user;
         }
@@ -188,7 +182,7 @@ class ProfileService
     public function getBankRequests($status = 'pending')
     {
         return \App\Models\BankUpdateRequest::with('user')
-            ->when($status !== 'all', function($q) use ($status) {
+            ->when($status !== 'all', function ($q) use ($status) {
                 return $q->where('status', $status);
             })->latest()->paginate(15);
     }

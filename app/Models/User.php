@@ -99,7 +99,10 @@ class User extends Authenticatable
 
     private static function generateUniqueReferralCode($name): string
     {
-        $cleanName = strtoupper(str_replace(' ', '', $name));
+        $cleanName = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $name));
+        if (empty($cleanName)) {
+            $cleanName = 'USER';
+        }
         $prefixLength = strlen($cleanName) > 4 ? 5 : strlen($cleanName);
         $namePart = substr($cleanName, 0, $prefixLength);
         $randomLength = 8 - strlen($namePart);

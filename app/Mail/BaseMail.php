@@ -4,13 +4,14 @@ namespace App\Mail;
 
 use App\Services\EmailService;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
 /**
  * Base mailable that applies dynamic SMTP config before building.
  */
-abstract class BaseMail extends Mailable
+abstract class BaseMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

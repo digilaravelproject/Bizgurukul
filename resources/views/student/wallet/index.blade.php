@@ -52,15 +52,26 @@
     </div>
 
 
-    {{-- TABS --}}
+    {{-- TABS & PER PAGE --}}
     <div x-data="{ tab: 'history' }">
-        <div class="flex border-b border-primary/10 mb-6 gap-6 overflow-x-auto no-scrollbar">
-            <button @click="tab = 'history'" :class="tab === 'history' ? 'border-primary text-primary' : 'border-transparent text-mutedText hover:text-mainText'" class="pb-3 border-b-2 font-black uppercase text-xs md:text-sm tracking-widest whitespace-nowrap transition-colors">
-                Commission History
-            </button>
-            <button @click="tab = 'withdrawals'" :class="tab === 'withdrawals' ? 'border-primary text-primary' : 'border-transparent text-mutedText hover:text-mainText'" class="pb-3 border-b-2 font-black uppercase text-xs md:text-sm tracking-widest whitespace-nowrap transition-colors">
-                Withdrawal Requests
-            </button>
+        <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-primary/10 mb-6 gap-4 overflow-x-auto no-scrollbar">
+            <div class="flex gap-6">
+                <button @click="tab = 'history'" :class="tab === 'history' ? 'border-primary text-primary' : 'border-transparent text-mutedText hover:text-mainText'" class="pb-3 border-b-2 font-black uppercase text-xs md:text-sm tracking-widest whitespace-nowrap transition-colors">
+                    Commission History
+                </button>
+                <button @click="tab = 'withdrawals'" :class="tab === 'withdrawals' ? 'border-primary text-primary' : 'border-transparent text-mutedText hover:text-mainText'" class="pb-3 border-b-2 font-black uppercase text-xs md:text-sm tracking-widest whitespace-nowrap transition-colors">
+                    Withdrawal Requests
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2 mb-3 md:mb-0 pb-2 md:pb-0">
+                <label class="text-[10px] font-black uppercase tracking-widest text-mutedText whitespace-nowrap">Show:</label>
+                <select onchange="updatePerPage(this.value)" class="bg-surface border border-primary/20 text-mainText text-xs font-bold rounded-lg focus:ring-primary focus:border-primary block p-1.5 px-3 cursor-pointer outline-none hover:border-primary/50 transition-colors">
+                    @foreach([15, 50, 100, 150, 200] as $count)
+                        <option value="{{ $count }}" {{ request('per_page', 15) == $count ? 'selected' : '' }}>{{ $count }}</option>
+                    @endforeach
+                </select>
+            </div>
         </div>
 
         {{-- TAB: COMMISSION HISTORY --}}
@@ -142,7 +153,7 @@
                     </form>
                 </div>
                 <div class="px-6 py-4 border-t border-primary/10 bg-navy/30">
-                    {{ $commissions->links() }}
+                    {{ $commissions->appends(['per_page' => request('per_page', 15)])->links() }}
                 </div>
             </div>
         </div>
@@ -203,7 +214,7 @@
                     </table>
                 </div>
                 <div class="px-6 py-4 border-t border-primary/10 bg-navy/30">
-                    {{ $withdrawals->links() }}
+                    {{ $withdrawals->appends(['per_page' => request('per_page', 15)])->links() }}
                 </div>
              </div>
         </div>
@@ -279,6 +290,13 @@
             return;
         }
         document.getElementById('modalWithdrawForm').submit();
+    }
+
+    function updatePerPage(value) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('per_page', value);
+        url.searchParams.delete('page'); // Reset to page 1 when changing items per page
+        window.location.href = url.toString();
     }
 </script>
 @endpush

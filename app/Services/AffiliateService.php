@@ -8,7 +8,7 @@ use App\Models\AffiliateCommission;
 use App\Models\User;
 use Carbon\Carbon;
 use Exception;
-use App\Http\Controllers\Student\LeaderboardController;
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -57,12 +57,12 @@ class AffiliateService
 
                 // Record the wallet transaction
                 $this->affiliateRepo->createWalletTransaction([
-                    'user_id'        => $user->id,
-                    'amount'         => $amount,
-                    'type'           => 'credit',
-                    'balance_after'  => $newBalance,
-                    'description'    => "Commission for referral #{$commission->id}",
-                    'reference_id'   => $commission->id,
+                    'user_id' => $user->id,
+                    'amount' => $amount,
+                    'type' => 'credit',
+                    'balance_after' => $newBalance,
+                    'description' => "Commission for referral #{$commission->id}",
+                    'reference_id' => $commission->id,
                     'reference_type' => AffiliateCommission::class,
                 ]);
 
@@ -70,8 +70,6 @@ class AffiliateService
                 $commission->status = 'paid';
                 $this->affiliateRepo->saveCommission($commission);
 
-                // Bust leaderboard cache so fresh data loads on next request
-                // LeaderboardController::bustCache(null, $user->id);
 
                 Log::info("Payout processed successfully for Commission ID: {$commissionId}");
                 return true;
@@ -88,10 +86,10 @@ class AffiliateService
     {
         try {
             return [
-                'today'        => $user->commissions()->whereDate('created_at', Carbon::today())->sum('amount'),
-                'last_7_days'  => $user->commissions()->where('created_at', '>=', Carbon::now()->subDays(7))->sum('amount'),
-                'last_30_days' => $user->commissions()->where('created_at', '>=', Carbon::now()->subDays(30))->sum('amount'),
-                'all_time'     => $user->commissions()->sum('amount'),
+                'today' => $user->commissions()->whereDate('created_at', Carbon::today())->sum('amount'),
+                'last_7_days' => $user->commissions()->where('created_at', '>=', Carbon::today()->subDays(6))->sum('amount'),
+                'last_30_days' => $user->commissions()->where('created_at', '>=', Carbon::today()->subDays(29))->sum('amount'),
+                'all_time' => $user->commissions()->sum('amount'),
             ];
         } catch (Exception $e) {
             Log::error("AffiliateService Error [getEarningsStats]: " . $e->getMessage(), ['user_id' => $user->id]);
@@ -105,11 +103,11 @@ class AffiliateService
         try {
             return [
                 'pending_earnings' => $user->commissions()->where('status', 'pending')->sum('amount'),
-                'total_payouts'    => $user->commissions()->where('status', 'paid')->sum('amount'),
-                'wallet_balance'   => $user->wallet_balance,
-                'total_withdrawn'  => \App\Models\WithdrawalRequest::where('user_id', $user->id)
-                                        ->where('status', 'approved')
-                                        ->sum('amount'),
+                'total_payouts' => $user->commissions()->where('status', 'paid')->sum('amount'),
+                'wallet_balance' => $user->wallet_balance,
+                'total_withdrawn' => \App\Models\WithdrawalRequest::where('user_id', $user->id)
+                    ->where('status', 'approved')
+                    ->sum('amount'),
             ];
         } catch (Exception $e) {
             Log::error("AffiliateService Error [getSecondaryStats]: " . $e->getMessage(), ['user_id' => $user->id]);
@@ -196,7 +194,7 @@ class AffiliateService
                 // Generate Unique Slug
                 $slug = 'ref_' . Str::random(8); // Consider moving slug generation strategy to a helper or config
                 while ($this->affiliateRepo->countLinksBySlug($slug) > 0) {
-                     $slug = 'ref_' . Str::random(8);
+                    $slug = 'ref_' . Str::random(8);
                 }
 
                 $linkData = [
@@ -237,7 +235,7 @@ class AffiliateService
         }
     }
 
-public function getLeaderboard($filter = 'last_30_days', $limit = 10)
+    public function getLeaderboard($filter = 'last_30_days', $limit = 10)
     {
         try {
             $query = AffiliateCommission::query()
@@ -246,9 +244,11 @@ public function getLeaderboard($filter = 'last_30_days', $limit = 10)
                 })
                 ->selectRaw('affiliate_id, SUM(amount) as total_earnings')
                 ->groupBy('affiliate_id')
-                ->with(['affiliate' => function ($query) {
-                    $query->select('id', 'name', 'profile_picture', 'profile_photo_url');
-                }]);
+                ->with([
+                    'affiliate' => function ($query) {
+                        $query->select('id', 'name', 'profile_picture', 'profile_photo_url');
+                    }
+                ]);
 
             if ($filter === 'today') {
                 $query->whereDate('created_at', Carbon::today());
@@ -263,8 +263,8 @@ public function getLeaderboard($filter = 'last_30_days', $limit = 10)
             } // 'all_time' no date filter
 
             return $query->orderByDesc('total_earnings')
-                         ->take($limit)
-                         ->get();
+                ->take($limit)
+                ->get();
         } catch (Exception $e) {
             Log::error("AffiliateService Error [getLeaderboard]: " . $e->getMessage());
             return collect([]);
@@ -273,7 +273,7 @@ public function getLeaderboard($filter = 'last_30_days', $limit = 10)
 
     public function getUserRank(User $user, $filter = 'last_30_days')
     {
-         try {
+        try {
             $userEarningsQuery = $user->commissions();
 
             if ($filter === 'today') {
@@ -321,9 +321,9 @@ public function getLeaderboard($filter = 'last_30_days', $limit = 10)
                 'sale_count' => $userSaleCount
             ];
 
-         } catch (Exception $e) {
+        } catch (Exception $e) {
             Log::error("AffiliateService Error [getUserRank]: " . $e->getMessage(), ['user_id' => $user->id]);
             return ['rank' => 0, 'earnings' => 0, 'sale_count' => 0];
-         }
+        }
     }
 }

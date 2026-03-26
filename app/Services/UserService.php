@@ -87,9 +87,6 @@ class UserService
                     $user->syncRoles([$data['role']]);
                 }
 
-                // Bust leaderboard cache so changes (like Hide from Leaderboard) reflect immediately
-                // LeaderboardController::bustCache(null, $user->id);
-
                 return $user;
 
             } catch (Exception $e) {
