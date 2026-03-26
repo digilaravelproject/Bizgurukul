@@ -253,9 +253,9 @@ class AffiliateService
             if ($filter === 'today') {
                 $query->whereDate('created_at', Carbon::today());
             } elseif ($filter === 'last_7_days') {
-                $query->where('created_at', '>=', Carbon::now()->subDays(7));
+                $query->where('created_at', '>=', Carbon::today()->subDays(6));
             } elseif ($filter === 'last_30_days') {
-                $query->where('created_at', '>=', Carbon::now()->subDays(30));
+                $query->where('created_at', '>=', Carbon::today()->subDays(29));
             } elseif ($filter === 'this_year') {
                 // YEARLY FILTER ADDED HERE
                 $query->where('created_at', '>=', Carbon::now()->startOfYear());
@@ -279,9 +279,9 @@ class AffiliateService
             if ($filter === 'today') {
                 $userEarningsQuery->whereDate('created_at', Carbon::today());
             } elseif ($filter === 'last_7_days') {
-                $userEarningsQuery->where('created_at', '>=', Carbon::now()->subDays(7));
+                $userEarningsQuery->where('created_at', '>=', Carbon::today()->subDays(6));
             } elseif ($filter === 'last_30_days') {
-                $userEarningsQuery->where('created_at', '>=', Carbon::now()->subDays(30));
+                $userEarningsQuery->where('created_at', '>=', Carbon::today()->subDays(29));
             } elseif ($filter === 'this_year') {
                 // YEARLY FILTER ADDED HERE
                 $userEarningsQuery->where('created_at', '>=', Carbon::now()->startOfYear());
@@ -300,9 +300,9 @@ class AffiliateService
             if ($filter === 'today') {
                 $query->whereDate('created_at', Carbon::today());
             } elseif ($filter === 'last_7_days') {
-                $query->where('created_at', '>=', Carbon::now()->subDays(7));
+                $query->where('created_at', '>=', Carbon::today()->subDays(6));
             } elseif ($filter === 'last_30_days') {
-                $query->where('created_at', '>=', Carbon::now()->subDays(30));
+                $query->where('created_at', '>=', Carbon::today()->subDays(29));
             } elseif ($filter === 'this_year') {
                 // YEARLY FILTER ADDED HERE
                 $query->where('created_at', '>=', Carbon::now()->startOfYear());

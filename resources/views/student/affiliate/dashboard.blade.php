@@ -7,11 +7,11 @@
     {{-- Header --}}
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-fade-in-down">
         <div>
-            <h1 class="text-3xl md:text-4xl font-black tracking-tight text-mainText">Partner Dashboard</h1>
+            <h1 class="text-3xl md:text-4xl font-black tracking-tight text-mainText">Welcome, {{ auth()->user()->name }}</h1>
             <p class="text-mutedText text-base font-medium mt-2">Track your referrals and earnings in real-time.</p>
         </div>
         <div class="flex gap-3">
-             <a href="{{ route('student.affiliate.leads') }}" class="px-6 py-3 rounded-xl border border-primary/20 text-primary font-bold hover:bg-primary/5 transition-all">
+            <a href="{{ route('student.affiliate.leads') }}" class="px-6 py-3 rounded-xl border border-primary/20 text-primary font-bold hover:bg-primary/5 transition-all">
                 My Leads
             </a>
             <a href="{{ route('student.affiliate.commission_structure') }}" class="px-6 py-3 rounded-xl brand-gradient text-customWhite font-bold shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-1 transition-all">
