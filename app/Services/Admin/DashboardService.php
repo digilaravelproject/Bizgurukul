@@ -111,22 +111,18 @@ class DashboardService
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  Profit Calculation (Exact — GST 18% inclusive + Affiliate Comm + 2% GW)
+    //  Profit Calculation (GST-inclusive ÷ 1.18 + Affiliate Comm + 2% GW)
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
      * Calculate net admin profit for a given period.
      *
-     * Formula (per rupee collected, GST inclusive at 18%):
-     *   GST           = amount × 18 / 118
-     *   After GST     = amount − GST
-     *   After Comm    = After GST − affiliate_commissions
-     *   Gateway (2%)  = amount × 2 / 100
-     *   Net Profit    = After Comm − Gateway
-     *
-     * Commission: SUM of all affiliate_commissions (pending + paid) in the window
-     * — commission is earned when sale happens, so we count all regardless of
-     *   payout status.
+     * Formula:
+     *   Base Price    = Price ÷ 1.18        (extract base from GST-inclusive price)
+     *   Gateway Fee   = Price × 0.02        (2% payment gateway fee)
+     *   Commission    = SUM of affiliate_commissions in the window
+     *                   (DB already stores effective amount: differential for upgrades)
+     *   Net Profit    = Base Price − Commission − Gateway Fee
      */
     private function calculateProfit(string $period): float
     {
@@ -146,26 +142,26 @@ class DashboardService
             $totalAmount = (float) $paymentQuery->sum('amount');
             if ($totalAmount <= 0) return 0.0;
 
-            // 2. Deduct GST (User formula: 18% of A)
-            $gst = $totalAmount * 0.18;
+            // 2. Extract base price (remove 18% GST from inclusive price)
+            $basePrice = $totalAmount / 1.18;
 
-            // 3. Deduct Gateway Fee (User formula: 2% of A)
+            // 3. Gateway Fee (2% of total collected amount)
             $gatewayFee = $totalAmount * 0.02;
 
-            // 4. Deduct Commissions (Actual Payout = Commission - 2% TDS)
+            // 4. Commission (already effective in DB: differential for upgrades, full for new)
             $commissionQuery = AffiliateCommission::query();
             if ($startDate) {
                 $commissionQuery->where('created_at', '>=', $startDate);
             }
             $totalCommission = (float) $commissionQuery->sum('amount');
-            $actualCommissionPayout = $totalCommission * 0.98; // C - 2% of C
 
-            $netProfit = $totalAmount - $gst - $gatewayFee - $actualCommissionPayout;
+            // Net Profit = Base Price − Commission − Gateway Fee
+            $netProfit = $basePrice - $totalCommission - $gatewayFee;
 
             return (float) round(max(0, $netProfit), 2);
 
         } catch (\Exception $e) {
-            Log::error('DashboardService@calculateProfit Optimized: ' . $e->getMessage(), ['period' => $period]);
+            Log::error('DashboardService@calculateProfit: ' . $e->getMessage(), ['period' => $period]);
             return 0.0;
         }
     }

@@ -166,14 +166,22 @@ class StudentController extends Controller
     }
 
     /**
-     * Display the resources page with tabs for Product Knowledge and Beginners Guide.
+     * Display the resources page with tabs for Product Knowledge, Beginners Guide, and Dynamic Categories.
      */
     public function resources(Request $request)
     {
         $productKnowledge = \App\Models\CourseResource::orderBy('created_at', 'desc')->get();
         $beginnersGuide = \App\Models\BeginnerGuideVideo::orderBy('category')->orderBy('order_column')->get();
+        
+        // Fetch dynamic categories with their resources
+        $resourceCategories = \App\Models\ResourceCategory::active()
+            ->with(['resources' => function($q) {
+                $q->active();
+            }])
+            ->orderBy('order_column')
+            ->get();
 
-        return view('users.resources', compact('productKnowledge', 'beginnersGuide'));
+        return view('users.resources', compact('productKnowledge', 'beginnersGuide', 'resourceCategories'));
     }
 
 }

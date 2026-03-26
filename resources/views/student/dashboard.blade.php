@@ -327,15 +327,15 @@
     <div class="stagger-4 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
          @php
             $secStats = [
-                ['label' => 'Programs Enrolled', 'val' => $myCourses->count() + $myBundles->count(), 'icon' => 'fa-graduation-cap'],
-                ['label' => 'Lessons Mastered', 'val' => $myCourses->sum('completed_lessons'), 'icon' => 'fa-check-double'],
-                ['label' => 'Pending Payout', 'val' => '₹'.number_format($secondaryStats['pending_earnings']), 'icon' => 'fa-hourglass-half'],
-                ['label' => 'Total Withdrawn', 'val' => '₹'.number_format($secondaryStats['total_payouts']), 'icon' => 'fa-wallet']
+                ['label' => 'Programs Enrolled', 'val' => $myCourses->count() + $myBundles->count(), 'icon' => 'fa-graduation-cap', 'color' => 'text-primary'],
+                ['label' => 'Pending Earnings', 'val' => '₹'.number_format($secondaryStats['pending_earnings']), 'icon' => 'fa-hourglass-half', 'color' => 'text-amber-500'],
+                ['label' => 'Wallet Balance', 'val' => '₹'.number_format($secondaryStats['wallet_balance']), 'icon' => 'fa-wallet', 'color' => 'text-emerald-500'],
+                ['label' => 'Total Paid Out', 'val' => '₹'.number_format($secondaryStats['total_payouts']), 'icon' => 'fa-money-check-alt', 'color' => 'text-emerald-500']
             ];
         @endphp
         @foreach($secStats as $stat)
         <div class="bg-surface p-6 rounded-2xl border border-primary/10 flex flex-col items-center justify-center text-center gap-2 hover-lift premium-shadow">
-            <i class="fas {{ $stat['icon'] }} text-primary text-2xl mb-2 opacity-90"></i>
+            <i class="fas {{ $stat['icon'] }} {{ $stat['color'] }} text-2xl mb-2 opacity-90"></i>
             <h4 class="text-2xl font-black text-mainText">{{ $stat['val'] }}</h4>
             <p class="text-[10px] font-bold uppercase tracking-widest text-mutedText">{{ $stat['label'] }}</p>
         </div>

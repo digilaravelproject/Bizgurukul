@@ -20,7 +20,8 @@ class WalletService
 
     public function processCommission(array $data)
     {
-        $tdsRate = 2.0;
+        $tdsEnabled = (bool) Setting::get('tds_enabled', true);
+        $tdsRate = $tdsEnabled ? 2.0 : 0.0;
         $tdsAmount = ($data['amount'] * $tdsRate) / 100;
         $payableAmount = $data['amount'] - $tdsAmount;
 

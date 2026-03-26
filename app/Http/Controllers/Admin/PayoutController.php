@@ -22,7 +22,13 @@ class PayoutController extends Controller
 
     public function index(Request $request)
     {
-        $withdrawals = $this->walletRepo->getAllWithdrawalRequests(20);
+        $perPage = $request->input('per_page', 20);
+        $withdrawals = $this->walletRepo->getAllWithdrawalRequests($perPage);
+
+        if ($request->ajax()) {
+            return view('admin.payouts.partials.payout_table', compact('withdrawals'))->render();
+        }
+
         return view('admin.payouts.index', compact('withdrawals'));
     }
 

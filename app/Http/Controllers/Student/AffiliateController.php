@@ -44,23 +44,68 @@ class AffiliateController extends Controller
         }
     }
 
-    public function leads()
+    public function leads(Request $request)
     {
         try {
             $user = Auth::user();
+            $search = $request->input('search');
 
-            // Leads are users who started registration but haven't paid yet.
-            // Using a custom page name 'leads_page' to separate from 'referrals_page'
-            $leads = Lead::where('referral_code', $user->referral_code)
-                ->latest()
-                ->paginate(15, ['*'], 'leads_page');
+            // 1. Referrals (Converted Leads - Users who joined using this user's referral code)
+            $referralQuery = User::where('referred_by', $user->id);
 
-            // Referrals are users who successfully completed payment and registered.
-            $referrals = User::where('referred_by', $user->id)
-                ->latest()
-                ->paginate(15, ['*'], 'referrals_page');
+            if ($search) {
+                $referralQuery->where(function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('mobile', 'like', "%{$search}%");
+                });
+            }
 
-            return view('student.affiliate.leads', compact('leads', 'referrals'));
+            $referrals = $referralQuery->latest()->paginate(10, ['*'], 'referral_page');
+
+            // Attach purchased bundle info to each referral
+            $referrals->getCollection()->transform(function($referral) {
+                $firstPayment = \App\Models\Payment::where('user_id', $referral->id)
+                    ->where('status', 'success')
+                    ->with('bundle')
+                    ->first();
+                $referral->purchased_product = $firstPayment ? $firstPayment->bundle?->title : 'N/A';
+                return $referral;
+            });
+
+            // 2. Pending Leads (Users who started registration but didn't pay yet)
+            $leadsQuery = Lead::where('referral_code', $user->referral_code);
+
+            if ($search) {
+                $leadsQuery->where(function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('mobile', 'like', "%{$search}%");
+                });
+            }
+
+            $leads = $leadsQuery->latest()->paginate(10, ['*'], 'lead_page');
+
+            // Attach bundle preference info to each lead
+            $leads->getCollection()->transform(function($lead) {
+                $bundleId = $lead->product_preference['bundle_id'] ?? null;
+                if ($bundleId) {
+                    $bundle = Bundle::find($bundleId);
+                    $lead->product_name = $bundle ? $bundle->title : 'Unknown Bundle';
+                } else {
+                    $lead->product_name = 'N/A';
+                }
+                return $lead;
+            });
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'referrals_html' => view('student.affiliate.partials.referrals_table', compact('referrals'))->render(),
+                    'leads_html' => view('student.affiliate.partials.leads_table', compact('leads'))->render(),
+                ]);
+            }
+
+            return view('student.affiliate.leads', compact('referrals', 'leads'));
         } catch (\Exception $e) {
             Log::error("Error loading leads for user " . Auth::id() . ": " . $e->getMessage());
             return back()->with('error', 'Something went wrong while loading your leads and referrals.');

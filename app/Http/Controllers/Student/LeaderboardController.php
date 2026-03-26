@@ -12,7 +12,7 @@ use Exception;
 class LeaderboardController extends Controller
 {
     /** Valid filter values accepted from the frontend */
-    private const ALLOWED_FILTERS = ['today', 'last_7_days', 'last_30_days', 'this_year', 'all_time'];
+    private const ALLOWED_FILTERS = ['last_7_days', 'last_30_days', 'this_year', 'all_time'];
 
     protected AffiliateService $affiliateService;
 
@@ -36,7 +36,7 @@ class LeaderboardController extends Controller
     public function fetchData(Request $request)
     {
         try {
-            $filter = $this->resolveFilter($request->get('filter'));
+            $filter = $this->resolveFilter($request->input('filter'));
             $user   = Auth::user();
 
             // Fetch Leaderboard (Directly, no cache for real-time accuracy)
@@ -66,7 +66,7 @@ class LeaderboardController extends Controller
         } catch (Exception $e) {
             Log::error('LeaderboardController@fetchData: ' . $e->getMessage(), [
                 'user_id' => Auth::id(),
-                'filter'  => $request->get('filter'),
+                'filter'  => $request->input('filter'),
                 'trace'   => $e->getTraceAsString(),
             ]);
 

@@ -152,6 +152,7 @@ class SettingController extends Controller
     {
         $settings = [
             'commission_holding_hours'   => Setting::get('commission_holding_hours', 24),
+            'tds_enabled'                => (bool) Setting::get('tds_enabled', true),
         ];
 
         return view('admin.settings.wallet', compact('settings'));
@@ -161,10 +162,12 @@ class SettingController extends Controller
     {
         $request->validate([
             'commission_holding_hours'   => 'required|numeric|min:0',
+            'tds_enabled'                => 'boolean',
         ]);
 
         try {
             Setting::set('commission_holding_hours', $request->input('commission_holding_hours'));
+            Setting::set('tds_enabled', $request->boolean('tds_enabled'));
 
             // Refresh existing data based on the new setting
             app(\App\Services\WalletService::class)->recalculateHoldPeriod();

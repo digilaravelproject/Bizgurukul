@@ -56,13 +56,26 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        $request->authenticate();
+        $request->authenticate(); // This will throw exception if credentials fail
+
+        $user = \App\Models\User::where('email', $request->email)->first();
+
+        // Check if user is Admin and has 2FA enabled
+        if ($user && $user->hasRole('Admin') && $user->hasTwoFactorEnabled()) {
+            Auth::logout(); // Logout for now, they need to verify 2FA
+            
+            $request->session()->put('auth.2fa_user_id', $user->id);
+            $request->session()->put('auth.2fa_remember', $request->boolean('remember'));
+
+            return redirect()->route('two-factor.challenge');
+        }
 
         $request->session()->regenerate();
 
-        $user = $request->user();
+        if ($user->hasRole('Student')) {
+            return redirect()->intended(route('student.courses.index'));
+        }
 
-        // Use centralized dashboard redirect logic
         return redirect()->intended(route('dashboard'));
     }
 

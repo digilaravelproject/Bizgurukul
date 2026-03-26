@@ -106,10 +106,14 @@ class AffiliateService
             return [
                 'pending_earnings' => $user->commissions()->where('status', 'pending')->sum('amount'),
                 'total_payouts'    => $user->commissions()->where('status', 'paid')->sum('amount'),
+                'wallet_balance'   => $user->wallet_balance,
+                'total_withdrawn'  => \App\Models\WithdrawalRequest::where('user_id', $user->id)
+                                        ->where('status', 'approved')
+                                        ->sum('amount'),
             ];
         } catch (Exception $e) {
             Log::error("AffiliateService Error [getSecondaryStats]: " . $e->getMessage(), ['user_id' => $user->id]);
-            return ['pending_earnings' => 0, 'total_payouts' => 0];
+            return ['pending_earnings' => 0, 'total_payouts' => 0, 'wallet_balance' => 0, 'total_withdrawn' => 0];
         }
     }
 

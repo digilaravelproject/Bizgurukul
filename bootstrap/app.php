@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'check.purchase' => \App\Http\Middleware\CheckPurchaseStatus::class,
+            '2fa' => \App\Http\Middleware\TwoFactorMiddleware::class,
         ]);
 
         $middleware->web(append: [\App\Http\Middleware\TrackReferral::class,]);

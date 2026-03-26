@@ -22,6 +22,8 @@ use App\Http\Controllers\Admin\CertificateSettingController;
 use App\Http\Controllers\Admin\EmailTemplateController;
 use App\Http\Controllers\Admin\VideoUploadController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\ResourceCategoryController;
+use App\Http\Controllers\Admin\GeneralResourceController;
 use App\Http\Controllers\Admin\DatabaseCleanupController;
 use Illuminate\Support\Facades\Route;
 
@@ -42,6 +44,9 @@ Route::middleware(['auth'])
         // Bunny thumbnail proxy — accessible to any authenticated admin (just serves an image)
         Route::get('/courses/lesson/{id}/thumbnail', [CourseController::class, 'lessonThumbnail'])->name('courses.lesson.thumbnail');
 
+        // Leads Management
+        Route::get('/leads', [App\Http\Controllers\Admin\LeadController::class, 'index'])->name('leads.index');
+
         // Settings (managed by manage-settings)
         Route::middleware(['permission:manage-settings'])->group(function () {
             Route::post('/settings/update', [AdminController::class, 'updateSettings'])->name('settings.update');
@@ -61,6 +66,11 @@ Route::middleware(['auth'])
             // Wallet Settings
             Route::get('/settings/wallet', [SettingController::class, 'wallet'])->name('settings.wallet');
             Route::post('/settings/wallet', [SettingController::class, 'updateWallet'])->name('settings.wallet.update');
+
+            // Two-Factor Authentication
+            Route::get('/settings/2fa', [\App\Http\Controllers\Admin\TwoFactorAuthenticationController::class, 'index'])->name('settings.2fa');
+            Route::post('/settings/2fa/enable', [\App\Http\Controllers\Admin\TwoFactorAuthenticationController::class, 'enable'])->name('settings.2fa.enable');
+            Route::post('/settings/2fa/disable', [\App\Http\Controllers\Admin\TwoFactorAuthenticationController::class, 'disable'])->name('settings.2fa.disable');
 
             // Email Templates
             Route::prefix('email-templates')->name('email-templates.')->group(function () {
@@ -157,6 +167,21 @@ Route::middleware(['auth'])
                 Route::get('/{id}/edit', 'edit')->name('edit');
                 Route::delete('/{id}', 'destroy')->name('destroy');
             });
+
+            // Dynamic Resource Management
+            Route::prefix('resource-categories')->name('resource-categories.')->group(function () {
+                Route::get('/', [ResourceCategoryController::class, 'index'])->name('index');
+                Route::post('/', [ResourceCategoryController::class, 'store'])->name('store');
+                Route::put('/{category}', [ResourceCategoryController::class, 'update'])->name('update');
+                Route::delete('/{category}', [ResourceCategoryController::class, 'destroy'])->name('destroy');
+            });
+
+            Route::prefix('general-resources')->name('general-resources.')->group(function () {
+                Route::get('/', [GeneralResourceController::class, 'index'])->name('index');
+                Route::post('/', [GeneralResourceController::class, 'store'])->name('store');
+                Route::put('/{resource}', [GeneralResourceController::class, 'update'])->name('update');
+                Route::delete('/{resource}', [GeneralResourceController::class, 'destroy'])->name('destroy');
+            });
         });
 
         // Users Management (managed by manage-users)
@@ -170,6 +195,7 @@ Route::middleware(['auth'])
                 Route::delete('/delete/{id}', [UserController::class, 'destroy'])->name('delete');
                 Route::post('/restore/{id}', [UserController::class, 'restore'])->name('restore');
                 Route::delete('/force-delete/{id}', [UserController::class, 'forceDelete'])->name('force.delete');
+                Route::post('/{id}/impersonate', [UserController::class, 'impersonate'])->name('impersonate');
             });
 
             // Communities

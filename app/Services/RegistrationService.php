@@ -11,6 +11,10 @@ use App\Models\Tax;
 use Razorpay\Api\Api;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use App\Mail\WelcomeMail;
+use App\Mail\AdminNotificationMail;
 use Exception;
 
 class RegistrationService
@@ -60,6 +64,22 @@ class RegistrationService
 
             // 8. Cleanup Lead
             $lead->delete();
+
+            // 9. Send Notifications
+            try {
+                // To User
+                Mail::to($user->email)->send(new WelcomeMail($user));
+
+                // To Admin
+                $adminEmail = config('mail.from.address'); // Or a specific admin setting
+                Mail::to($adminEmail)->send(new AdminNotificationMail(
+                    'New Student Registration',
+                    "A new student {$user->name} ({$user->email}) has successfully registered and purchased the bundle: {$bundle->title}."
+                ));
+            } catch (Exception $e) {
+                // Log error but don't fail registration
+                Log::error("Registration Email Failed: " . $e->getMessage());
+            }
 
             return $user;
         });

@@ -10,8 +10,30 @@
      <!-- Aesthetic Accents -->
      <div class="absolute -top-24 -right-24 w-72 h-72 bg-primary/5 blur-[80px] rounded-full pointer-events-none"></div>
 
-    <form action="{{ route('admin.settings.wallet.update') }}" method="POST" class="space-y-8 relative z-10">
+    <form action="{{ route('admin.settings.wallet.update') }}" method="POST" class="space-y-10 relative z-10">
         @csrf
+
+        {{-- Tax Deduction (TDS) --}}
+        <div>
+            <h3 class="text-lg font-black text-mainText uppercase tracking-widest mb-4 flex items-center gap-2">
+                <i class="fas fa-hand-holding-usd text-primary"></i> Tax Deduction (TDS)
+            </h3>
+
+            <div class="grid grid-cols-1 gap-6">
+                <div class="max-w-md">
+                    <label class="block text-xs font-bold text-mutedText uppercase tracking-widest mb-3">TDS Deduction (2%)</label>
+                    <div class="flex items-center gap-4 bg-navy p-4 rounded-xl border border-primary/10">
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-mainText">Enable TDS Calculation</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="tds_enabled" value="1" {{ old('tds_enabled', $settings['tds_enabled']) ? 'checked' : '' }} class="sr-only peer">
+                            <div class="w-11 h-6 bg-navy/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary border border-primary/10"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         {{-- Withdrawal Timing --}}
         <div>

@@ -123,7 +123,7 @@
                                                 <i class="fas fa-spinner fa-spin"></i> Processing
                                             </span>
                                         @elseif($comm->status === 'paid')
-                                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary">
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500">
                                                 <i class="fas fa-wallet"></i> Paid
                                             </span>
                                         @endif

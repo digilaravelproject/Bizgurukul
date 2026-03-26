@@ -61,11 +61,16 @@ class User extends Authenticatable
         'hide_from_leaderboard',
         'profile_photo_url',
         'deleted_at',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'two_factor_confirmed_at',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     protected $casts = [
@@ -78,6 +83,7 @@ class User extends Authenticatable
         'hide_from_leaderboard' => 'boolean',
         'banned_at' => 'datetime',
         'deleted_at' => 'datetime',
+        'two_factor_confirmed_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -340,5 +346,13 @@ class User extends Authenticatable
     protected function setNameAttribute($value)
     {
         $this->attributes['name'] = ucwords(strtolower($value));
+    }
+
+    /**
+     * Determine if the user has two factor authentication enabled.
+     */
+    public function hasTwoFactorEnabled(): bool
+    {
+        return !is_null($this->two_factor_secret) && !is_null($this->two_factor_confirmed_at);
     }
 }

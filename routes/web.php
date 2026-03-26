@@ -49,6 +49,9 @@ Route::middleware('auth')->group(function () {
     // Dashboard Redirect
     Route::get('/dashboard', [DashboardRedirectController::class, 'index'])->name('dashboard');
 
+    // Stop Impersonating (Admin returns to own account)
+    Route::post('/stop-impersonating', [\App\Http\Controllers\Admin\UserController::class, 'stopImpersonating'])->name('stop.impersonating');
+
     // Onboarding (Common)
     Route::get('/onboarding/referral', [App\Http\Controllers\OnboardingController::class, 'showReferralStep'])->name('onboarding.referral');
     Route::post('/onboarding/referral', [App\Http\Controllers\OnboardingController::class, 'storeReferrer'])->name('onboarding.referral.store');

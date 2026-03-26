@@ -283,7 +283,6 @@
                 profile_picture: null
             },
             availableFilters: [
-                { label: 'Daily', value: 'today' },
                 { label: 'Weekly', value: 'last_7_days' },
                 { label: 'Monthly', value: 'last_30_days' },
                 { label: 'Yearly', value: 'this_year' },

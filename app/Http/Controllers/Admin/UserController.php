@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Services\UserService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 use Exception;
 
@@ -165,5 +166,43 @@ class UserController extends Controller
         } catch (Exception $e) {
             return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Impersonate a user — admin logs in as this user.
+     */
+    public function impersonate($id)
+    {
+        $user = \App\Models\User::findOrFail($id);
+
+        // Safety: prevent impersonating admin users
+        if ($user->hasRole('Admin')) {
+            return back()->with('error', 'Cannot impersonate admin users.');
+        }
+
+        // Store the real admin's ID in session
+        session()->put('impersonator_id', Auth::id());
+
+        // Login as the target user
+        Auth::login($user);
+
+        return redirect('/dashboard')->with('success', 'You are now viewing as ' . $user->name);
+    }
+
+    /**
+     * Stop impersonating — return to admin account.
+     */
+    public function stopImpersonating()
+    {
+        $adminId = session()->pull('impersonator_id');
+
+        if (!$adminId) {
+            return redirect('/dashboard');
+        }
+
+        $admin = \App\Models\User::findOrFail($adminId);
+        Auth::login($admin);
+
+        return redirect()->route('admin.dashboard')->with('success', 'Returned to admin panel.');
     }
 }
