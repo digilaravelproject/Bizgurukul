@@ -50,21 +50,37 @@ class WalletService
         $this->syncAvailableCommissions($userId);
 
         return [
-            'available_balance' => $this->walletRepo->getWithdrawableBalance($userId),
-            'on_hold_balance'   => $this->walletRepo->getOnHoldBalance($userId),
-            'total_earnings'    => $this->walletRepo->getTotalEarnings($userId),
-            'total_withdrawn'   => $this->walletRepo->getTotalWithdrawn($userId),
+            'available_balance'     => $this->walletRepo->getWithdrawableBalance($userId), // Gross for summary
+            'available_balance_net' => $this->walletRepo->getWithdrawableBalanceNet($userId), // Net for payout
+            'on_hold_balance'       => $this->walletRepo->getOnHoldBalance($userId), // Gross for summary
+            'on_hold_balance_net'   => $this->walletRepo->getOnHoldBalanceNet($userId), // Net
+            'pending_balance'       => $this->walletRepo->getPendingBalance($userId), // Gross for summary
+            'total_earnings'        => $this->walletRepo->getTotalEarnings($userId),
+            'total_withdrawn'       => $this->walletRepo->getTotalWithdrawn($userId),
+            'total_tds'             => $this->walletRepo->getTotalTdsDeducted($userId),
+            'tds_enabled'           => (bool) Setting::get('tds_enabled', true),
         ];
     }
 
     public function syncAvailableCommissions(?int $userId = null)
     {
+        // 1. Standard holding period sync: On-Hold -> Available
         $query = \App\Models\AffiliateCommission::where('status', 'on_hold')
                     ->where('available_at', '<=', now());
         if ($userId) {
             $query->where('affiliate_id', $userId);
         }
         $query->update(['status' => 'available']);
+
+        // 2. DATA INTEGRITY HEALER (Root Cause Fix): 
+        // If a commission is NOT 'paid', 'requested', or 'processing', 
+        // it should NOT have a withdrawal_request_id. If it does, it's orphan data and should be cleared.
+        $integrityQuery = \App\Models\AffiliateCommission::whereNotIn('status', ['paid', 'requested', 'processing'])
+                            ->whereNotNull('withdrawal_request_id');
+        if ($userId) {
+            $integrityQuery->where('affiliate_id', $userId);
+        }
+        $integrityQuery->update(['withdrawal_request_id' => null]);
     }
 
     /**

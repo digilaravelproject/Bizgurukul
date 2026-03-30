@@ -93,6 +93,12 @@
                 <div x-show="emailChecked" x-cloak class="mt-1 text-right">
                     <button type="button" @click="emailChecked = false; $nextTick(() => document.getElementById('email').focus())" class="text-xs text-primary hover:underline">Change Email</button>
                 </div>
+                <!-- Forgot Password Link (First Step) -->
+                <div x-show="!emailChecked" class="mt-1 text-right">
+                    @if (Route::has('password.request'))
+                        <a href="{{ route('password.request') }}" class="text-xs text-primary hover:underline">Forgot Password?</a>
+                    @endif
+                </div>
                 <x-input-error :messages="$errors->get('email')" class="mt-1" />
             </div>
 

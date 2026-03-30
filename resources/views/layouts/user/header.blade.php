@@ -43,17 +43,21 @@
                     <p class="text-[10px] text-mutedText uppercase font-bold tracking-tighter">Partner</p>
                 </div>
 
-                {{-- User Avatar Icon --}}
-                <div
-                    class="h-9 w-9 rounded-lg brand-gradient flex items-center justify-center text-white font-bold shadow-lg shadow-primary/20 text-xs">
-                    @php
-                        $nameParts = explode(' ', trim(Auth::user()->name));
-                        $initials = count($nameParts) === 1
-                            ? strtoupper(substr($nameParts[0], 0, 2))
-                            : strtoupper(substr($nameParts[0], 0, 1) . substr(end($nameParts), 0, 1));
-                    @endphp
-                    {{ $initials }}
-                </div>
+                @if (Auth::user()->profile_photo_url || Auth::user()->profile_picture)
+                    <img src="{{ Auth::user()->profile_image_url }}" 
+                        class="h-9 w-9 rounded-lg object-cover shadow-lg shadow-primary/20 border border-primary/10">
+                @else
+                    <div
+                        class="h-9 w-9 rounded-lg brand-gradient flex items-center justify-center text-white font-bold shadow-lg shadow-primary/20 text-xs">
+                        @php
+                            $nameParts = explode(' ', trim(Auth::user()->name));
+                            $initials = count($nameParts) === 1
+                                ? strtoupper(substr($nameParts[0], 0, 2))
+                                : strtoupper(substr($nameParts[0], 0, 1) . substr(end($nameParts), 0, 1));
+                        @endphp
+                        {{ $initials }}
+                    </div>
+                @endif
             </button>
 
             {{-- Dropdown Menu --}}

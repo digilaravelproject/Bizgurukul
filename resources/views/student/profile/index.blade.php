@@ -307,7 +307,7 @@
                                     <div class="ml-3">
                                         <h3 class="text-sm font-bold text-red-500">KYC Rejected</h3>
                                         <p class="text-sm text-red-400 mt-1">Reason: <span
-                                                class="font-bold">{{ $user->kyc->admin_note }}</span></p>
+                                                class="font-bold">{{ $user->kyc?->admin_note }}</span></p>
                                         <button @click="reapplyMode = true"
                                             class="text-red-500 underline text-xs mt-2 font-bold hover:text-red-600">Click
                                             here to Re-apply</button>
@@ -325,7 +325,7 @@
                                 <div
                                     class="mt-4 text-left inline-block bg-customWhite p-4 rounded-xl shadow-sm border border-emerald-500/20">
                                     <p class="text-xs text-mutedText font-bold uppercase">Name on Document</p>
-                                    <p class="font-bold text-mainText">{{ $user->kyc->pan_name }}</p>
+                                    <p class="font-bold text-mainText">{{ $user->kyc?->pan_name }}</p>
                                 </div>
                             </div>
                         @endif
@@ -392,7 +392,7 @@
 
                         @php
                             $currentBank = $user->bank;
-                            $dbBankStatus = $currentBank->status ?? 'not_submitted';
+                            $dbBankStatus = $currentBank?->status ?? 'not_submitted';
                             $hasPendingUpdate = $user->bankUpdateRequests()->where('status', 'pending')->exists();
                         @endphp
 
@@ -586,11 +586,11 @@
     <script>
         function studentProfile() {
             return {
-                activeTab: '{{ request()->get('section', 'profile') }}',
+                activeTab: '{{ request()->input('section', 'profile') }}',
                 isLoading: false,
                 reapplyMode: false,
                 changeBankMode: false,
-                bankStatus: '{{ $user->bank->status ?? 'not_submitted' }}',
+                bankStatus: '{{ $user->bank?->status ?? 'not_submitted' }}',
                 kycStatus: '{{ $user->kyc_status ?? 'not_submitted' }}',
                 hasUpdatePending: {{ $user->bankUpdateRequests()->where('status', 'pending')->exists() ? 'true' : 'false' }},
                 profile_image: '{{ Auth::user()->profile_image_url }}',
@@ -618,18 +618,18 @@
 
                 // KYC Data
                 kyc: {
-                    pan_name: '{{ $user->kyc->pan_name ?? '' }}',
+                    pan_name: '{{ $user->kyc?->pan_name ?? '' }}',
                     file: null
                 },
 
                 // Bank Data
                 bank: {
-                    holder_name: '{{ $user->bank->account_holder_name ?? '' }}',
+                    holder_name: '{{ $user->bank?->account_holder_name ?? '' }}',
                     account_number: '', // Reset for security
                     account_number_confirmation: '',
-                    bank_name: '{{ $user->bank->bank_name ?? '' }}',
-                    ifsc_code: '{{ $user->bank->ifsc_code ?? '' }}',
-                    upi_id: '{{ $user->bank->upi_id ?? '' }}',
+                    bank_name: '{{ $user->bank?->bank_name ?? '' }}',
+                    ifsc_code: '{{ $user->bank?->ifsc_code ?? '' }}',
+                    upi_id: '{{ $user->bank?->upi_id ?? '' }}',
                     file: null
                 },
 

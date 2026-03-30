@@ -22,6 +22,13 @@ class WalletRepository
     {
         return AffiliateCommission::where('affiliate_id', $userId)
             ->where('status', 'available')
+            ->sum('amount');
+    }
+
+    public function getWithdrawableBalanceNet(int $userId)
+    {
+        return AffiliateCommission::where('affiliate_id', $userId)
+            ->where('status', 'available')
             ->whereNull('withdrawal_request_id')
             ->where('available_at', '<=', now())
             ->sum('payable_amount');
@@ -31,9 +38,23 @@ class WalletRepository
     {
         return AffiliateCommission::where('affiliate_id', $userId)
             ->where('status', 'on_hold')
+            ->sum('amount');
+    }
+    
+    public function getOnHoldBalanceNet(int $userId)
+    {
+        return AffiliateCommission::where('affiliate_id', $userId)
+            ->where('status', 'on_hold')
             ->where('available_at', '>', now())
             ->whereNull('withdrawal_request_id')
             ->sum('payable_amount');
+    }
+
+    public function getPendingBalance(int $userId)
+    {
+        return AffiliateCommission::where('affiliate_id', $userId)
+            ->whereIn('status', ['requested', 'processing'])
+            ->sum('amount');
     }
 
     public function getTotalEarnings(int $userId)
@@ -43,10 +64,19 @@ class WalletRepository
             ->sum('amount');
     }
 
+    public function getTotalTdsDeducted(int $userId)
+    {
+        return AffiliateCommission::where('affiliate_id', $userId)
+            ->whereIn('status', ['on_hold', 'available', 'paid', 'requested', 'processing'])
+            ->sum('tds_amount');
+    }
+
     public function getTotalWithdrawn(int $userId)
     {
-        return WithdrawalRequest::where('user_id', $userId)
-            ->where('status', 'approved')
+        // For dashboard reconciliation, we sum from the commissions table.
+        // This ensures Revenue = Paid + Available + Hold + Pending.
+        return AffiliateCommission::where('affiliate_id', $userId)
+            ->where('status', 'paid')
             ->sum('amount');
     }
 

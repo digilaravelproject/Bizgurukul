@@ -9,13 +9,13 @@
         @csrf
 
         <!-- Password Reset Token -->
-        <input type="hidden" name="token" value="{{ $request->route('token') }}">
+        <input type="hidden" name="token" value="{{ request()->route('token') }}">
 
         <!-- Email Address -->
         <div>
             <label for="email" class="block text-sm font-medium text-mainText mb-1.5">{{ __('Email') }}</label>
-            <input id="email" type="email" name="email" :value="old('email', $request->email)" required autofocus autocomplete="username"
-                class="w-full px-4 py-3 bg-navy/30 border border-slate-200 rounded-lg text-mainText placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition duration-200"
+            <input id="email" type="email" name="email" value="{{ old('email', request()->email) }}" readonly
+                class="w-full px-4 py-3 bg-navy/10 border border-slate-200 rounded-lg text-mainText/60 cursor-not-allowed focus:outline-none transition duration-200"
                 placeholder="name@example.com">
             <x-input-error :messages="$errors->get('email')" class="mt-1" />
         </div>
