@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use App\Models\Setting;
 use App\Services\EmailService;
 use Illuminate\Http\Request;
@@ -178,6 +180,175 @@ class SettingController extends Controller
         } catch (Exception $e) {
             Log::error('Wallet config update error: ' . $e->getMessage());
             return back()->withInput()->with('error', 'Failed to save wallet settings.');
+        }
+    }
+
+    // ──────────────────────────────────────
+    // Payment Gateway Configuration
+    // ──────────────────────────────────────
+
+    public function paymentGateway()
+    {
+        $settings = [
+            'active_payment_gateway' => Setting::get('active_payment_gateway', 'razorpay'),
+
+            // Razorpay
+            'razorpay_key'            => Setting::get('razorpay_key', config('services.razorpay.key', '')),
+            'razorpay_secret'         => Setting::get('razorpay_secret', config('services.razorpay.secret', '')),
+            'razorpay_webhook_secret' => Setting::get('razorpay_webhook_secret', config('services.razorpay.webhook_secret', '')),
+
+            // Cashfree
+            'cashfree_app_id'         => Setting::get('cashfree_app_id', config('services.cashfree.app_id', '')),
+            'cashfree_secret_key'     => Setting::get('cashfree_secret_key', config('services.cashfree.secret_key', '')),
+            'cashfree_webhook_secret' => Setting::get('cashfree_webhook_secret', config('services.cashfree.webhook_secret', '')),
+            'cashfree_environment'    => Setting::get('cashfree_environment', config('services.cashfree.environment', 'sandbox')),
+        ];
+
+        // Generate webhook URLs for display
+        $webhookUrls = [
+            'razorpay' => route('webhook.razorpay'),
+            'cashfree' => url('/webhook/cashfree'),
+        ];
+
+        return view('admin.settings.payment', compact('settings', 'webhookUrls'));
+    }
+
+    public function updatePaymentGateway(Request $request)
+    {
+        $request->validate([
+            'active_payment_gateway' => 'required|in:razorpay,cashfree',
+
+            // Razorpay fields
+            'razorpay_key'            => 'nullable|string|max:255',
+            'razorpay_secret'         => 'nullable|string|max:255',
+            'razorpay_webhook_secret' => 'nullable|string|max:255',
+
+            // Cashfree fields
+            'cashfree_app_id'         => 'nullable|string|max:255',
+            'cashfree_secret_key'     => 'nullable|string|max:255',
+            'cashfree_webhook_secret' => 'nullable|string|max:255',
+            'cashfree_environment'    => 'nullable|in:sandbox,production',
+        ]);
+
+        try {
+            $keys = [
+                'active_payment_gateway',
+                'razorpay_key', 'razorpay_secret', 'razorpay_webhook_secret',
+                'cashfree_app_id', 'cashfree_secret_key', 'cashfree_webhook_secret', 'cashfree_environment',
+            ];
+
+            foreach ($keys as $key) {
+                $value = $request->input($key);
+                if ($value !== null && $value !== '') {
+                    Setting::set($key, $value);
+                }
+            }
+
+            return redirect()->route('admin.settings.payment')
+                ->with('success', 'Payment gateway settings updated successfully.');
+
+        } catch (Exception $e) {
+            Log::error('Payment gateway config update error: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to save payment gateway settings.');
+        }
+    }
+
+    public function testPaymentGateway(Request $request)
+    {
+        $gateway = $request->input('gateway', 'razorpay');
+
+        try {
+            if ($gateway === 'cashfree') {
+                $gw = new \App\Services\Gateways\CashfreeGateway();
+                $result = $gw->testConnection();
+                return response()->json($result);
+            }
+
+            // Razorpay test: try to fetch auth
+            $key = Setting::get('razorpay_key') ?: config('services.razorpay.key');
+            $secret = Setting::get('razorpay_secret') ?: config('services.razorpay.secret');
+
+            if (empty($key) || empty($secret)) {
+                return response()->json(['success' => false, 'message' => 'Razorpay API keys are not configured.']);
+            }
+
+            $api = new \Razorpay\Api\Api($key, $secret);
+            // Fetch a dummy order list to verify credentials
+            $api->order->all(['count' => 1]);
+
+            return response()->json(['success' => true, 'message' => 'Razorpay connection successful!']);
+
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => 'Connection failed: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Test payment gateway webhook setup.
+     */
+    public function testWebhook(Request $request)
+    {
+        $gateway = $request->input('gateway', 'razorpay');
+        $webhookUrl = $gateway === 'razorpay' ? route('webhook.razorpay') : url('/webhook/cashfree');
+
+        // Get the secret being tested (from input if provided, else from setting)
+        $secret = $request->input('webhook_secret');
+        if (!$secret) {
+            $secret = $gateway === 'razorpay' 
+                ? Setting::get('razorpay_webhook_secret', config('services.razorpay.webhook_secret'))
+                : Setting::get('cashfree_webhook_secret', config('services.cashfree.webhook_secret'));
+        }
+
+        if (empty($secret)) {
+            return response()->json(['success' => false, 'message' => 'Webhook secret is not configured.']);
+        }
+
+        try {
+            $payload = json_encode([
+                'type' => 'TEST_WEBHOOK',
+                'event' => 'test.webhook',
+                'created_at' => now()->timestamp,
+                'data' => ['message' => 'This is a test webhook from Admin Panel']
+            ]);
+
+            $headers = [];
+            if ($gateway === 'razorpay') {
+                $headers['X-Razorpay-Signature'] = hash_hmac('sha256', $payload, $secret);
+            } else {
+                $timestamp = (string) round(microtime(true) * 1000);
+                $headers['x-webhook-timestamp'] = $timestamp;
+                $headers['x-webhook-signature'] = base64_encode(hash_hmac('sha256', $timestamp . $payload, $secret, true));
+            }
+
+            // Perform internal HTTP request to test the webhook endpoint
+            $response = Http::withHeaders($headers)
+                ->withBody($payload, 'application/json')
+                ->timeout(10)
+                ->post($webhookUrl);
+
+            // Our webhook controllers return 200 for successful (or ignored but verified) events.
+            // They return 400 for signature verification failures.
+            if ($response->successful()) {
+                return response()->json([
+                    'success' => true, 
+                    'message' => 'Webhook reached successfully and secret verified!'
+                ]);
+            }
+
+            if ($response->status() === 400) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Signature verification failed. Please check your Webhook Secret.'
+                ]);
+            }
+
+            return response()->json([
+                'success' => false, 
+                'message' => 'Webhook test failed. Server returned status: ' . $response->status()
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => 'Connection error: ' . $e->getMessage()]);
         }
     }
 }

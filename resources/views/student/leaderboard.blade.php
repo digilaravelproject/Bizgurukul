@@ -4,263 +4,295 @@
 
 @push('styles')
 <style>
-    /* Clean & Modern Mesh Background using Platform Colors */
+    /* Premium Deep Mesh Background */
     .dashboard-bg {
         background-color: rgb(var(--color-bg-body));
         background-image:
-            radial-gradient(at 0% 0%, rgba(var(--color-primary) / 0.15) 0px, transparent 50%),
-            radial-gradient(at 100% 100%, rgba(var(--color-secondary) / 0.15) 0px, transparent 50%);
+            radial-gradient(circle at 15% 50%, rgba(var(--color-primary) / 0.08), transparent 25%),
+            radial-gradient(circle at 85% 30%, rgba(var(--color-secondary) / 0.08), transparent 25%);
         background-attachment: fixed;
     }
 
-    /* Premium Bento Box / Glass Cards using Platform Card Colors */
-    .bento-card {
-        background: rgba(var(--color-bg-card) / 0.85);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(var(--color-primary) / 0.08);
+    /* Refined Premium Glass Effect */
+    .premium-glass {
+        background: rgba(var(--color-bg-card) / 0.6);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(var(--color-primary) / 0.1);
+        box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08);
         border-radius: 1.5rem;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition: all 0.3s ease;
     }
 
-    .bento-card:hover {
-        box-shadow: 0 10px 25px -5px rgba(var(--color-primary) / 0.15);
+    .premium-glass:hover {
+        border-color: rgba(var(--color-primary) / 0.25);
+        box-shadow: 0 15px 50px -10px rgba(var(--color-primary) / 0.15);
     }
 
-    /* Unique Podium Styling */
-    .top-rank-card {
+    /* VIP User Card Styling */
+    .vip-card {
+        background: linear-gradient(135deg, rgba(var(--color-primary)/0.95), rgba(var(--color-secondary)/0.95));
         position: relative;
         overflow: hidden;
+        color: white;
+        border-radius: 1.5rem;
+        box-shadow: 0 20px 40px -10px rgba(var(--color-primary)/0.4);
     }
 
-    .top-rank-card::before {
+    .vip-card::after {
         content: '';
         position: absolute;
-        top: 0; left: 0; right: 0; height: 4px;
-    }
-
-    /* Keep Medals distinct */
-    .rank-1::before { background: linear-gradient(90deg, #F59E0B, #FBBF24); } /* Gold */
-    .rank-2::before { background: linear-gradient(90deg, #94A3B8, #CBD5E1); } /* Silver */
-    .rank-3::before { background: linear-gradient(90deg, #B45309, #D97706); } /* Bronze */
-
-    /* Glow effect for Rank 1 */
-    .rank-1-glow {
-        position: absolute;
-        inset: -20px;
-        background: radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, transparent 60%);
-        z-index: -1;
+        top: -50%; right: -50%; bottom: -50%; left: -50%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+        transform: rotate(30deg);
         pointer-events: none;
-        animation: pulse-glow 3s infinite alternate;
     }
 
-    @keyframes pulse-glow {
-        0% { opacity: 0.5; transform: scale(0.95); }
-        100% { opacity: 1; transform: scale(1.05); }
-    }
-
-    /* Segmented Filters (Pill style) - Padding & Font-size removed for Tailwind usage */
-    .filter-pill {
-        border-radius: 9999px;
-        font-weight: 600;
-        transition: all 0.2s ease;
+    /* Podium Styles */
+    .podium-avatar {
         position: relative;
-        z-index: 1;
+        border-radius: 50%;
+        padding: 4px;
+        background: rgba(var(--color-bg-card) / 1);
+        box-shadow: 0 8px 25px -5px rgba(0,0,0,0.1);
+    }
+
+    /* Medals & Glows */
+    .gold-glow { box-shadow: 0 0 30px 0px rgba(245, 158, 11, 0.4); }
+    .silver-glow { box-shadow: 0 0 20px 0px rgba(148, 163, 184, 0.3); }
+    .bronze-glow { box-shadow: 0 0 20px 0px rgba(180, 83, 9, 0.3); }
+
+    .rank-text-gradient {
+        background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Sleek Filter Pills */
+    .sleek-filter {
+        border-radius: 999px;
+        font-weight: 700;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         color: var(--color-mutedText);
     }
-
-    .filter-pill:hover:not(.filter-active) {
+    .sleek-filter:hover:not(.active-filter) {
         color: var(--color-mainText);
         background: rgba(var(--color-primary) / 0.05);
     }
-
-    .filter-active {
+    .active-filter {
         background: rgb(var(--color-primary));
         color: white !important;
-        box-shadow: 0 4px 14px 0 rgba(var(--color-primary) / 0.3);
+        box-shadow: 0 4px 15px rgba(var(--color-primary) / 0.3);
     }
 
-    .brand-gradient-text {
-        background: linear-gradient(135deg, rgb(var(--color-primary)) 0%, rgb(var(--color-secondary)) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    /* List Item Hover */
+    .list-item-hover {
+        transition: transform 0.2s ease, background 0.2s ease;
+    }
+    .list-item-hover:hover {
+        transform: translateX(6px);
+        background: rgba(var(--color-primary) / 0.03);
     }
 </style>
 @endpush
 
 @section('content')
-<div class="dashboard-bg min-h-screen pb-20 pt-8" x-data="leaderboardData()">
+<div class="dashboard-bg min-h-screen pb-24 pt-10" x-data="leaderboardData()" x-cloak>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {{-- Header Section --}}
-        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
-            <div>
-                <h1 class="text-3xl font-black text-mainText tracking-tight">
-                    Top <span class="brand-gradient-text">Performers</span>
+        {{-- Premium Header --}}
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6 mb-12 relative z-10">
+            <div class="text-center md:text-left">
+                <h1 class="text-4xl md:text-5xl font-black text-mainText tracking-tight mb-2">
+                    Hall of <span class="text-primary">Fame</span>
                 </h1>
-                <p class="text-sm text-mutedText font-medium mt-1">Hall of Fame at Skills Pehle</p>
+                <p class="text-sm md:text-base text-mutedText font-medium tracking-wide">Celebrating the top achievers of Skills Pehle</p>
             </div>
 
-            {{-- Modern Time Filters (Desktop) --}}
-            <div class="hidden md:flex bg-surface p-1 rounded-full shadow-sm border border-primary/10">
+            {{-- Desktop Filters --}}
+            <div class="hidden md:flex bg-surface/80 backdrop-blur-md p-1.5 rounded-full border border-primary/10 shadow-sm">
                 <template x-for="f in availableFilters" :key="f.value">
                     <button @click="setFilter(f.value)"
-                            class="filter-pill px-4 lg:px-5 py-2 text-sm"
-                            :class="filter === f.value ? 'filter-active' : 'text-mutedText'">
+                            class="sleek-filter px-6 py-2.5 text-sm tracking-wide"
+                            :class="filter === f.value ? 'active-filter' : ''">
+                        <span x-text="f.label"></span>
+                    </button>
+                </template>
+            </div>
+
+            {{-- Mobile Filters --}}
+            <div class="flex md:hidden bg-surface/80 backdrop-blur-md p-1 rounded-full border border-primary/10 w-full justify-between overflow-x-auto hide-scrollbar">
+                <template x-for="f in availableFilters" :key="f.value">
+                    <button @click="setFilter(f.value)"
+                            class="sleek-filter flex-1 px-3 py-2 text-xs whitespace-nowrap"
+                            :class="filter === f.value ? 'active-filter' : ''">
                         <span x-text="f.label"></span>
                     </button>
                 </template>
             </div>
         </div>
 
-        {{-- Mobile Filters (Shows only on small screens, Fits in ONE line without scroll) --}}
-        <div class="flex md:hidden bg-surface p-1 rounded-full shadow-sm border border-primary/10 mb-6 w-full justify-between items-center gap-0.5">
-            <template x-for="f in availableFilters" :key="f.value">
-                <button @click="setFilter(f.value)"
-                        class="filter-pill flex-1 flex items-center justify-center px-0.5 py-2 text-[10px] xs:text-[11px] sm:text-xs leading-none whitespace-nowrap tracking-tight"
-                        :class="filter === f.value ? 'filter-active' : 'text-mutedText'">
-                    <span x-text="f.label"></span>
-                </button>
-            </template>
-        </div>
-
-        {{-- Loader --}}
-        <div x-show="loading" class="flex flex-col items-center justify-center py-20">
-            <div class="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4"></div>
-            <p class="text-sm font-bold text-mutedText uppercase tracking-widest">Loading Data...</p>
-        </div>
-
-        {{-- Main Grid Layout (Profile Left, Leaderboard Right) --}}
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8" x-show="!loading" style="display: none;">
-
-            {{-- LEFT COLUMN: USER STATS --}}
-            <div class="lg:col-span-4 space-y-6">
-
-                {{-- Main User Profile Card --}}
-                <div class="bento-card p-6 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-4 opacity-5 text-6xl text-primary">
-                        <i class="fas fa-chart-pie"></i>
-                    </div>
-
-                    <p class="text-xs font-bold text-mutedText uppercase tracking-widest mb-4">Your Profile</p>
-
-                    <div class="flex items-center gap-4 mb-6">
-                        <div class="relative">
-                            <template x-if="!hasImage(userData.profile_picture)">
-                                <div class="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-black shadow-inner" x-text="getInitials(userData.name)"></div>
-                            </template>
-                            <template x-if="hasImage(userData.profile_picture)">
-                                <img :src="userData.profile_picture" @@error="userData.profile_picture = null" class="w-16 h-16 rounded-full object-cover border-2 border-surface shadow-md">
-                            </template>
-                            <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-surface rounded-full"></div>
-                        </div>
-                        <div>
-                            <h2 class="text-xl font-bold text-mainText truncate max-w-[180px]" x-text="userData.name"></h2>
-                            <p class="text-sm text-mutedText font-medium">Partner</p>
-                        </div>
-                    </div>
-
-                    <div class="bg-surface rounded-2xl p-5 border border-primary/5 shadow-sm">
-                        <p class="text-xs font-bold text-mutedText mb-1">Total Earnings (<span x-text="getFilterLabel()"></span>)</p>
-                        <h3 class="text-3xl font-black text-mainText">₹<span x-text="formatMoney(userData.earnings)"></span></h3>
-                    </div>
-                </div>
-
-                {{-- Mini Stats Grid --}}
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bento-card p-5 text-center flex flex-col justify-center">
-                        <i class="fas fa-trophy text-primary text-xl mb-2"></i>
-                        <p class="text-xs font-bold text-mutedText mb-1">Your Rank</p>
-                        <p class="text-2xl font-black text-mainText">#<span x-text="userData.rank"></span></p>
-                    </div>
-                    <div class="bento-card p-5 text-center flex flex-col justify-center">
-                        <i class="fas fa-bolt text-secondary text-xl mb-2"></i>
-                        <p class="text-xs font-bold text-mutedText mb-1">Total Sales</p>
-                        <p class="text-2xl font-black text-mainText" x-text="userData.sale_count || 0"></p>
-                    </div>
-                </div>
-
+        {{-- Loader (Elegant Spinner) --}}
+        <div x-show="loading" class="flex flex-col items-center justify-center py-32 space-y-4">
+            <div class="relative w-16 h-16">
+                <div class="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+                <div class="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
             </div>
+            <p class="text-xs font-bold text-primary uppercase tracking-widest animate-pulse">Fetching Elite Data...</p>
+        </div>
 
-            {{-- RIGHT COLUMN: LEADERBOARD SHOWCASE --}}
-            <div class="lg:col-span-8">
+        {{-- Main Content Grid --}}
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10" x-show="!loading" style="display: none;">
 
-                {{-- TOP 3 CREATIVE SHOWCASE (Unique Horizontal Layout) --}}
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 items-end" x-show="topThree.length > 0">
+            {{-- LEADERBOARD SHOWCASE (Now Full Width) --}}
+            <div class="lg:col-span-12 space-y-12">
 
-                    {{-- Rank 2 (Left) --}}
+                {{-- The Podium (Top 3) --}}
+                <div class="flex flex-row items-end justify-center gap-2 sm:gap-6 pt-10" x-show="topThree.length > 0">
+
+                    {{-- Rank 2 (Silver) --}}
                     <template x-if="topThree[1]">
-                        <div class="bento-card top-rank-card rank-2 p-5 text-center flex flex-col items-center md:mb-4">
-                            <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-black text-xs flex items-center justify-center mb-3">#2</div>
-                            <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-slate-200 mb-3 shadow-sm bg-surface">
-                                <template x-if="!hasImage(topThree[1].profile_picture)"><div class="w-full h-full flex items-center justify-center font-bold text-slate-400" x-text="getInitials(topThree[1].name)"></div></template>
-                                <template x-if="hasImage(topThree[1].profile_picture)"><img :src="topThree[1].profile_picture" class="w-full h-full object-cover"></template>
+                        <div class="w-1/3 flex flex-col items-center group">
+                            <div class="text-slate-400 font-black text-xl sm:text-2xl mb-2 opacity-50">#2</div>
+                            <div class="podium-avatar silver-glow mb-4 z-10 w-20 h-20 sm:w-24 sm:h-24 transition-transform group-hover:-translate-y-2 duration-300">
+                                <div class="w-full h-full rounded-full overflow-hidden border-4 border-slate-300">
+                                    <template x-if="!hasImage(topThree[1].profile_picture)"><div class="w-full h-full flex items-center justify-center bg-slate-100 font-bold text-2xl text-slate-500" x-text="getInitials(topThree[1].name)"></div></template>
+                                    <template x-if="hasImage(topThree[1].profile_picture)"><img :src="topThree[1].profile_picture" class="w-full h-full object-cover"></template>
+                                </div>
                             </div>
-                            <h3 class="text-sm font-bold text-mainText truncate w-full" x-text="topThree[1].name"></h3>
-                            <p class="text-sm font-black text-slate-500 mt-1">₹<span x-text="formatMoney(topThree[1].earnings)"></span></p>
+                            <div class="premium-glass w-full pt-8 pb-4 px-2 text-center -mt-12 rounded-t-3xl border-b-0 rounded-b-xl relative z-0">
+                                <h3 class="text-xs sm:text-sm font-bold text-mainText truncate w-full px-1" x-text="topThree[1].name"></h3>
+                                <p class="text-sm sm:text-base font-black text-slate-500 mt-1">₹<span x-text="formatMoney(topThree[1].earnings)"></span></p>
+                            </div>
                         </div>
                     </template>
 
-                    {{-- Rank 1 (Center - Elevated) --}}
+                    {{-- Rank 1 (Gold - King) --}}
                     <template x-if="topThree[0]">
-                        <div class="bento-card top-rank-card rank-1 p-6 text-center flex flex-col items-center relative z-10 border-amber-200/50 shadow-xl">
-                            <div class="rank-1-glow"></div>
-                            <i class="fas fa-crown text-amber-500 text-2xl mb-2 animate-bounce"></i>
-                            <div class="w-20 h-20 rounded-full overflow-hidden border-4 border-amber-400 mb-4 shadow-md bg-surface">
-                                <template x-if="!hasImage(topThree[0].profile_picture)"><div class="w-full h-full flex items-center justify-center font-bold text-2xl text-amber-500" x-text="getInitials(topThree[0].name)"></div></template>
-                                <template x-if="hasImage(topThree[0].profile_picture)"><img :src="topThree[0].profile_picture" class="w-full h-full object-cover"></template>
+                        <div class="w-1/3 flex flex-col items-center group relative z-20 -mt-10">
+                            <i class="fas fa-crown text-amber-400 text-3xl sm:text-4xl mb-2 drop-shadow-lg animate-bounce"></i>
+                            <div class="podium-avatar gold-glow mb-4 z-10 w-28 h-28 sm:w-36 sm:h-36 transition-transform group-hover:-translate-y-2 duration-300">
+                                <div class="w-full h-full rounded-full overflow-hidden border-4 border-amber-400">
+                                    <template x-if="!hasImage(topThree[0].profile_picture)"><div class="w-full h-full flex items-center justify-center bg-amber-50 font-bold text-3xl text-amber-600" x-text="getInitials(topThree[0].name)"></div></template>
+                                    <template x-if="hasImage(topThree[0].profile_picture)"><img :src="topThree[0].profile_picture" class="w-full h-full object-cover"></template>
+                                </div>
+                                <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-xs font-black px-3 py-1 rounded-full shadow-lg border-2 border-white">#1</div>
                             </div>
-                            <h3 class="text-base font-black text-mainText truncate w-full" x-text="topThree[0].name"></h3>
-                            <div class="mt-2 bg-amber-50 text-amber-700 px-4 py-1.5 rounded-lg text-sm font-black border border-amber-200/60 inline-block">
-                                ₹<span x-text="formatMoney(topThree[0].earnings)"></span>
+                            <div class="premium-glass w-full pt-10 pb-6 px-2 text-center -mt-14 rounded-t-[2.5rem] rounded-b-2xl border-amber-200/50 bg-gradient-to-b from-amber-50/10 to-transparent relative z-0">
+                                <h3 class="text-sm sm:text-lg font-black text-mainText truncate w-full px-1" x-text="topThree[0].name"></h3>
+                                <div class="mt-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-4 py-1.5 rounded-xl text-sm sm:text-base font-black inline-block shadow-md">
+                                    ₹<span x-text="formatMoney(topThree[0].earnings)"></span>
+                                </div>
                             </div>
                         </div>
                     </template>
 
-                    {{-- Rank 3 (Right) --}}
+                    {{-- Rank 3 (Bronze) --}}
                     <template x-if="topThree[2]">
-                        <div class="bento-card top-rank-card rank-3 p-5 text-center flex flex-col items-center md:mb-4">
-                            <div class="w-8 h-8 rounded-full bg-orange-50 text-orange-600 font-black text-xs flex items-center justify-center mb-3">#3</div>
-                            <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-orange-200/60 mb-3 shadow-sm bg-surface">
-                                <template x-if="!hasImage(topThree[2].profile_picture)"><div class="w-full h-full flex items-center justify-center font-bold text-orange-400" x-text="getInitials(topThree[2].name)"></div></template>
-                                <template x-if="hasImage(topThree[2].profile_picture)"><img :src="topThree[2].profile_picture" class="w-full h-full object-cover"></template>
-                            </div>
-                            <h3 class="text-sm font-bold text-mainText truncate w-full" x-text="topThree[2].name"></h3>
-                            <p class="text-sm font-black text-orange-600/80 mt-1">₹<span x-text="formatMoney(topThree[2].earnings)"></span></p>
-                        </div>
-                    </template>
-                </div>
-
-                {{-- REST OF THE LEADERBOARD (2-Column Compact Grid) --}}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3" x-show="restOfTopTen.length > 0">
-                    <template x-for="user in restOfTopTen" :key="user.rank">
-                        <div class="bento-card p-3 flex items-center justify-between hover:bg-surface/50 cursor-default">
-                            <div class="flex items-center gap-3">
-                                <div class="w-7 text-center text-xs font-black text-mutedText" x-text="user.rank"></div>
-
-                                <div class="relative w-10 h-10 rounded-full overflow-hidden bg-primary/5">
-                                    <template x-if="!hasImage(user.profile_picture)">
-                                        <div class="w-full h-full flex items-center justify-center text-xs font-bold text-primary" x-text="getInitials(user.name)"></div>
-                                    </template>
-                                    <template x-if="hasImage(user.profile_picture)">
-                                        <img :src="user.profile_picture" class="w-full h-full object-cover">
-                                    </template>
-                                </div>
-
-                                <div class="flex flex-col">
-                                    <span class="text-sm font-bold text-mainText leading-tight max-w-[100px] sm:max-w-[120px] truncate" x-text="user.name"></span>
+                        <div class="w-1/3 flex flex-col items-center group">
+                            <div class="text-orange-400/70 font-black text-xl sm:text-2xl mb-2 opacity-50">#3</div>
+                            <div class="podium-avatar bronze-glow mb-4 z-10 w-20 h-20 sm:w-24 sm:h-24 transition-transform group-hover:-translate-y-2 duration-300">
+                                <div class="w-full h-full rounded-full overflow-hidden border-4 border-orange-300">
+                                    <template x-if="!hasImage(topThree[2].profile_picture)"><div class="w-full h-full flex items-center justify-center bg-orange-50 font-bold text-2xl text-orange-600" x-text="getInitials(topThree[2].name)"></div></template>
+                                    <template x-if="hasImage(topThree[2].profile_picture)"><img :src="topThree[2].profile_picture" class="w-full h-full object-cover"></template>
                                 </div>
                             </div>
-
-                            <div class="text-right pl-2">
-                                <span class="text-sm font-black text-primary">₹<span x-text="formatMoney(user.earnings)"></span></span>
+                            <div class="premium-glass w-full pt-8 pb-4 px-2 text-center -mt-12 rounded-t-3xl border-b-0 rounded-b-xl relative z-0">
+                                <h3 class="text-xs sm:text-sm font-bold text-mainText truncate w-full px-1" x-text="topThree[2].name"></h3>
+                                <p class="text-sm sm:text-base font-black text-orange-600 mt-1">₹<span x-text="formatMoney(topThree[2].earnings)"></span></p>
                             </div>
                         </div>
                     </template>
                 </div>
 
+                {{-- Rest of the Top 10 (Sleek List) --}}
+                <div class="premium-glass p-2 sm:p-4" x-show="restOfTopTen.length > 0">
+                    <div class="space-y-1">
+                        <template x-for="user in restOfTopTen" :key="user.rank">
+                            <div class="list-item-hover flex items-center justify-between p-3 sm:p-4 rounded-xl cursor-default">
+                                <div class="flex items-center gap-4 sm:gap-6">
+                                    <div class="w-8 text-center">
+                                        <span class="text-sm sm:text-base font-black text-mutedText opacity-70" x-text="'#' + user.rank"></span>
+                                    </div>
+
+                                    <div class="relative w-12 h-12 rounded-full overflow-hidden bg-surface border border-primary/10 shadow-sm">
+                                        <template x-if="!hasImage(user.profile_picture)">
+                                            <div class="w-full h-full flex items-center justify-center text-sm font-bold text-primary" x-text="getInitials(user.name)"></div>
+                                        </template>
+                                        <template x-if="hasImage(user.profile_picture)">
+                                            <img :src="user.profile_picture" class="w-full h-full object-cover">
+                                        </template>
+                                    </div>
+
+                                    <div class="flex flex-col">
+                                        <span class="text-sm sm:text-base font-bold text-mainText" x-text="user.name"></span>
+                                        <span class="text-xs font-medium text-mutedText">Top Performer</span>
+                                    </div>
+                                </div>
+
+                                <div class="text-right">
+                                    <span class="text-base sm:text-lg font-black text-primary">₹<span x-text="formatMoney(user.earnings)"></span></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
             </div>
+
+            {{-- BOTTOM: VIP USER PROFILE (Now horizontal at the bottom) --}}
+            <div class="lg:col-span-12 border-t border-primary/5 pt-16">
+                <div class="space-y-8">
+
+                    {{-- Title for Side Column --}}
+                    <h3 class="text-sm font-bold text-mutedText uppercase tracking-widest pl-2">Your Standing</h3>
+
+                    {{-- VIP Profile Card --}}
+                    <div class="vip-card p-8 md:p-10">
+                        <div class="absolute top-0 right-0 p-8 opacity-20 text-8xl">
+                            <i class="fas fa-fingerprint"></i>
+                        </div>
+
+                        <div class="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+                            <div class="flex items-center gap-6">
+                                <div class="relative">
+                                    <template x-if="!hasImage(userData.profile_picture)">
+                                        <div class="w-20 h-20 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-2xl font-black shadow-inner border border-white/30" x-text="getInitials(userData.name)"></div>
+                                    </template>
+                                    <template x-if="hasImage(userData.profile_picture)">
+                                        <img :src="userData.profile_picture" x-on:error="userData.profile_picture = null" class="w-20 h-20 rounded-full object-cover border-4 border-white/50 shadow-xl">
+                                    </template>
+                                    <div class="absolute bottom-1 right-1 w-5 h-5 bg-green-400 border-2 border-primary rounded-full shadow-md"></div>
+                                </div>
+                                <div class="text-left">
+                                    <h2 class="text-2xl md:text-3xl font-black tracking-wide" x-text="userData.name"></h2>
+                                    <p class="text-sm font-medium text-white/70 uppercase tracking-widest mt-1">Exclusive Partner Member</p>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col md:items-end text-center md:text-right">
+                                <p class="text-xs font-bold text-white/70 mb-1 uppercase tracking-wider">Total Earnings (<span x-text="getFilterLabel()"></span>)</p>
+                                <h3 class="text-4xl md:text-5xl font-black tracking-tight">₹<span x-text="formatMoney(userData.earnings)"></span></h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Bottom Stats Grid (Horizontal on Desktop) --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="premium-glass p-6 flex flex-col justify-center items-start relative overflow-hidden group">
+                            <div class="absolute -right-4 -top-4 text-primary/10 text-6xl transition-transform group-hover:scale-110"><i class="fas fa-trophy"></i></div>
+                            <p class="text-xs font-bold text-mutedText mb-1 uppercase tracking-wider relative z-10">Current Rank</p>
+                            <p class="text-4xl font-black text-mainText relative z-10">#<span x-text="userData.rank"></span></p>
+                        </div>
+                        <div class="premium-glass p-6 flex flex-col justify-center items-start relative overflow-hidden group">
+                            <div class="absolute -right-4 -top-4 text-secondary/10 text-6xl transition-transform group-hover:scale-110"><i class="fas fa-chart-line"></i></div>
+                            <p class="text-xs font-bold text-mutedText mb-1 uppercase tracking-wider relative z-10">Total Sales</p>
+                            <p class="text-4xl font-black text-mainText relative z-10" x-text="userData.sale_count || 0"></p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
@@ -296,8 +328,7 @@
             setFilter(newFilter) {
                 if (this.filter === newFilter) return;
                 this.filter = newFilter;
-                
-                // Debounced fetch
+
                 if (this.debounceTimer) clearTimeout(this.debounceTimer);
                 this.debounceTimer = setTimeout(() => {
                     this.fetchData();
@@ -312,6 +343,7 @@
             fetchData() {
                 this.loading = true;
 
+                // Simulated delay hatane ke liye ya custom behavior ke liye yahan fetch setup hai
                 fetch(`{{ route('student.leaderboard.data') }}?filter=${this.filter}`)
                     .then(res => res.json())
                     .then(data => {
@@ -323,7 +355,10 @@
                         console.error('Leaderboard Fetch Error:', err);
                     })
                     .finally(() => {
-                        this.loading = false;
+                        // Smooth transition experience ke liye chota sa timeout
+                        setTimeout(() => {
+                            this.loading = false;
+                        }, 200);
                     });
             },
 

@@ -312,27 +312,28 @@ class RegistrationFlowController extends Controller
             // Recalculate Price Securely
             $pricing = $this->registrationService->calculatePricing($bundle, $request->coupon_code, $hasReferral);
 
-            // Initialize Razorpay
-            $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
+            // Initialize Gateway via Factory
+            $gateway = \App\Services\Gateways\PaymentGatewayFactory::make();
+            $gatewayName = \App\Services\Gateways\PaymentGatewayFactory::activeGateway();
 
             $orderData = [
                 'receipt' => 'rcpt_'.$lead->id.'_'.time(),
-                'amount' => round($pricing['totalAmount'] * 100), // Paise
+                'amount' => $pricing['totalAmount'],
                 'currency' => 'INR',
-                'payment_capture' => 1,
                 'notes' => [
                     'lead_id' => $lead->id,
-                    'coupon_code' => $request->coupon_code,
+                    'coupon_code' => $request->coupon_code ?? '',
                 ],
             ];
 
-            $razorpayOrder = $api->order->create($orderData);
+            $orderResult = $gateway->createOrder($orderData);
 
-            return response()->json([
+            $response = [
                 'status' => 'success',
-                'order_id' => $razorpayOrder['id'],
-                'amount' => $orderData['amount'],
-                'key' => config('services.razorpay.key'),
+                'gateway' => $gatewayName,
+                'order_id' => $orderResult['order_id'],
+                'amount' => $orderResult['amount'],
+                'key' => $gatewayName === 'razorpay' ? config('services.razorpay.key') : null,
                 'name' => config('app.name'),
                 'description' => $bundle->title,
                 'prefill' => [
@@ -340,12 +341,19 @@ class RegistrationFlowController extends Controller
                     'email' => $lead->email,
                     'contact' => $lead->mobile,
                 ],
-            ]);
+            ];
+
+            if ($gatewayName === 'cashfree') {
+                $response['session_id'] = $orderResult['session_id'] ?? null;
+                $response['environment'] = $orderResult['environment'] ?? 'sandbox';
+            }
+
+            return response()->json($response);
 
         } catch (\Exception $e) {
             Log::error('Payment Initiation Failed: '.$e->getMessage());
 
-            return response()->json(['status' => 'error', 'message' => 'Unable to initiate payment']);
+            return response()->json(['status' => 'error', 'message' => 'Unable to initiate payment: ' . $e->getMessage()]);
         }
     }
 
@@ -356,9 +364,9 @@ class RegistrationFlowController extends Controller
     {
         try {
             $request->validate([
-                'razorpay_order_id' => 'required',
-                'razorpay_payment_id' => 'required',
-                'razorpay_signature' => 'required',
+                'gateway' => 'nullable|string',
+                'razorpay_order_id' => 'required_without:cashfree_order_id',
+                'cashfree_order_id' => 'required_without:razorpay_order_id',
                 'lead_id' => 'required',
                 'coupon_code' => 'nullable|string',
             ]);
@@ -374,7 +382,10 @@ class RegistrationFlowController extends Controller
 
             } catch (\Exception $e) {
                 // If it failed, check if it was because the lead was already processed (e.g., by a webhook)
-                $payment = Payment::where('razorpay_order_id', $request->razorpay_order_id)->first();
+                $orderId = $request->razorpay_order_id ?? $request->cashfree_order_id;
+                $payment = Payment::where('gateway_order_id', $orderId)
+                                    ->orWhere('razorpay_order_id', $orderId)
+                                    ->first();
 
                 if ($payment && $payment->user) {
                     $user = $payment->user;

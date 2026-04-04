@@ -35,12 +35,24 @@ class RegistrationService
             return DB::transaction(function () use ($data) {
                 // 1. Verify Signature (Bypass if Webhook)
                 if (empty($data['is_webhook'])) {
-                    $attributes = [
-                        'razorpay_order_id' => $data['razorpay_order_id'],
-                        'razorpay_payment_id' => $data['razorpay_payment_id'],
-                        'razorpay_signature' => $data['razorpay_signature']
-                    ];
-                    $this->api->utility->verifyPaymentSignature($attributes);
+                    $gatewayName = $data['gateway'] ?? 'razorpay';
+                    $gateway = \App\Services\Gateways\PaymentGatewayFactory::make($gatewayName);
+                    
+                    if ($gatewayName === 'razorpay') {
+                        $attributes = [
+                            'razorpay_order_id' => $data['razorpay_order_id'] ?? $data['gateway_order_id'],
+                            'razorpay_payment_id' => $data['razorpay_payment_id'] ?? $data['gateway_payment_id'],
+                            'razorpay_signature' => $data['razorpay_signature'] ?? ''
+                        ];
+                        $gateway->verifyPayment($attributes);
+                    } else {
+                        $verifyResult = $gateway->verifyPayment(['order_id' => $data['cashfree_order_id'] ?? $data['gateway_order_id']]);
+                        if (!$verifyResult['verified']) {
+                            throw new Exception('Payment verification failed for Cashfree.');
+                        }
+                        // For non-webhook calls, update the data array with the actual payment ID
+                        $data['gateway_payment_id'] = $verifyResult['payment_id'];
+                    }
                 }
 
                 // 2. Retrieve Data with Lock
@@ -232,11 +244,9 @@ class RegistrationService
 
     protected function recordPayment(User $user, Bundle $bundle, array $data, array $pricing, ?Coupon $coupon)
     {
-        return Payment::create([
+        $paymentData = [
             'user_id' => $user->id,
             'bundle_id' => $bundle->id,
-            'razorpay_order_id' => $data['razorpay_order_id'],
-            'razorpay_payment_id' => $data['razorpay_payment_id'],
             'subtotal' => $pricing['taxableAmount'],
             'discount_amount' => $pricing['discount'],
             'tax_amount' => $pricing['taxAmount'],
@@ -253,7 +263,20 @@ class RegistrationService
             'amount' => $pricing['totalAmount'],
             'coupon_id' => $coupon ? $coupon->id : null,
             'status' => 'success',
-        ]);
+            'payment_gateway' => $data['gateway'] ?? 'razorpay',
+        ];
+
+        if (($data['gateway'] ?? 'razorpay') === 'razorpay') {
+            $paymentData['razorpay_order_id'] = $data['razorpay_order_id'] ?? $data['gateway_order_id'] ?? null;
+            $paymentData['razorpay_payment_id'] = $data['razorpay_payment_id'] ?? $data['gateway_payment_id'] ?? null;
+            $paymentData['gateway_order_id'] = $data['razorpay_order_id'] ?? $data['gateway_order_id'] ?? null;
+            $paymentData['gateway_payment_id'] = $data['razorpay_payment_id'] ?? $data['gateway_payment_id'] ?? null;
+        } else {
+            $paymentData['gateway_order_id'] = $data['cashfree_order_id'] ?? $data['gateway_order_id'] ?? null;
+            $paymentData['gateway_payment_id'] = $data['gateway_payment_id'] ?? null;
+        }
+
+        return Payment::create($paymentData);
     }
 
     protected function processCommission(?User $referrer, User $user, Bundle $bundle)

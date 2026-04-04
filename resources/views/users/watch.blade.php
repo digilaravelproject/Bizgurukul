@@ -393,11 +393,33 @@
             const lessonId = "{{ $currentLesson ? $currentLesson->id : '' }}";
             let isAlreadyCompleted = "{{ ($progress && $progress->is_completed) ? 1 : 0 }}" == 1;
 
+            // Bunny Stream API Event Listener
+            window.addEventListener('message', function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    // data.event includes ended, timeupdate, etc.
+                    if (data.event === 'ended' && !isAlreadyCompleted) {
+                        saveProgress(9999, true);
+                        isAlreadyCompleted = true; // prevent multiple reloads
+                        setTimeout(() => location.reload(), 800);
+                    }
+                    if (data.event === 'timeupdate' && !isAlreadyCompleted) {
+                        const now = Math.floor(data.value);
+                        if (now > 0 && now % 10 === 0 && now !== lastSaved) {
+                            lastSaved = now;
+                            saveProgress(now, false);
+                        }
+                    }
+                } catch (e) {
+                    // Ignore non-bunny / non-JSON messages
+                }
+            });
+
             @if(!$currentLesson || (!$currentLesson->bunny_video_id && !$currentLesson->bunny_embed_url))
                 player.on('timeupdate', function() {
                     if (isAlreadyCompleted) return;
                     const now = Math.floor(player.currentTime());
-                    if (now % 10 === 0 && now !== lastSaved) {
+                    if (now > 0 && now % 10 === 0 && now !== lastSaved) {
                         lastSaved = now;
                         saveProgress(now, false);
                     }
@@ -406,16 +428,21 @@
                 player.on('ended', function() {
                     if (!isAlreadyCompleted) {
                         saveProgress(Math.floor(player.duration()), true);
-                        location.reload(); // Refresh to update list
+                        setTimeout(() => location.reload(), 800);
                     }
                 });
             @endif
 
             document.getElementById('mark-complete')?.addEventListener('click', function() {
+                // If it's a video.js player, get duration. If bunny or error, use 0/generic.
                 const duration = (typeof player !== 'undefined' && player) ? Math.floor(player.duration() || 0) : 0;
                 saveProgress(duration, true);
-                // Don't wait for completion strictly, just small delay then reload
-                setTimeout(() => location.reload(), 500);
+                
+                // Show immediate feedback
+                this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Updating...';
+                this.classList.add('opacity-50');
+                
+                setTimeout(() => location.reload(), 1000);
             });
 
             function saveProgress(seconds, completed) {

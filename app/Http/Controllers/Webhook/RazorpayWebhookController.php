@@ -58,7 +58,7 @@ class RazorpayWebhookController extends Controller
             $paymentId = $paymentEntity['id'];
             
             // Check if already processed (Race condition prevention)
-            if (Payment::where('razorpay_order_id', $orderId)->exists()) {
+            if (Payment::where('razorpay_order_id', $orderId)->orWhere('gateway_order_id', $orderId)->exists()) {
                 Log::info('Razorpay Webhook: Order already processed ' . $orderId);
                 return response()->json(['status' => 'success', 'message' => 'Already processed'], 200);
             }
@@ -85,6 +85,7 @@ class RazorpayWebhookController extends Controller
                     'coupon_code' => $notes['coupon_code'] ?? null,
                     'razorpay_order_id' => $orderId,
                     'razorpay_payment_id' => $paymentId,
+                    'gateway' => 'razorpay',
                     'is_webhook' => true // Custom flag to bypass utility->verifyPaymentSignature
                 ];
                 

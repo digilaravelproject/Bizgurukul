@@ -16,12 +16,10 @@ use App\Services\EmailService;
 
 class RazorpayController extends Controller
 {
-    private $api;
     private $commissionService;
 
     public function __construct(\App\Services\CommissionCalculatorService $commissionService)
     {
-        $this->api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
         $this->commissionService = $commissionService;
     }
 
@@ -156,140 +154,109 @@ class RazorpayController extends Controller
                 return response()->json(['status' => 'success']);
             }
 
-            $razorpayOrder = $this->api->order->create($orderData);
+            $gateway = \App\Services\Gateways\PaymentGatewayFactory::make();
+            $gatewayName = $gateway->getGatewayName();
+
+            $orderResult = $gateway->createOrder([
+                'amount'     => $amount,
+                'receipt'    => 'rcpt_' . time(),
+                'currency'   => 'INR',
+                'customer'   => [
+                    'id'    => $user->id,
+                    'name'  => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->mobile,
+                ],
+                'notes'      => [
+                    'user_id' => $user->id,
+                    'type'    => $type,
+                    'item_id' => $id,
+                ],
+                'return_url' => url('/'),
+            ]);
 
             // Store pending payment in database
             Payment::create([
                 'user_id' => $user->id,
                 'course_id' => $type === 'course' ? $id : null,
                 'bundle_id' => $type === 'bundle' ? $id : null,
-                'razorpay_order_id' => $razorpayOrder['id'],
+                'razorpay_order_id' => $gatewayName === 'razorpay' ? $orderResult['order_id'] : null,
+                'gateway_order_id' => $orderResult['order_id'],
+                'payment_gateway' => $gatewayName,
                 'amount' => $amount,
                 'subtotal' => $amount,
                 'total_amount' => $amount,
                 'status' => 'pending',
             ]);
 
-            return response()->json([
-                'order_id' => $razorpayOrder['id'],
-                'amount' => $orderData['amount'],
-                'key' => env('RAZORPAY_KEY'),
+            $response = [
+                'gateway' => $gatewayName,
+                'order_id' => $orderResult['order_id'],
+                'amount' => $orderResult['amount'],
+                'key' => $orderResult['key'],
                 'product_name' => $productName,
-            ]);
+            ];
+
+            if ($gatewayName === 'cashfree') {
+                $response['session_id'] = $orderResult['session_id'] ?? null;
+                $response['environment'] = $orderResult['environment'] ?? 'sandbox';
+            }
+
+            return response()->json($response);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json(['status' => 'error', 'message' => 'Product not found.'], 404);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("Error creating Razorpay order for {$type} {$id} (User " . Auth::id() . "): " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error("Error creating payment order for {$type} {$id} (User " . Auth::id() . "): " . $e->getMessage());
             return response()->json(['status' => 'error', 'message' => 'Failed to initialize payment gateway. Please try again later.'], 500);
         }
     }
 
-    public function verifyPayment(Request $request)
+    /**
+     * Handle payment verification after gateway callback.
+     */
+    public function verifyPayment(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
-            $signature = $request->razorpay_signature;
-            $paymentId = $request->razorpay_payment_id;
-            $orderId = $request->razorpay_order_id;
+            $gatewayName = $request->input('gateway', 'razorpay');
+            $gateway = \App\Services\Gateways\PaymentGatewayFactory::make($gatewayName);
+            $orderId = null;
+            $paymentId = null;
 
-            $attributes = [
-                'razorpay_order_id' => $orderId,
-                'razorpay_payment_id' => $paymentId,
-                'razorpay_signature' => $signature
-            ];
+            if ($gatewayName === 'razorpay') {
+                $orderId = $request->razorpay_order_id;
+                $paymentId = $request->razorpay_payment_id;
+                $gateway->verifyPayment([
+                    'razorpay_order_id' => $orderId,
+                    'razorpay_payment_id' => $paymentId,
+                    'razorpay_signature' => $request->razorpay_signature
+                ]);
+            } else {
+                $orderId = $request->cashfree_order_id;
+                $verifyResult = $gateway->verifyPayment(['order_id' => $orderId]);
+                if (!$verifyResult['verified']) {
+                    throw new \Exception('Payment verification failed.');
+                }
+                $paymentId = $verifyResult['payment_id'];
+            }
 
-            $this->api->utility->verifyPaymentSignature($attributes);
-
-            // DB Transaction for ACID compliance
             \Illuminate\Support\Facades\DB::beginTransaction();
 
-            // Update Database
-            $payment = Payment::with(['course', 'bundle'])->where('razorpay_order_id', $orderId)->lockForUpdate()->firstOrFail();
+            $payment = Payment::with(['course', 'bundle'])
+                ->where('gateway_order_id', $orderId)
+                ->orWhere('razorpay_order_id', $orderId)
+                ->lockForUpdate()
+                ->firstOrFail();
 
             if ($payment->status !== 'success') {
-                $user = Auth::user();
-                $product = $payment->bundle ?? $payment->course;
-
-                // --- 🚨 DETECT UPGRADE BEFORE STATUS UPDATE 🚨 ---
-                $isUpgrade = false;
-                $previousBundle = null;
-
-                if ($product instanceof \App\Models\Bundle && $user) {
-                    $previousBundle = $user->highestPurchasedBundle();
-                    if ($previousBundle && $previousBundle->id !== $product->id
-                        && $previousBundle->preference_index < $product->preference_index) {
-                        $isUpgrade = true;
-                    }
-                }
-                // --------------------------------------------------
-
-                $payment->update([
-                    'status' => 'success',
-                    'razorpay_payment_id' => $paymentId
-                ]);
-
-                // Commission Logic
-                if ($user && $user->referrer) {
-                    $sponsor = $user->referrer;
-
-                    // Calculate Commission
-                    $commissionAmount = 0;
-                    if ($product instanceof \App\Models\Bundle) {
-                        if ($isUpgrade && $previousBundle) {
-                            // UPGRADE: Sponsor gets differential
-                            $newCommission = $this->commissionService->calculateCommission($sponsor, $product, $product->affiliate_price);
-                            $oldCommission = $this->commissionService->calculateCommission($sponsor, $previousBundle, $previousBundle->affiliate_price);
-                            $commissionAmount = max(0, $newCommission - $oldCommission);
-                        } else {
-                            // Fresh purchase
-                            $commissionAmount = $this->commissionService->calculateCommission($sponsor, $product, $payment->amount);
-                        }
-                    } elseif ($product instanceof Course) {
-                         $commissionAmount = $product->commission_value ?? 0;
-                    }
-
-                    if ($commissionAmount > 0) {
-                        app(\App\Services\WalletService::class)->processCommission([
-                            'affiliate_id' => $sponsor->id,
-                            'referred_user_id' => $user->id,
-                            'amount' => $commissionAmount,
-                            // Status is handled by processCommission
-                            'reference_id' => $product->id,
-                            'reference_type' => get_class($product),
-                            'notes' => ($isUpgrade ? 'Upgrade Commission' : 'Commission') . ' for ' . class_basename($product) . ': ' . $product->title,
-                        ]);
-                    }
-                }
+                $this->processSuccessfulPayment($payment, (string) $paymentId);
             }
 
             \Illuminate\Support\Facades\DB::commit();
 
-            // --- Email Notifications ---
-            try {
-                $product = $payment->bundle ?? $payment->course;
-                $productName = $product ? $product->title : 'Your Product';
-                $user = Auth::user();
-                $amountFormatted = number_format($payment->amount, 2);
-                $txnId = $payment->razorpay_payment_id;
+            // Send notification after commit
+            $this->sendPurchaseNotifications($payment, (string) $paymentId);
 
-                if ($payment->bundle_id) {
-                    Mail::to($user->email)->queue(new PlanUpgradedMail($user->name, $productName, $amountFormatted, $txnId));
-                } else {
-                    Mail::to($user->email)->queue(new CoursePurchasedMail($user->name, $productName, $amountFormatted, $txnId));
-                }
-
-                $adminEmail = EmailService::adminEmail();
-                if ($adminEmail) {
-                    Mail::to($adminEmail)->queue(new AdminNotificationMail(
-                        'New ' . ($payment->bundle_id ? 'Plan Purchase' : 'Course Purchase'),
-                        "{$user->name} ({$user->email}) purchased: {$productName} for ₹{$amountFormatted} (TXN: {$txnId})"
-                    ));
-                }
-            } catch (\Throwable $ignored) {}
-            // --- End Email Notifications ---
-
-            // Success - Flash message for dashboard
             session()->flash('success', 'Investment Successful! Your ' . ($payment->bundle_id ? 'Bundle' : 'Course') . ' has been activated.');
-
             return response()->json(['status' => 'success', 'message' => 'Payment Verified']);
 
         } catch (\Razorpay\Api\Errors\SignatureVerificationError $e) {
@@ -300,8 +267,98 @@ class RazorpayController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Payment record not found.'], 404);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\DB::rollBack();
-            \Illuminate\Support\Facades\Log::error("Error verifying Razorpay payment for order {$request->razorpay_order_id}: " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error("Error verifying payment for order {$orderId}: " . $e->getMessage());
             return response()->json(['status' => 'error', 'message' => 'Payment verification failed due to a server error.'], 500);
+        }
+    }
+
+    /**
+     * Process successful payment: updates status, calculates commissions, and upgrades bundles.
+     */
+    private function processSuccessfulPayment(Payment $payment, string $paymentId): void
+    {
+        $user = Auth::user();
+        $product = $payment->bundle ?? $payment->course;
+        if (!$product || !$user) return;
+
+        // Detect Upgrade
+        $isUpgrade = false;
+        $previousBundle = null;
+
+        if ($product instanceof \App\Models\Bundle) {
+            $previousBundle = $user->highestPurchasedBundle();
+            if ($previousBundle && $previousBundle->id !== $product->id
+                && $previousBundle->preference_index < $product->preference_index) {
+                $isUpgrade = true;
+            }
+        }
+
+        $payment->update([
+            'status' => 'success',
+            'razorpay_payment_id' => $paymentId,
+            'gateway_payment_id' => $paymentId
+        ]);
+
+        // Process Commission
+        if ($user->referrer) {
+            $sponsor = $user->referrer;
+            $commissionAmount = 0;
+
+            if ($product instanceof \App\Models\Bundle) {
+                if ($isUpgrade && $previousBundle) {
+                    $newComm = $this->commissionService->calculateCommission($sponsor, $product, $product->affiliate_price);
+                    $oldComm = $this->commissionService->calculateCommission($sponsor, $previousBundle, $previousBundle->affiliate_price);
+                    $commissionAmount = max(0, $newComm - $oldComm);
+                } else {
+                    $commissionAmount = $this->commissionService->calculateCommission($sponsor, $product, $payment->amount);
+                }
+            } elseif ($product instanceof Course) {
+                $commissionAmount = $product->commission_value ?? 0;
+            }
+
+            if ($commissionAmount > 0) {
+                app(\App\Services\WalletService::class)->processCommission([
+                    'affiliate_id' => $sponsor->id,
+                    'referred_user_id' => $user->id,
+                    'amount' => $commissionAmount,
+                    'reference_id' => $product->id,
+                    'reference_type' => get_class($product),
+                    'notes' => ($isUpgrade ? 'Upgrade Commission' : 'Commission') . ' for ' . class_basename($product) . ': ' . $product->title,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Send email notifications for the purchase.
+     */
+    private function sendPurchaseNotifications(Payment $payment, string $paymentId): void
+    {
+        try {
+            $product = $payment->bundle ?? $payment->course;
+            if (!$product) return;
+
+            $user = Auth::user();
+            if (!$user) return;
+
+            $productName = $product->title;
+            $amountFormatted = number_format($payment->amount, 2);
+
+            if ($payment->bundle_id) {
+                Mail::to($user->email)->queue(new PlanUpgradedMail($user->name, $productName, $amountFormatted, $paymentId));
+            } else {
+                Mail::to($user->email)->queue(new CoursePurchasedMail($user->name, $productName, $amountFormatted, $paymentId));
+            }
+
+            $adminEmail = EmailService::adminEmail();
+            if ($adminEmail) {
+                Mail::to($adminEmail)->queue(new AdminNotificationMail(
+                    'New ' . ($payment->bundle_id ? 'Plan Purchase' : 'Course Purchase'),
+                    "{$user->name} ({$user->email}) purchased: {$productName} for ₹{$amountFormatted} (TXN: {$paymentId})"
+                ));
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Notification Error: " . $e->getMessage());
         }
     }
 }

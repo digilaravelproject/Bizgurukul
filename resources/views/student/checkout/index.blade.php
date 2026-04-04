@@ -2,7 +2,12 @@
 
 @section('content')
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
     <script>
+        // Initialize Cashfree
+        const cashfreeMode = '{{ \App\Models\Setting::get("cashfree_environment", "sandbox") === "production" ? "production" : "sandbox" }}';
+        const cashfree = Cashfree({ mode: cashfreeMode });
+
         function checkoutHandler() {
             return {
                 basePrice: {{ $basePrice }},
@@ -37,36 +42,63 @@
                         }
 
                         if (data.order_id) {
-                            const options = {
-                                "key": data.key,
-                                "amount": data.amount,
-                                "currency": "INR",
-                                "name": "{{ config('app.name') }}",
-                                "description": data.product_name,
-                                "order_id": data.order_id,
-                                "handler": (response) => {
-                                    this.verifyPayment(response);
-                                },
-                                "prefill": {
-                                    "name": "{{ $user->name }}",
-                                    "email": "{{ $user->email }}",
-                                    "contact": "{{ $user->mobile ?? '' }}"
-                                },
-                                "theme": {
-                                    "color": "#F7941D"
-                                },
-                                "modal": {
-                                    "ondismiss": () => {
+                            if (data.gateway === 'cashfree') {
+                                // --- CASHFREE CHECKOUT ---
+                                let checkoutOptions = {
+                                    paymentSessionId: data.session_id,
+                                    redirectTarget: "_modal",
+                                };
+                                cashfree.checkout(checkoutOptions).then((result) => {
+                                    if(result.error){
+                                        console.log("User has closed the popup or there is some payment error", result.error);
                                         this.processingPayment = false;
+                                        alert('Payment failed or cancelled.');
                                     }
-                                }
-                            };
-                            const rzp1 = new Razorpay(options);
-                            rzp1.on('payment.failed', (response) => {
-                                this.processingPayment = false;
-                                alert('Payment Failed: ' + response.error.description);
-                            });
-                            rzp1.open();
+                                    if(result.redirect){
+                                        console.log("Payment will be redirected");
+                                    }
+                                    if(result.paymentDetails){
+                                        console.log("Payment has been completed", result.paymentDetails);
+                                        this.verifyPayment({
+                                            gateway: 'cashfree',
+                                            cashfree_order_id: data.order_id
+                                        });
+                                    }
+                                });
+                            } else {
+                                // --- RAZORPAY CHECKOUT ---
+                                const options = {
+                                    "key": data.key,
+                                    "amount": data.amount,
+                                    "currency": "INR",
+                                    "name": "{{ config('app.name') }}",
+                                    "description": data.product_name,
+                                    "order_id": data.order_id,
+                                    "handler": (response) => {
+                                        response.gateway = 'razorpay';
+                                        this.verifyPayment(response);
+                                    },
+                                    "prefill": {
+                                        "name": "{{ $user->name }}",
+                                        "email": "{{ $user->email }}",
+                                        "contact": "{{ $user->mobile ?? '' }}"
+                                    },
+                                    "theme": {
+                                        "color": "#F7941D"
+                                    },
+                                    "modal": {
+                                        "ondismiss": () => {
+                                            this.processingPayment = false;
+                                        }
+                                    }
+                                };
+                                const rzp1 = new Razorpay(options);
+                                rzp1.on('payment.failed', (response) => {
+                                    this.processingPayment = false;
+                                    alert('Payment Failed: ' + response.error.description);
+                                });
+                                rzp1.open();
+                            }
                         } else {
                             throw new Error(data.message || 'Error creating order');
                         }
@@ -76,22 +108,18 @@
                     }
                 },
 
-                async verifyPayment(rzpResponse) {
+                async verifyPayment(verificationData) {
                     this.processingPayment = true;
                     this.processingRedirect = true;
                     try {
-                        console.log('Verifying payment...', rzpResponse);
+                        console.log('Verifying payment...', verificationData);
                         const response = await fetch('{{ route('razorpay.verify') }}', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
-                            body: JSON.stringify({
-                                razorpay_order_id: rzpResponse.razorpay_order_id,
-                                razorpay_payment_id: rzpResponse.razorpay_payment_id,
-                                razorpay_signature: rzpResponse.razorpay_signature
-                            })
+                            body: JSON.stringify(verificationData)
                         });
 
                         const data = await response.json();

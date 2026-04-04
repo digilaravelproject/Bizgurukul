@@ -82,10 +82,19 @@ class StudentController extends Controller
                     'seconds' => 'required|numeric'
                 ]);
 
-                VideoProgress::updateOrCreate(
-                    ['user_id' => Auth::id(), 'lesson_id' => $request->lesson_id],
-                    ['last_watched_second' => $request->seconds, 'is_completed' => $request->completed ?? false]
-                );
+                $progress = VideoProgress::firstOrNew([
+                    'user_id' => Auth::id(),
+                    'lesson_id' => $request->lesson_id
+                ]);
+
+                $progress->last_watched_second = $request->seconds;
+
+                // Ensure once is_completed is true, it is NEVER overwritten by false
+                if ($request->completed || $progress->is_completed) {
+                    $progress->is_completed = true;
+                }
+
+                $progress->save();
             } else {
                 // beginner guide or other standalone video progress - keep in session
                 $seconds = $request->input('seconds', 0);

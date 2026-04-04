@@ -101,8 +101,13 @@
 
 @push('scripts')
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    // Initialize Cashfree
+    const cashfreeMode = '{{ \App\Models\Setting::get("cashfree_environment", "sandbox") === "production" ? "production" : "sandbox" }}';
+    const cashfree = Cashfree({ mode: cashfreeMode });
+
     function purchasePackage(id, name, price) {
         Swal.fire({
             title: 'Purchase Confirmation',
@@ -144,30 +149,54 @@
                 Swal.close();
                 const order = data.data;
 
-                var options = {
-                    "key": order.key,
-                    "amount": order.amount,
-                    "currency": "INR",
-                    "name": order.name,
-                    "description": "Purchase Coupon Package: " + name,
-                    "order_id": order.order_id,
-                    "handler": function (response){
-                        verifyPayment(response);
-                    },
-                    "prefill": order.prefill,
-                    "theme": {
-                        "color": "#F7941D" // Brand Color
-                    }
-                };
-                var rzp1 = new Razorpay(options);
-                rzp1.on('payment.failed', function (response){
-                    Swal.fire({
-                        title: 'Payment Failed',
-                        text: response.error.description,
-                        icon: 'error'
+                if (order.gateway === 'cashfree') {
+                    // --- CASHFREE CHECKOUT ---
+                    let checkoutOptions = {
+                        paymentSessionId: order.session_id,
+                        redirectTarget: "_modal",
+                    };
+                    cashfree.checkout(checkoutOptions).then((result) => {
+                        if(result.error){
+                            console.log("User closed popup or error", result.error);
+                            Swal.fire('Payment Failed', result.error.message || 'Payment cancelled.', 'error');
+                        }
+                        if(result.redirect){
+                            console.log("Payment will be redirected");
+                        }
+                        if(result.paymentDetails){
+                            console.log("Payment completed", result.paymentDetails);
+                            verifyPayment({
+                                cashfree_order_id: order.order_id
+                            });
+                        }
                     });
-                });
-                rzp1.open();
+                } else {
+                    // --- RAZORPAY CHECKOUT ---
+                    var options = {
+                        "key": order.key,
+                        "amount": order.amount,
+                        "currency": "INR",
+                        "name": order.name,
+                        "description": "Purchase Coupon Package: " + name,
+                        "order_id": order.order_id,
+                        "handler": function (response){
+                            verifyPayment(response);
+                        },
+                        "prefill": order.prefill,
+                        "theme": {
+                            "color": "#F7941D" // Brand Color
+                        }
+                    };
+                    var rzp1 = new Razorpay(options);
+                    rzp1.on('payment.failed', function (response){
+                        Swal.fire({
+                            title: 'Payment Failed',
+                            text: response.error.description,
+                            icon: 'error'
+                        });
+                    });
+                    rzp1.open();
+                }
 
             } else {
                 Swal.fire({
@@ -187,7 +216,7 @@
         });
     }
 
-    function verifyPayment(response) {
+    function verifyPayment(verificationData) {
         Swal.fire({
             title: 'Verifying Payment',
             text: 'Processing your purchase...',
@@ -199,11 +228,7 @@
 
         fetch('{{ route('student.coupons.purchase.verify') }}', {
             method: 'POST',
-            body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature
-            }),
+            body: JSON.stringify(verificationData),
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',

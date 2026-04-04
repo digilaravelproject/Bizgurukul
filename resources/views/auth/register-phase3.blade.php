@@ -1,6 +1,11 @@
 <x-guest-layout>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
     <script>
+        // Initialize Cashfree
+        const cashfreeMode = '{{ \App\Models\Setting::get("cashfree_environment", "sandbox") === "production" ? "production" : "sandbox" }}';
+        const cashfree = Cashfree({ mode: cashfreeMode });
+
         function checkoutHandler() {
             return {
                 couponCode: '',
@@ -83,37 +88,64 @@
                         const data = await response.json();
 
                         if (data.status === 'success') {
-                            const options = {
-                                "key": data.key,
-                                "amount": data.amount,
-                                "currency": "INR",
-                                "name": "{{ config('app.name') }}",
-                                "description": "Course Bundle Purchase",
-                                "image": "{{ Storage::url('site_images/logo1.png') }}",
-                                "order_id": data.order_id,
-                                "handler": (response) => {
-                                    this.verifyPayment(response);
-                                },
-                                "prefill": {
-                                    "name": "{{ $lead->name }}",
-                                    "email": "{{ $lead->email }}",
-                                    "contact": "{{ $lead->mobile }}"
-                                },
-                                "theme": {
-                                    "color": "#F7941D" // Razorpay Theme Color Matched
-                                },
-                                "modal": {
-                                    "ondismiss": () => {
+                            if (data.gateway === 'cashfree') {
+                                // --- CASHFREE CHECKOUT ---
+                                let checkoutOptions = {
+                                    paymentSessionId: data.session_id,
+                                    redirectTarget: "_modal",
+                                };
+                                cashfree.checkout(checkoutOptions).then((result) => {
+                                    if(result.error){
+                                        console.log("User closed popup or error", result.error);
                                         this.processingPayment = false;
+                                        alert('Payment failed or cancelled.');
                                     }
-                                }
-                            };
-                            const rzp1 = new Razorpay(options);
-                            rzp1.on('payment.failed', (response) => {
-                                this.processingPayment = false;
-                                alert('Payment Failed: ' + response.error.description);
-                            });
-                            rzp1.open();
+                                    if(result.redirect){
+                                        console.log("Payment will be redirected");
+                                    }
+                                    if(result.paymentDetails){
+                                        console.log("Payment completed", result.paymentDetails);
+                                        this.verifyPayment({
+                                            gateway: 'cashfree',
+                                            cashfree_order_id: data.order_id
+                                        });
+                                    }
+                                });
+                            } else {
+                                // --- RAZORPAY CHECKOUT ---
+                                const options = {
+                                    "key": data.key,
+                                    "amount": data.amount,
+                                    "currency": "INR",
+                                    "name": "{{ config('app.name') }}",
+                                    "description": "Course Bundle Purchase",
+                                    "image": "{{ Storage::url('site_images/logo1.png') }}",
+                                    "order_id": data.order_id,
+                                    "handler": (response) => {
+                                        response.gateway = 'razorpay';
+                                        this.verifyPayment(response);
+                                    },
+                                    "prefill": {
+                                        "name": "{{ $lead->name }}",
+                                        "email": "{{ $lead->email }}",
+                                        "contact": "{{ $lead->mobile }}"
+                                    },
+                                    "theme": {
+                                        "color": "#F7941D" // Razorpay Theme Color Matched
+                                    },
+                                    "modal": {
+                                        "ondismiss": () => {
+                                            this.processingPayment = false;
+                                        }
+                                    }
+                                };
+                                const rzp1 = new Razorpay(options);
+                                rzp1.on('payment.failed', (response) => {
+                                    this.processingPayment = false;
+                                    alert('Payment Failed: ' + response.error.description);
+                                });
+                                rzp1.open();
+                            }
                         } else {
                             throw new Error(data.message);
                         }
@@ -123,21 +155,20 @@
                     }
                 },
 
-                async verifyPayment(rzpResponse) {
+                async verifyPayment(verificationData) {
                     try {
+                        const payload = {
+                            ...verificationData,
+                            lead_id: {{ $lead->id }},
+                            coupon_code: this.couponCode
+                        };
                         const response = await fetch('{{ route('payment.verify') }}', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
-                            body: JSON.stringify({
-                                razorpay_order_id: rzpResponse.razorpay_order_id,
-                                razorpay_payment_id: rzpResponse.razorpay_payment_id,
-                                razorpay_signature: rzpResponse.razorpay_signature,
-                                lead_id: {{ $lead->id }},
-                                coupon_code: this.couponCode
-                            })
+                            body: JSON.stringify(payload)
                         });
 
                         const data = await response.json();

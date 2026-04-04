@@ -35,7 +35,9 @@ class OrdersExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSi
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('mobile', 'like', "%{$search}%");
             })->orWhere('razorpay_order_id', 'like', "%{$search}%")
-              ->orWhere('razorpay_payment_id', 'like', "%{$search}%");
+              ->orWhere('gateway_order_id', 'like', "%{$search}%")
+              ->orWhere('razorpay_payment_id', 'like', "%{$search}%")
+              ->orWhere('gateway_payment_id', 'like', "%{$search}%");
         }
 
         // Applying Date Filter
@@ -75,7 +77,9 @@ class OrdersExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSi
             'Amount',
             'CGST',
             'SGST',
-            'Total Amount'
+            'Total Amount',
+            'Gateway',
+            'Gateway ID'
         ];
     }
 
@@ -101,7 +105,9 @@ class OrdersExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSi
             number_format($baseAmount, 2, '.', ''),
             number_format($cgst, 2, '.', ''),
             number_format($sgst, 2, '.', ''),
-            number_format($totalAmount, 2, '.', '')
+            number_format($totalAmount, 2, '.', ''),
+            ucfirst($order->payment_gateway ?? 'Razorpay'),
+            $order->gateway_payment_id ?? $order->razorpay_payment_id ?? 'N/A'
         ];
     }
 

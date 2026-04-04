@@ -68,6 +68,12 @@ Route::middleware(['auth'])
             Route::get('/settings/wallet', [SettingController::class, 'wallet'])->name('settings.wallet');
             Route::post('/settings/wallet', [SettingController::class, 'updateWallet'])->name('settings.wallet.update');
 
+            // Payment Gateway Settings
+            Route::get('/settings/payment', [SettingController::class, 'paymentGateway'])->name('settings.payment');
+            Route::post('/settings/payment', [SettingController::class, 'updatePaymentGateway'])->name('settings.payment.update');
+            Route::post('/settings/payment/test', [SettingController::class, 'testPaymentGateway'])->name('settings.payment.test');
+            Route::post('/settings/payment/test-webhook', [SettingController::class, 'testWebhook'])->name('settings.payment.test_webhook');
+
             // Two-Factor Authentication
             Route::get('/settings/2fa', [\App\Http\Controllers\Admin\TwoFactorAuthenticationController::class, 'index'])->name('settings.2fa');
             Route::post('/settings/2fa/enable', [\App\Http\Controllers\Admin\TwoFactorAuthenticationController::class, 'enable'])->name('settings.2fa.enable');

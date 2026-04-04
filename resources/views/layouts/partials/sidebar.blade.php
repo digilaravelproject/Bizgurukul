@@ -25,7 +25,7 @@
             lmsOpen: {{ request()->routeIs('admin.courses.*', 'admin.categories.*', 'admin.lessons.*', 'admin.bundles.*', 'admin.beginner-guide', 'admin.resources', 'admin.certificate.*') ? 'true' : 'false' }},
             promoOpen: {{ request()->routeIs('admin.coupons.*', 'admin.coupon-packages.*') ? 'true' : 'false' }},
             resourceHubOpen: {{ request()->routeIs('admin.resource-categories.*', 'admin.general-resources.*') ? 'true' : 'false' }},
-            userOpen: {{ request()->routeIs('admin.users.*', 'admin.kyc.*', 'admin.verifications.*', 'admin.communities.*', 'admin.contact-inquiries.*') ? 'true' : 'false' }},
+            userOpen: {{ request()->routeIs('admin.users.*', 'admin.leads.*', 'admin.kyc.*', 'admin.verifications.*', 'admin.communities.*', 'admin.contact-inquiries.*') ? 'true' : 'false' }},
             affiliateOpen: {{ request()->routeIs('admin.affiliate.*', 'admin.payouts.*', 'admin.achievements.*') ? 'true' : 'false' }},
             settingsOpen: {{ request()->routeIs('admin.settings.*', 'admin.taxes.*', 'admin.email-templates.*', 'admin.roles.*', 'admin.activity-logs.*') ? 'true' : 'false' }}
         }">
@@ -278,6 +278,10 @@
                     <a href="{{ route('admin.settings.wallet') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.settings.wallet') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
                         <i class="fas fa-wallet text-[11px]"></i>
                         Wallet Settings
+                    </a>
+                    <a href="{{ route('admin.settings.payment') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.settings.payment') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                        <i class="fas fa-credit-card text-[11px]"></i>
+                        Payment Gateway
                     </a>
                     <a href="{{ route('admin.settings.email') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.settings.email*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
                         <i class="fas fa-envelope text-[11px]"></i>

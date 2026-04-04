@@ -43,7 +43,9 @@ class OrderController extends Controller
                       ->orWhere('email', 'like', "%{$search}%")
                       ->orWhere('mobile', 'like', "%{$search}%");
                 })->orWhere('razorpay_order_id', 'like', "%{$search}%")
-                  ->orWhere('razorpay_payment_id', 'like', "%{$search}%");
+                  ->orWhere('gateway_order_id', 'like', "%{$search}%")
+                  ->orWhere('razorpay_payment_id', 'like', "%{$search}%")
+                  ->orWhere('gateway_payment_id', 'like', "%{$search}%");
             });
         }
 

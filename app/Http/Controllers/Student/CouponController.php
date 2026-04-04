@@ -109,9 +109,9 @@ class CouponController extends Controller
     {
         try {
             $request->validate([
-                'razorpay_order_id' => 'required',
-                'razorpay_payment_id' => 'required',
-                'razorpay_signature' => 'required'
+                'gateway' => 'nullable|string',
+                'razorpay_order_id' => 'required_without:cashfree_order_id',
+                'cashfree_order_id' => 'required_without:razorpay_order_id'
             ]);
 
             DB::beginTransaction();
@@ -152,7 +152,8 @@ class CouponController extends Controller
             return response()->json(['status' => 'error', 'message' => $e->errors()], 422);
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error("Error verifying coupon purchase for order {$request->razorpay_order_id}: " . $e->getMessage());
+            $loggedOrderId = $request->razorpay_order_id ?? $request->cashfree_order_id ?? 'unknown';
+            Log::error("Error verifying coupon purchase for order {$loggedOrderId}: " . $e->getMessage());
             return response()->json(['status' => 'error', 'message' => 'Payment verification failed. Please contact support.'], 500);
         }
     }

@@ -9,10 +9,14 @@
 
         <td class="px-6 py-4 whitespace-nowrap">
             <div class="text-sm font-bold text-mainText">{{ $order->invoice_no }}</div>
-            <div class="text-[10px] text-mutedText mt-1">Order ID: {{ $order->razorpay_order_id ?? $order->id }}</div>
-            @if($order->razorpay_payment_id)
-                <div class="text-[10px] text-mutedText mt-0.5">Pay ID: {{ $order->razorpay_payment_id }}</div>
-            @endif
+            <div class="text-[10px] text-mutedText mt-1">Order ID: {{ $order->gateway_order_id ?? ($order->razorpay_order_id ?? $order->id) }}</div>
+            <div class="text-[10px] text-primary/70 mt-0.5 font-medium flex items-center gap-1">
+                <span class="capitalize">{{ $order->payment_gateway ?? 'razorpay' }}</span>
+                @if($order->gateway_payment_id || $order->razorpay_payment_id)
+                    <span class="text-mutedText/50">•</span>
+                    <span>{{ $order->gateway_payment_id ?? $order->razorpay_payment_id }}</span>
+                @endif
+            </div>
         </td>
 
         <td class="px-6 py-4">
