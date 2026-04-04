@@ -21,7 +21,13 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Payment::with(['user', 'bundle', 'course', 'paymentable']);
+        // Per Page
+        $perPage = $request->input('per_page', 20);
+        if (!in_array($perPage, [20, 30, 50, 100, 200])) {
+            $perPage = 20;
+        }
+
+        $query = Payment::with(['user.referrer', 'bundle', 'course', 'paymentable']);
 
         // Applying Status Filter
         $status = $request->input('status');
@@ -66,10 +72,13 @@ class OrderController extends Controller
             }
         }
 
-        $orders = $query->latest()->paginate(20)->withQueryString();
+        $orders = $query->latest()->paginate($perPage);
 
         if ($request->ajax()) {
-            return view('admin.orders.partials.history_table', compact('orders'))->render();
+            return response()->json([
+                'table' => view('admin.orders.partials.history_table', compact('orders'))->render(),
+                'pagination' => view('components.admin.table.pagination', ['records' => $orders])->render()
+            ]);
         }
 
         return view('admin.orders.index', compact('orders'));

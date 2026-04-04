@@ -104,4 +104,15 @@ class AchievementController extends Controller
             ], 500);
         }
     }
+
+    public function qualifiedUsers(Achievement $achievement)
+    {
+        $userAchievements = $achievement->userAchievements()
+            ->with('user')
+            ->whereIn('status', ['unlocked', 'claimed'])
+            ->orderBy('unlocked_at', 'desc')
+            ->get();
+
+        return view('admin.achievements.qualified', compact('achievement', 'userAchievements'));
+    }
 }

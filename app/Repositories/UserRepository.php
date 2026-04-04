@@ -14,13 +14,13 @@ class UserRepository
     }
 
     // List with Pagination, Search & Trash logic
-    public function getPaginatedUsers($perPage, $search, $viewTrash)
+    public function getPaginatedUsers($perPage, $search, $viewTrash, $startDate = null, $endDate = null)
     {
         $searchTerm = trim($search);
 
         return $this->model->query()
             // Optimization: Only fetch columns needed for the table
-            ->select('id', 'name', 'email', 'mobile', 'gender','state_id', 'dob', 'profile_picture', 'profile_photo_url', 'referral_code', 'kyc_status', 'is_banned', 'hide_from_leaderboard')
+            ->select('id', 'name', 'email', 'mobile', 'gender','state_id', 'referred_by', 'dob', 'profile_picture', 'profile_photo_url', 'referral_code', 'kyc_status', 'is_banned', 'hide_from_leaderboard', 'created_at', 'deleted_at')
             ->addSelect(['bank_status' => \App\Models\BankDetail::select('status')
                 ->whereColumn('user_id', 'users.id')
                 ->limit(1)
@@ -29,7 +29,7 @@ class UserRepository
                 ->whereColumn('affiliate_id', 'users.id')
                 ->where('status', 'paid')
             ])
-            ->with(['roles:id,name', 'state:id,name'])
+            ->with(['roles:id,name', 'state:id,name', 'referrer:id,name,referral_code'])
             ->when($viewTrash === 'true', function ($q) {
                 return $q->onlyTrashed();
             })
@@ -41,6 +41,8 @@ class UserRepository
                       ->orWhere('referral_code', 'like', "%{$searchTerm}%");
                 });
             })
+            ->when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
+            ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
             ->latest()
             ->paginate($perPage);
     }

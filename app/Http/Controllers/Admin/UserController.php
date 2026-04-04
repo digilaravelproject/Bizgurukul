@@ -19,24 +19,38 @@ class UserController extends Controller
     }
 
     public function index(Request $request)
-{
-    if ($request->ajax()) {
-        try {
-            $users = $this->userService->getUsers(
-                15,
-                $request->get('search'),
-                $request->get('trash', 'false')
-            );
-            return response()->json(['status' => true, 'data' => $users]);
-        } catch (Exception $e) {
-            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+    {
+        $perPage = $request->input('per_page', 20);
+        if (!in_array($perPage, [20, 30, 50, 100, 200])) {
+            $perPage = 20;
         }
-    }
 
-    $roles = Role::all();
-    $states = \App\Models\State::orderBy('name')->get();
-    return view('admin.users.index', compact('roles', 'states'));
-}
+        $search = $request->input('search');
+        $viewTrash = $request->input('trash', 'false');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        if ($request->ajax()) {
+            try {
+                $users = $this->userService->getUsers($perPage, $search, $viewTrash, $startDate, $endDate);
+
+                return response()->json([
+                    'status' => true,
+                    'table' => view('admin.users.partials.users_table', compact('users'))->render(),
+                    'pagination' => view('components.admin.table.pagination', ['records' => $users])->render()
+                ]);
+            } catch (Exception $e) {
+                return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+            }
+        }
+
+        $roles = Role::all();
+        $states = \App\Models\State::orderBy('name')->get();
+        
+        $users = $this->userService->getUsers($perPage, $search, $viewTrash, $startDate, $endDate);
+
+        return view('admin.users.index', compact('roles', 'states', 'users'));
+    }
 
     public function show($id)
     {
@@ -204,5 +218,13 @@ class UserController extends Controller
         Auth::login($admin);
 
         return redirect()->route('admin.dashboard')->with('success', 'Returned to admin panel.');
+    }
+
+    public function export(Request $request)
+    {
+        $filters = $request->only(['search', 'start_date', 'end_date', 'trash']);
+        $filename = "users_" . now()->format('Y-m-d_H-i-s') . ".xlsx";
+
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\UsersExport($filters), $filename);
     }
 }

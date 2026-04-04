@@ -12,7 +12,7 @@ class LeadController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Lead::query();
+        $query = Lead::with('sponsor');
 
         // Search by name, email, or mobile
         if ($search = $request->input('search')) {
@@ -23,12 +23,18 @@ class LeadController extends Controller
             });
         }
 
-        // Filter by Status (Lead table status column if exists, otherwise assume all are pending)
-        // Leads are deleted upon conversion, so all current ones are 'Pending'
+        // Filter by Date Range
+        if ($startDate = $request->input('start_date')) {
+            $query->whereDate('created_at', '>=', $startDate);
+        }
+        if ($endDate = $request->input('end_date')) {
+            $query->whereDate('created_at', '<=', $endDate);
+        }
 
-        $leads = $query->latest()->paginate(20);
+        $perPage = $request->input('per_page', 20);
+        $leads = $query->latest()->paginate($perPage);
 
-        // Transform to include bundle and sponsor info
+        // Transform to include bundle info efficiently
         $leads->getCollection()->transform(function($lead) {
             // Product Info
             $bundleId = $lead->product_preference['bundle_id'] ?? null;
@@ -38,17 +44,28 @@ class LeadController extends Controller
             } else {
                 $lead->product_name = 'N/A';
             }
-
-            // Sponsor Info
-            $lead->sponsor = User::where('referral_code', $lead->referral_code)->first();
             
             return $lead;
         });
 
         if ($request->ajax()) {
-            return view('admin.leads.partials.leads_table', compact('leads'))->render();
+            return response()->json([
+                'table' => view('admin.leads.partials.leads_table', compact('leads'))->render(),
+                'pagination' => view('components.admin.table.pagination', ['records' => $leads])->render()
+            ]);
         }
 
         return view('admin.leads.index', compact('leads'));
+    }
+
+    public function export(Request $request)
+    {
+        $filters = $request->only(['search', 'start_date', 'end_date']);
+        $filename = 'leads_export_' . date('Y-m-d_H-i-s') . '.xlsx';
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\LeadsExport($filters),
+            $filename
+        );
     }
 }

@@ -150,5 +150,10 @@ class Bundle extends Model
         }
         return 0;
     }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
 }
 

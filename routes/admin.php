@@ -46,6 +46,7 @@ Route::middleware(['auth'])
 
         // Leads Management
         Route::get('/leads', [App\Http\Controllers\Admin\LeadController::class, 'index'])->name('leads.index');
+        Route::get('/leads/export', [App\Http\Controllers\Admin\LeadController::class, 'export'])->name('leads.export');
 
         // Settings (managed by manage-settings)
         Route::middleware(['permission:manage-settings'])->group(function () {
@@ -81,6 +82,7 @@ Route::middleware(['auth'])
 
             Route::resource('achievements', \App\Http\Controllers\Admin\AchievementController::class)->except(['show']);
             Route::post('achievements/{achievement}/toggle-status', [\App\Http\Controllers\Admin\AchievementController::class, 'toggleStatus'])->name('achievements.toggle-status');
+            Route::get('achievements/{achievement}/qualified', [\App\Http\Controllers\Admin\AchievementController::class, 'qualifiedUsers'])->name('achievements.qualified');
         });
 
         // Transactions (managed by manage-transactions)
@@ -196,6 +198,7 @@ Route::middleware(['auth'])
                 Route::post('/restore/{id}', [UserController::class, 'restore'])->name('restore');
                 Route::delete('/force-delete/{id}', [UserController::class, 'forceDelete'])->name('force.delete');
                 Route::post('/{id}/impersonate', [UserController::class, 'impersonate'])->name('impersonate');
+                Route::get('/export', [UserController::class, 'export'])->name('export');
             });
 
             // Communities

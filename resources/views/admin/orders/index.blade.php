@@ -3,181 +3,154 @@
 @section('title', 'Order History')
 
 @section('content')
-<div class="space-y-8 font-sans text-mainText" x-data="orderFilter()">
+<div class="space-y-6 font-sans text-mainText" 
+     x-data="orderManager()" 
+     x-init="init()">
 
-    {{-- Header Section --}}
-    <div class="flex flex-col md:flex-row justify-between items-end gap-4">
-        <div>
-            <h1 class="text-3xl font-extrabold tracking-tight text-mainText">Order History</h1>
-            <p class="text-mutedText mt-1 text-sm">Track user orders and view invoices.</p>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-3">
-            <div class="relative">
-                <input type="text" x-model="search" @input.debounce.500ms="fetchOrders()" placeholder="Search orders..." class="pl-10 pr-4 py-2 bg-surface text-mainText border border-primary/10 rounded-xl text-sm focus:ring-primary focus:border-primary w-64 shadow-sm">
-                <svg class="w-4 h-4 text-mutedText absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+    {{-- Header & Filters --}}
+    <div class="flex flex-col gap-6">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-black tracking-tight text-mainText uppercase italic">Order History</h1>
+                <p class="text-mutedText mt-1 text-xs font-bold uppercase tracking-widest">Track user orders and view invoices.</p>
             </div>
 
-            <select x-model="status" @change="fetchOrders()" class="bg-surface border border-primary/10 rounded-xl text-sm font-medium focus:ring-primary text-mainText px-4 py-2">
-                <option value="all">All Status</option>
-                <option value="success">Success</option>
-                <option value="pending">Pending</option>
-                <option value="failed">Failed</option>
-            </select>
-
-            <select x-model="filter" @change="fetchOrders()" class="bg-surface border border-primary/10 rounded-xl text-sm font-medium focus:ring-primary text-mainText px-4 py-2">
-                <option value="all_time">All Time</option>
-                <option value="today">Today</option>
-                <option value="7_days">7 Days</option>
-                <option value="30_days">30 Days</option>
-                <option value="custom">Custom Date</option>
-            </select>
-
-            <button @click="exportOrders()" class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors shadow-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                Export Excel
-            </button>
-
-            <div x-show="filter === 'custom'" class="flex gap-2 items-center" x-transition x-cloak>
-                <input type="date" x-model="startDate" class="bg-surface border border-primary/10 rounded-xl text-sm font-medium focus:ring-primary text-mainText px-3 py-2">
-                <span class="text-mutedText">to</span>
-                <input type="date" x-model="endDate" class="bg-surface border border-primary/10 rounded-xl text-sm font-medium focus:ring-primary text-mainText px-3 py-2">
-                <button @click="fetchOrders()" class="bg-primary hover:bg-primary-dark text-white px-3 py-2 rounded-xl text-sm font-bold transition-colors">
-                    Apply
-                </button>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+                    <i class="fas fa-info-circle text-orange-500 text-[10px]"></i>
+                    <span class="text-[10px] text-orange-600 font-black uppercase">Pending status: Started but not completed</span>
+                </div>
             </div>
         </div>
+
+        {{-- Standard Filter Component --}}
+        <x-admin.table.filter 
+            :export-route="route('admin.orders.export')"
+            placeholder="Search orders, transactions..."
+        >
+            <x-slot name="extraFilters">
+                <select x-model="status" @change="updateTable(1)" 
+                    class="appearance-none bg-surface border border-primary/10 rounded-xl pl-4 pr-8 py-2 text-[10px] font-black uppercase text-mutedText focus:border-primary outline-none focus:ring-4 focus:ring-primary/5 transition-all shadow-sm">
+                    <option value="all">All Status</option>
+                    <option value="success">Success</option>
+                    <option value="pending">Pending</option>
+                    <option value="failed">Failed</option>
+                </select>
+            </x-slot>
+        </x-admin.table.filter>
     </div>
 
-    {{-- Main Content Card --}}
-    <div class="bg-surface rounded-2xl shadow-sm border border-primary/10 overflow-hidden">
-
-        <div class="p-6 border-b border-primary/5 flex flex-col md:flex-row justify-between items-start md:items-center bg-navy/30 gap-4">
-            <div>
-                <h3 class="text-lg font-bold text-mainText flex items-center gap-2">
-                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    Recent Orders
-                </h3>
-            </div>
-            <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2 px-3 py-1.5 bg-orange-500/10 border border-orange-500/20 rounded-lg">
-                    <i class="fas fa-info-circle text-orange-500 text-xs"></i>
-                    <span class="text-[11px] text-orange-600 font-medium">Pending status means checkout was started but payment not completed.</span>
-                </div>
-                <span class="text-xs font-medium text-mutedText bg-white px-3 py-1 rounded-full border border-primary/5 shadow-sm">
-                    Total Records: {{ $orders->total() }}
-                </span>
+    {{-- Table Section --}}
+    <div class="bg-surface rounded-3xl shadow-sm border border-primary/10 overflow-hidden relative">
+        {{-- Loader --}}
+        <div x-show="loading" class="absolute inset-0 bg-navy/50 backdrop-blur-[2px] z-20 flex items-center justify-center" x-transition x-cloak>
+            <div class="flex flex-col items-center gap-3">
+                <div class="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                <span class="text-[10px] font-black uppercase tracking-widest text-white">Loading Orders...</span>
             </div>
         </div>
 
-        <div class="overflow-x-auto relative min-h-[300px]">
-            <div x-show="loading" class="absolute inset-0 bg-surface/80 backdrop-blur-sm z-10 flex items-center justify-center" x-cloak>
-                <svg class="w-8 h-8 animate-spin text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                </svg>
-            </div>
-            <table class="w-full text-left">
-                <thead class="bg-primary/5 text-xs uppercase text-primary font-bold tracking-wider">
+        <div class="overflow-x-auto min-h-[400px]">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-navy/50 text-[10px] uppercase text-primary font-black tracking-[0.2em]">
                     <tr>
-                        <th class="px-6 py-4">Date & Time</th>
-                        <th class="px-6 py-4">Invoice & Order ID</th>
-                        <th class="px-6 py-4">User</th>
-                        <th class="px-6 py-4">Product</th>
-                        <th class="px-6 py-4 text-right">Amount</th>
-                        <th class="px-6 py-4 text-center">Status</th>
-                        <th class="px-6 py-4 text-center">Action</th>
+                        <th class="px-6 py-5 border-b border-primary/5">Date & Time</th>
+                        <th class="px-6 py-5 border-b border-primary/5">Invoice & ID</th>
+                        <th class="px-6 py-5 border-b border-primary/5">User</th>
+                        <th class="px-6 py-5 border-b border-primary/5">Sponsor</th>
+                        <th class="px-6 py-5 border-b border-primary/5">Product</th>
+                        <th class="px-6 py-5 border-b border-primary/5 text-right">Amount</th>
+                        <th class="px-6 py-5 border-b border-primary/5 text-center">Status</th>
+                        <th class="px-6 py-5 border-b border-primary/5 text-center">Action</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-primary/5" id="history-table-body">
+                <tbody class="divide-y divide-primary/5" id="orders-tbody">
                     @include('admin.orders.partials.history_table')
                 </tbody>
             </table>
+        </div>
+
+        {{-- Standard Pagination Component --}}
+        <div id="pagination-wrapper" class="border-t border-primary/5 bg-navy/20 p-4">
+            <x-admin.table.pagination :records="$orders" />
         </div>
     </div>
 </div>
 
 @push('scripts')
 <script>
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('orderFilter', () => ({
+    function orderManager() {
+        return {
             loading: false,
-            search: '{{ request('search') }}',
+            search: '',
             filter: 'all_time',
-            status: '{{ request('status', 'all') }}',
+            status: 'all',
             startDate: '',
             endDate: '',
+            perPage: 20,
+            page: 1,
 
-            async fetchOrders() {
-                if (this.filter === 'custom' && (!this.startDate || !this.endDate)) return;
+            init() {
+                // Listen for changes from filter components
+                window.addEventListener('search-changed', (e) => {
+                    this.search = e.detail.search || '';
+                    this.updateTable(1);
+                });
 
+                window.addEventListener('date-changed', (e) => {
+                    this.startDate = e.detail.start_date;
+                    this.endDate = e.detail.end_date;
+                    this.updateTable(1);
+                });
+
+                window.addEventListener('per-page-changed', (e) => {
+                    this.perPage = e.detail.per_page;
+                    this.updateTable(1);
+                });
+
+                window.addEventListener('page-changed', (e) => {
+                    this.goToPage(e.detail.url);
+                });
+            },
+
+            async updateTable(page = 1) {
+                this.page = page;
                 this.loading = true;
-                try {
-                    let url = `{{ route('admin.orders.index') }}?filter=${this.filter}&search=${encodeURIComponent(this.search)}&status=${this.status}`;
-                    if (this.filter === 'custom') {
-                        url += `&start_date=${this.startDate}&end_date=${this.endDate}`;
-                    }
 
-                    const response = await fetch(url, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
+                try {
+                    const params = new URLSearchParams({
+                        page: this.page,
+                        search: this.search,
+                        filter: this.filter,
+                        status: this.status,
+                        per_page: this.perPage,
+                        start_date: this.startDate,
+                        end_date: this.endDate
+                    });
+
+                    const response = await fetch(`{{ route('admin.orders.index') }}?${params.toString()}`, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
                     });
 
                     if (!response.ok) throw new Error('Network error');
 
-                    const html = await response.text();
-                    document.getElementById('history-table-body').innerHTML = html;
+                    const data = await response.json();
+                    document.getElementById('orders-tbody').innerHTML = data.table;
+                    document.getElementById('pagination-wrapper').innerHTML = data.pagination;
                 } catch (error) {
-                    console.error('Error fetching orders:', error);
+                    console.error('Error:', error);
                 } finally {
                     this.loading = false;
                 }
             },
 
-            exportOrders() {
-                let url = `{{ route('admin.orders.export') }}?filter=${this.filter}&search=${encodeURIComponent(this.search)}&status=${this.status}`;
-                if (this.filter === 'custom') {
-                    if (!this.startDate || !this.endDate) {
-                        alert('Please select both start and end dates.');
-                        return;
-                    }
-                    url += `&start_date=${this.startDate}&end_date=${this.endDate}`;
-                }
-                window.location.href = url;
-            }
-        }));
-    });
-
-    // Support pagination links click (AJAX)
-    document.addEventListener('click', async function(e) {
-        let link = e.target.closest('a.page-link');
-        if(!link && e.target.tagName === 'A') {
-            const href = e.target.getAttribute('href');
-            if (href && href.includes('page=')) {
-                link = e.target;
+            goToPage(url) {
+                if (!url) return;
+                const page = new URL(url).searchParams.get('page');
+                this.updateTable(page);
             }
         }
-
-        if (link && link.closest('#history-table-body')) {
-            e.preventDefault();
-            const component = Alpine.$data(document.querySelector('[x-data="orderFilter()"]'));
-            component.loading = true;
-            try {
-                const response = await fetch(link.href, {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                });
-                if(!response.ok) throw new Error('Network Error');
-                const html = await response.text();
-                document.getElementById('history-table-body').innerHTML = html;
-            } catch (err) {
-                console.error(err);
-            } finally {
-                component.loading = false;
-            }
-        }
-    });
+    }
 </script>
 @endpush
 @endsection

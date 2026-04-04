@@ -14,6 +14,8 @@ class Achievement extends Model
         'title',
         'short_title',
         'target_amount',
+        'start_date',
+        'end_date',
         'reward_type',
         'reward_description',
         'reward_image',
@@ -23,6 +25,8 @@ class Achievement extends Model
 
     protected $casts = [
         'target_amount' => 'decimal:2',
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
         'status' => 'boolean',
     ];
 

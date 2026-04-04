@@ -16,15 +16,40 @@ class AchievementService
      */
     public function checkAndUnlockAchievements(User $user): array
     {
-        $totalEarned = $user->total_earnings;
-        $activeAchievements = Achievement::active()->orderBy('target_amount', 'asc')->get();
-        $unlockedCount = 0;
+        $now = now();
+        
+        // Get active achievements within their date range, ordered by priority
+        $activeAchievements = Achievement::active()
+            ->where(function ($query) use ($now) {
+                $query->whereNull('start_date')
+                      ->orWhere('start_date', '<=', $now);
+            })
+            ->where(function ($query) use ($now) {
+                $query->whereNull('end_date')
+                      ->orWhere('end_date', '>=', $now);
+            })
+            ->orderBy('priority', 'asc')
+            ->orderBy('target_amount', 'asc')
+            ->get();
+
         $newlyUnlocked = [];
 
         foreach ($activeAchievements as $achievement) {
-            if ($totalEarned >= $achievement->target_amount) {
-                // Check if already exists
-                $userAchievement = UserAchievement::firstOrCreate(
+            // Check if already unlocked or claimed
+            $userAchievement = UserAchievement::where('user_id', $user->id)
+                ->where('achievement_id', $achievement->id)
+                ->first();
+
+            if ($userAchievement && ($userAchievement->status === 'unlocked' || $userAchievement->status === 'claimed')) {
+                continue; // Already processed
+            }
+
+            // Calculate earnings in the specific range of this achievement
+            $earningsInRange = $user->getEarningsInRange($achievement->start_date, $achievement->end_date);
+
+            if ($earningsInRange >= $achievement->target_amount) {
+                // Unlock it
+                $userAchievement = UserAchievement::updateOrCreate(
                     [
                         'user_id' => $user->id,
                         'achievement_id' => $achievement->id,
@@ -35,18 +60,15 @@ class AchievementService
                     ]
                 );
 
-                if ($userAchievement->wasRecentlyCreated || ($userAchievement->status === 'locked' && $totalEarned >= $achievement->target_amount)) {
-                    if ($userAchievement->status === 'locked') {
-                        $userAchievement->update([
-                            'status' => 'unlocked',
-                            'unlocked_at' => now(),
-                        ]);
-                    }
-                    $unlockedCount++;
-                    $newlyUnlocked[] = $achievement;
-                }
+                $newlyUnlocked[] = $achievement;
+                
+                // The user said: "pehle jiski prioraty hogi woi wala use krna hain then woh achive hojye then next wala"
+                // If we want to force sequential achievement, we could break here.
+                // However, usually achieving one could immediately make you eligible for the next if targets overlap.
+                // But following the user's "next वाला" logic strictly:
+                // break; 
             } else {
-                // Not reached yet, ensure it exists as locked if it doesn't
+                // Ensure it exists as locked if it doesn't
                 UserAchievement::firstOrCreate(
                     [
                         'user_id' => $user->id,
@@ -56,6 +78,10 @@ class AchievementService
                         'status' => 'locked',
                     ]
                 );
+                
+                // If we follow sequential logic, we should probably stop here because the user
+                // should finish this priority before moving to the next.
+                break;
             }
         }
 
@@ -67,33 +93,79 @@ class AchievementService
      */
     public function getDashboardData(User $user): array
     {
-        $totalEarned = $user->total_earnings;
-        $nextAchievement = $user->next_achievement;
+        $now = now();
 
-        $currentMilestone = Achievement::active()
-            ->where('target_amount', '<=', $totalEarned)
+        // Get the next achievement the user is working on
+        // That is: the one with lowest priority that is active and locked for this user
+        $nextAchievement = Achievement::active()
+            ->where(function ($query) use ($now) {
+                $query->whereNull('start_date')
+                      ->orWhere('start_date', '<=', $now);
+            })
+            ->where(function ($query) use ($now) {
+                $query->whereNull('end_date')
+                      ->orWhere('end_date', '>=', $now);
+            })
+            ->whereNotExists(function ($query) use ($user) {
+                $query->select(DB::raw(1))
+                      ->from('user_achievements')
+                      ->whereColumn('user_achievements.achievement_id', 'achievements.id')
+                      ->where('user_achievements.user_id', $user->id)
+                      ->whereIn('user_achievements.status', ['unlocked', 'claimed']);
+            })
+            ->orderBy('priority', 'asc')
+            ->orderBy('target_amount', 'asc')
+            ->first();
+
+        // If no specifically active achievement found, look for ANY active achievement to show progress
+        if (!$nextAchievement) {
+            $nextAchievement = Achievement::active()
+            ->where(function ($query) use ($now) {
+                $query->whereNull('start_date')
+                      ->orWhere('start_date', '<=', $now);
+            })
+            ->where(function ($query) use ($now) {
+                $query->whereNull('end_date')
+                      ->orWhere('end_date', '>=', $now);
+            })
+            ->orderBy('priority', 'asc')
+            ->orderBy('target_amount', 'asc')
+            ->first();
+        }
+
+        // Current earnings for the next achievement's period
+        $currentEarningsInRange = $nextAchievement 
+            ? $user->getEarningsInRange($nextAchievement->start_date, $nextAchievement->end_date)
+            : 0;
+
+        // Current milestone (the one just achieved)
+        $currentMilestone = $user->achievements()
+            ->wherePivotIn('status', ['unlocked', 'claimed'])
+            ->orderBy('priority', 'desc')
             ->orderBy('target_amount', 'desc')
             ->first();
 
-        $startAmount = $currentMilestone ? $currentMilestone->target_amount : 0;
-        $targetAmount = $nextAchievement ? $nextAchievement->target_amount : ($currentMilestone ? $currentMilestone->target_amount * 1.5 : 1000);
+        $startAmount = 0; // In the new logic, each milestone starts from 0 in its period
+        $targetAmount = $nextAchievement ? $nextAchievement->target_amount : 1000;
 
-        $progressInRange = $totalEarned - $startAmount;
-        $totalRange = $targetAmount - $startAmount;
+        $progressInRange = $currentEarningsInRange;
+        $totalRange = $targetAmount;
         $percentage = $totalRange > 0 ? min(100, max(0, ($progressInRange / $totalRange) * 100)) : 100;
 
-        // Overall progress percentage (for a general progress bar)
-        // If we have a max target, we use that.
+        // Overall progress percentage
         $maxTarget = Achievement::active()->max('target_amount') ?: 1000000;
-        $overallPercentage = min(100, ($totalEarned / $maxTarget) * 100);
+        $overallPercentage = min(100, ($user->total_earnings / $maxTarget) * 100);
 
         return [
-            'total_earned' => $totalEarned,
+            'total_earned' => $currentEarningsInRange, // Using range-specific earnings for the display
             'next_achievement' => $nextAchievement,
             'current_milestone' => $currentMilestone,
             'percentage' => $percentage,
             'overall_percentage' => $overallPercentage,
-            'remaining_to_next' => $nextAchievement ? ($nextAchievement->target_amount - $totalEarned) : 0,
+            'remaining_to_next' => $nextAchievement ? max(0, $nextAchievement->target_amount - $currentEarningsInRange) : 0,
+            'is_date_based' => $nextAchievement && ($nextAchievement->start_date || $nextAchievement->end_date),
+            'start_date' => $nextAchievement ? $nextAchievement->start_date : null,
+            'end_date' => $nextAchievement ? $nextAchievement->end_date : null,
         ];
     }
 

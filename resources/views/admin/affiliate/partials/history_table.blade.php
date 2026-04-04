@@ -62,12 +62,9 @@
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-500">
                         <i class="fas fa-hourglass-half mr-1"></i> On Hold
                     </span>
-                    <form action="{{ route('admin.payouts.commission.early_approve', $commission->id) }}" method="POST" onsubmit="return confirm('Manually approve this commission early?');">
-                        @csrf
-                        <button type="submit" class="text-[10px] uppercase tracking-widest bg-emerald-500 hover:bg-emerald-400 text-white px-3 py-1.5 rounded-lg font-black transition-all shadow-md flex items-center gap-1">
-                            <i class="fas fa-check"></i> Early Approve
-                        </button>
-                    </form>
+                    <button type="button" @click="approveEarly({{ $commission->id }})" class="text-[10px] uppercase tracking-widest bg-emerald-500 hover:bg-emerald-400 text-white px-3 py-1.5 rounded-lg font-black transition-all shadow-md flex items-center gap-1">
+                        <i class="fas fa-check"></i> Early Approve
+                    </button>
                 </div>
             @elseif($commission->status == 'available')
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500">
@@ -106,11 +103,3 @@
         </td>
     </tr>
 @endforelse
-
-@if($commissions->hasPages())
-    <tr class="bg-navy/30">
-        <td colspan="6" class="p-4 border-t border-primary/5">
-            {{ $commissions->links() }}
-        </td>
-    </tr>
-@endif

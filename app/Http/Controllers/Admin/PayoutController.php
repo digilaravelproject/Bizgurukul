@@ -78,12 +78,18 @@ class PayoutController extends Controller
         }
     }
 
-    public function earlyApproveCommission($id)
+    public function earlyApproveCommission(Request $request, $id)
     {
         try {
             $this->walletService->manuallyApproveCommission($id);
+            if ($request->ajax()) {
+                return response()->json(['status' => true, 'message' => 'Commission manually approved and made available.']);
+            }
             return back()->with('success', 'Commission manually approved and made available.');
         } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+            }
             return back()->with('error', $e->getMessage());
         }
     }

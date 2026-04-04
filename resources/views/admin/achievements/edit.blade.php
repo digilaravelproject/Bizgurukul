@@ -66,6 +66,21 @@
                                 </select>
                             </div>
                         </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-xs font-black uppercase tracking-widest pl-1 text-primary">Start Date & Time (Optional)</label>
+                                <input type="datetime-local" name="start_date" value="{{ old('start_date', $achievement->start_date ? $achievement->start_date->format('Y-m-d\TH:i') : '') }}"
+                                       class="w-full h-14 px-6 bg-primary/5 border-none text-mainText placeholder-mutedText/40 text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:outline-none rounded-2xl transition-all">
+                                <p class="text-[10px] text-mutedText font-medium ml-1">If empty, starts immediately.</p>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs font-black uppercase tracking-widest pl-1 text-error">End Date & Time (Optional)</label>
+                                <input type="datetime-local" name="end_date" value="{{ old('end_date', $achievement->end_date ? $achievement->end_date->format('Y-m-d\TH:i') : '') }}"
+                                       class="w-full h-14 px-6 bg-primary/5 border-none text-mainText placeholder-mutedText/40 text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:outline-none rounded-2xl transition-all">
+                                <p class="text-[10px] text-mutedText font-medium ml-1">If empty, never expires.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

@@ -25,12 +25,24 @@ class WalletController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $perPage = $request->input('per_page', 15);
+        $perPage = $request->input('per_page', 20);
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
 
         $dashboardData = $this->walletService->getWalletDashboardData($user->id);
 
-        $commissions = $this->walletRepo->getEarnedCommissions($user->id, $perPage);
-        $withdrawals = $this->walletRepo->getWithdrawalRequests($user->id, $perPage);
+        $commissions = $this->walletRepo->getEarnedCommissions($user->id, $perPage, $startDate, $endDate);
+        $withdrawals = $this->walletRepo->getWithdrawalRequests($user->id, $perPage, $startDate, $endDate);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => true,
+                'commissions_table' => view('student.wallet.partials.commissions_table', compact('commissions', 'dashboardData'))->render(),
+                'commissions_pagination' => $commissions->links()->toHtml(),
+                'withdrawals_table' => view('student.wallet.partials.withdrawals_table', compact('withdrawals'))->render(),
+                'withdrawals_pagination' => $withdrawals->links()->toHtml(),
+            ]);
+        }
 
         return view('student.wallet.index', compact('dashboardData', 'commissions', 'withdrawals'));
     }
@@ -64,8 +76,21 @@ class WalletController extends Controller
                 }
             } catch (\Throwable $ignored) {}
 
+            if ($request->ajax()) {
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Withdrawal request submitted successfully.'
+                ]);
+            }
+
             return back()->with('success', 'Withdrawal request submitted successfully.');
         } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $e->getMessage()
+                ], 422);
+            }
             return back()->with('error', $e->getMessage());
         }
     }

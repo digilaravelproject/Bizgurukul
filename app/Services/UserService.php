@@ -17,10 +17,10 @@ class UserService
         $this->userRepo = $userRepo;
     }
 
-    public function getUsers($perPage = 15, $search = null, $viewTrash = 'false')
+    public function getUsers($perPage = 15, $search = null, $viewTrash = 'false', $startDate = null, $endDate = null)
     {
         try {
-            return $this->userRepo->getPaginatedUsers($perPage, $search, $viewTrash);
+            return $this->userRepo->getPaginatedUsers($perPage, $search, $viewTrash, $startDate, $endDate);
         } catch (Exception $e) {
             Log::error("UserService Error [getUsers]: " . $e->getMessage());
             throw new Exception("Unable to load users list.");
@@ -70,7 +70,8 @@ class UserService
                 // LOCK the user row so no one else edits it right now
                 $user = $this->userRepo->findForUpdate($id);
 
-                if (!$user) throw new Exception("User not found.");
+                if (!$user)
+                    throw new Exception("User not found.");
 
                 $updateData = collect($data)->except(['role', 'password'])->toArray();
 
@@ -102,7 +103,8 @@ class UserService
             // Try finding normally, if not found try in trash
             $user = $this->userRepo->findById($id) ?: $this->userRepo->findById($id, true);
 
-            if (!$user) throw new Exception("User not found.");
+            if (!$user)
+                throw new Exception("User not found.");
 
             return $user;
         } catch (Exception $e) {
@@ -117,7 +119,8 @@ class UserService
             try {
                 // Lock row
                 $user = $this->userRepo->findForUpdate($id);
-                if (!$user) throw new Exception("User not found.");
+                if (!$user)
+                    throw new Exception("User not found.");
 
                 $user->is_banned = !$user->is_banned;
                 $user->banned_at = $user->is_banned ? now() : null;
@@ -135,7 +138,8 @@ class UserService
     {
         try {
             $user = $this->userRepo->findById($id);
-            if (!$user) throw new Exception("User not found.");
+            if (!$user)
+                throw new Exception("User not found.");
             return $this->userRepo->delete($user);
         } catch (Exception $e) {
             Log::error("UserService Error [deleteUser]: " . $e->getMessage());
@@ -147,7 +151,8 @@ class UserService
     {
         try {
             $user = $this->userRepo->findById($id, true);
-            if (!$user) throw new Exception("User not found in trash.");
+            if (!$user)
+                throw new Exception("User not found in trash.");
             return $this->userRepo->restore($user);
         } catch (Exception $e) {
             Log::error("UserService Error [restoreUser]: " . $e->getMessage());
@@ -157,13 +162,39 @@ class UserService
 
     public function forceDeleteUser($id)
     {
-        try {
-            $user = $this->userRepo->findById($id, true);
-            if (!$user) throw new Exception("User not found.");
-            return $this->userRepo->forceDelete($user);
-        } catch (Exception $e) {
-            Log::error("UserService Error [forceDeleteUser]: " . $e->getMessage());
-            throw new Exception("Failed to permanently delete user.");
-        }
+        return DB::transaction(function () use ($id) {
+            try {
+                $user = $this->userRepo->findById($id, true);
+                if (!$user)
+                    throw new Exception("User not found in trash.");
+
+                // Detach Roles to clean pivot table Spatie
+                if (method_exists($user, 'roles')) {
+                    $user->roles()->detach();
+                }
+
+                // Delete identity-tied records that might block deletion
+                $user->kyc()?->delete();
+                $user->bank()?->delete();
+                $user->affiliateSettings()?->delete();
+                $user->userAchievements()?->delete();
+                $user->commissionRules()?->delete();
+                $user->bankUpdateRequests()?->delete();
+                $user->referralVisits()?->delete();
+
+                // Delete any payments/commissions - only if user is being FORCE deleted
+                $user->payments()?->delete();
+                $user->commissions()?->delete();
+                $user->walletTransactions()?->delete();
+
+                // Handle commissions where this user was the referred subject
+                \App\Models\AffiliateCommission::where('referred_user_id', $user->id)->delete();
+
+                return $this->userRepo->forceDelete($user);
+            } catch (Exception $e) {
+                Log::error("UserService Error [forceDeleteUser]: " . $e->getMessage());
+                throw new Exception("Failed to permanently delete user: " . $e->getMessage());
+            }
+        });
     }
 }

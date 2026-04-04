@@ -222,6 +222,21 @@ class User extends Authenticatable
         return (float) $this->commissions()->sum('amount');
     }
 
+    public function getEarningsInRange($startDate = null, $endDate = null): float
+    {
+        $query = $this->commissions();
+
+        if ($startDate) {
+            $query->where('created_at', '>=', $startDate);
+        }
+
+        if ($endDate) {
+            $query->where('created_at', '<=', $endDate);
+        }
+
+        return (float) $query->sum('amount');
+    }
+
     public function getNextAchievementAttribute(): ?Achievement
     {
         $totalEarned = $this->total_earnings;

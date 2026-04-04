@@ -156,11 +156,70 @@ class AffiliateService
 
             return [
                 'labels' => $data->map(fn($item) => trim(str_replace(['Commission for Bundle:', 'Commission for Course:'], '', $item->notes)))->toArray(),
-                'series' => $data->pluck('total')->toArray()
+                'series' => $data->pluck('total')->map(fn($v) => (float)$v)->toArray()
             ];
         } catch (Exception $e) {
             Log::error("AffiliateService Error [getCategoryPerformance]: " . $e->getMessage(), ['user_id' => $user->id]);
             return ['labels' => [], 'series' => []];
+        }
+    }
+
+    /**
+     * Get bundle-wise sales distribution for the student.
+     */
+    public function getBundleDistribution(User $user): array
+    {
+        try {
+            $commissions = $user->commissions()
+                ->with(['reference'])
+                ->get();
+
+            $data = $commissions->map(function ($commission) {
+                $title = 'Unknown Bundle';
+                $bundleId = null;
+
+                // 1. Try to get info from reference (Bundle or Payment)
+                if ($commission->reference instanceof \App\Models\Bundle) {
+                    $title = $commission->reference->title;
+                    $bundleId = $commission->reference->id;
+                } elseif ($commission->reference instanceof \App\Models\Payment && $commission->reference->bundle) {
+                    $title = $commission->reference->bundle->title;
+                    $bundleId = $commission->reference->bundle->id;
+                } 
+                // 2. Fallback: Parse from notes if reference loading fails
+                elseif (!empty($commission->notes) && str_contains($commission->notes, 'Commission for Bundle:')) {
+                    $title = trim(str_replace('Commission for Bundle:', '', $commission->notes));
+                    // We use the title as a grouping key if ID is missing
+                    $bundleId = 'name_' . $title;
+                }
+
+                return [
+                    'bundle_id' => $bundleId,
+                    'title'     => $title,
+                    'amount'    => (float) $commission->amount,
+                ];
+            })
+            ->filter(fn($item) => $item['bundle_id'] !== null)
+            ->groupBy('bundle_id')
+            ->map(function ($group) {
+                return [
+                    'title'       => $group->first()['title'],
+                    'sales_count' => $group->count(),
+                    'revenue'     => $group->sum('amount'),
+                ];
+            })
+            ->sortByDesc('sales_count')
+            ->values();
+
+            return [
+                'labels'  => $data->pluck('title')->toArray(),
+                'series'  => $data->pluck('sales_count')->toArray(),
+                'revenue' => $data->pluck('revenue')->toArray(),
+                'stats'   => $data->toArray(),
+            ];
+        } catch (Exception $e) {
+            Log::error("AffiliateService Error [getBundleDistribution]: " . $e->getMessage(), ['user_id' => $user->id]);
+            return ['labels' => [], 'series' => [], 'revenue' => [], 'stats' => []];
         }
     }
     public function getDashboardData(User $user)

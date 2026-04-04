@@ -17,6 +17,8 @@ class StoreAchievementRequest extends FormRequest
             'title' => 'required|string|max:255',
             'short_title' => 'nullable|string|max:50',
             'target_amount' => 'required|numeric|min:0',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
             'reward_type' => 'required|in:cash,gift,trip,gadget,custom',
             'reward_description' => 'required|string',
             'reward_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',

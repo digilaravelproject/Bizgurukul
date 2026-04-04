@@ -81,6 +81,7 @@ class DashboardController extends Controller
                 'secondaryStats'      => $this->affiliateService->getSecondaryStats($user),
                 'graphData'           => $this->affiliateService->getGraphData($user, 7),
                 'categoryPerformance' => $this->affiliateService->getCategoryPerformance($user),
+                'bundleDistribution'  => $this->affiliateService->getBundleDistribution($user),
             ], $affiliateData));
 
         } catch (Exception $e) {
@@ -97,20 +98,26 @@ class DashboardController extends Controller
 
             $achievementData = $this->achievementService->getDashboardData($user);
 
-            // Get all achievements for the cards
             $allAchievements = Achievement::active()
                 ->orderBy('priority', 'asc')
                 ->orderBy('target_amount', 'asc')
                 ->get();
 
             $userAchievements = $user->achievements->pluck('pivot.status', 'id')->toArray();
+            
+            // Calculate progress for each milestone based on its specific dates
+            $milestoneProgress = [];
+            foreach ($allAchievements as $milestone) {
+                $milestoneProgress[$milestone->id] = $user->getEarningsInRange($milestone->start_date, $milestone->end_date);
+            }
 
             return view('student.rewards', [
-                'user'            => $user,
-                'achievementData' => $achievementData,
-                'allMilestones'   => $allAchievements,
-                'userMilestones'  => $userAchievements,
-                'earningsStats'   => $this->affiliateService->getEarningsStats($user),
+                'user'              => $user,
+                'achievementData'   => $achievementData,
+                'allMilestones'     => $allAchievements,
+                'userMilestones'    => $userAchievements,
+                'milestoneProgress' => $milestoneProgress,
+                'earningsStats'     => $this->affiliateService->getEarningsStats($user),
             ]);
 
         } catch (Exception $e) {

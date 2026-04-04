@@ -80,20 +80,24 @@ class WalletRepository
             ->sum('amount');
     }
 
-    public function getEarnedCommissions(int $userId, int $perPage = 15)
+    public function getEarnedCommissions(int $userId, int $perPage = 15, $startDate = null, $endDate = null)
     {
-        return AffiliateCommission::with('reference') // ->latest()
+        return AffiliateCommission::with('reference')
             ->where('affiliate_id', $userId)
+            ->when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
+            ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
             ->latest()
-            ->paginate($perPage);
+            ->paginate($perPage, ['*'], 'commission_page');
     }
 
-    public function getWithdrawalRequests(int $userId, int $perPage = 15)
+    public function getWithdrawalRequests(int $userId, int $perPage = 15, $startDate = null, $endDate = null)
     {
         return WithdrawalRequest::with('commissions')
             ->where('user_id', $userId)
+            ->when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
+            ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
             ->latest()
-            ->paginate($perPage);
+            ->paginate($perPage, ['*'], 'withdrawal_page');
     }
 
     public function getAllWithdrawalRequests(int $perPage = 15)

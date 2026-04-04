@@ -29,4 +29,9 @@ class Lead extends Model
         'product_preference' => 'array',
         'dob' => 'date',
     ];
+
+    public function sponsor()
+    {
+        return $this->belongsTo(User::class, 'referral_code', 'referral_code');
+    }
 }

@@ -8,36 +8,30 @@
     <div x-data="userManager()" x-init="init()" class="container-fluid font-sans antialiased">
 
         {{-- 1. TOP HEADER & ACTIONS --}}
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 animate-fade-in">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 animate-fade-in text-mainText">
             <div>
-                <h2 class="text-2xl font-black text-mainText tracking-tight">User Management</h2>
-                <p class="text-sm text-mutedText mt-1 font-medium">Manage students, verify KYC, and handle access control.
-                </p>
+                <h2 class="text-2xl font-black tracking-tight">User Management</h2>
+                <p class="text-sm text-mutedText mt-1 font-medium">Manage students, verify KYC, and handle access control.</p>
             </div>
 
             <div class="flex items-center gap-3 w-full md:w-auto">
-                {{-- Trash Toggle Switch --}}
+                {{-- Trash Toggle --}}
                 <div class="bg-white p-1 rounded-2xl flex items-center border border-primary/10 shadow-sm">
                     <button @click="toggleTrash(false)"
-                        :class="!viewTrash ? 'bg-primary text-white shadow-md shadow-primary/20' :
-                            'text-mutedText hover:text-primary'"
+                        :class="!viewTrash ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-mutedText hover:text-primary'"
                         class="px-5 py-2 text-xs font-bold rounded-xl transition-all duration-300">
                         Active
                     </button>
                     <button @click="toggleTrash(true)"
-                        :class="viewTrash ? 'bg-secondary text-white shadow-md shadow-secondary/20' :
-                            'text-mutedText hover:text-secondary'"
+                        :class="viewTrash ? 'bg-secondary text-white shadow-md shadow-secondary/20' : 'text-mutedText hover:text-secondary'"
                         class="px-5 py-2 text-xs font-bold rounded-xl transition-all duration-300 flex items-center gap-2">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                            </path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
                         Trash
                     </button>
                 </div>
 
-                {{-- Add User Button --}}
                 <button @click="openModal('create')"
                     class="flex-1 md:flex-none brand-gradient inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-xs font-black text-white shadow-lg shadow-primary/25 hover:-translate-y-0.5 transition-all duration-300">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -48,58 +42,42 @@
             </div>
         </div>
 
-        {{-- 2. SEARCH BAR --}}
-        <div class="mb-8 relative max-w-md animate-fade-in">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-primary">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-            </span>
-            <input type="text" x-model.debounce.300ms="search" placeholder="Search name, email, mobile..."
-                class="w-full pl-12 pr-10 py-4 bg-white border border-primary/10 text-mainText placeholder-mutedText/40 rounded-2xl focus:ring-2 focus:ring-primary/5 focus:border-primary outline-none transition shadow-sm font-bold text-sm">
-
-            <button x-show="search.length > 0" @click="search = ''; fetchUsers()"
-                class="absolute inset-y-0 right-0 flex items-center pr-4 text-mutedText hover:text-secondary transition"
-                style="display: none;">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
+        {{-- 2. FILTER BAR --}}
+        <x-admin.table.filter
+            id="userFilter"
+            placeholder="Search name, email, mobile, ref..."
+            :show-date-filter="false"
+            :show-export="true"
+            export-route="admin.users.export"
+        />
 
         {{-- 3. CONTENT AREA --}}
         <div class="relative min-h-[400px]">
-
-            {{-- SKELETON LOADER (Shown during isLoading) --}}
-            <div x-show="isLoading" x-transition.opacity
-                class="bg-white border border-primary/10 rounded-[2rem] overflow-hidden shadow-xl shadow-primary/5">
+            {{-- SKELETON LOADER --}}
+            <div x-show="isLoading" x-transition.opacity class="bg-white border border-primary/10 rounded-[2rem] overflow-hidden shadow-xl shadow-primary/5 mb-8">
                 <div class="animate-pulse">
                     <div class="h-16 bg-primary/5 border-b border-primary/5"></div>
-                    <template x-for="i in 5" :key="i">
+                    @foreach(range(1, 5) as $i)
                         <div class="flex items-center px-8 py-5 border-b border-primary/5 gap-4">
                             <div class="h-12 w-12 rounded-2xl bg-navy"></div>
                             <div class="flex-1 space-y-2">
                                 <div class="h-3 w-48 bg-navy rounded"></div>
                                 <div class="h-2 w-20 bg-navy rounded"></div>
                             </div>
-                            <div class="h-6 w-24 bg-navy rounded hidden md:block"></div>
-                            <div class="h-6 w-24 bg-navy rounded"></div>
                             <div class="h-8 w-8 bg-navy rounded-xl ml-auto"></div>
                         </div>
-                    </template>
+                    @endforeach
                 </div>
             </div>
 
             {{-- DATA TABLE --}}
-            <div x-show="!isLoading"
-                class="overflow-hidden rounded-[2rem] border border-primary/10 bg-white shadow-xl relative animate-fade-in">
+            <div x-show="!isLoading" class="overflow-hidden rounded-[2rem] border border-primary/10 bg-white shadow-xl relative animate-fade-in mb-8">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm text-mutedText">
-                        <thead
-                            class="bg-primary/5 text-[10px] uppercase font-black text-primary border-b border-primary/5 tracking-widest">
+                        <thead class="bg-primary/5 text-[10px] uppercase font-black text-primary border-b border-primary/5 tracking-widest">
                             <tr>
                                 <th class="px-8 py-6">User Profile</th>
+                                <th class="px-6 py-6">Sponsor</th>
                                 <th class="px-6 py-6">Role</th>
                                 <th class="px-6 py-6 text-center">KYC</th>
                                 <th class="px-6 py-6 text-center">Bank</th>
@@ -108,182 +86,19 @@
                                 <th class="px-8 py-6 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-primary/5">
-                            <template x-for="user in users" :key="user.id">
-                                <tr class="hover:bg-primary/[0.02] transition-colors group">
-                                    <td class="px-8 py-5">
-                                        <div class="flex items-center gap-4">
-                                            <div class="relative h-12 w-12 flex-shrink-0">
-                                                <template x-if="user.profile_picture">
-                                                    <img :src="'/storage/' + user.profile_picture"
-                                                        class="h-full w-full rounded-2xl object-cover ring-2 ring-primary/5 shadow-sm">
-                                                </template>
-                                                <template x-if="!user.profile_picture">
-                                                    <div
-                                                        class="h-full w-full rounded-2xl brand-gradient flex items-center justify-center text-white font-black text-sm shadow-sm border border-white">
-                                                        <span x-text="user.name.charAt(0).toUpperCase()"></span>
-                                                    </div>
-                                                </template>
-                                            </div>
-                                            <div class="min-w-0">
-                                                <div class="font-bold text-mainText text-sm truncate max-w-[180px]"
-                                                    x-text="user.name"></div>
-                                                <div class="text-xs text-mutedText truncate max-w-[180px]">
-                                                    <span x-text="user.email"></span>
-                                                    <template x-if="user.state">
-                                                        <span class="text-primary/60 font-black ml-1">• <span x-text="user.state.name"></span></span>
-                                                    </template>
-                                                </div>
-                                                <div class="text-[11px] font-bold text-mainText/70 mt-0.5" x-text="user.mobile || 'No Mobile'"></div>
-                                                <div class="mt-1 text-[9px] font-black text-primary/80 uppercase">REF: <span
-                                                        x-text="user.referral_code"></span></div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <template x-for="role in user.roles" :key="role.id">
-                                            <span
-                                                class="inline-flex items-center rounded-lg bg-navy px-3 py-1 text-[10px] font-black text-mainText border border-primary/5"
-                                                x-text="role.name"></span>
-                                        </template>
-                                    </td>
-                                    <td class="px-6 py-5 text-center">
-                                        <span
-                                            class="px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter border shadow-sm"
-                                            :class="{
-                                                'bg-green-50 text-green-600 border-green-200': user
-                                                    .kyc_status === 'verified',
-                                                'bg-amber-50 text-amber-600 border-amber-200': user
-                                                    .kyc_status === 'pending',
-                                                'bg-red-50 text-red-600 border-red-200': user.kyc_status === 'rejected',
-                                                'bg-navy text-mutedText border-primary/5': user
-                                                    .kyc_status === 'not_submitted'
-                                            }"
-                                            x-text="user.kyc_status.split('_').pop()">
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-5 text-center">
-                                        <span
-                                            class="px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter border shadow-sm"
-                                            :class="{
-                                                'bg-green-50 text-green-600 border-green-200': user.bank_status === 'verified',
-                                                'bg-amber-50 text-amber-600 border-amber-200': user.bank_status === 'pending',
-                                                'bg-red-50 text-red-600 border-red-200': user.bank_status === 'rejected',
-                                                'bg-navy text-mutedText border-primary/5': !user.bank_status || user.bank_status === 'not_submitted'
-                                            }"
-                                            x-text="(user.bank_status || 'NONE').split('_').pop()">
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-5 text-right">
-                                        <span class="font-black text-emerald-600" x-text="'₹' + (user.total_earnings || 0)"></span>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <div class="flex items-center justify-center text-xs font-bold"
-                                            :class="user.is_banned == 1 ? 'text-secondary' : 'text-green-600'">
-                                            <span class="w-1.5 h-1.5 rounded-full mr-2"
-                                                :class="user.is_banned == 1 ? 'bg-secondary' : 'bg-green-500'"></span>
-                                            <span x-text="user.is_banned == 1 ? 'Banned' : 'Active'"></span>
-                                        </div>
-                                        <template x-if="user.hide_from_leaderboard">
-                                            <div class="mt-1 text-[9px] font-black text-secondary uppercase flex items-center justify-center">
-                                                <svg class="w-2.5 h-2.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-                                                </svg>
-                                                Leaderboard Hidden
-                                            </div>
-                                        </template>
-                                    </td>
-                                    <td class="px-8 py-5 text-right">
-                                        <div
-                                            class="flex items-center justify-end gap-1 opacity-90 group-hover:opacity-100 transition-opacity">
-                                            <button @click="viewUser(user.id)"
-                                                class="p-2 text-mutedText hover:text-primary hover:bg-navy rounded-xl transition group-hover:shadow-sm"
-                                                title="View Profile">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                                    </path>
-                                                </svg>
-                                            </button>
-
-                                            <template x-if="!viewTrash">
-                                                <div class="flex items-center gap-1">
-                                                    <form :action="'/admin/users/' + user.id + '/impersonate'" method="POST" class="inline">
-                                                        @csrf
-                                                        <button type="submit" class="p-2 text-mutedText hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition group-hover:shadow-sm" title="Login as User">
-                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
-                                                            </svg>
-                                                        </button>
-                                                    </form>
-                                                    <button @click="openModal('edit', user)"
-                                                        class="p-2 text-mutedText hover:text-primary hover:bg-navy rounded-xl transition group-hover:shadow-sm"
-                                                        title="Edit">
-                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                                            viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2"
-                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                                            </path>
-                                                        </svg>
-                                                    </button>
-                                                    <button @click="deleteUser(user.id)"
-                                                        class="p-2 text-mutedText hover:text-secondary hover:bg-navy rounded-xl transition group-hover:shadow-sm"
-                                                        title="Move to Trash">
-                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                                            viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2"
-                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                            </path>
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            </template>
-
-                                            <template x-if="viewTrash">
-                                                <div class="flex items-center gap-2">
-                                                    <button @click="restoreUser(user.id)"
-                                                        class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-green-600 bg-green-50 hover:bg-green-100 rounded-xl transition border border-green-200">Restore</button>
-                                                    <button @click="forceDelete(user.id)"
-                                                        class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white bg-secondary rounded-xl shadow-md shadow-secondary/20">Permanent
-                                                        Delete</button>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </template>
-                            {{-- Empty State --}}
-                            <template x-if="users.length === 0 && !isLoading">
-                                <tr>
-                                    <td colspan="5" class="px-6 py-12 text-center text-mutedText/50 font-bold">No users
-                                        found</td>
-                                </tr>
-                            </template>
+                        <tbody id="userTableBody" class="divide-y divide-primary/5">
+                            @include('admin.users.partials.users_table', ['users' => $users])
                         </tbody>
                     </table>
                 </div>
 
-                {{-- Pagination --}}
-                <div class="px-8 py-6 bg-primary/5 border-t border-primary/5 flex items-center justify-between"
-                    x-show="pagination.total > 0">
-                    <span class="text-xs text-mutedText font-bold">Showing <span class="text-primary"
-                            x-text="pagination.from"></span> - <span class="text-primary" x-text="pagination.to"></span>
-                        of <span class="text-primary" x-text="pagination.total"></span> users</span>
-                    <div class="flex gap-2">
-                        <button @click="changePage(pagination.prev_page_url)" :disabled="!pagination.prev_page_url"
-                            class="px-5 py-2 text-xs font-black uppercase tracking-widest bg-white border border-primary/10 rounded-xl hover:bg-primary hover:text-white transition disabled:opacity-30 shadow-sm">Prev</button>
-                        <button @click="changePage(pagination.next_page_url)" :disabled="!pagination.next_page_url"
-                            class="px-5 py-2 text-xs font-black uppercase tracking-widest bg-white border border-primary/10 rounded-xl hover:bg-primary hover:text-white transition disabled:opacity-30 shadow-sm">Next</button>
-                    </div>
+                {{-- Pagination Container --}}
+                <div id="userPagination" class="px-8 py-6 bg-primary/5 border-t border-primary/5 flex items-center justify-between">
+                    <x-admin.table.pagination :records="$users" />
                 </div>
             </div>
         </div>
+
 
         {{-- 4. CREATE / EDIT MODAL --}}
         <div x-show="showModal" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
@@ -568,7 +383,11 @@
                 pagination: {},
                 isLoading: false,
                 search: '',
+                perPage: 20,
                 viewTrash: false,
+                startDate: '',
+                endDate: '',
+                lastUrl: "{{ route('admin.users.index') }}",
                 showModal: false,
                 viewModal: false,
                 modalMode: 'create',
@@ -594,7 +413,11 @@
 
                 init() {
                     this.fetchUsers();
-                    this.$watch('search', () => this.fetchUsers());
+
+                    window.addEventListener('filter-applied', (e) => {
+                        if (e.detail.id === 'userFilter') this.fetchUsers();
+                    });
+
                     this.Toast = Swal.mixin({
                         toast: true,
                         position: 'top-end',
@@ -606,23 +429,38 @@
                     });
                 },
 
-                toggleTrash(status) {
-                    this.viewTrash = status;
-                    this.fetchUsers();
+                goToPage(url) {
+                    if (url) {
+                        this.lastUrl = url;
+                        this.fetchUsers(url);
+                    }
                 },
 
-                async fetchUsers(url = "{{ route('admin.users.index') }}") {
+                toggleTrash(status) {
+                    this.viewTrash = status;
+                    this.fetchUsers("{{ route('admin.users.index') }}");
+                },
+
+                updateTable() {
+                    this.fetchUsers("{{ route('admin.users.index') }}");
+                },
+
+                async fetchUsers(url = null) {
+                    let targetUrlRaw = url || this.lastUrl;
+                    this.lastUrl = targetUrlRaw;
+
                     if (this.controller) this.controller.abort();
                     this.controller = new AbortController();
 
                     this.isLoading = true;
                     try {
-                        let targetUrl = new URL(url.includes('http') ? url : window.location.origin + url);
+                        let targetUrl = new URL(targetUrlRaw.includes('http') ? targetUrlRaw : window.location.origin + targetUrlRaw);
+
                         targetUrl.searchParams.set('trash', this.viewTrash);
-                        if (this.search) {
-                            targetUrl.searchParams.set('search', this.search);
-                        }
-                        // Cache bursting
+                        targetUrl.searchParams.set('search', this.search || '');
+                        targetUrl.searchParams.set('per_page', this.perPage || 20);
+                        targetUrl.searchParams.set('start_date', this.startDate || '');
+                        targetUrl.searchParams.set('end_date', this.endDate || '');
                         targetUrl.searchParams.set('_t', new Date().getTime());
 
                         let response = await fetch(targetUrl, {
@@ -635,8 +473,8 @@
 
                         let result = await response.json();
                         if (result.status) {
-                            this.users = result.data.data;
-                            this.pagination = result.data;
+                            document.getElementById('userTableBody').innerHTML = result.table;
+                            document.getElementById('userPagination').innerHTML = result.pagination;
                         }
                     } catch (error) {
                         if (error.name !== 'AbortError') console.error('Fetch error:', error);
@@ -754,7 +592,7 @@
                         });
                         let result = await response.json();
                         if (result.status) {
-                            this.fetchUsers();
+                            await this.fetchUsers();
                             this.Toast.fire({
                                 icon: 'success',
                                 title: result.message
@@ -803,10 +641,15 @@
                                 });
                                 let res = await response.json();
                                 if (res.status) {
-                                    this.fetchUsers();
+                                    await this.fetchUsers();
                                     this.Toast.fire({
                                         icon: 'success',
                                         title: res.message
+                                    });
+                                } else {
+                                    this.Toast.fire({
+                                        icon: 'error',
+                                        title: res.message || 'Action failed'
                                     });
                                 }
                             } catch (e) {
@@ -841,10 +684,15 @@
                                 });
                                 let res = await response.json();
                                 if (res.status) {
-                                    this.fetchUsers();
+                                    await this.fetchUsers();
                                     this.Toast.fire({
                                         icon: 'success',
                                         title: res.message
+                                    });
+                                } else {
+                                    this.Toast.fire({
+                                        icon: 'error',
+                                        title: res.message || 'Action failed'
                                     });
                                 }
                             } catch (e) {

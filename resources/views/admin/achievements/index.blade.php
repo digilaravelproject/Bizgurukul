@@ -7,96 +7,122 @@
     <div class="font-sans text-mainText min-h-screen space-y-8">
 
         {{-- Top Bar: Header & Create Action --}}
-        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 animate-fade-in-down">
-            <div class="space-y-1">
-                <h2 class="text-3xl font-extrabold tracking-tight text-mainText">Achievements & Rewards</h2>
-                <div class="flex items-center gap-2 text-sm font-medium">
-                    <span class="text-mutedText">Gamification milestone system</span>
-                    <span class="h-1 w-1 rounded-full bg-primary/30"></span>
-                    <span class="text-primary font-bold">Total: {{ $achievements->count() }} milestones</span>
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 animate-fade-in-down pb-2">
+            <div class="space-y-0.5">
+                <h2 class="text-2xl font-black tracking-tight text-mainText">Rewards & Milestones</h2>
+                <div class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-mutedText">
+                    <span class="text-primary/70">{{ $achievements->count() }} active targets</span>
+                    <span class="h-0.5 w-0.5 rounded-full bg-primary/30"></span>
+                    <span>Gamified growth system</span>
                 </div>
             </div>
 
             <a href="{{ route('admin.achievements.create') }}"
-                class="group relative inline-flex items-center justify-center gap-3 rounded-2xl brand-gradient px-8 py-4 text-xs font-black text-customWhite uppercase tracking-[2px] shadow-xl shadow-primary/30 transition-all duration-500 hover:shadow-primary/50 hover:-translate-y-1 active:scale-95 overflow-hidden">
+                class="group relative inline-flex items-center justify-center gap-2 rounded-xl brand-gradient px-6 py-3 text-[10px] font-black text-customWhite uppercase tracking-widest shadow-lg shadow-primary/20 transition-all duration-300 hover:-translate-y-0.5 active:scale-95 overflow-hidden">
                 <span class="relative z-10 flex items-center gap-2">
-                    <svg class="h-5 w-5 transition-transform duration-500 group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M12 4v16m8-8H4" />
                     </svg>
-                    New Achievement
+                    New Milestone
                 </span>
-                <div class="absolute inset-0 -translate-x-full group-hover:translate-x-0 bg-white/20 transition-transform duration-700 ease-out skew-x-12"></div>
             </a>
         </div>
 
         {{-- Achievements Table --}}
-        <div class="bg-surface border border-primary/10 rounded-[2.5rem] shadow-2xl shadow-primary/5 overflow-hidden animate-fade-in-up">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+        <div class="bg-surface border border-primary/10 rounded-[2rem] shadow-xl shadow-primary/5 overflow-hidden animate-fade-in-up">
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left border-collapse table-auto min-w-[1000px] lg:min-w-0">
                     <thead>
-                        <tr class="bg-primary/5 border-b border-primary/10">
-                            <th class="px-8 py-6 text-xs font-black text-mainText uppercase tracking-widest">Priority</th>
-                            <th class="px-8 py-6 text-xs font-black text-mainText uppercase tracking-widest">Image</th>
-                            <th class="px-8 py-6 text-xs font-black text-mainText uppercase tracking-widest">Title</th>
-                            <th class="px-8 py-6 text-xs font-black text-mainText uppercase tracking-widest">Target (₹)</th>
-                            <th class="px-8 py-6 text-xs font-black text-mainText uppercase tracking-widest">Reward Type</th>
-                            <th class="px-8 py-6 text-xs font-black text-mainText uppercase tracking-widest">Status</th>
-                            <th class="px-8 py-6 text-xs font-black text-mainText uppercase tracking-widest text-right">Actions</th>
+                        <tr class="bg-primary/[0.03] border-b border-primary/10">
+                            <th class="px-5 py-4 text-[10px] font-black text-mutedText uppercase tracking-widest w-16">#</th>
+                            <th class="px-5 py-4 text-[10px] font-black text-mutedText uppercase tracking-widest w-16 text-center">Reward</th>
+                            <th class="px-5 py-4 text-[10px] font-black text-mutedText uppercase tracking-widest">Milestone Info</th>
+                            <th class="px-5 py-4 text-[10px] font-black text-mutedText uppercase tracking-widest">Target & Type</th>
+                            <th class="px-5 py-4 text-[10px] font-black text-mutedText uppercase tracking-widest">Active Duration</th>
+                            <th class="px-5 py-4 text-[10px] font-black text-mutedText uppercase tracking-widest text-center">Stats</th>
+                            <th class="px-5 py-4 text-[10px] font-black text-mutedText uppercase tracking-widest text-center">Status</th>
+                            <th class="px-5 py-4 text-[10px] font-black text-mutedText uppercase tracking-widest text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-primary/5">
                         @forelse($achievements as $achievement)
-                            <tr class="hover:bg-primary/5 transition-colors duration-300">
-                                <td class="px-8 py-6">
-                                    <span class="h-8 w-8 flex items-center justify-center rounded-full bg-primary/10 text-primary font-black text-sm">
+                            <tr class="{{ $achievement->status ? 'bg-success/[0.04]' : 'opacity-70' }} hover:bg-primary/[0.06] transition-colors duration-300 group">
+                                <td class="px-5 py-4">
+                                    <span class="h-7 w-7 flex items-center justify-center rounded-lg bg-primary/10 text-primary font-black text-[11px]">
                                         {{ $achievement->priority }}
                                     </span>
                                 </td>
-                                <td class="px-8 py-6">
-                                    @if($achievement->reward_image)
-                                        <img src="{{ $achievement->reward_image_url }}" alt="{{ $achievement->title }}" class="h-12 w-12 rounded-xl object-cover border border-primary/10 shadow-sm">
-                                    @else
-                                        <div class="h-12 w-12 rounded-xl bg-primary/5 flex items-center justify-center border border-primary/10">
-                                            <svg class="h-6 w-6 text-primary/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                            </svg>
-                                        </div>
-                                    @endif
+                                <td class="px-5 py-4 text-center">
+                                    <div class="inline-block relative">
+                                        @if($achievement->reward_image)
+                                            <img src="{{ $achievement->reward_image_url }}" alt="{{ $achievement->title }}" class="h-10 w-10 rounded-lg object-cover border border-primary/10 shadow-sm group-hover:scale-110 transition-transform duration-300">
+                                        @else
+                                            <div class="h-10 w-10 rounded-lg bg-primary/5 flex items-center justify-center border border-primary/10 text-primary/30">
+                                                <i class="fas fa-gift text-xs"></i>
+                                            </div>
+                                        @endif
+                                    </div>
                                 </td>
-                                <td class="px-8 py-6">
-                                    <div class="font-bold text-mainText">{{ $achievement->title }}</div>
-                                    <div class="text-xs text-mutedText font-medium">{{ $achievement->short_title }}</div>
+                                <td class="px-5 py-4">
+                                    <div class="font-extrabold text-mainText text-sm group-hover:text-primary transition-colors">{{ $achievement->title }}</div>
+                                    <div class="text-[10px] text-mutedText font-bold uppercase tracking-tighter">{{ $achievement->short_title }}</div>
                                 </td>
-                                <td class="px-8 py-6 font-black text-primary">₹{{ number_format($achievement->target_amount, 2) }}</td>
-                                <td class="px-8 py-6">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
+                                <td class="px-5 py-4">
+                                    <div class="font-black text-primary text-sm">₹{{ number_format($achievement->target_amount) }}</div>
+                                    <div class="inline-flex mt-1 px-2 py-0.5 rounded-md bg-primary/5 text-primary text-[9px] font-black uppercase tracking-widest border border-primary/10">
                                         {{ $achievement->reward_type }}
-                                    </span>
+                                    </div>
                                 </td>
-                                <td class="px-8 py-6">
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox"
-                                               onchange="toggleStatus({{ $achievement->id }})"
-                                               class="sr-only peer"
-                                               {{ $achievement->status ? 'checked' : '' }}>
-                                        <div class="w-11 h-6 bg-mutedText/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-success"></div>
-                                        <span class="ml-3 text-xs font-bold {{ $achievement->status ? 'text-success' : 'text-mutedText' }}" id="status-text-{{ $achievement->id }}">
-                                            {{ $achievement->status ? 'Active' : 'Inactive' }}
-                                        </span>
-                                    </label>
+                                <td class="px-5 py-4">
+                                    <div class="flex flex-col gap-0.5">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="w-1 h-1 rounded-full bg-success"></span>
+                                            <span class="text-[10px] font-black text-mainText">{{ $achievement->start_date ? $achievement->start_date->format('d M y') : 'Immediate' }}</span>
+                                        </div>
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="w-1 h-1 rounded-full bg-error"></span>
+                                            <span class="text-[10px] font-black text-mutedText">{{ $achievement->end_date ? $achievement->end_date->format('d M y') : 'Lifetime' }}</span>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td class="px-8 py-6">
-                                    <div class="flex justify-end gap-3">
+                                <td class="px-5 py-4 text-center">
+                                    <a href="{{ route('admin.achievements.qualified', $achievement) }}"
+                                       class="inline-flex flex-col items-center gap-0.5 group/btn transition-all">
+                                        <span class="text-sm font-black text-success">{{ $achievement->userAchievements()->whereIn('status', ['unlocked', 'claimed'])->count() }}</span>
+                                        <span class="text-[8px] font-black uppercase tracking-tighter text-mutedText group-hover/btn:text-success">Qualified</span>
+                                    </a>
+                                </td>
+                                <td class="px-5 py-4">
+                                    <div class="flex justify-center">
+                                        <label class="relative inline-flex items-center cursor-pointer group">
+                                            <input type="checkbox"
+                                                   onchange="toggleStatus(this, {{ $achievement->id }})"
+                                                   class="sr-only peer"
+                                                   {{ $achievement->status ? 'checked' : '' }}>
+                                            {{-- Custom Toggle Track --}}
+                                            <div class="w-11 h-6 bg-mutedText/20 rounded-full peer border-2 border-transparent transition-all duration-500
+                                                peer-checked:bg-success/10 peer-checked:border-success/30 
+                                                shadow-inner 
+                                                group-hover:shadow-primary/10"></div>
+                                            {{-- Custom Toggle Ball --}}
+                                            <div class="absolute top-1 left-1 w-4 h-4 bg-mutedText/40 rounded-full transition-all duration-500 ease-[cubic-bezier(0.68,-0.55,0.27,1.55)] shadow-sm
+                                                peer-checked:translate-x-5 peer-checked:bg-success peer-checked:shadow-success/30
+                                                group-hover:scale-110 active:scale-95"></div>
+                                        </label>
+                                    </div>
+                                </td>
+                                <td class="px-5 py-4">
+                                    <div class="flex justify-end gap-2">
                                         <a href="{{ route('admin.achievements.edit', $achievement) }}"
-                                           class="h-10 w-10 flex items-center justify-center rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-customWhite transition-all duration-300 shadow-lg shadow-primary/5">
-                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                           class="h-8 w-8 flex items-center justify-center rounded-lg bg-primary/5 text-primary hover:bg-primary hover:text-customWhite transition-all duration-300">
+                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                             </svg>
                                         </a>
                                         <button onclick="confirmDelete({{ $achievement->id }})"
-                                           class="h-10 w-10 flex items-center justify-center rounded-xl bg-error/10 text-error hover:bg-error hover:text-customWhite transition-all duration-300 shadow-lg shadow-error/5">
-                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                           class="h-8 w-8 flex items-center justify-center rounded-lg bg-error/[0.05] text-error hover:bg-error hover:text-customWhite transition-all duration-300">
+                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
                                         </button>
                                         <form id="delete-form-{{ $achievement->id }}" action="{{ route('admin.achievements.destroy', $achievement) }}" method="POST" style="display: none;">
@@ -130,7 +156,7 @@
     </div>
 
     <script>
-        function toggleStatus(id) {
+        function toggleStatus(el, id) {
             fetch(`/admin/achievements/${id}/toggle-status`, {
                 method: 'POST',
                 headers: {
@@ -142,15 +168,14 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    const textEl = document.getElementById(`status-text-${id}`);
+                    // Smooth Row State Transition
+                    const row = el.closest('tr');
                     if (data.status) {
-                        textEl.innerText = 'Active';
-                        textEl.classList.remove('text-mutedText');
-                        textEl.classList.add('text-success');
+                        row.classList.add('bg-success/[0.04]');
+                        row.classList.remove('opacity-70');
                     } else {
-                        textEl.innerText = 'Inactive';
-                        textEl.classList.remove('text-success');
-                        textEl.classList.add('text-mutedText');
+                        row.classList.remove('bg-success/[0.04]');
+                        row.classList.add('opacity-70');
                     }
 
                     const Toast = Swal.mixin({
@@ -158,17 +183,21 @@
                         position: 'top-end',
                         showConfirmButton: false,
                         timer: 2000,
-                        timerProgressBar: true
+                        timerProgressBar: true,
+                        background: 'rgb(var(--color-surface))',
+                        color: 'rgb(var(--color-mainText))'
                     });
                     Toast.fire({
                         icon: 'success',
                         title: data.message
                     });
                 } else {
+                    el.checked = !el.checked; // Revert toggle on error
                     Swal.fire('Error', data.message, 'error');
                 }
             })
             .catch(error => {
+                el.checked = !el.checked; // Revert toggle on error
                 console.error('Error:', error);
                 Swal.fire('Error', 'Something went wrong!', 'error');
             });

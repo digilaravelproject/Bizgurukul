@@ -105,10 +105,10 @@
     </div>
 
 
-    {{-- 3. DUAL ANALYTICS SECTION --}}
-    <div class="stagger-3 grid grid-cols-1 lg:grid-cols-4 gap-6">
+    {{-- 3. ANALYTICS SECTION --}}
+    <div class="stagger-3 grid grid-cols-1 lg:grid-cols-2 gap-6">
         {{-- Graph: Earnings Trend --}}
-        <div class="lg:col-span-2 bg-surface rounded-[1.5rem] md:rounded-[2.5rem] p-6 border border-primary/10 premium-shadow relative overflow-hidden">
+        <div class="bg-surface rounded-[1.5rem] md:rounded-[2.5rem] p-6 md:p-8 border border-primary/10 premium-shadow relative overflow-hidden">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 relative z-10">
                 <div>
                     <h3 class="text-sm font-black text-mainText uppercase tracking-widest flex items-center gap-3">
@@ -119,8 +119,54 @@
             <div id="earningsChart" class="w-full h-[250px] md:h-[300px] relative z-10"></div>
         </div>
 
-        {{-- Reward Gauge (Integrated) --}}
-        <div class="bg-surface rounded-[2.5rem] p-6 border border-primary/10 premium-shadow relative overflow-hidden flex flex-col items-center justify-center text-center">
+        {{-- Bundle Sales Distribution --}}
+        <div class="bg-surface rounded-[1.5rem] md:rounded-[2.5rem] p-6 md:p-8 border border-primary/10 premium-shadow relative overflow-hidden">
+             <div class="flex items-center justify-between gap-4 mb-8 relative z-10">
+                <h3 class="text-sm font-black text-mainText uppercase tracking-widest flex items-center gap-3">
+                    <i class="fas fa-chart-pie text-secondary"></i> Bundle Distribution
+                </h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center h-full">
+                <div class="relative flex items-center justify-center">
+                    <div id="bundleDistributionChart" class="w-full"></div>
+                    @if(empty($bundleDistribution['series']))
+                        <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+                            <i class="fas fa-chart-pie text-mutedText/20 text-4xl mb-2"></i>
+                            <p class="text-[10px] font-bold text-mutedText uppercase tracking-widest">No Sales Yet</p>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="space-y-4 max-h-[320px] md:max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                    @forelse($bundleDistribution['stats'] as $index => $stat)
+                        <div class="group relative p-3 rounded-2xl bg-primary/5 border border-primary/10 hover:border-primary/20 transition-all">
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-2.5 h-2.5 rounded-full flex-shrink-0" id="color-dot-{{ $index }}"></div>
+                                    <h4 class="text-[11px] font-black text-mainText truncate uppercase tracking-wider">{{ $stat['title'] }}</h4>
+                                </div>
+                                <span class="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-full">{{ $stat['sales_count'] }}</span>
+                            </div>
+                            <div class="flex items-center justify-between mt-2 pt-2 border-t border-primary/10">
+                                <p class="text-[9px] font-bold text-mutedText uppercase tracking-widest">Earnings</p>
+                                <p class="text-xs font-black text-mainText">₹{{ number_format($stat['revenue']) }}</p>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center py-8">
+                            <p class="text-xs font-medium text-mutedText">Your sales distribution will appear here once you start earning commissions.</p>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- 4. UTILS SECTION --}}
+    <div class="stagger-3 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {{-- Reward Gauge --}}
+        <div class="bg-surface rounded-[2rem] md:rounded-[2.5rem] p-6 border border-primary/10 premium-shadow relative overflow-hidden flex flex-col items-center justify-center text-center">
             <div class="absolute -top-12 -left-12 w-48 h-48 bg-primary/5 blur-[50px] rounded-full pointer-events-none"></div>
 
             <div class="relative z-10 w-full">
@@ -167,8 +213,8 @@
             </div>
         </div>
 
-        {{-- Affiliate Link Generator (Enhanced) --}}
-        <div class="bg-surface rounded-3xl p-6 border border-primary/10 premium-shadow flex flex-col relative overflow-hidden" x-data="{ type: 'general', expiryOption: 'no_expiry' }">
+        {{-- Affiliate Link Generator --}}
+        <div class="lg:col-span-3 bg-surface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 border border-primary/10 premium-shadow flex flex-col relative overflow-hidden" x-data="{ type: 'general', expiryOption: 'no_expiry' }">
              {{-- Background Accent --}}
              <div class="absolute -right-10 -top-10 w-32 h-32 bg-secondary/10 blur-[40px] rounded-full pointer-events-none"></div>
 
@@ -430,8 +476,9 @@
 
             init() {
                 this.renderEarningsChart();
+                this.renderBundleChart();
 
-                // Handle window resize - redraw chart with correct dimensions
+                // Handle window resize
                 window.addEventListener('resize', () => {
                     clearTimeout(this.resizeTimer);
                     this.resizeTimer = setTimeout(() => {
@@ -439,6 +486,7 @@
                             this.chartInstance.destroy();
                             this.renderEarningsChart();
                         }
+                        this.renderBundleChart();
                     }, 300);
                 });
             },
@@ -455,34 +503,32 @@
                         height: isMobile ? 220 : 300,
                         width: '100%',
                         toolbar: { show: false },
-                        fontFamily: 'var(--font-main)',
+                        fontFamily: 'inherit',
                         background: 'transparent',
                         zoom: { enabled: false },
                         selection: { enabled: false },
                         sparkline: { enabled: false },
-                        events: {
-                            mounted: function(chartContext, config) {
-                                // Reset any zoom state on mount
-                                chartContext.resetSeries();
-                            }
-                        }
                     },
                     states: {
                         active: { filter: { type: 'none' } }
                     },
-                    colors: ['rgb(var(--color-primary))'],
-                    fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.0, stops: [0, 100] } },
+                    colors: ['#f7941d'], // Primary Brand Orange
+                    fill: { 
+                        type: 'gradient', 
+                        gradient: { 
+                            shadeIntensity: 1, 
+                            opacityFrom: 0.2, 
+                            opacityTo: 0.05, 
+                            stops: [0, 90] 
+                        } 
+                    },
                     dataLabels: { enabled: false },
-                    stroke: { curve: 'smooth', width: isMobile ? 2 : 3 },
+                    stroke: { curve: 'smooth', width: 3 },
                     xaxis: {
                         categories: @json($graphData['labels']),
                         labels: {
                             show: !isMobile,
-                            style: { colors: 'rgb(var(--color-text-muted))', fontSize: '11px', fontWeight: 600 },
-                            rotate: -45,
-                            rotateAlways: false,
-                            trim: true,
-                            maxHeight: 60
+                            style: { colors: '#555555', fontSize: '11px', fontWeight: 600 },
                         },
                         axisBorder: { show: false },
                         axisTicks: { show: false }
@@ -490,41 +536,112 @@
                     yaxis: {
                         show: !isMobile,
                         labels: {
-                            style: { colors: 'rgb(var(--color-text-muted))', fontWeight: 600 },
+                            style: { colors: '#555555', fontWeight: 600 },
                             formatter: (val) => "₹" + val.toFixed(0)
                         }
                     },
                     grid: {
-                        borderColor: 'rgba(var(--color-text-muted), 0.1)',
+                        borderColor: 'rgba(0,0,0,0.05)',
                         strokeDashArray: 4,
-                        padding: {
-                            left: isMobile ? 0 : 10,
-                            right: isMobile ? 5 : 10,
-                            top: 0,
-                            bottom: 0
-                        }
                     },
                     tooltip: {
                         theme: 'light',
                         x: { show: true },
                         y: { formatter: (val) => "₹" + val.toFixed(0) },
-                        marker: { show: true }
-                    },
-                    responsive: [{
-                        breakpoint: 480,
-                        options: {
-                            chart: { height: 200 },
-                            stroke: { width: 2 },
-                            grid: {
-                                padding: { left: 0, right: 0 }
-                            }
-                        }
-                    }]
+                    }
                 };
 
                 this.chartInstance = new ApexCharts(chartEl, options);
                 this.chartInstance.render();
             },
+
+            renderBundleChart() {
+                const isMobile = window.innerWidth < 768;
+                const chartEl = document.querySelector("#bundleDistributionChart");
+                if (!chartEl || @json(empty($bundleDistribution['series']))) return;
+
+                const options = {
+                    series: @json($bundleDistribution['series']),
+                    labels: @json($bundleDistribution['labels']),
+                    chart: {
+                        type: 'donut',
+                        height: isMobile ? 240 : 300,
+                        fontFamily: 'inherit',
+                    },
+                    colors: [
+                        '#f7941d', // Primary
+                        '#d04a02', // Secondary
+                        '#f59e0b', // Amber
+                        '#10b981', // Emerald
+                        '#3b82f6', // Blue
+                        '#8b5cf6'  // Violet
+                    ],
+                    stroke: { 
+                        show: true, 
+                        width: 4, 
+                        colors: ['#ffffff'] // White gap for light theme
+                    },
+                    dataLabels: { enabled: false },
+                    legend: { show: false },
+                    plotOptions: {
+                        pie: {
+                            donut: {
+                                size: '75%',
+                                labels: {
+                                    show: true,
+                                    name: { 
+                                        show: true, 
+                                        fontSize: '11px', 
+                                        fontWeight: 900, 
+                                        color: '#888888', 
+                                        offsetY: -8,
+                                        fontFamily: 'inherit'
+                                    },
+                                    value: { 
+                                        show: true, 
+                                        fontSize: '24px', 
+                                        fontWeight: 900, 
+                                        color: '#2d2d2d', 
+                                        offsetY: 8,
+                                        fontFamily: 'inherit',
+                                        formatter: (val) => val 
+                                    },
+                                    total: { 
+                                        show: true, 
+                                        label: 'TOTAL SALES', 
+                                        fontSize: '9px', 
+                                        fontWeight: 900, 
+                                        color: '#aaaaaa',
+                                        fontFamily: 'inherit'
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    tooltip: {
+                        theme: 'light',
+                        style: {
+                            fontSize: '12px',
+                            fontFamily: 'inherit'
+                        },
+                        y: { 
+                            formatter: (val) => `<span class="font-bold text-primary">${val}</span> Units` 
+                        }
+                    },
+                };
+
+                const chart = new ApexCharts(chartEl, options);
+                chart.render();
+
+                // Assign colors to the legend dots
+                setTimeout(() => {
+                    const colors = chart.w.globals.colors;
+                    @json($bundleDistribution['stats']).forEach((_, i) => {
+                        const dot = document.getElementById(`color-dot-${i}`);
+                        if (dot) dot.style.backgroundColor = colors[i % colors.length];
+                    });
+                }, 100);
+            }
 
         }
     }

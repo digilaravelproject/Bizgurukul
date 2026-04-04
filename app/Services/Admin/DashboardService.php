@@ -4,6 +4,7 @@ namespace App\Services\Admin;
 
 use App\Models\AffiliateCommission;
 use App\Models\Course;
+use App\Models\Bundle;
 use App\Models\Payment;
 use App\Models\User;
 use Carbon\Carbon;
@@ -12,102 +13,166 @@ use Illuminate\Support\Facades\Log;
 
 class DashboardService
 {
+    /**
+     * Get aggregated statistics for the admin dashboard.
+     * Refactored to avoid IDE inference limitations and improve modularity.
+     */
     public function getAggregateStats()
     {
-        // Cache for 30 seconds
         return Cache::remember('admin_dashboard_stats', 30, function () {
             try {
                 $today = Carbon::today();
-                $startOfMonth = Carbon::now()->startOfMonth();
-                $endOfMonth = Carbon::now()->endOfMonth();
-                $startOfLastMonth = Carbon::now()->subMonth()->startOfMonth();
-                $endOfLastMonth = Carbon::now()->subMonth()->endOfMonth();
-
-                // Revenue Calculations (Include 'captured' for Razorpay compatibility)
                 $successStatuses = ['success', 'captured'];
-                $totalRevenue = (float) Payment::whereIn('status', $successStatuses)->sum('amount');
-                $revenueThisMonth = (float) Payment::whereIn('status', $successStatuses)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->sum('amount');
-                $revenueLastMonth = (float) Payment::whereIn('status', $successStatuses)->whereBetween('created_at', [$startOfLastMonth, $endOfLastMonth])->sum('amount');
 
-                $sevenDaysRevenue = (float) Payment::whereIn('status', $successStatuses)->where('created_at', '>=', Carbon::now()->subDays(7))->sum('amount');
-                $thirtyDaysRevenue = (float) Payment::whereIn('status', $successStatuses)->where('created_at', '>=', Carbon::now()->subDays(30))->sum('amount');
+                // 1. Revenue & Payment Metrics
+                $paymentStats = $this->getPaymentMetrics($successStatuses, $today);
 
-                // Growth Calculation (Prevent Division by Zero)
-                $growthPercentage = 0;
-                if ($revenueLastMonth > 0) {
-                    $growthPercentage = (($revenueThisMonth - $revenueLastMonth) / $revenueLastMonth) * 100;
-                }
+                // 2. User & Student Metrics
+                $userStats = $this->getUserMetrics($today);
 
-                // Top Courses
-                $topCourses = [];
-                try {
-                    $topCourses = Course::withCount('students')
-                        ->orderBy('students_count', 'desc')
-                        ->take(4)
-                        ->get(['id', 'title', 'website_price', 'thumbnail']);
-                } catch (\Exception $e) {
-                    Log::error('Dashboard Top Courses Error: ' . $e->getMessage());
-                    $topCourses = [];
-                }
+                // 3. Course Metrics
+                $courseMetrics = $this->getCourseMetrics();
 
-                return [
-                    'total_users'           => User::role('Student')->count(),
-                    'new_users_today'       => User::role('Student')->whereDate('created_at', $today)->count(),
-                    'active_students'       => User::role('Student')->where('is_active', true)->count(),
-                    'total_courses'         => Course::count(),
-                    'active_courses'        => Course::where('is_published', true)->count(),
-                    'total_revenue'         => $totalRevenue,
-                    'today_revenue'         => (float) Payment::whereIn('status', $successStatuses)->whereDate('created_at', $today)->sum('amount'),
-                    'seven_days_revenue'    => $sevenDaysRevenue,
-                    'thirty_days_revenue'   => $thirtyDaysRevenue,
-                    'all_time_revenue'      => $totalRevenue,
-                    'revenue_growth'        => round($growthPercentage, 1),
-                    'total_paid_commission' => (float) AffiliateCommission::paid()->sum('amount'),
-                    'pending_commission'    => (float) AffiliateCommission::pending()->sum('amount'),
-                    'sales_today'           => Payment::where('status', 'success')->whereDate('created_at', $today)->count(),
-                    'recent_registrations'  => User::latest()->take(6)->get(['id', 'name', 'email', 'profile_picture', 'created_at']),
-                    'top_courses'           => $topCourses,
-                    'recent_transactions'   => Payment::latest()
-                        ->take(6)
-                        ->with('user:id,name,profile_picture')
-                        ->get(['id', 'amount', 'status', 'created_at', 'user_id']),
+                // 4. Bundle Performance (Distribution Chart Data)
+                $bundleStats = $this->getBundlePerformance($successStatuses);
 
-                    // ── Profit Cards (GST + Commission + Gateway deducted) ──
-                    'today_profit'        => $this->calculateProfit('today'),
-                    'seven_days_profit'   => $this->calculateProfit('last_7_days'),
-                    'thirty_days_profit'  => $this->calculateProfit('last_30_days'),
-                    'all_time_profit'     => $this->calculateProfit('all_time'),
-                ];
+                // 5. Recent Activity
+                $recentRegistrations = User::latest()->take(6)->get(['id', 'name', 'email', 'profile_picture', 'created_at']);
+                $recentTransactions = Payment::latest()
+                    ->take(6)
+                    ->with('user:id,name,profile_picture')
+                    ->get(['id', 'amount', 'status', 'created_at', 'user_id']);
+
+                return array_merge(
+                    $paymentStats,
+                    $userStats,
+                    $courseMetrics,
+                    [
+                        'recent_registrations' => $recentRegistrations,
+                        'recent_transactions'  => $recentTransactions,
+                        'bundle_stats'         => $bundleStats,
+                    ],
+                    // Profit Cards
+                    [
+                        'today_profit'        => $this->calculateProfit('today'),
+                        'seven_days_profit'   => $this->calculateProfit('last_7_days'),
+                        'thirty_days_profit'  => $this->calculateProfit('last_30_days'),
+                        'all_time_profit'     => $this->calculateProfit('all_time'),
+                    ]
+                );
 
             } catch (\Exception $e) {
-                // FALLBACK: If anything critical fails, return 0s so dashboard loads
-                Log::error('Dashboard Aggregation Critical Error: ' . $e->getMessage());
-
-                return [
-                    'total_users' => 0,
-                    'new_users_today' => 0,
-                    'active_students' => 0,
-                    'total_courses' => 0,
-                    'active_courses' => 0,
-                    'total_revenue' => 0,
-                    'today_revenue' => 0,
-                    'seven_days_revenue' => 0,
-                    'thirty_days_revenue' => 0,
-                    'all_time_revenue' => 0,
-                    'revenue_growth' => 0,
-                    'total_paid_commission' => 0,
-                    'pending_commission' => 0,
-                    'sales_today' => 0,
-                    'today_profit' => 0,
-                    'seven_days_profit' => 0,
-                    'thirty_days_profit' => 0,
-                    'all_time_profit' => 0,
-                    'recent_registrations' => [],
-                    'top_courses' => [],
-                    'recent_transactions' => [],
-                ];
+                Log::error('Dashboard Aggregation Total Failure: ' . $e->getMessage());
+                return $this->getFallbackStats();
             }
         });
+    }
+
+    /**
+     * Extract revenue and commission metrics.
+     */
+    private function getPaymentMetrics(array $statuses, Carbon $today): array
+    {
+        $startOfMonth = Carbon::now()->startOfMonth();
+        $endOfMonth = Carbon::now()->endOfMonth();
+        $startOfLastMonth = Carbon::now()->subMonth()->startOfMonth();
+        $endOfLastMonth = Carbon::now()->subMonth()->endOfMonth();
+
+        $revenueThisMonth = (float) Payment::whereIn('status', $statuses)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->sum('amount');
+        $revenueLastMonth = (float) Payment::whereIn('status', $statuses)->whereBetween('created_at', [$startOfLastMonth, $endOfLastMonth])->sum('amount');
+
+        $growthPercentage = $revenueLastMonth > 0 ? (($revenueThisMonth - $revenueLastMonth) / $revenueLastMonth) * 100 : 0;
+
+        return [
+            'total_revenue'         => (float) Payment::whereIn('status', $statuses)->sum('amount'),
+            'today_revenue'         => (float) Payment::whereIn('status', $statuses)->whereDate('created_at', $today)->sum('amount'),
+            'seven_days_revenue'    => (float) Payment::whereIn('status', $statuses)->where('created_at', '>=', Carbon::now()->subDays(7))->sum('amount'),
+            'thirty_days_revenue'   => (float) Payment::whereIn('status', $statuses)->where('created_at', '>=', Carbon::now()->subDays(30))->sum('amount'),
+            'all_time_revenue'      => (float) Payment::whereIn('status', $statuses)->sum('amount'),
+            'revenue_growth'        => round($growthPercentage, 1),
+            'total_paid_commission' => (float) AffiliateCommission::paid()->sum('amount'),
+            'pending_commission'    => (float) AffiliateCommission::whereIn('status', ['requested', 'processing'])->sum('amount'),
+            'sales_today'           => Payment::where('status', 'success')->whereDate('created_at', $today)->count(),
+        ];
+    }
+
+    /**
+     * Extract user registration metrics.
+     */
+    private function getUserMetrics(Carbon $today): array
+    {
+        return [
+            'total_users'     => User::role('Student')->count(),
+            'new_users_today' => User::role('Student')->whereDate('created_at', $today)->count(),
+            'active_students' => User::role('Student')->where('is_active', true)->count(),
+        ];
+    }
+
+    /**
+     * Extract course-related metrics.
+     */
+    private function getCourseMetrics(): array
+    {
+        try {
+            $topCourses = Course::withCount('students')
+                ->orderBy('students_count', 'desc')
+                ->take(4)
+                ->get(['id', 'title', 'website_price', 'thumbnail']);
+        } catch (\Exception $e) {
+            Log::error('Dashboard Course Metrics Error: ' . $e->getMessage());
+            $topCourses = [];
+        }
+
+        return [
+            'total_courses'  => Course::count(),
+            'active_courses' => Course::where('is_published', true)->count(),
+            'top_courses'    => $topCourses,
+        ];
+    }
+
+    /**
+     * Extract bundle distribution statistics.
+     */
+    private function getBundlePerformance(array $statuses): array
+    {
+        try {
+            return Bundle::where('is_published', true)
+                ->withCount(['payments' => function ($query) use ($statuses) {
+                    $query->whereIn('status', $statuses);
+                }])
+                ->get()
+                ->map(function ($bundle) use ($statuses) {
+                    return [
+                        'id'          => $bundle->id,
+                        'title'       => $bundle->title,
+                        'sales_count' => $bundle->payments_count,
+                        'revenue'     => (float) Payment::where('bundle_id', $bundle->id)
+                            ->whereIn('status', $statuses)
+                            ->sum('amount'),
+                    ];
+                })
+                ->sortByDesc('sales_count')
+                ->values()
+                ->toArray();
+        } catch (\Exception $e) {
+            Log::error('Dashboard Bundle Performance Error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Safety fallback stats in case of total aggregation failure.
+     */
+    private function getFallbackStats(): array
+    {
+        return [
+            'total_users' => 0, 'new_users_today' => 0, 'active_students' => 0,
+            'total_courses' => 0, 'active_courses' => 0,
+            'total_revenue' => 0, 'today_revenue' => 0, 'seven_days_revenue' => 0, 'thirty_days_revenue' => 0, 'all_time_revenue' => 0,
+            'revenue_growth' => 0, 'total_paid_commission' => 0, 'pending_commission' => 0, 'sales_today' => 0,
+            'today_profit' => 0, 'seven_days_profit' => 0, 'thirty_days_profit' => 0, 'all_time_profit' => 0,
+            'recent_registrations' => [], 'top_courses' => [], 'bundle_stats' => [], 'recent_transactions' => [],
+        ];
     }
 
     // ─────────────────────────────────────────────────────────────────────────
