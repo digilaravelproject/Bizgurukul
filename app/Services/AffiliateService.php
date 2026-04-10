@@ -101,11 +101,21 @@ class AffiliateService
     public function getSecondaryStats(User $user)
     {
         try {
+            // Logic aligned with WalletRepository/WalletService statuses: 
+            // 1. Pending: Money earned but not yet available OR already requested but not paid
+            $pendingStatus = ['on_hold', 'requested', 'processing'];
+            
+            // 2. Wallet Balance: Money that is "available" to be withdrawn
+            $walletBalanceStatus = ['available'];
+
+            // 3. Paid Out: Money actually sent
+            $paidStatus = ['paid'];
+
             return [
-                'pending_earnings' => $user->commissions()->where('status', 'pending')->sum('amount'),
-                'total_payouts' => $user->commissions()->where('status', 'paid')->sum('amount'),
-                'wallet_balance' => $user->wallet_balance,
-                'total_withdrawn' => \App\Models\WithdrawalRequest::where('user_id', $user->id)
+                'pending_earnings' => $user->commissions()->whereIn('status', $pendingStatus)->sum('amount'),
+                'total_payouts'    => $user->commissions()->whereIn('status', $paidStatus)->sum('amount'),
+                'wallet_balance'   => $user->commissions()->whereIn('status', $walletBalanceStatus)->sum('amount'),
+                'total_withdrawn'  => \App\Models\WithdrawalRequest::where('user_id', $user->id)
                     ->where('status', 'approved')
                     ->sum('amount'),
             ];

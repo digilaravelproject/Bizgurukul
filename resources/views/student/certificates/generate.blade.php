@@ -97,32 +97,62 @@
             position: relative;
             z-index: 10;
             text-align: center;
-            width: 80%;
+            width: 100%;
             height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding-top: 15mm; /* subtle push down from top */
+            justify-content: flex-start; /* Fixed top-down layout */
+            padding-top: 55mm; /* Starting position of content */
         }
 
-        /* TYPOGRAPHY */
+        /* Fixed sections to prevent any movement */
+        .cert-intro {
+            height: 10mm;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .name-container {
+            width: 75%; /* More compact width for the name */
+            height: 38mm; /* Fixed vertical space for name */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2mm 0;
+            overflow: hidden; 
+        }
+
         .student-name {
             font-family: 'Cinzel', serif;
-            font-size: 48pt;
+            font-size: 48pt; 
             font-weight: 700;
-            color: #0f172a; /* Deep elegant navy */
-            margin: 10mm 0;
-            letter-spacing: 0.05em;
-            line-height: 1.2;
+            color: #0f172a;
+            letter-spacing: 0.02em;
+            line-height: 1.1;
             text-transform: uppercase;
+            text-align: center;
+            width: 100%;
+            display: block;
+            margin: 0;
+        }
+
+        .course-container {
+            width: 85%;
+            height: 25mm; /* Fixed space for course title */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 5mm;
+            overflow: hidden;
         }
 
         .cert-body {
             font-family: 'Playfair Display', serif;
             font-size: 16pt;
             color: #475569;
-            margin: 5mm 0;
+            margin: 0;
             font-style: italic;
         }
 
@@ -130,22 +160,23 @@
             font-family: 'Montserrat', sans-serif;
             font-size: 24pt;
             font-weight: 700;
-            color: #d97706; /* Elegant bronze/gold color instead of bright orange */
-            max-width: 85%;
-            margin: 0 auto;
-            line-height: 1.3;
+            color: #d97706;
+            line-height: 1.2;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            text-align: center;
+            width: 100%;
         }
 
         .footer-details {
             display: flex;
             justify-content: space-between;
-            width: 100%;
+            width: 75%; /* More compact footer */
             margin-top: 15mm;
-            padding: 0 10mm;
             position: absolute;
             bottom: 25mm;
+            left: 50%;
+            transform: translateX(-50%); /* Perfectly centered */
         }
 
         .footer-item {
@@ -205,14 +236,15 @@
         }
 
         /* Responsive scaling merely for browser viewing */
+        /* Responsive scaling for browser viewing */
         @media screen and (max-width: 1200px) {
-            .certificate-wrapper { zoom: 0.8; }
+            .certificate-wrapper { transform: scale(0.8); transform-origin: top center; margin-bottom: -40mm; }
         }
         @media screen and (max-width: 900px) {
-            .certificate-wrapper { zoom: 0.6; }
+            .certificate-wrapper { transform: scale(0.6); transform-origin: top center; margin-bottom: -80mm; }
         }
         @media screen and (max-width: 600px) {
-            .certificate-wrapper { zoom: 0.4; }
+            .certificate-wrapper { transform: scale(0.4); transform-origin: top center; margin-bottom: -120mm; }
         }
     </style>
 </head>
@@ -244,15 +276,21 @@
         <!-- Editable Overlay Content -->
         <div class="certificate-content">
 
-            <div class="cert-body" style="font-size: 16pt; margin-bottom: 2mm;">This is to certify that</div>
+            <div class="cert-intro">
+                <div class="cert-body" style="font-size: 16pt;">This is to certify that</div>
+            </div>
 
-            <div class="student-name">{{ strtoupper($user->name) }}</div>
+            <div class="name-container">
+                <div class="student-name" id="studentName">{{ strtoupper($user->name) }}</div>
+            </div>
 
-            <div class="cert-body" style="font-size: 14pt; max-width: 80%; margin: 5mm auto 8mm; line-height: 1.6;">
+            <div class="cert-body" style="font-size: 14pt; max-width: 80%; line-height: 1.6; height: 15mm; display: flex; align-items: center; justify-content: center; margin: 2mm 0;">
                 has successfully completed the comprehensive learning track and demonstrated exceptional dedication in
             </div>
 
-            <div class="course-title">{{ strtoupper($course->title) }}</div>
+            <div class="course-container">
+                <div class="course-title" id="courseTitle">{{ strtoupper($course->title) }}</div>
+            </div>
 
             <!-- Positioned at the bottom corners -->
             <div class="footer-details">
@@ -272,7 +310,43 @@
     <!-- Include html2pdf.js for client-side PDF generation on mobile devices -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
+        // Function to dynamically adjust certificate font sizes
+        function adjustCertificateText() {
+            const configs = [
+                { id: 'studentName', baseSize: 48, minSize: 14 },
+                { id: 'courseTitle', baseSize: 24, minSize: 12 }
+            ];
+
+            configs.forEach(config => {
+                const el = document.getElementById(config.id);
+                if (!el) return;
+                
+                const container = el.parentElement;
+                let fontSize = config.baseSize;
+                el.style.fontSize = fontSize + 'pt';
+
+                // Force layout reflow calculation
+                // Reduce font size until it fits within the fixed-height container
+                let attempts = 0;
+                while (el.scrollHeight > container.offsetHeight && fontSize > config.minSize && attempts < 50) {
+                    fontSize -= 1;
+                    el.style.fontSize = fontSize + 'pt';
+                    attempts++;
+                }
+            });
+        }
+
+        // Initialize adjustments with multiple triggers for reliability
+        window.addEventListener('load', () => setTimeout(adjustCertificateText, 50));
+        
+        if (document.fonts) {
+            document.fonts.ready.then(adjustCertificateText);
+        }
+
         function downloadPDF() {
+            // Ensure text is properly fitted before capture
+            adjustCertificateText();
+
             // Update button state to show loading
             const btn = document.getElementById('downloadPdfBtn');
             const originalContent = btn.innerHTML;

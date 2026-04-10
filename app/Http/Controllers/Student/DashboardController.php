@@ -35,19 +35,17 @@ class DashboardController extends Controller
                 ->pluck('lesson_id')
                 ->toArray();
 
-            // Fetch and calculate course progress efficiently using withCount
-            $myCourses = Payment::where('user_id', $user->id)
-                ->where('status', 'success')
-                ->whereNotNull('course_id')
-                ->with(['course' => function($q) {
-                    $q->withCount('lessons')->with('category');
-                }])
-                ->latest()
+            // Fetch ALL unlocked course IDs (Direct Purchase + From Bundles)
+            $unlockedCourseIds = $user->unlockedCourseIds();
+
+            // Fetch course details for these IDs to display progress
+            $myCourses = Course::whereIn('id', $unlockedCourseIds)
+                ->withCount('lessons')
+                ->with('category')
                 ->get()
-                ->pluck('course')
-                ->filter()
                 ->map(function ($course) use ($completedLessonIds) {
-                    $completed = $course->lessons->pluck('id')->intersect($completedLessonIds)->count();
+                    $courseLessons = $course->lessons->pluck('id');
+                    $completed = $courseLessons->intersect($completedLessonIds)->count();
 
                     $course->progress_percent = $course->lessons_count > 0
                         ? round(($completed / $course->lessons_count) * 100)
@@ -58,15 +56,8 @@ class DashboardController extends Controller
                     return $course;
                 });
 
-            // Fetch purchased bundles
-            $myBundles = Payment::where('user_id', $user->id)
-                ->where('status', 'success')
-                ->whereNotNull('bundle_id')
-                ->with('bundle')
-                ->latest()
-                ->get()
-                ->pluck('bundle')
-                ->filter();
+            // Fetch purchased bundles (Directly purchased)
+            $myBundles = $user->bundles;
 
             $referralLink = $user->referral_code ? url('/register?ref=' . $user->referral_code) : '';
             $affiliateData = $this->affiliateService->getDashboardData($user);
@@ -75,6 +66,7 @@ class DashboardController extends Controller
                 'user'                => $user,
                 'myCourses'           => $myCourses,
                 'myBundles'           => $myBundles,
+                'enrolledCount'       => count($unlockedCourseIds) + $myBundles->count(),
                 'referralLink'        => $referralLink,
                 'achievementData'     => $this->achievementService->getDashboardData($user),
                 'earningsStats'       => $this->affiliateService->getEarningsStats($user),

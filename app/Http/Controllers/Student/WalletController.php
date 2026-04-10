@@ -37,6 +37,7 @@ class WalletController extends Controller
         if ($request->ajax()) {
             return response()->json([
                 'status' => true,
+                'stats_grid' => view('student.wallet.partials.stats_grid', compact('dashboardData'))->render(),
                 'commissions_table' => view('student.wallet.partials.commissions_table', compact('commissions', 'dashboardData'))->render(),
                 'commissions_pagination' => $commissions->links()->toHtml(),
                 'withdrawals_table' => view('student.wallet.partials.withdrawals_table', compact('withdrawals'))->render(),

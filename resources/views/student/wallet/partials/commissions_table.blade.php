@@ -4,8 +4,9 @@
     <td class="px-6 py-4 text-center">
         @if($comm->status === 'available')
         <input type="checkbox" 
-               x-model="selectedCommissions" 
-               :value="{{ $comm->id }}" 
+               :checked="!!selectedData[{{ $comm->id }}]"
+               @change="toggleCommission({{ $comm->id }}, {{ $comm->payable_amount }}, $event.target.checked)"
+               value="{{ $comm->id }}"
                class="commission-checkbox w-4 h-4 rounded border-primary/30 text-primary focus:ring-primary bg-navy cursor-pointer" 
                data-amount="{{ $comm->payable_amount }}">
         @else
