@@ -116,15 +116,15 @@ class CashfreeGateway implements PaymentGatewayInterface
     public function verifyPayment(array $data): array
     {
         try {
-            if (!isset($data['order_id'])) {
+            $orderId = $data['order_id'] ?? $data['cashfree_order_id'] ?? null;
+            
+            if (!$orderId) {
                 return [
                     'verified'   => false,
                     'payment_id' => null,
                     'error'      => 'Missing order_id for verification.',
                 ];
             }
-
-            $orderId = $data['order_id'];
 
             $response = Http::withHeaders($this->getHeaders())
                 ->timeout(30)
