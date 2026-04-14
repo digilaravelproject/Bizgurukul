@@ -566,10 +566,10 @@
                                 <span class="flex-shrink-0 w-8 h-8 rounded-xl bg-navy flex items-center justify-center text-[10px] font-black text-primary border border-primary/20">
                                     {{ $index + 1 }}
                                 </span>
-                                <h3 class="text-lg font-black text-mainText">{{ $q->question_text }}</h3>
+                                <h3 class="text-lg font-black text-mainText">{{ $q->question }}</h3>
                             </div>
 
-                            @if($q->question_type === 'options')
+                            @if($q->type === 'options')
                                 <div class="grid grid-cols-1 gap-3">
                                     @foreach($q->options as $opt)
                                     <label class="group relative flex items-center p-4 rounded-2xl border-2 border-navy hover:border-primary/50 transition-all cursor-pointer"
@@ -915,8 +915,8 @@
                             
                             return {
                                 question_id: qid,
-                                option_id: q && q.question_type === 'options' ? value : null,
-                                text_answer: q && q.question_type === 'text' ? value : null
+                                option_id: q && q.type === 'options' ? value : null,
+                                text_answer: q && q.type === 'text' ? value : null
                             };
                         });
 
