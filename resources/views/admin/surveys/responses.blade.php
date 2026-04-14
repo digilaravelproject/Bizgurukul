@@ -29,11 +29,11 @@
                                 </td>
                                 <td class="px-6 py-5">
                                     <div class="text-xs font-semibold text-mutedText truncate max-w-xs">
-                                        {{ $res->question->question_text }}
+                                        {{ $res->question->question }}
                                     </div>
                                 </td>
                                 <td class="px-6 py-5">
-                                    @if($res->question->question_type === 'options')
+                                    @if($res->question->type === 'options')
                                         <span class="px-3 py-1 rounded-lg bg-indigo-50 text-indigo-600 text-[10px] font-black tracking-wider uppercase">
                                             {{ $res->option->option_text ?? 'N/A' }}
                                         </span>

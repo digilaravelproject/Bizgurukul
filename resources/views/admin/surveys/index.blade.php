@@ -235,7 +235,7 @@
     <script>
         function surveyManager() {
             return {
-                questions: @json($questions),
+                questions: @json($questions->items()),
                 showModal: false,
                 modalMode: 'create',
                 isSubmitting: false,
@@ -266,7 +266,7 @@
                             question: q.question,
                             type: q.type,
                             is_required: q.is_required,
-                            options: q.options.map(o => ({ id: o.id, text: o.option_text }))
+                            options: (q.options || []).map(o => ({ id: o.id, text: o.option_text }))
                         };
                     } else {
                         this.form = {
