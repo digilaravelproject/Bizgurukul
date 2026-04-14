@@ -103,8 +103,8 @@ class AffiliateController extends Controller
                 return response()->json([
                     'referrals_html' => view('student.affiliate.partials.referrals_table', compact('referrals'))->render(),
                     'leads_html' => view('student.affiliate.partials.leads_table', compact('leads'))->render(),
-                    'referrals_pagination' => $referrals->links()->render(),
-                    'leads_pagination' => $leads->links()->render(),
+                    'referrals_pagination' => (string)$referrals->links(),
+                    'leads_pagination' => (string)$leads->links(),
                 ]);
             }
 

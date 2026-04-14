@@ -28,28 +28,33 @@
     @stack('styles')
 </head>
 
-<body class="font-sans antialiased bg-navy text-mainText h-screen flex flex-col overflow-hidden" x-data="{ sidebarOpen: false }">
+<body class="font-sans antialiased bg-navy text-mainText h-screen flex flex-col overflow-hidden"
+    x-data="{ sidebarOpen: false }">
 
     {{-- Impersonation Banner --}}
     @if(session('impersonator_id'))
-    <div class="relative z-[999] bg-gradient-to-r from-amber-600 via-orange-500 to-amber-600 text-white py-1.5 px-4 md:px-6 flex items-center justify-between shadow-lg shadow-amber-900/20 shrink-0 border-b border-white/10" style="font-family: inherit;">
-        <div class="flex items-center gap-2 md:gap-3">
-            <div class="flex items-center justify-center w-6 h-6 rounded-full bg-white/20 animate-pulse">
-                <i class="fas fa-user-secret text-[10px]"></i>
+        <div class="relative z-[999] text-white py-2 px-4 md:px-6 flex items-center justify-between shadow-[0_4px_12px_rgba(0,0,0,0.15)] shrink-0 border-b border-white/5"
+            style="background-color: #b45309 !important; font-family: inherit;">
+            <div class="flex items-center gap-2 md:gap-3">
+                <div class="flex items-center justify-center w-7 h-7 rounded-full bg-white/15">
+                    <i class="fas fa-user-shield text-[11px] text-white"></i>
+                </div>
+                <span class="text-[10px] md:text-[11px] font-black uppercase tracking-[0.12em] leading-none text-white">
+                    <span class="hidden sm:inline opacity-90">Security Console:</span> Viewing as <span
+                        class="bg-white/10 px-2 py-0.5 rounded ml-1">{{ Auth::user()->name }}</span>
+                </span>
             </div>
-            <span class="text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] leading-none">
-                <span class="hidden sm:inline opacity-80">System:</span> Viewing as <span class="text-white border-b border-white/30">{{ Auth::user()->name }}</span>
-            </span>
+            <form action="{{ route('stop.impersonating') }}" method="POST">
+                @csrf
+                <button type="submit"
+                    class="bg-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm transform hover:scale-[1.03] active:scale-95 border border-white/20"
+                    style="color: #b45309 !important;">
+                    <i class="fas fa-power-off text-[10px]"></i>
+                    <span class="hidden xs:inline">Stop Session</span>
+                    <span class="xs:hidden">Stop</span>
+                </button>
+            </form>
         </div>
-        <form action="{{ route('stop.impersonating') }}" method="POST">
-            @csrf
-            <button type="submit" class="bg-white/10 hover:bg-white/25 backdrop-blur-md text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-white/20 hover:scale-105 active:scale-95 shadow-sm">
-                <i class="fas fa-sign-out-alt text-[10px]"></i>
-                <span class="hidden xs:inline">Exit Session</span>
-                <span class="xs:hidden">Exit</span>
-            </button>
-        </form>
-    </div>
     @endif
 
     <div class="flex-1 flex overflow-hidden">
