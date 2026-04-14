@@ -103,17 +103,16 @@ class RegistrationFlowController extends Controller
             );
 
             return redirect()->route('register.phase2', ['lead_id' => $lead->id]);
-
         } catch (ValidationException $e) {
             Log::warning('Phase 1 Validation Error: ', $e->errors());
 
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            Log::error('Phase 1 General Error: '.$e->getMessage(), [
+            Log::error('Phase 1 General Error: ' . $e->getMessage(), [
                 'stack' => $e->getTraceAsString(),
             ]);
 
-            return back()->withErrors(['error' => 'Unable to save details: '.$e->getMessage()])->withInput();
+            return back()->withErrors(['error' => 'Unable to save details: ' . $e->getMessage()])->withInput();
         }
     }
 
@@ -164,9 +163,8 @@ class RegistrationFlowController extends Controller
             }
 
             return view('auth.register-phase2', compact('lead', 'sponsor', 'maskedSponsor', 'bundles', 'referralCode'));
-
         } catch (\Exception $e) {
-            Log::error('Phase 2 Error: '.$e->getMessage());
+            Log::error('Phase 2 Error: ' . $e->getMessage());
 
             return redirect()->route('register.phase1')->withErrors('Session expired. Please start over.');
         }
@@ -189,7 +187,6 @@ class RegistrationFlowController extends Controller
             }
 
             return response()->json(['status' => 'invalid']);
-
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => 'Validation failed']);
         }
@@ -215,9 +212,8 @@ class RegistrationFlowController extends Controller
             ]);
 
             return redirect()->route('register.phase3', ['lead_id' => $lead->id]);
-
         } catch (\Exception $e) {
-            Log::error('Store Phase 2 Error: '.$e->getMessage());
+            Log::error('Store Phase 2 Error: ' . $e->getMessage());
 
             return back()->withErrors('Unable to proceed. Please try again.');
         }
@@ -248,9 +244,8 @@ class RegistrationFlowController extends Controller
                 compact('lead', 'bundle', 'maskedEmail'),
                 $pricing
             ));
-
         } catch (\Exception $e) {
-            Log::error('Phase 3 Error: '.$e->getMessage());
+            Log::error('Phase 3 Error: ' . $e->getMessage());
 
             return redirect()->route('register.phase2', ['lead_id' => $request->lead_id]);
         }
@@ -287,7 +282,6 @@ class RegistrationFlowController extends Controller
                 'total' => $pricing['totalAmount'],
                 'taxable_amount' => $pricing['taxableAmount'],
             ]);
-
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage() ?: 'Error applying coupon']);
         }
@@ -314,10 +308,9 @@ class RegistrationFlowController extends Controller
 
             // Initialize Gateway via Factory
             $gateway = \App\Services\Gateways\PaymentGatewayFactory::make();
-            $gatewayName = \App\Services\Gateways\PaymentGatewayFactory::activeGateway();
 
             $orderData = [
-                'receipt' => 'rcpt_'.$lead->id.'_'.time(),
+                'receipt' => 'rcpt_' . $lead->id . '_' . time(),
                 'amount' => $pricing['totalAmount'],
                 'currency' => 'INR',
                 'notes' => [
@@ -327,13 +320,26 @@ class RegistrationFlowController extends Controller
             ];
 
             $orderResult = $gateway->createOrder($orderData);
+            $gatewayName = $gateway->getGatewayName();
+
+            // Store pending payment in database for audit trail
+            Payment::create([
+                'lead_id'            => $lead->id, // Associate with lead
+                'amount'             => $pricing['totalAmount'],
+                'subtotal'           => $pricing['taxableAmount'],
+                'total_amount'       => $pricing['totalAmount'],
+                'status'             => 'pending',
+                'payment_gateway'    => $gatewayName,
+                'gateway_order_id'   => $orderResult['order_id'],
+                'razorpay_order_id'  => $gatewayName === 'razorpay' ? $orderResult['order_id'] : null,
+            ]);
 
             $response = [
                 'status' => 'success',
                 'gateway' => $gatewayName,
                 'order_id' => $orderResult['order_id'],
                 'amount' => $orderResult['amount'],
-                'key' => $gatewayName === 'razorpay' ? config('services.razorpay.key') : null,
+                'key' => $orderResult['key'], // Use key returned by gateway (supports admin panel overrides)
                 'name' => config('app.name'),
                 'description' => $bundle->title,
                 'prefill' => [
@@ -349,9 +355,8 @@ class RegistrationFlowController extends Controller
             }
 
             return response()->json($response);
-
         } catch (\Exception $e) {
-            Log::error('Payment Initiation Failed: '.$e->getMessage());
+            Log::error('Payment Initiation Failed: ' . $e->getMessage());
 
             return response()->json(['status' => 'error', 'message' => 'Unable to initiate payment: ' . $e->getMessage()]);
         }
@@ -379,24 +384,23 @@ class RegistrationFlowController extends Controller
 
                 // Fire Registered Event (Only if we just created the user)
                 event(new Registered($user));
-
             } catch (\Exception $e) {
                 // If it failed, check if it was because the lead was already processed (e.g., by a webhook)
                 $orderId = $request->razorpay_order_id ?? $request->cashfree_order_id;
                 $payment = Payment::where('gateway_order_id', $orderId)
-                                    ->orWhere('razorpay_order_id', $orderId)
-                                    ->first();
+                    ->orWhere('razorpay_order_id', $orderId)
+                    ->first();
 
                 if ($payment && $payment->user) {
                     $user = $payment->user;
-                    Log::info('RegistrationFlow: Lead already processed by parallel process. Resuming session for user: '.$user->id);
+                    Log::info('RegistrationFlow: Lead already processed by parallel process. Resuming session for user: ' . $user->id);
                 } else {
                     // It's a genuine failure
-                    Log::error('Payment Verification Failed: '.$e->getMessage());
+                    Log::error('Payment Verification Failed: ' . $e->getMessage());
 
                     return response()->json([
                         'status' => 'error',
-                        'message' => 'Payment verification failed: '.$e->getMessage(),
+                        'message' => 'Payment verification failed: ' . $e->getMessage(),
                     ]);
                 }
             }
@@ -415,9 +419,8 @@ class RegistrationFlowController extends Controller
                 'status' => 'success',
                 'redirect_url' => $redirectUrl,
             ]);
-
         } catch (\Exception $e) {
-            Log::error('Registration Flow Error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('Registration Flow Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
 
             return response()->json(['status' => 'error', 'message' => 'An unexpected error occurred. Please contact support.']);
         }
@@ -442,15 +445,15 @@ class RegistrationFlowController extends Controller
             $domain = $parts[1];
 
             $maskedName = strlen($name) > 2
-                ? $name[0].str_repeat('*', strlen($name) - 2).$name[strlen($name) - 1]
-                : $name.'***';
+                ? $name[0] . str_repeat('*', strlen($name) - 2) . $name[strlen($name) - 1]
+                : $name . '***';
 
-            return $maskedName.'@'.$domain;
+            return $maskedName . '@' . $domain;
         }
 
         // Default: Mobile or Name
         return strlen($string) > 2
-            ? $string[0].str_repeat('*', strlen($string) - 2).$string[strlen($string) - 1]
+            ? $string[0] . str_repeat('*', strlen($string) - 2) . $string[strlen($string) - 1]
             : $string;
     }
 }

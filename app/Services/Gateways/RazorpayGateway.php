@@ -49,6 +49,14 @@ class RazorpayGateway implements PaymentGatewayInterface
     public function verifyPayment(array $data): array
     {
         try {
+            if (!isset($data['razorpay_order_id'], $data['razorpay_payment_id'], $data['razorpay_signature'])) {
+                 return [
+                    'verified'   => false,
+                    'payment_id' => null,
+                    'error'      => 'Missing required payment verification parameters.',
+                ];
+            }
+
             $attributes = [
                 'razorpay_order_id'   => $data['razorpay_order_id'],
                 'razorpay_payment_id' => $data['razorpay_payment_id'],

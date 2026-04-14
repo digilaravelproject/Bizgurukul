@@ -23,39 +23,34 @@ class RegistrationService
 
     public function __construct()
     {
-        $this->api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
+        // No longer hardcoding Razorpay here to support multi-gateway
     }
 
     /**
-     * Verify Razorpay Payment and Complete Registration
+     * Verify Payment and Complete Registration
      */
     public function verifyAndCompleteRegistration(array $data)
     {
         try {
             return DB::transaction(function () use ($data) {
-                // 1. Verify Signature (Bypass if Webhook)
+                $gatewayName = $data['gateway'] ?? \App\Services\Gateways\PaymentGatewayFactory::activeGateway();
+                $gateway = \App\Services\Gateways\PaymentGatewayFactory::make($gatewayName);
+
+                // 1. Verify Payment (Bypass redirect-signature-verification if it's already verified by Webhook)
                 if (empty($data['is_webhook'])) {
-                    $gatewayName = $data['gateway'] ?? 'razorpay';
-                    $gateway = \App\Services\Gateways\PaymentGatewayFactory::make($gatewayName);
+                    $verifyResult = $gateway->verifyPayment($data);
                     
-                    if ($gatewayName === 'razorpay') {
-                        $attributes = [
-                            'razorpay_order_id' => $data['razorpay_order_id'] ?? $data['gateway_order_id'],
-                            'razorpay_payment_id' => $data['razorpay_payment_id'] ?? $data['gateway_payment_id'],
-                            'razorpay_signature' => $data['razorpay_signature'] ?? ''
-                        ];
-                        $gateway->verifyPayment($attributes);
-                    } else {
-                        $verifyResult = $gateway->verifyPayment(['order_id' => $data['cashfree_order_id'] ?? $data['gateway_order_id']]);
-                        if (!$verifyResult['verified']) {
-                            throw new Exception('Payment verification failed for Cashfree.');
-                        }
-                        // For non-webhook calls, update the data array with the actual payment ID
+                    if (!$verifyResult['verified']) {
+                        throw new Exception('Payment verification failed: ' . ($verifyResult['error'] ?? 'Invalid details'));
+                    }
+                    
+                    // Update data with the actual gateway payment ID if found during verification
+                    if (!empty($verifyResult['payment_id'])) {
                         $data['gateway_payment_id'] = $verifyResult['payment_id'];
                     }
                 }
 
-                // 2. Retrieve Data with Lock
+                // 2. Retrieve Data with Lock to prevent duplicate processing
                 $lead = Lead::where('id', $data['lead_id'])->lockForUpdate()->firstOrFail();
 
                 $bundleId = $lead->product_preference['bundle_id'] ?? null;
@@ -244,6 +239,8 @@ class RegistrationService
 
     protected function recordPayment(User $user, Bundle $bundle, array $data, array $pricing, ?Coupon $coupon)
     {
+        $gatewayName = $data['gateway'] ?? 'razorpay';
+        
         $paymentData = [
             'user_id' => $user->id,
             'bundle_id' => $bundle->id,
@@ -263,17 +260,15 @@ class RegistrationService
             'amount' => $pricing['totalAmount'],
             'coupon_id' => $coupon ? $coupon->id : null,
             'status' => 'success',
-            'payment_gateway' => $data['gateway'] ?? 'razorpay',
+            'payment_gateway' => $gatewayName,
+            'gateway_order_id' => $data['razorpay_order_id'] ?? $data['cashfree_order_id'] ?? $data['gateway_order_id'] ?? null,
+            'gateway_payment_id' => $data['razorpay_payment_id'] ?? $data['cashfree_payment_id'] ?? $data['gateway_payment_id'] ?? null,
         ];
 
-        if (($data['gateway'] ?? 'razorpay') === 'razorpay') {
-            $paymentData['razorpay_order_id'] = $data['razorpay_order_id'] ?? $data['gateway_order_id'] ?? null;
-            $paymentData['razorpay_payment_id'] = $data['razorpay_payment_id'] ?? $data['gateway_payment_id'] ?? null;
-            $paymentData['gateway_order_id'] = $data['razorpay_order_id'] ?? $data['gateway_order_id'] ?? null;
-            $paymentData['gateway_payment_id'] = $data['razorpay_payment_id'] ?? $data['gateway_payment_id'] ?? null;
-        } else {
-            $paymentData['gateway_order_id'] = $data['cashfree_order_id'] ?? $data['gateway_order_id'] ?? null;
-            $paymentData['gateway_payment_id'] = $data['gateway_payment_id'] ?? null;
+        // Maintain backward compatibility for legacy columns if they exist
+        if ($gatewayName === 'razorpay') {
+            $paymentData['razorpay_order_id'] = $paymentData['gateway_order_id'];
+            $paymentData['razorpay_payment_id'] = $paymentData['gateway_payment_id'];
         }
 
         return Payment::create($paymentData);
