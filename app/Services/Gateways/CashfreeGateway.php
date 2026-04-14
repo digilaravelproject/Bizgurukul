@@ -61,7 +61,7 @@ class CashfreeGateway implements PaymentGatewayInterface
                 'customer_id'    => 'cust_' . ($data['customer']['id'] ?? time()),
                 'customer_name'  => $data['customer']['name'] ?? 'Customer',
                 'customer_email' => $data['customer']['email'] ?? '',
-                'customer_phone' => $data['customer']['phone'] ?? '',
+                'customer_phone' => $data['customer']['phone'] ?? throw new Exception('Customer phone number is required for Cashfree payments.'),
             ],
             'order_meta' => [
                 'return_url' => $data['return_url'] ?? url('/'),
@@ -69,10 +69,15 @@ class CashfreeGateway implements PaymentGatewayInterface
         ];
 
         if (!empty($data['notes'])) {
-            $payload['order_note'] = is_array($data['notes'])
-                ? json_encode($data['notes'])
-                : $data['notes'];
-            $payload['order_tags'] = $data['notes'];
+            $payload['order_note'] = is_array($data['notes']) 
+                ? json_encode($data['notes']) 
+                : (string)$data['notes'];
+
+            // Also send as order_tags for reliable webhook metadata retrieval
+            // Cashfree order_tags must be string key-value pairs
+            if (is_array($data['notes'])) {
+                $payload['order_tags'] = array_map('strval', $data['notes']);
+            }
         }
 
         try {

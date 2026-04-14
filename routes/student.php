@@ -100,5 +100,8 @@ Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')
         // Browse Courses
         Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
         Route::get('/courses/{id}', [CourseController::class, 'show'])->name('courses.show');
+
+        // Survey Response
+        Route::post('/survey/submit', [\App\Http\Controllers\Student\SurveyResponseController::class, 'store'])->name('survey.submit');
     });
 });

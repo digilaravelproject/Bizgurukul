@@ -257,7 +257,7 @@
             <div class="mt-4 flex flex-col items-center justify-center gap-2">
                 <div class="flex items-center gap-2 text-xs font-bold text-mutedText">
                     <i class="fas fa-shield-alt text-green-500"></i>
-                    100% Secure Payment via Razorpay
+                    100% Secure Payment via {{ ucfirst(\App\Services\Gateways\PaymentGatewayFactory::activeGateway()) }}
                 </div>
             </div>
         </div>

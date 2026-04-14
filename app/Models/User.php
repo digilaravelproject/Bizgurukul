@@ -64,6 +64,7 @@ class User extends Authenticatable
         'two_factor_secret',
         'two_factor_recovery_codes',
         'two_factor_confirmed_at',
+        'survey_completed',
     ];
 
     protected $hidden = [
@@ -84,6 +85,7 @@ class User extends Authenticatable
         'banned_at' => 'datetime',
         'deleted_at' => 'datetime',
         'two_factor_confirmed_at' => 'datetime',
+        'survey_completed' => 'boolean',
     ];
 
     protected static function boot()

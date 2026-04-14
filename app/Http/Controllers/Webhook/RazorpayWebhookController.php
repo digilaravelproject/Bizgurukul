@@ -57,8 +57,13 @@ class RazorpayWebhookController extends Controller
             $orderId = $paymentEntity['order_id'];
             $paymentId = $paymentEntity['id'];
             
-            // Check if already processed (Race condition prevention)
-            if (Payment::where('razorpay_order_id', $orderId)->orWhere('gateway_order_id', $orderId)->exists()) {
+            // Check if already SUCCESSFULLY processed (Race condition prevention)
+            // Note: initiatePayment() creates a 'pending' record, so we must check status, not just existence
+            $existingPayment = Payment::where('razorpay_order_id', $orderId)
+                ->orWhere('gateway_order_id', $orderId)
+                ->first();
+
+            if ($existingPayment && $existingPayment->status === 'success') {
                 Log::info('Razorpay Webhook: Order already processed ' . $orderId);
                 return response()->json(['status' => 'success', 'message' => 'Already processed'], 200);
             }

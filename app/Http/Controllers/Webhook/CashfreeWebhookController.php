@@ -23,23 +23,48 @@ class CashfreeWebhookController extends Controller
     public function handleWebhook(Request $request)
     {
         $payload = $request->getContent();
+        $headers = $request->headers->all();
+        
+        Log::info('Cashfree Webhook Raw Debug:', [
+            'url' => $request->fullUrl(),
+            'method' => $request->method(),
+            'headers' => $headers,
+            'payload' => $payload
+        ]);
+
         $timestamp = $request->header('x-webhook-timestamp', '');
         $signature = $request->header('x-webhook-signature', '');
 
-        // Verify webhook signature
-        $cashfreeGateway = new CashfreeGateway();
-
-        if ($signature && !$cashfreeGateway->verifyWebhookSignature($payload, $timestamp, $signature)) {
-            Log::error('Cashfree Webhook Signature Verification Failed');
-            return response()->json(['status' => 'error', 'message' => 'Invalid signature'], 400);
-        }
-
         $data = json_decode($payload, true);
 
-        Log::info('Cashfree Webhook Received', ['type' => $data['type'] ?? 'unknown']);
+        // Handle empty or invalid JSON (often sent by test bots)
+        if (!$data) {
+            Log::info('Cashfree Webhook: Received empty or invalid payload');
+            return response()->json(['status' => 'success'], 200);
+        }
 
-        // Handle PAYMENT_SUCCESS events
         $eventType = $data['type'] ?? '';
+        Log::info('Cashfree Webhook Received', ['type' => $eventType]);
+
+        // 1. Handle Test/Ping events IMMEDIATELY (Bypass signature for tests)
+        if (in_array($eventType, ['PING', 'TEST', 'TEST_WEBHOOK']) || empty($eventType)) {
+            return response()->json(['status' => 'success'], 200);
+        }
+
+        // 2. Verify Signature — MANDATORY for all real events (Security Fix)
+        $cashfreeGateway = new CashfreeGateway();
+
+        if (empty($signature)) {
+            Log::warning('Cashfree Webhook: Missing signature header — rejecting request');
+            return response()->json(['message' => 'Missing signature'], 401);
+        }
+
+        if (!$cashfreeGateway->verifyWebhookSignature($payload, $timestamp, $signature)) {
+            Log::warning('Cashfree Webhook: Invalid Signature');
+            return response()->json(['message' => 'Invalid signature'], 401);
+        }
+
+        // 3. Handle PAYMENT_SUCCESS events
 
         if (in_array($eventType, ['PAYMENT_SUCCESS_WEBHOOK', 'PAYMENT_SUCCESS'])) {
             $orderData = $data['data']['order'] ?? [];
@@ -56,20 +81,19 @@ class CashfreeWebhookController extends Controller
             // Check if this payment is already recorded
             $existingPayment = Payment::where('gateway_order_id', $orderId)->first();
 
-            if ($existingPayment) {
-                if ($existingPayment->status === 'success') {
-                    Log::info('Cashfree Webhook: Order already processed - ' . $orderId);
-                    return response()->json(['status' => 'success', 'message' => 'Already processed'], 200);
-                }
+            if ($existingPayment && $existingPayment->status === 'success') {
+                Log::info('Cashfree Webhook: Order already processed - ' . $orderId);
+                return response()->json(['status' => 'success', 'message' => 'Already processed'], 200);
+            }
 
-                // Update existing pending payment to success
+            // If pending payment exists, update it to success but DON'T return yet —
+            // we must also complete registration if it hasn't been done
+            if ($existingPayment && $existingPayment->status !== 'success') {
                 $existingPayment->update([
                     'gateway_payment_id' => $cfPaymentId,
                     'status' => 'success',
                 ]);
-
                 Log::info('Cashfree Webhook: Updated existing payment for order ' . $orderId);
-                return response()->json(['status' => 'success'], 200);
             }
 
             // Handle Registration Payments (lead-based)
@@ -99,11 +123,13 @@ class CashfreeWebhookController extends Controller
                     }
 
                     $verificationData = [
-                        'lead_id'            => $leadId,
-                        'coupon_code'        => $couponCode,
-                        'cashfree_order_id'  => $orderId,
+                        'lead_id'             => $leadId,
+                        'coupon_code'         => $couponCode,
+                        'cashfree_order_id'   => $orderId,
                         'cashfree_payment_id' => $cfPaymentId,
-                        'is_webhook'         => true,
+                        'gateway'             => 'cashfree', // Explicit gateway — prevents wrong gateway fallback
+                        'gateway_payment_id'  => $cfPaymentId,
+                        'is_webhook'          => true,
                     ];
 
                     $user = $this->registrationService->verifyAndCompleteRegistration($verificationData);
@@ -120,6 +146,11 @@ class CashfreeWebhookController extends Controller
                     Log::error('Cashfree Webhook Process Error: ' . $e->getMessage(), ['stack' => $e->getTraceAsString()]);
                     return response()->json(['status' => 'error', 'message' => 'Internal Server Error'], 500);
                 }
+            }
+
+            // If we updated the payment but had no lead (e.g., student checkout), just respond success
+            if ($existingPayment) {
+                return response()->json(['status' => 'success'], 200);
             }
 
             Log::info('Cashfree Webhook: No matching handler for order ' . $orderId);

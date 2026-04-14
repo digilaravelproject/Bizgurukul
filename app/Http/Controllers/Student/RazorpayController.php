@@ -225,11 +225,16 @@ class RazorpayController extends Controller
             if ($gatewayName === 'razorpay') {
                 $orderId = $request->razorpay_order_id;
                 $paymentId = $request->razorpay_payment_id;
-                $gateway->verifyPayment([
+                $verifyResult = $gateway->verifyPayment([
                     'razorpay_order_id' => $orderId,
                     'razorpay_payment_id' => $paymentId,
                     'razorpay_signature' => $request->razorpay_signature
                 ]);
+                // SignatureVerificationError will be re-thrown by the gateway,
+                // but also check the return value for non-exception failures
+                if (!$verifyResult['verified']) {
+                    throw new \Exception('Payment signature verification failed.');
+                }
             } else {
                 $orderId = $request->cashfree_order_id;
                 $verifyResult = $gateway->verifyPayment(['order_id' => $orderId]);

@@ -38,10 +38,19 @@ class DashboardController extends Controller
             $myBundles = $user->bundles;
             $affiliateData = $this->affiliateService->getDashboardData($user);
 
+            // Fetch Survey Questions if not completed
+            $surveyQuestions = [];
+            if (!$user->survey_completed) {
+                $surveyQuestions = \App\Models\SurveyQuestion::where('is_active', true)
+                    ->with('options')
+                    ->get();
+            }
+
             return view('student.dashboard', array_merge([
                 'user'                => $user,
                 'myCourses'           => $myCourses,
                 'myBundles'           => $myBundles,
+                'surveyQuestions'     => $surveyQuestions,
                 'enrolledCount'       => count($unlockedCourseIds) + $myBundles->count(),
                 'referralLink'        => $user->referral_code ? url('/register?ref=' . $user->referral_code) : '',
                 'achievementData'     => $this->achievementService->getDashboardData($user),

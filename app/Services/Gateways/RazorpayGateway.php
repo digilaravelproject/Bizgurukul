@@ -69,6 +69,9 @@ class RazorpayGateway implements PaymentGatewayInterface
                 'verified'   => true,
                 'payment_id' => $data['razorpay_payment_id'],
             ];
+        } catch (\Razorpay\Api\Errors\SignatureVerificationError $e) {
+            // Re-throw signature errors so callers using exception-based flow can catch them
+            throw $e;
         } catch (Exception $e) {
             return [
                 'verified'   => false,

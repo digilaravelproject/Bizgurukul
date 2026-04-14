@@ -241,8 +241,12 @@ class RegistrationService
     {
         $gatewayName = $data['gateway'] ?? 'razorpay';
         
+        // Resolve the order ID from gateway-specific keys
+        $orderId = $data['razorpay_order_id'] ?? $data['cashfree_order_id'] ?? $data['gateway_order_id'] ?? null;
+        
         $paymentData = [
             'user_id' => $user->id,
+            'lead_id' => null, // Clear lead association since user now exists
             'bundle_id' => $bundle->id,
             'subtotal' => $pricing['taxableAmount'],
             'discount_amount' => $pricing['discount'],
@@ -261,7 +265,7 @@ class RegistrationService
             'coupon_id' => $coupon ? $coupon->id : null,
             'status' => 'success',
             'payment_gateway' => $gatewayName,
-            'gateway_order_id' => $data['razorpay_order_id'] ?? $data['cashfree_order_id'] ?? $data['gateway_order_id'] ?? null,
+            'gateway_order_id' => $orderId,
             'gateway_payment_id' => $data['razorpay_payment_id'] ?? $data['cashfree_payment_id'] ?? $data['gateway_payment_id'] ?? null,
         ];
 
@@ -269,6 +273,20 @@ class RegistrationService
         if ($gatewayName === 'razorpay') {
             $paymentData['razorpay_order_id'] = $paymentData['gateway_order_id'];
             $paymentData['razorpay_payment_id'] = $paymentData['gateway_payment_id'];
+        }
+
+        // Try to find and update existing pending payment (created by initiatePayment) 
+        // instead of creating a duplicate record
+        $existingPayment = null;
+        if ($orderId) {
+            $existingPayment = Payment::where('gateway_order_id', $orderId)
+                ->orWhere('razorpay_order_id', $orderId)
+                ->first();
+        }
+
+        if ($existingPayment) {
+            $existingPayment->update($paymentData);
+            return $existingPayment->fresh();
         }
 
         return Payment::create($paymentData);

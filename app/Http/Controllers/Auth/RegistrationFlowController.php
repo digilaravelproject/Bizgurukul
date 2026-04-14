@@ -310,13 +310,20 @@ class RegistrationFlowController extends Controller
             $gateway = \App\Services\Gateways\PaymentGatewayFactory::make();
 
             $orderData = [
-                'receipt' => 'rcpt_' . $lead->id . '_' . time(),
-                'amount' => $pricing['totalAmount'],
+                'receipt'  => 'rcpt_' . $lead->id . '_' . time(),
+                'amount'   => $pricing['totalAmount'],
                 'currency' => 'INR',
+                'customer' => [
+                    'id'    => $lead->id,
+                    'name'  => $lead->name,
+                    'email' => $lead->email,
+                    'phone' => $lead->mobile,
+                ],
                 'notes' => [
-                    'lead_id' => $lead->id,
+                    'lead_id'     => $lead->id,
                     'coupon_code' => $request->coupon_code ?? '',
                 ],
+                'return_url' => route('register.phase3', ['lead_id' => $lead->id]),
             ];
 
             $orderResult = $gateway->createOrder($orderData);
@@ -358,7 +365,7 @@ class RegistrationFlowController extends Controller
         } catch (\Exception $e) {
             Log::error('Payment Initiation Failed: ' . $e->getMessage());
 
-            return response()->json(['status' => 'error', 'message' => 'Unable to initiate payment: ' . $e->getMessage()]);
+            return response()->json(['status' => 'error', 'message' => 'Unable to initiate payment. Please try again or contact support.']);
         }
     }
 
@@ -372,6 +379,8 @@ class RegistrationFlowController extends Controller
                 'gateway' => 'nullable|string',
                 'razorpay_order_id' => 'required_without:cashfree_order_id',
                 'cashfree_order_id' => 'required_without:razorpay_order_id',
+                'razorpay_payment_id' => 'nullable|string',
+                'razorpay_signature' => 'nullable|string',
                 'lead_id' => 'required',
                 'coupon_code' => 'nullable|string',
             ]);
@@ -400,7 +409,7 @@ class RegistrationFlowController extends Controller
 
                     return response()->json([
                         'status' => 'error',
-                        'message' => 'Payment verification failed: ' . $e->getMessage(),
+                        'message' => 'Payment verification failed. Please contact support if amount was deducted.',
                     ]);
                 }
             }

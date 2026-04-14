@@ -237,6 +237,16 @@ Route::middleware(['auth'])
 
         Route::middleware(['permission:manage-settings'])->group(function () {
             Route::get('/activity-logs', [\App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
+            
+            // Survey Management
+            Route::prefix('surveys')->name('surveys.')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Admin\SurveyController::class, 'index'])->name('index');
+                Route::post('/store', [\App\Http\Controllers\Admin\SurveyController::class, 'store'])->name('store');
+                Route::post('/update/{survey}', [\App\Http\Controllers\Admin\SurveyController::class, 'update'])->name('update');
+                Route::delete('/delete/{survey}', [\App\Http\Controllers\Admin\SurveyController::class, 'destroy'])->name('delete'); // renamed from destroy to delete to match courses/categories
+                Route::post('/toggle-status/{survey}', [\App\Http\Controllers\Admin\SurveyController::class, 'toggleStatus'])->name('toggle-status');
+                Route::get('/responses', [\App\Http\Controllers\Admin\SurveyController::class, 'responses'])->name('responses');
+            });
         });
 
         // Roles & Permissions (managed by manage-roles)

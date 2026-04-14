@@ -12,6 +12,7 @@ class Payment extends Model
     // Fillable fields for mass assignment protection
     protected $fillable = [
         'user_id',
+        'lead_id',
         'course_id',
         'bundle_id',
         'paymentable_type',
@@ -34,6 +35,11 @@ class Payment extends Model
     protected $casts = [
         'tax_details' => 'array',
     ];
+
+    public function lead()
+    {
+        return $this->belongsTo(Lead::class);
+    }
 
     public function coupon()
     {

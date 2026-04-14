@@ -540,6 +540,90 @@
             </div>
         @endif --}}
 
+        {{-- Survey Popup --}}
+        @if(count($surveyQuestions) > 0)
+        <div x-data="surveyHandler()" x-show="showSurvey" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div class="fixed inset-0 bg-navy/60 backdrop-blur-md" @click="false"></div>
+            
+            <div class="relative w-full max-w-xl bg-white rounded-[2.5rem] shadow-2xl border border-primary/10 overflow-hidden transform transition-all"
+                x-show="showSurvey" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+                
+                <div class="brand-gradient h-2 shadow-inner"></div>
+                
+                <div class="p-8 md:p-12">
+                    <div class="text-center mb-10">
+                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-primary/10 text-primary mb-6">
+                            <i class="fas fa-comment-dots text-2xl"></i>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-black tracking-tight text-mainText">Help Us Improve!</h2>
+                        <p class="text-sm font-medium text-mutedText mt-2">Take a moment to share your feedback with us.</p>
+                    </div>
+
+                    <form @submit.prevent="submitSurvey" class="space-y-8">
+                        @foreach($surveyQuestions as $index => $q)
+                        <div x-show="currentStep === {{ $index }}" x-transition:enter="duration-300" class="survey-question">
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="flex-shrink-0 w-8 h-8 rounded-xl bg-navy flex items-center justify-center text-[10px] font-black text-primary border border-primary/20">
+                                    {{ $index + 1 }}
+                                </span>
+                                <h3 class="text-lg font-black text-mainText">{{ $q->question_text }}</h3>
+                            </div>
+
+                            @if($q->question_type === 'options')
+                                <div class="grid grid-cols-1 gap-3">
+                                    @foreach($q->options as $opt)
+                                    <label class="group relative flex items-center p-4 rounded-2xl border-2 border-navy hover:border-primary/50 transition-all cursor-pointer"
+                                        :class="responses['{{ $q->id }}'] == '{{ $opt->id }}' ? 'border-primary bg-primary/5 shadow-lg shadow-primary/5' : ''">
+                                        <input type="radio" name="q_{{ $q->id }}" value="{{ $opt->id }}" required="{{ $q->is_required }}" 
+                                            @change="responses['{{ $q->id }}'] = '{{ $opt->id }}'" class="hidden">
+                                        <div class="w-5 h-5 rounded-full border-2 border-primary/20 flex items-center justify-center group-hover:border-primary/40 mr-4 transition-all"
+                                            :class="responses['{{ $q->id }}'] == '{{ $opt->id }}' ? 'border-primary' : ''">
+                                            <div class="w-2.5 h-2.5 rounded-full bg-primary scale-0 transition-transform" 
+                                                :class="responses['{{ $q->id }}'] == '{{ $opt->id }}' ? 'scale-100' : ''"></div>
+                                        </div>
+                                        <span class="text-sm font-bold text-mainText group-hover:text-primary transition-colors">{{ $opt->option_text }}</span>
+                                    </label>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="bg-navy rounded-2xl p-6 border border-primary/5">
+                                    <textarea name="q_{{ $q->id }}" required="{{ $q->is_required }}" rows="4"
+                                        @input="responses['{{ $q->id }}'] = $event.target.value"
+                                        class="w-full bg-transparent border-0 focus:ring-0 text-sm font-bold text-mainText placeholder-mutedText/40"
+                                        placeholder="Enter your response here..."></textarea>
+                                </div>
+                            @endif
+                        </div>
+                        @endforeach
+
+                        <div class="flex items-center justify-between gap-4 pt-4">
+                            <div class="flex gap-2">
+                                @foreach($surveyQuestions as $index => $q)
+                                <div class="w-2 h-2 rounded-full transition-all duration-300"
+                                    :class="currentStep === {{ $index }} ? 'w-6 bg-primary' : 'bg-primary/20'"></div>
+                                @endforeach
+                            </div>
+
+                            <div class="flex gap-3">
+                                <button type="button" x-show="currentStep > 0" @click="currentStep--"
+                                    class="px-6 py-3 rounded-xl bg-navy text-mutedText text-xs font-black uppercase tracking-widest hover:text-primary transition-all">Back</button>
+                                
+                                <button type="button" x-show="currentStep < {{ count($surveyQuestions) - 1 }}" @click="nextStep()"
+                                    class="brand-gradient px-8 py-3 rounded-xl text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/25 hover:-translate-y-0.5 transition-all">Next</button>
+                                
+                                <button type="submit" x-show="currentStep === {{ count($surveyQuestions) - 1 }}" :disabled="isSubmitting"
+                                    class="brand-gradient px-8 py-3 rounded-xl text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/25 hover:-translate-y-0.5 disabled:opacity-50 transition-all flex items-center gap-2">
+                                    <i x-show="isSubmitting" class="fas fa-circle-notch fa-spin"></i>
+                                    Submit
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        @endif
+
     </div>
 
     <script>
@@ -781,6 +865,104 @@
                     }, 100);
                 }
 
+            }
+        }
+
+        function surveyHandler() {
+            return {
+                showSurvey: true,
+                currentStep: 0,
+                isSubmitting: false,
+                responses: {},
+
+                nextStep() {
+                    const q = this.getQuestionByStep(this.currentStep);
+                    if (q.is_required && !this.responses[q.id]) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Response Required',
+                            text: 'Please provide an answer to continue.',
+                            background: '#FFFFFF',
+                            color: '#2D2D2D',
+                            confirmButtonColor: '#f7941d',
+                        });
+                        return;
+                    }
+                    this.currentStep++;
+                },
+
+                getQuestionByStep(step) {
+                    const questions = @json($surveyQuestions);
+                    return questions[step];
+                },
+
+                async submitSurvey() {
+                    const q = this.getQuestionByStep(this.currentStep);
+                    if (q.is_required && !this.responses[q.id]) {
+                        this.nextStep(); // Trigger alert
+                        return;
+                    }
+
+                    this.isSubmitting = true;
+                    try {
+                        const formattedResponses = Object.keys(this.responses).map(qid => {
+                            const value = this.responses[qid];
+                            // Try to determine if it's an option ID or text
+                            // In our case, options are numeric IDs, text is... well, text.
+                            // But we have the questions array in the dashboard already.
+                            const questions = @json($surveyQuestions);
+                            const q = questions.find(question => question.id == qid);
+                            
+                            return {
+                                question_id: qid,
+                                option_id: q && q.question_type === 'options' ? value : null,
+                                text_answer: q && q.question_type === 'text' ? value : null
+                            };
+                        });
+
+                        const response = await fetch("{{ route('student.survey.submit') }}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ responses: formattedResponses })
+                        });
+
+                        const result = await response.json();
+                        if (!response.ok) throw result;
+
+                        this.showSurvey = false;
+                        
+                        // Launch confetti!
+                        if(typeof confetti === 'function') {
+                            confetti({
+                                particleCount: 150,
+                                spread: 70,
+                                origin: { y: 0.6 },
+                                colors: ['#F7941D', '#D04A02', '#FFFFFF']
+                            });
+                        }
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Thank You!',
+                            text: 'Your feedback has been submitted successfully.',
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+
+                    } catch (error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Submission Failed',
+                            text: error.message || 'Something went wrong. Please try again later.'
+                        });
+                    } finally {
+                        this.isSubmitting = false;
+                    }
+                }
             }
         }
 
