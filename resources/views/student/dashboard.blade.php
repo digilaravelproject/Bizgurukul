@@ -542,7 +542,7 @@
 
         {{-- Survey Popup --}}
         @if(count($surveyQuestions) > 0)
-        <div x-data="surveyHandler()" x-show="showSurvey" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div x-data="surveyHandler(@js($surveyQuestions))" x-show="showSurvey" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div class="fixed inset-0 bg-navy/60 backdrop-blur-md" @click="false"></div>
             
             <div class="relative w-full max-w-xl bg-white rounded-[2.5rem] shadow-2xl border border-primary/10 overflow-hidden transform transition-all"
@@ -559,62 +559,70 @@
                         <p class="text-sm font-medium text-mutedText mt-2">Take a moment to share your feedback with us.</p>
                     </div>
 
-                    <form @submit.prevent="submitSurvey" class="space-y-8">
-                        @foreach($surveyQuestions as $index => $q)
-                        <div x-show="currentStep === {{ $index }}" x-transition:enter="duration-300" class="survey-question">
-                            <div class="flex items-center gap-3 mb-6">
-                                <span class="flex-shrink-0 w-8 h-8 rounded-xl bg-navy flex items-center justify-center text-[10px] font-black text-primary border border-primary/20">
-                                    {{ $index + 1 }}
-                                </span>
-                                <h3 class="text-lg font-black text-mainText">{{ $q->question }}</h3>
+                    <form @submit.prevent="submitSurvey" class="space-y-8" x-init="questions.forEach(q => responses[q.id] = responses[q.id] || '')">
+                        <template x-for="(q, index) in questions" :key="'q-' + q.id">
+                            <div x-show="currentStep === index" x-transition:enter="duration-300" class="survey-question">
+                                <div class="flex items-start gap-4 mb-8">
+                                    <span class="flex-shrink-0 w-10 h-10 rounded-2xl bg-navy flex items-center justify-center text-xs font-black text-primary border border-primary/20 shadow-sm" x-text="index + 1"></span>
+                                    <div class="flex-1 pt-1">
+                                        <h3 class="text-lg md:text-xl font-black text-mainText leading-tight" x-text="q.question"></h3>
+                                        <p class="text-[10px] font-bold text-primary uppercase tracking-widest mt-2" x-show="q.is_required">* Required</p>
+                                    </div>
+                                </div>
+
+                                {{-- Options Type --}}
+                                <template x-if="q.type === 'options' && q.options">
+                                    <div class="grid grid-cols-1 gap-3">
+                                        <template x-for="opt in q.options" :key="'opt-' + opt.id">
+                                            <label class="group relative flex items-center p-5 rounded-2xl border-2 border-navy hover:border-primary/50 transition-all cursor-pointer bg-surface/50"
+                                                :class="responses[q.id] == opt.id ? 'border-primary bg-primary/5 shadow-lg shadow-primary/5' : ''">
+                                                <input type="radio" :name="'q_' + q.id" :value="opt.id" 
+                                                    @change="responses[q.id] = opt.id"
+                                                    :checked="responses[q.id] == opt.id" class="hidden">
+                                                <div class="w-6 h-6 rounded-full border-2 border-primary/20 flex items-center justify-center group-hover:border-primary/40 mr-4 transition-all"
+                                                    :class="responses[q.id] == opt.id ? 'border-primary' : ''">
+                                                    <div class="w-2.5 h-2.5 rounded-full bg-primary scale-0 transition-transform duration-300" 
+                                                        :class="responses[q.id] == opt.id ? 'scale-100' : ''"></div>
+                                                </div>
+                                                <span class="text-sm font-bold text-mainText group-hover:text-primary transition-colors" x-text="opt.option_text"></span>
+                                            </label>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                {{-- Text Type --}}
+                                <template x-if="q.type === 'text'">
+                                    <div class="bg-navy rounded-2xl p-6 border border-primary/5 shadow-inner">
+                                        <textarea :name="'q_' + q.id" rows="4"
+                                            x-model="responses[q.id]"
+                                            class="w-full bg-transparent border-0 focus:ring-0 text-sm font-bold text-mainText placeholder-mutedText/40 resize-none"
+                                            placeholder="Enter your response here..."></textarea>
+                                    </div>
+                                </template>
                             </div>
+                        </template>
 
-                            @if($q->type === 'options')
-                                <div class="grid grid-cols-1 gap-3">
-                                    @foreach($q->options as $opt)
-                                    <label class="group relative flex items-center p-4 rounded-2xl border-2 border-navy hover:border-primary/50 transition-all cursor-pointer"
-                                        :class="responses['{{ $q->id }}'] == '{{ $opt->id }}' ? 'border-primary bg-primary/5 shadow-lg shadow-primary/5' : ''">
-                                        <input type="radio" name="q_{{ $q->id }}" value="{{ $opt->id }}" required="{{ $q->is_required }}" 
-                                            @change="responses['{{ $q->id }}'] = '{{ $opt->id }}'" class="hidden">
-                                        <div class="w-5 h-5 rounded-full border-2 border-primary/20 flex items-center justify-center group-hover:border-primary/40 mr-4 transition-all"
-                                            :class="responses['{{ $q->id }}'] == '{{ $opt->id }}' ? 'border-primary' : ''">
-                                            <div class="w-2.5 h-2.5 rounded-full bg-primary scale-0 transition-transform" 
-                                                :class="responses['{{ $q->id }}'] == '{{ $opt->id }}' ? 'scale-100' : ''"></div>
-                                        </div>
-                                        <span class="text-sm font-bold text-mainText group-hover:text-primary transition-colors">{{ $opt->option_text }}</span>
-                                    </label>
-                                    @endforeach
-                                </div>
-                            @else
-                                <div class="bg-navy rounded-2xl p-6 border border-primary/5">
-                                    <textarea name="q_{{ $q->id }}" required="{{ $q->is_required }}" rows="4"
-                                        @input="responses['{{ $q->id }}'] = $event.target.value"
-                                        class="w-full bg-transparent border-0 focus:ring-0 text-sm font-bold text-mainText placeholder-mutedText/40"
-                                        placeholder="Enter your response here..."></textarea>
-                                </div>
-                            @endif
-                        </div>
-                        @endforeach
-
-                        <div class="flex items-center justify-between gap-4 pt-4">
+                        <div class="flex items-center justify-between gap-6 pt-4">
                             <div class="flex gap-2">
-                                @foreach($surveyQuestions as $index => $q)
-                                <div class="w-2 h-2 rounded-full transition-all duration-300"
-                                    :class="currentStep === {{ $index }} ? 'w-6 bg-primary' : 'bg-primary/20'"></div>
-                                @endforeach
+                                <template x-for="(q, index) in questions" :key="'dot-' + q.id">
+                                    <div class="h-2 rounded-full transition-all duration-500"
+                                        :class="currentStep === index ? 'w-8 bg-primary shadow-lg shadow-primary/20' : 'w-2 bg-primary/20'"></div>
+                                </template>
                             </div>
 
                             <div class="flex gap-3">
-                                <button type="button" x-show="currentStep > 0" @click="currentStep--"
-                                    class="px-6 py-3 rounded-xl bg-navy text-mutedText text-xs font-black uppercase tracking-widest hover:text-primary transition-all">Back</button>
+                                <button type="button" x-show="currentStep > 0" @click="prevStep()"
+                                    class="px-6 py-3.5 rounded-xl bg-navy text-mutedText text-[10px] font-black uppercase tracking-widest hover:text-primary transition-all">Back</button>
                                 
-                                <button type="button" x-show="currentStep < {{ count($surveyQuestions) - 1 }}" @click="nextStep()"
-                                    class="brand-gradient px-8 py-3 rounded-xl text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/25 hover:-translate-y-0.5 transition-all">Next</button>
+                                <button type="button" x-show="currentStep < questions.length - 1" @click="nextStep()"
+                                    class="brand-gradient px-8 py-3.5 rounded-xl text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/25 hover:-translate-y-0.5 transition-all">
+                                    Next Step
+                                </button>
                                 
-                                <button type="submit" x-show="currentStep === {{ count($surveyQuestions) - 1 }}" :disabled="isSubmitting"
-                                    class="brand-gradient px-8 py-3 rounded-xl text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/25 hover:-translate-y-0.5 disabled:opacity-50 transition-all flex items-center gap-2">
+                                <button type="submit" x-show="currentStep === questions.length - 1" :disabled="isSubmitting"
+                                    class="brand-gradient px-10 py-3.5 rounded-xl text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/25 hover:-translate-y-0.5 disabled:opacity-50 transition-all flex items-center gap-2">
                                     <i x-show="isSubmitting" class="fas fa-circle-notch fa-spin"></i>
-                                    Submit
+                                    <span x-text="isSubmitting ? 'Submitting...' : 'Finish Survey'"></span>
                                 </button>
                             </div>
                         </div>
@@ -623,6 +631,7 @@
             </div>
         </div>
         @endif
+
 
     </div>
 
@@ -868,15 +877,22 @@
             }
         }
 
-        function surveyHandler() {
+        function surveyHandler(initialQuestions = []) {
             return {
                 showSurvey: true,
                 currentStep: 0,
                 isSubmitting: false,
                 responses: {},
+                questions: initialQuestions,
+
+                prevStep() {
+                    if (this.currentStep > 0) this.currentStep--;
+                },
 
                 nextStep() {
-                    const q = this.getQuestionByStep(this.currentStep);
+                    if (this.currentStep >= this.questions.length) return;
+                    
+                    const q = this.questions[this.currentStep];
                     if (q.is_required && !this.responses[q.id]) {
                         Swal.fire({
                             icon: 'warning',
@@ -891,13 +907,8 @@
                     this.currentStep++;
                 },
 
-                getQuestionByStep(step) {
-                    const questions = @json($surveyQuestions);
-                    return questions[step];
-                },
-
                 async submitSurvey() {
-                    const q = this.getQuestionByStep(this.currentStep);
+                    const q = this.questions[this.currentStep];
                     if (q.is_required && !this.responses[q.id]) {
                         this.nextStep(); // Trigger alert
                         return;
@@ -907,18 +918,24 @@
                     try {
                         const formattedResponses = Object.keys(this.responses).map(qid => {
                             const value = this.responses[qid];
-                            // Try to determine if it's an option ID or text
-                            // In our case, options are numeric IDs, text is... well, text.
-                            // But we have the questions array in the dashboard already.
-                            const questions = @json($surveyQuestions);
-                            const q = questions.find(question => question.id == qid);
+                            const question = this.questions.find(fq => fq.id == qid);
                             
                             return {
                                 question_id: qid,
-                                option_id: q && q.type === 'options' ? value : null,
-                                text_answer: q && q.type === 'text' ? value : null
+                                option_id: (question && question.type === 'options') ? value : null,
+                                text_answer: (question && question.type === 'text') ? value : null
                             };
                         });
+
+                        // Check if all required questions are answered before submitting
+                        const missingRequired = this.questions.find(q => q.is_required && !this.responses[q.id]);
+                        if (missingRequired) {
+                            const index = this.questions.indexOf(missingRequired);
+                            this.currentStep = index;
+                            this.nextStep(); // Show alert
+                            this.isSubmitting = false;
+                            return;
+                        }
 
                         const response = await fetch("{{ route('student.survey.submit') }}", {
                             method: 'POST',
@@ -935,7 +952,6 @@
 
                         this.showSurvey = false;
                         
-                        // Launch confetti!
                         if(typeof confetti === 'function') {
                             confetti({
                                 particleCount: 150,

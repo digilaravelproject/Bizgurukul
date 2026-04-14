@@ -51,13 +51,6 @@
                 </a>
                 @endcan
 
-                @can('manage-settings')
-                <a href="{{ route('admin.surveys.index') }}"
-                    class="flex items-center px-4 py-3 rounded-2xl transition-all duration-300 group {{ request()->routeIs('admin.surveys.*') ? 'bg-primary/10 text-primary shadow-sm' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
-                    <i class="fas fa-poll w-5 h-5 mr-3 text-[16px]"></i>
-                    <span class="font-bold text-sm">Survey Manager</span>
-                </a>
-                @endcan
 
                 <a href="{{ route('admin.profile.edit') }}"
                     class="flex items-center px-4 py-3 rounded-2xl transition-all duration-300 group {{ request()->routeIs('admin.profile.*') ? 'bg-primary/10 text-primary shadow-sm' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
@@ -306,6 +299,14 @@
                     <a href="{{ route('admin.taxes.index') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.taxes.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                         Tax Management
+                    </a>
+                    <a href="{{ route('admin.surveys.index') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.surveys.index') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                        <i class="fas fa-poll-h text-[11px]"></i>
+                        Survey Management
+                    </a>
+                    <a href="{{ route('admin.surveys.responses') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.surveys.responses') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                        <i class="fas fa-clipboard-list text-[11px]"></i>
+                        Survey Responses
                     </a>
                     <a href="{{ route('admin.activity-logs.index') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.activity-logs.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
                         <i class="fas fa-history text-[11px]"></i>
