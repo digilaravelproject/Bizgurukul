@@ -214,12 +214,12 @@
                             </div>
                         @endif
 
-                        <div class="flex gap-4 {{ $isUpcoming ? 'blur-[2px]' : '' }}">
-                            <div class="relative shrink-0">
+                        <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 {{ $isUpcoming ? 'blur-[2px]' : '' }}">
+                            <div class="relative shrink-0 flex justify-center sm:block">
                                 @if($milestone->reward_image)
-                                    <img src="{{ url('storage/' . $milestone->reward_image) }}" alt="{{ $milestone->title }}" class="h-20 w-20 rounded-2xl object-cover ring-2 ring-primary/10">
+                                    <img src="{{ url('storage/' . $milestone->reward_image) }}" alt="{{ $milestone->title }}" class="h-24 w-24 sm:h-20 sm:w-20 rounded-2xl object-cover ring-2 ring-primary/10">
                                 @else
-                                    <div class="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-3xl">
+                                    <div class="h-24 w-24 sm:h-20 sm:w-20 rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-4xl sm:text-3xl">
                                         <i class="fas fa-gift"></i>
                                     </div>
                                 @endif
@@ -231,22 +231,22 @@
                                 @endif
                             </div>
 
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center justify-between gap-2">
-                                    <div>
-                                        <h4 class="text-sm font-black text-mainText truncate uppercase">{{ $milestone->short_title }}</h4>
-                                        <div class="flex items-center gap-2 mt-0.5">
+                            <div class="flex-1 min-w-0 text-center sm:text-left">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                    <div class="order-2 sm:order-1">
+                                        <h4 class="text-sm md:text-base font-black text-mainText truncate uppercase">{{ $milestone->short_title }}</h4>
+                                        <div class="flex items-center justify-center sm:justify-start gap-2 mt-0.5">
                                             <i class="far fa-calendar-alt text-[9px] text-mutedText"></i>
                                             <span class="text-[9px] font-bold text-mutedText uppercase tracking-wider">
                                                 {{ $milestone->start_date ? $milestone->start_date->format('M d') : 'Start' }} - {{ $milestone->end_date ? $milestone->end_date->format('M d, Y') : 'Life' }}
                                             </span>
                                         </div>
                                     </div>
-                                    <span class="shrink-0 text-xs font-black {{ $isLocked ? 'text-mutedText' : 'text-primary' }}">₹{{ number_format($milestone->target_amount) }}</span>
+                                    <span class="shrink-0 text-sm font-black order-1 sm:order-2 {{ $isLocked ? 'text-mutedText' : 'text-primary' }}">₹{{ number_format($milestone->target_amount) }}</span>
                                 </div>
-                                <p class="text-[10px] text-mutedText font-medium line-clamp-1 mt-2">{{ $milestone->reward_description }}</p>
+                                <p class="text-[10px] sm:text-xs text-mutedText font-medium line-clamp-2 mt-2 leading-relaxed">{{ $milestone->reward_description }}</p>
 
-                                <div class="mt-4">
+                                <div class="mt-5">
                                     @if($isUpcoming)
                                         <div class="flex items-center gap-2 text-[9px] font-black text-primary/60 uppercase tracking-widest mt-2">
                                             <i class="fas fa-clock"></i> Starts in {{ $milestone->start_date->diffForHumans() }}

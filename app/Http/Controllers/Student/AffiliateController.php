@@ -49,6 +49,7 @@ class AffiliateController extends Controller
         try {
             $user = Auth::user();
             $search = $request->input('search');
+            $perPage = $request->input('per_page', 10);
 
             // 1. Referrals (Converted Leads - Users who joined using this user's referral code)
             $referralQuery = User::where('referred_by', $user->id);
@@ -61,7 +62,7 @@ class AffiliateController extends Controller
                 });
             }
 
-            $referrals = $referralQuery->latest()->paginate(10, ['*'], 'referral_page');
+            $referrals = $referralQuery->latest()->paginate($perPage, ['*'], 'referral_page');
 
             // Attach purchased bundle info to each referral
             $referrals->getCollection()->transform(function($referral) {
@@ -84,7 +85,7 @@ class AffiliateController extends Controller
                 });
             }
 
-            $leads = $leadsQuery->latest()->paginate(10, ['*'], 'lead_page');
+            $leads = $leadsQuery->latest()->paginate($perPage, ['*'], 'lead_page');
 
             // Attach bundle preference info to each lead
             $leads->getCollection()->transform(function($lead) {
@@ -102,6 +103,8 @@ class AffiliateController extends Controller
                 return response()->json([
                     'referrals_html' => view('student.affiliate.partials.referrals_table', compact('referrals'))->render(),
                     'leads_html' => view('student.affiliate.partials.leads_table', compact('leads'))->render(),
+                    'referrals_pagination' => $referrals->links()->render(),
+                    'leads_pagination' => $leads->links()->render(),
                 ]);
             }
 
