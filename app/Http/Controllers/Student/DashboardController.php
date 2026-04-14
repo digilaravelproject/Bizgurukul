@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\{User, Course, Bundle, Payment, VideoProgress, Achievement};
+use Carbon\Carbon;
 use Exception;
 
 class DashboardController extends Controller
@@ -29,37 +30,12 @@ class DashboardController extends Controller
                 return redirect()->route('login')->with('error', 'Please login first.');
             }
 
-            // Fetch completed lesson IDs for calculation
-            $completedLessonIds = VideoProgress::where('user_id', $user->id)
-                ->where('is_completed', true)
-                ->pluck('lesson_id')
-                ->toArray();
-
-            // Fetch ALL unlocked course IDs (Direct Purchase + From Bundles)
+            // Fetch ALL unlocked course IDs and calculate progress
             $unlockedCourseIds = $user->unlockedCourseIds();
+            $myCourses = $this->getCourseProgress($user, $unlockedCourseIds);
 
-            // Fetch course details for these IDs to display progress
-            $myCourses = Course::whereIn('id', $unlockedCourseIds)
-                ->withCount('lessons')
-                ->with('category')
-                ->get()
-                ->map(function ($course) use ($completedLessonIds) {
-                    $courseLessons = $course->lessons->pluck('id');
-                    $completed = $courseLessons->intersect($completedLessonIds)->count();
-
-                    $course->progress_percent = $course->lessons_count > 0
-                        ? round(($completed / $course->lessons_count) * 100)
-                        : 0;
-                    $course->completed_lessons = $completed;
-                    $course->total_lessons = $course->lessons_count;
-
-                    return $course;
-                });
-
-            // Fetch purchased bundles (Directly purchased)
+            // Fetch purchased bundles
             $myBundles = $user->bundles;
-
-            $referralLink = $user->referral_code ? url('/register?ref=' . $user->referral_code) : '';
             $affiliateData = $this->affiliateService->getDashboardData($user);
 
             return view('student.dashboard', array_merge([
@@ -67,7 +43,7 @@ class DashboardController extends Controller
                 'myCourses'           => $myCourses,
                 'myBundles'           => $myBundles,
                 'enrolledCount'       => count($unlockedCourseIds) + $myBundles->count(),
-                'referralLink'        => $referralLink,
+                'referralLink'        => $user->referral_code ? url('/register?ref=' . $user->referral_code) : '',
                 'achievementData'     => $this->achievementService->getDashboardData($user),
                 'earningsStats'       => $this->affiliateService->getEarningsStats($user),
                 'secondaryStats'      => $this->affiliateService->getSecondaryStats($user),
@@ -80,6 +56,34 @@ class DashboardController extends Controller
             Log::error("Dashboard Error: " . $e->getMessage());
             return abort(500, 'Something went wrong.');
         }
+    }
+
+    /**
+     * Calculate progress for each unlocked course
+     */
+    protected function getCourseProgress(User $user, array $courseIds)
+    {
+        $completedLessonIds = VideoProgress::where('user_id', $user->id)
+            ->where('is_completed', true)
+            ->pluck('lesson_id')
+            ->toArray();
+
+        return Course::whereIn('id', $courseIds)
+            ->withCount('lessons')
+            ->with('category', 'lessons:id')
+            ->get()
+            ->map(function ($course) use ($completedLessonIds) {
+                $courseLessons = $course->lessons->pluck('id');
+                $completed = $courseLessons->intersect($completedLessonIds)->count();
+
+                $course->progress_percent = $course->lessons_count > 0
+                    ? round(($completed / $course->lessons_count) * 100)
+                    : 0;
+                $course->completed_lessons = $completed;
+                $course->total_lessons = $course->lessons_count;
+
+                return $course;
+            });
     }
 
     public function rewards()
@@ -144,6 +148,45 @@ class DashboardController extends Controller
                 'success' => false,
                 'message' => 'Something went wrong.'
             ], 500);
+        }
+    }
+
+    /**
+     * Fetch refined graph data for dashboard via AJAX
+     */
+    public function getChartData(\Illuminate\Http\Request $request)
+    {
+        try {
+            /** @var User $user */
+            $user = Auth::user();
+            $range = $request->query('range', '7');
+
+            // Map range to days
+            $days = match($range) {
+                'week'    => 7,
+                'month'   => 30,
+                '6month'  => 180,
+                'lifetime' => 0, // 0 handles lifetime logic in getGraphData
+                default   => 7
+            };
+
+            // If lifetime, we might need to handle it differently in AffiliateService
+            // Let's check how many days back the lifetime goes
+            if ($days === 0) {
+                $firstPayment = $user->commissions()->oldest()->first();
+                $days = $firstPayment ? Carbon::now()->diffInDays($firstPayment->created_at) + 1 : 365;
+                
+                // Cap it at 1000 days or something reasonable for labels if needed
+                // but getGraphData fills every day... 
+            }
+
+            $data = $this->affiliateService->getGraphData($user, (int)$days);
+
+            return response()->json($data);
+
+        } catch (Exception $e) {
+            Log::error("Chart Data Error: " . $e->getMessage());
+            return response()->json(['error' => 'Failed to load data'], 500);
         }
     }
 }

@@ -59,6 +59,7 @@ Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')
         // Dashboard
         // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart_data');
         Route::get('/rewards', [DashboardController::class, 'rewards'])->name('rewards');
         Route::get('/leaderboard', [\App\Http\Controllers\Student\LeaderboardController::class, 'index'])->name('leaderboard');
         Route::get('/leaderboard/data', [\App\Http\Controllers\Student\LeaderboardController::class, 'fetchData'])->name('leaderboard.data');

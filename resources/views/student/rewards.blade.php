@@ -4,34 +4,48 @@
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
+<style>
+    .premium-shadow {
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
+    }
+    .brand-gradient {
+        background: linear-gradient(135deg, rgb(var(--color-primary)) 0%, rgb(var(--color-secondary)) 100%);
+    }
+    @media (max-width: 640px) {
+        .speedometer-container {
+            max-width: 280px !important;
+        }
+    }
+</style>
+
 <div class="space-y-8">
     {{-- Header --}}
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-4">
         <div>
-            <h1 class="text-3xl font-black text-mainText tracking-tight uppercase">My Rewards</h1>
-            <p class="text-mutedText font-medium mt-1">Track your progress and unlock premium milestones.</p>
+            <h1 class="text-2xl md:text-3xl font-black text-mainText tracking-tight uppercase">My <span class="text-primary">Rewards</span></h1>
+            <p class="text-xs md:text-sm text-mutedText font-medium mt-1">Track your progress and unlock premium milestones.</p>
         </div>
-        <div class="bg-surface px-6 py-3 rounded-2xl border border-primary/10 premium-shadow">
-            <span class="text-[10px] font-black text-mutedText uppercase tracking-widest block">Total Earnings</span>
-            <span class="text-xl font-black text-primary">₹{{ number_format($earningsStats['all_time']) }}</span>
+        <div class="bg-surface px-5 py-3 md:px-6 md:py-3 rounded-2xl border border-primary/10 premium-shadow flex flex-col md:block items-center text-center md:text-left">
+            <span class="text-[9px] md:text-[10px] font-black text-mutedText uppercase tracking-widest block">Total Earnings</span>
+            <span class="text-lg md:text-xl font-black text-primary">₹{{ number_format($earningsStats['all_time']) }}</span>
         </div>
     </div>
 
     {{-- ACHIEVEMENTS & SPEEDOMETER --}}
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
         {{-- Speedometer Card --}}
-        <div class="lg:col-span-5 xl:col-span-4 bg-surface rounded-[2.5rem] p-6 lg:p-10 border border-primary/10 premium-shadow relative overflow-hidden flex flex-col items-center justify-center text-center group">
+        <div class="lg:col-span-5 xl:col-span-4 bg-surface rounded-[2.5rem] p-5 sm:p-6 lg:p-10 border border-primary/10 premium-shadow relative overflow-hidden flex flex-col items-center justify-center text-center group">
             <div class="absolute -top-24 -left-24 w-64 h-64 bg-primary/5 blur-[80px] rounded-full pointer-events-none group-hover:bg-primary/10 transition-colors duration-1000"></div>
 
             <div class="relative z-10 w-full">
-                <div class="flex items-center justify-center gap-4 mb-8">
-                    <span class="h-px w-12 bg-primary/20"></span>
-                    <h3 class="text-[11px] font-black text-mutedText uppercase tracking-[4px]">Rank mastery</h3>
-                    <span class="h-px w-12 bg-primary/20"></span>
+                <div class="flex items-center justify-center gap-4 mb-6 md:mb-8">
+                    <span class="h-px w-8 md:w-12 bg-primary/20"></span>
+                    <h3 class="text-[10px] md:text-[11px] font-black text-mutedText uppercase tracking-[3px] md:tracking-[4px]">Rank mastery</h3>
+                    <span class="h-px w-8 md:w-12 bg-primary/20"></span>
                 </div>
 
                 {{-- Semi-Circle Segmented Speedometer --}}
-                <div class="relative w-full aspect-[16/10] max-w-[360px] mx-auto flex items-center justify-center -mt-4">
+                <div class="relative w-full aspect-[16/10] max-w-[320px] md:max-w-[360px] mx-auto flex items-center justify-center -mt-2 md:-mt-4 speedometer-container">
                     @php
                         $totalActive = $allMilestones->count();
                         $dashTotal = 125.66; 
@@ -123,46 +137,46 @@
                         </g>
                     </svg>
 
-                    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 text-center">
-                        <span class="block text-5xl font-black text-mainText tracking-tighter">{{ round($currentMilestonePercent) }}%</span>
-                        <div class="px-3 py-1 rounded-full bg-primary/10 border border-primary/10 inline-block mt-1">
-                             <span class="text-[9px] font-black text-primary uppercase tracking-[2px]">Target progress</span>
+                    <div class="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 text-center">
+                        <span class="block text-4xl md:text-5xl font-black text-mainText tracking-tighter">{{ round($currentMilestonePercent) }}%</span>
+                        <div class="px-2 md:px-3 py-1 rounded-full bg-primary/10 border border-primary/10 inline-block mt-1">
+                             <span class="text-[8px] md:text-[9px] font-black text-primary uppercase tracking-[2px]">Target progress</span>
                         </div>
                     </div>
                 </div>
 
                 {{-- Rank Stats --}}
-                <div class="mt-10 grid grid-cols-2 gap-4 text-left">
-                    <div class="bg-surface border border-primary/10 rounded-[1.5rem] p-5 transition-all hover:bg-primary/5">
-                        <p class="text-[9px] font-black text-mutedText uppercase tracking-widest leading-none">Active rank</p>
-                        <h4 class="text-base font-black text-mainText mt-2 flex items-center gap-2 truncate">
-                            <i class="fas fa-crown text-success"></i>
-                            {{ $achievementData['current_milestone'] ? $achievementData['current_milestone']->short_title : 'Novice' }}
+                <div class="mt-6 md:mt-10 grid grid-cols-2 gap-3 md:gap-4 text-left">
+                    <div class="bg-surface border border-primary/10 rounded-[1.25rem] md:rounded-[1.5rem] p-4 md:p-5 transition-all hover:bg-primary/5">
+                        <p class="text-[8px] md:text-[9px] font-black text-mutedText uppercase tracking-widest leading-none">Active rank</p>
+                        <h4 class="text-sm md:text-base font-black text-mainText mt-2 flex items-center gap-2">
+                            <i class="fas fa-crown text-success shrink-0"></i>
+                            <span class="truncate">{{ $achievementData['current_milestone'] ? $achievementData['current_milestone']->short_title : 'Novice' }}</span>
                         </h4>
                     </div>
-                    <div class="bg-surface border border-secondary/10 rounded-[1.5rem] p-5 transition-all hover:bg-secondary/5">
-                        <p class="text-[9px] font-black text-mutedText uppercase tracking-widest leading-none">Winning Path</p>
-                        <h4 class="text-base font-black text-primary mt-2 flex items-center gap-2 truncate">
-                            <i class="fas fa-rocket text-secondary animate-bounce"></i>
-                            {{ $achievementData['next_achievement'] ? $achievementData['next_achievement']->short_title : 'Peak' }}
+                    <div class="bg-surface border border-secondary/10 rounded-[1.25rem] md:rounded-[1.5rem] p-4 md:p-5 transition-all hover:bg-secondary/5">
+                        <p class="text-[8px] md:text-[9px] font-black text-mutedText uppercase tracking-widest leading-none">Winning Path</p>
+                        <h4 class="text-sm md:text-base font-black text-primary mt-2 flex items-center gap-2">
+                            <i class="fas fa-rocket text-secondary animate-bounce shrink-0"></i>
+                            <span class="truncate">{{ $achievementData['next_achievement'] ? $achievementData['next_achievement']->short_title : 'Peak' }}</span>
                         </h4>
                     </div>
                 </div>
 
                 @if($achievementData['next_achievement'])
-                <div class="mt-8 p-5 bg-navy/60 rounded-[2rem] border border-primary/10 backdrop-blur-md">
+                <div class="mt-6 md:mt-8 p-4 md:p-5 bg-navy/60 rounded-[1.5rem] md:rounded-[2rem] border border-primary/10 backdrop-blur-md">
                     <div class="flex justify-between items-center mb-3">
-                        <span class="text-[10px] font-black text-mutedText uppercase tracking-widest">Unlock Goal</span>
-                        <span class="text-sm font-black text-primary">₹{{ number_format($achievementData['remaining_to_next']) }}</span>
+                        <span class="text-[9px] md:text-[10px] font-black text-mutedText uppercase tracking-widest">Unlock Goal</span>
+                        <span class="text-xs md:text-sm font-black text-primary">₹{{ number_format($achievementData['remaining_to_next']) }}</span>
                     </div>
-                    <div class="w-full h-2.5 bg-primary/10 rounded-full overflow-hidden p-[1px] border border-white/5">
+                    <div class="w-full h-2 md:h-2.5 bg-primary/10 rounded-full overflow-hidden p-[1px] border border-white/5">
                         <div class="h-full bg-primary transition-all duration-1500 shadow-[0_0_15px_rgba(var(--color-primary),0.6)] rounded-full" style="width: {{ $currentMilestonePercent }}%"></div>
                     </div>
                 </div>
                 @else
-                <div class="mt-8 py-5 px-8 brand-gradient rounded-[2rem] shadow-2xl shadow-primary/30 flex items-center gap-4 justify-center text-white">
-                    <i class="fas fa-trophy text-2xl"></i>
-                    <span class="text-xs font-black uppercase tracking-[3px]">Ultimate peak reached</span>
+                <div class="mt-6 md:mt-8 py-4 md:py-5 px-6 md:px-8 brand-gradient rounded-[1.5rem] md:rounded-[2rem] shadow-2xl shadow-primary/30 flex items-center gap-4 justify-center text-white">
+                    <i class="fas fa-trophy text-xl md:text-2xl"></i>
+                    <span class="text-[10px] md:text-xs font-black uppercase tracking-[2px] md:tracking-[3px]">Peak reached</span>
                 </div>
                 @endif
             </div>

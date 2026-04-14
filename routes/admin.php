@@ -221,6 +221,7 @@ Route::middleware(['auth'])
                 Route::get('/', [\App\Http\Controllers\Admin\ContactInquiryController::class, 'index'])->name('index');
                 Route::get('/{id}', [\App\Http\Controllers\Admin\ContactInquiryController::class, 'show'])->name('show');
                 Route::post('/{id}/reply', [\App\Http\Controllers\Admin\ContactInquiryController::class, 'markReplied'])->name('mark-replied');
+                Route::post('/{id}/send-reply', [\App\Http\Controllers\Admin\ContactInquiryController::class, 'sendReply'])->name('send-reply');
                 Route::delete('/{id}', [\App\Http\Controllers\Admin\ContactInquiryController::class, 'destroy'])->name('destroy');
             });
         });

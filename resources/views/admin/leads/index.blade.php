@@ -11,10 +11,18 @@
     </div>
 
     {{-- Filter Bar Component --}}
-    <x-admin.table.filter 
-        placeholder="Search leads by name, email, mobile..." 
-        exportAction="exportLeads"
-    />
+    <div class="mb-4">
+        <x-admin.table.filter 
+            placeholder="Search leads..." 
+            exportAction="exportLeads"
+        />
+    </div>
+
+    {{-- Mobile Swipe Hint --}}
+    <div class="md:hidden flex items-center justify-center gap-2 mb-4 animate-pulse">
+        <i class="fas fa-arrows-left-right text-primary/40 text-[10px]"></i>
+        <span class="text-[10px] font-black uppercase tracking-[0.2em] text-mutedText">Swipe to view details</span>
+    </div>
 
     {{-- Main Table Section --}}
     <div class="bg-surface rounded-3xl border border-primary/10 shadow-sm overflow-hidden relative">
@@ -34,13 +42,13 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto overflow-y-hidden">
-            <table class="w-full text-left">
+        <div class="overflow-x-auto hide-scrollbar">
+            <table class="w-full text-left min-w-[800px] md:min-w-full">
                 <thead>
                     <tr class="bg-primary/5 text-[10px] font-black text-mutedText uppercase tracking-[0.2em] border-b border-primary/10">
                         <th class="px-6 py-5">Lead Profile</th>
                         <th class="px-6 py-5">Contact Details</th>
-                        <th class="px-6 py-5">Sponsor (Affiliate)</th>
+                        <th class="px-6 py-5">Sponsor</th>
                         <th class="px-6 py-5">Product Preference</th>
                         <th class="px-6 py-5 text-right">Status</th>
                     </tr>
@@ -52,7 +60,7 @@
         </div>
 
         {{-- Pagination Component --}}
-        <div id="pagination-wrapper">
+        <div id="pagination-wrapper" class="overflow-x-auto hide-scrollbar">
             <x-admin.table.pagination :records="$leads" />
         </div>
     </div>

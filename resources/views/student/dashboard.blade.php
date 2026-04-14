@@ -72,6 +72,14 @@
         #earningsChart .apexcharts-svg {
             overflow: hidden;
         }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 
     <div class="space-y-4 md:space-y-8 pb-12 font-sans text-mainText" x-data="dashboardHandler()">
@@ -149,8 +157,27 @@
                             <i class="fas fa-chart-area text-primary"></i> Revenue Trajectory
                         </h3>
                     </div>
+
+                    {{-- Chart Range Selector --}}
+                    <div class="flex items-center gap-1 bg-navy/20 p-1 rounded-xl border border-primary/5 self-start sm:self-center overflow-x-auto hide-scrollbar max-w-full">
+                        @foreach(['week' => 'Week', 'month' => 'Month', '6month' => '6 Month', 'lifetime' => 'Lifetime'] as $val => $label)
+                            <button 
+                                @click="changeRange('{{ $val }}')"
+                                :class="range === '{{ $val }}' ? 'bg-primary text-white shadow-lg' : 'text-mutedText hover:text-primary hover:bg-primary/5'"
+                                class="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all duration-300 flex-shrink-0 whitespace-nowrap"
+                            >
+                                {{ $label }}
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
-                <div id="earningsChart" class="w-full h-[250px] md:h-[300px] relative z-10"></div>
+                <div id="earningsChart" class="w-full h-[250px] md:h-[300px] relative z-10" :class="{ 'opacity-30 pointer-events-none transition-opacity duration-300': loadingChart }">
+                    <template x-if="loadingChart">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <i class="fas fa-circle-notch fa-spin text-primary text-xl"></i>
+                        </div>
+                    </template>
+                </div>
             </div>
 
             {{-- Bundle Sales Distribution --}}
@@ -555,6 +582,8 @@
             return {
                 chartInstance: null,
                 resizeTimer: null,
+                range: 'week',
+                loadingChart: false,
 
                 init() {
                     this.renderEarningsChart();
@@ -571,6 +600,33 @@
                             this.renderBundleChart();
                         }, 300);
                     });
+                },
+
+                async changeRange(newRange) {
+                    if(this.range === newRange || this.loadingChart) return;
+                    this.range = newRange;
+                    this.loadingChart = true;
+
+                    try {
+                        const response = await fetch(`{{ route('student.dashboard.chart_data') }}?range=${newRange}`);
+                        const data = await response.json();
+                        
+                        if (data.labels && data.data) {
+                            this.chartInstance.updateOptions({
+                                xaxis: {
+                                    categories: data.labels
+                                }
+                            });
+                            this.chartInstance.updateSeries([{
+                                name: 'Earnings',
+                                data: data.data
+                            }]);
+                        }
+                    } catch (error) {
+                        console.error('Failed to fetch chart data:', error);
+                    } finally {
+                        this.loadingChart = false;
+                    }
                 },
 
                 renderEarningsChart() {

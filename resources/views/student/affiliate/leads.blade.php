@@ -111,7 +111,7 @@
                     <input type="text" 
                            x-model="search" 
                            @input.debounce.500ms="doSearch()"
-                           placeholder="Search by name, email or phone..." 
+                           placeholder="Search leads..." 
                            class="w-full bg-surface border border-primary/10 rounded-full pl-11 pr-4 py-2.5 text-sm font-bold text-mainText focus:border-primary outline-none focus:ring-4 focus:ring-primary/5 transition-all shadow-sm">
                     <div x-show="isLoading" class="absolute inset-y-0 right-0 pr-4 flex items-center">
                         <i class="fas fa-circle-notch fa-spin text-xs text-primary"></i>
@@ -119,19 +119,25 @@
                 </div>
 
                 {{-- Modern Tabs (Responsive width) --}}
-                <div class="bg-surface p-1.5 rounded-full shadow-sm border border-primary/10 flex w-full lg:w-auto">
+                <div class="bg-surface p-1 rounded-full shadow-sm border border-primary/10 flex w-full md:w-auto overflow-x-auto hide-scrollbar">
                     <button @click="activeTab = 'referrals'"
                             :class="activeTab === 'referrals' ? 'filter-active' : ''"
-                            class="filter-pill tracking-wide outline-none flex-1 lg:flex-none justify-center">
+                            class="filter-pill tracking-wide outline-none flex-1 md:flex-none justify-center whitespace-nowrap">
                         <i class="fas fa-check-circle"></i> Converted
                     </button>
                     <button @click="activeTab = 'leads'"
                             :class="activeTab === 'leads' ? 'filter-active' : ''"
-                            class="filter-pill tracking-wide outline-none flex-1 lg:flex-none justify-center">
+                            class="filter-pill tracking-wide outline-none flex-1 md:flex-none justify-center whitespace-nowrap">
                         <i class="fas fa-hourglass-half"></i> Pending
                     </button>
                 </div>
             </div>
+        </div>
+
+        {{-- Mobile Swipe Hint --}}
+        <div class="md:hidden flex items-center justify-center gap-2 mb-4 animate-pulse">
+            <i class="fas fa-arrows-left-right text-primary/40 text-[10px]"></i>
+            <span class="text-[10px] font-black uppercase tracking-[0.2em] text-mutedText">Swipe to view more</span>
         </div>
 
         {{-- ========================================== --}}
@@ -141,11 +147,11 @@
              x-transition:enter="transition ease-out duration-300 transform"
              x-transition:enter-start="opacity-0 translate-y-4"
              x-transition:enter-end="opacity-100 translate-y-0"
-             class="glass-panel overflow-hidden">
+             class="glass-panel">
 
-            <div class="w-full">
-                <table class="w-full text-left border-collapse">
-                    <thead class="hidden md:table-header-group bg-primary/5 text-xs uppercase text-mutedText font-black tracking-widest border-b border-primary/10">
+            <div class="overflow-x-auto hide-scrollbar rounded-[1.5rem]">
+                <table class="w-full text-left border-collapse min-w-[700px] md:min-w-full">
+                    <thead class="bg-primary/5 text-[10px] md:text-xs uppercase text-mutedText font-black tracking-widest border-b border-primary/10">
                         <tr>
                             <th class="px-6 py-5 whitespace-nowrap">User Profile</th>
                             <th class="px-6 py-5 whitespace-nowrap">Product</th>
@@ -172,11 +178,11 @@
              x-transition:enter="transition ease-out duration-300 transform"
              x-transition:enter-start="opacity-0 translate-y-4"
              x-transition:enter-end="opacity-100 translate-y-0"
-             class="glass-panel overflow-hidden">
+             class="glass-panel">
 
-            <div class="w-full">
-                <table class="w-full text-left border-collapse">
-                    <thead class="hidden md:table-header-group bg-primary/5 text-xs uppercase text-mutedText font-black tracking-widest border-b border-primary/10">
+            <div class="overflow-x-auto hide-scrollbar rounded-[1.5rem]">
+                <table class="w-full text-left border-collapse min-w-[700px] md:min-w-full">
+                    <thead class="bg-primary/5 text-[10px] md:text-xs uppercase text-mutedText font-black tracking-widest border-b border-primary/10">
                         <tr>
                             <th class="px-6 py-5 whitespace-nowrap">Lead Profile</th>
                             <th class="px-6 py-5 whitespace-nowrap">Product</th>
