@@ -13,8 +13,15 @@
     }
     @media (max-width: 640px) {
         .speedometer-container {
-            max-width: 280px !important;
+            width: 100% !important;
+            max-width: 320px !important;
         }
+    }
+    .needle-glow {
+        filter: drop-shadow(0 0 8px rgba(var(--color-primary), 0.8));
+    }
+    .text-glow {
+        text-shadow: 0 0 15px rgba(var(--color-primary), 0.3);
     }
 </style>
 
@@ -38,18 +45,18 @@
             <div class="absolute -top-24 -left-24 w-64 h-64 bg-primary/5 blur-[80px] rounded-full pointer-events-none group-hover:bg-primary/10 transition-colors duration-1000"></div>
 
             <div class="relative z-10 w-full max-w-sm mx-auto sm:max-w-none">
-                <div class="flex items-center justify-center gap-4 mb-6 md:mb-8">
+                <div class="flex items-center justify-center gap-4 mb-8 md:mb-10">
                     <span class="h-px w-8 md:w-12 bg-primary/20"></span>
-                    <h3 class="text-[10px] md:text-[11px] font-black text-mutedText uppercase tracking-[3px] md:tracking-[4px]">Rank mastery</h3>
+                    <h3 class="text-[10px] md:text-[11px] font-black text-mutedText uppercase tracking-[4px]">Rank mastery</h3>
                     <span class="h-px w-8 md:w-12 bg-primary/20"></span>
                 </div>
 
                 {{-- Semi-Circle Segmented Speedometer --}}
-                <div class="relative w-full aspect-[4/3] sm:aspect-[16/10] flex items-center justify-center -mt-4 sm:-mt-2">
+                <div class="relative w-full aspect-[4/3] flex items-center justify-center -mt-6 sm:-mt-4">
                     @php
                         $totalActive = $allMilestones->count();
                         $dashTotal = 125.66; 
-                        $gap = 2.5;
+                        $gap = 2;
                         $segmentWidth = ($dashTotal - (($totalActive - 1) * $gap)) / ($totalActive ?: 1);
                         
                         $achievedCount = 0;
@@ -62,11 +69,10 @@
                                 $currentIndex = $idx;
                             }
                         }
-                        
                         $currentMilestonePercent = $achievementData['percentage'] ?? 0;
                     @endphp
 
-                    <svg viewBox="0 0 100 65" class="w-full h-auto max-w-[280px] sm:max-w-none drop-shadow-2xl">
+                    <svg viewBox="0 0 100 70" class="w-full h-auto max-w-[320px] filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.1)]">
                         <defs>
                             <linearGradient id="achieved-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
                                 <stop offset="0%" style="stop-color:rgb(var(--color-primary))" />
@@ -74,12 +80,22 @@
                             </linearGradient>
                             <linearGradient id="target-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
                                 <stop offset="0%" style="stop-color:#F59E0B" />
-                                <stop offset="100%" style="stop-color:#EF4444" />
+                                <stop offset="100%" style="stop-color:#ef4444" />
                             </linearGradient>
+                            <filter id="glow">
+                                <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
                         </defs>
 
-                        {{-- Global Background Track --}}
-                        <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="rgba(var(--color-primary), 0.1)" stroke-width="14" stroke-linecap="round" />
+                        {{-- Glow Layer --}}
+                        <path d="M 10 55 A 40 40 0 0 1 90 55" fill="none" stroke="rgba(var(--color-primary), 0.03)" stroke-width="18" stroke-linecap="round" />
+                        
+                        {{-- Background Track --}}
+                        <path d="M 10 55 A 40 40 0 0 1 90 55" fill="none" stroke="rgba(var(--color-primary), 0.08)" stroke-width="14" stroke-linecap="round" />
 
                         {{-- Segments --}}
                         @foreach($allMilestones as $idx => $m)
@@ -87,14 +103,16 @@
                                 $status = $userMilestones[$m->id] ?? 'locked';
                                 $isAchieved = in_array($status, ['unlocked', 'claimed']);
                                 $isTarget = ($idx === $currentIndex);
+                                // The dash offset formula to place each segment correctly
+                                // Since dashTotal is 125.66 (pi*r), we move backward from the end
                                 $startOffset = $dashTotal - ($idx * ($segmentWidth + $gap));
                             @endphp
                             
-                            {{-- Base track --}}
-                            <path d="M 10 50 A 40 40 0 0 1 90 50" 
+                            {{-- Base track segments --}}
+                            <path d="M 10 55 A 40 40 0 0 1 90 55" 
                                   fill="none" 
-                                  stroke="{{ $isAchieved ? 'url(#achieved-gradient)' : 'rgba(var(--color-primary), 0.05)' }}" 
-                                  stroke-width="11" 
+                                  stroke="{{ $isAchieved ? 'url(#achieved-gradient)' : 'rgba(var(--color-primary), 0.04)' }}" 
+                                  stroke-width="12" 
                                   stroke-linecap="round"
                                   stroke-dasharray="{{ $segmentWidth }} {{ $dashTotal }}" 
                                   stroke-dashoffset="{{ $startOffset }}"
@@ -102,13 +120,14 @@
                             
                             @if($isTarget)
                                 {{-- Progress within current segment --}}
-                                <path d="M 10 50 A 40 40 0 0 1 90 50" 
+                                <path d="M 10 55 A 40 40 0 0 1 90 55" 
                                       fill="none" 
                                       stroke="url(#target-gradient)" 
-                                      stroke-width="11" 
+                                      stroke-width="12" 
                                       stroke-linecap="round"
                                       stroke-dasharray="{{ ($currentMilestonePercent / 100) * $segmentWidth }} {{ $dashTotal }}" 
                                       stroke-dashoffset="{{ $startOffset }}"
+                                      filter="url(#glow)"
                                       class="transition-all duration-1000 ease-out" />
                             @endif
                         @endforeach
@@ -117,35 +136,40 @@
                         @php
                             $currentPos = $achievedCount + ($currentIndex !== -1 ? ($currentMilestonePercent / 100) : 0);
                             $totalPos = $totalActive ?: 1;
-                            $needleAngle = -90 + (180 * ($currentPos / $totalPos));
+                            $needleAngle = 180 * ($currentPos / $totalPos); // 0% = Left, 100% = Right
                         @endphp
-                        <g transform="rotate({{ $needleAngle }} 50 50)" class="transition-all duration-[1500ms] ease-out origin-center">
-                            <line x1="50" y1="50" x2="18" y2="50" stroke="#fff" stroke-width="3" stroke-linecap="round" />
-                            <circle cx="50" cy="50" r="5" fill="#fff" stroke="rgb(var(--color-primary))" stroke-width="2" />
+                        <g transform="rotate({{ $needleAngle }} 50 55)" class="transition-all duration-[1500ms] ease-out origin-[50px_55px]">
+                            <path d="M 50 55 L 14 55" stroke="rgba(0,0,0,0.1)" stroke-width="4" stroke-linecap="round" transform="translate(0, 1.5)" />
+                            <path d="M 50 55 L 14 55" stroke="#fff" stroke-width="3" stroke-linecap="round" class="needle-glow" />
                         </g>
                     </svg>
 
-                    <div class="absolute bottom-4 sm:bottom-0 left-1/2 -translate-x-1/2 text-center w-full px-4">
-                        <span class="block text-4xl sm:text-5xl font-black text-mainText tracking-tighter">{{ round($currentMilestonePercent) }}%</span>
-                        <div class="px-3 py-1 rounded-full bg-primary/10 border border-primary/10 inline-block mt-1">
-                             <span class="text-[8px] sm:text-[9px] font-black text-primary uppercase tracking-[2px]">Next Level</span>
+                    <div class="absolute bottom-2 sm:bottom-0 left-1/2 -translate-x-1/2 text-center w-full pointer-events-none">
+                        <span class="block text-4xl sm:text-6xl font-black text-mainText tracking-tighter leading-none text-glow">{{ round($currentMilestonePercent) }}%</span>
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mt-2">
+                             <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                             <span class="text-[9px] sm:text-[10px] font-black text-primary uppercase tracking-[2px]">Next Level</span>
                         </div>
                     </div>
                 </div>
 
                 {{-- Rank Stats --}}
-                <div class="mt-8 sm:mt-10 grid grid-cols-2 gap-3 sm:gap-4 text-left">
-                    <div class="bg-surface border border-primary/10 rounded-[1.25rem] sm:rounded-[1.5rem] p-4 sm:p-5 transition-all hover:bg-primary/5">
-                        <p class="text-[8px] sm:text-[9px] font-black text-mutedText uppercase tracking-widest leading-none">Status</p>
+                <div class="mt-4 sm:mt-6 grid grid-cols-2 gap-3 sm:gap-4 text-left">
+                    <div class="bg-surface/50 border border-primary/10 rounded-[1.5rem] p-4 sm:p-5 transition-all hover:bg-primary/5 hover:border-primary/30">
+                        <p class="text-[8px] sm:text-[9px] font-black text-mutedText uppercase tracking-widest leading-none">Current Status</p>
                         <h4 class="text-xs sm:text-base font-black text-mainText mt-2 flex items-center gap-2">
-                            <i class="fas fa-crown text-success shrink-0 text-[10px] sm:text-sm"></i>
+                            <div class="w-6 h-6 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
+                                <i class="fas fa-crown text-success text-[10px] sm:text-xs"></i>
+                            </div>
                             <span class="truncate">{{ $achievementData['current_milestone'] ? $achievementData['current_milestone']->short_title : 'Novice' }}</span>
                         </h4>
                     </div>
-                    <div class="bg-surface border border-secondary/10 rounded-[1.25rem] sm:rounded-[1.5rem] p-4 sm:p-5 transition-all hover:bg-secondary/5">
-                        <p class="text-[8px] sm:text-[9px] font-black text-mutedText uppercase tracking-widest leading-none">Target</p>
+                    <div class="bg-surface/50 border border-secondary/10 rounded-[1.5rem] p-4 sm:p-5 transition-all hover:bg-secondary/5 hover:border-secondary/30">
+                        <p class="text-[8px] sm:text-[9px] font-black text-mutedText uppercase tracking-widest leading-none">Target Goal</p>
                         <h4 class="text-xs sm:text-base font-black text-primary mt-2 flex items-center gap-2">
-                            <i class="fas fa-rocket text-secondary shrink-0 text-[10px] sm:text-sm"></i>
+                            <div class="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                <i class="fas fa-rocket text-primary text-[10px] sm:text-xs"></i>
+                            </div>
                             <span class="truncate">{{ $achievementData['next_achievement'] ? $achievementData['next_achievement']->short_title : 'Max' }}</span>
                         </h4>
                     </div>
