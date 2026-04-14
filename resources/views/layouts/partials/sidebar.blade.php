@@ -51,6 +51,14 @@
                 </a>
                 @endcan
 
+                @can('manage-settings')
+                <a href="{{ route('admin.surveys.index') }}"
+                    class="flex items-center px-4 py-3 rounded-2xl transition-all duration-300 group {{ request()->routeIs('admin.surveys.*') ? 'bg-primary/10 text-primary shadow-sm' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
+                    <i class="fas fa-poll w-5 h-5 mr-3 text-[16px]"></i>
+                    <span class="font-bold text-sm">Survey Manager</span>
+                </a>
+                @endcan
+
                 <a href="{{ route('admin.profile.edit') }}"
                     class="flex items-center px-4 py-3 rounded-2xl transition-all duration-300 group {{ request()->routeIs('admin.profile.*') ? 'bg-primary/10 text-primary shadow-sm' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
