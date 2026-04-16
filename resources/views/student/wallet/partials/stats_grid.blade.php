@@ -3,9 +3,6 @@
         <div
             class="bg-surface rounded-2xl p-5 border-2 border-indigo-500 shadow-lg shadow-indigo-500/20 relative overflow-hidden group hover:-translate-y-1 transition duration-300">
             <div class="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-indigo-500/10 to-transparent"></div>
-            <div class="absolute -right-2 -bottom-2 text-6xl text-indigo-500/10 -rotate-12 group-hover:rotate-0 transition-transform duration-500">
-                <i class="fas fa-calendar-alt"></i>
-            </div>
             <p class="text-[10px] md:text-sm font-bold text-indigo-400 uppercase tracking-widest mb-1 relative z-10">
                 Range Earnings
             </p>
@@ -14,11 +11,10 @@
             </h3>
         </div>
     @endif
-
     <div
         class="bg-surface rounded-2xl p-5 border border-primary/10 shadow-sm relative overflow-hidden group hover:-translate-y-1 transition duration-300">
-        <div class="absolute -right-2 -bottom-2 text-6xl text-blue-500/5 -rotate-12 group-hover:rotate-0 transition-transform duration-500">
-            <i class="fas fa-chart-line"></i>
+        <div
+            class="absolute -right-4 -top-4 w-16 h-16 bg-blue-500/10 rounded-full group-hover:scale-150 transition duration-500">
         </div>
         <p class="text-[10px] md:text-sm font-bold text-mutedText uppercase tracking-widest mb-1 relative z-10">Total
             Revenue</p>
@@ -29,9 +25,6 @@
     <div
         class="bg-surface rounded-2xl p-5 border-2 border-emerald-500/30 shadow-lg relative overflow-hidden group hover:-translate-y-1 transition duration-300">
         <div class="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-emerald-500/5 to-transparent"></div>
-        <div class="absolute -right-2 -bottom-2 text-6xl text-emerald-500/10 -rotate-12 group-hover:rotate-0 transition-transform duration-500">
-            <i class="fas fa-wallet"></i>
-        </div>
         <p
             class="text-[10px] md:text-sm font-bold text-emerald-500 uppercase tracking-widest mb-1 relative z-10 flex items-center gap-2">
             <i class="fas fa-check-circle"></i> Available
@@ -46,8 +39,8 @@
 
     <div
         class="bg-surface rounded-2xl p-5 border border-amber-500/30 shadow-sm relative overflow-hidden group hover:-translate-y-1 transition duration-300">
-        <div class="absolute -right-2 -bottom-2 text-6xl text-amber-500/10 -rotate-12 group-hover:rotate-0 transition-transform duration-500">
-            <i class="fas fa-clock"></i>
+        <div
+            class="absolute -right-4 -top-4 w-16 h-16 bg-amber-500/10 rounded-full group-hover:scale-150 transition duration-500">
         </div>
         <p
             class="text-[10px] md:text-sm font-bold text-amber-500 uppercase tracking-widest mb-1 relative z-10 flex items-center gap-2">
@@ -63,8 +56,8 @@
 
     <div
         class="bg-surface rounded-2xl p-5 border border-blue-500/30 shadow-sm relative overflow-hidden group hover:-translate-y-1 transition duration-300">
-        <div class="absolute -right-2 -bottom-2 text-6xl text-blue-500/10 -rotate-12 group-hover:rotate-0 transition-transform duration-500">
-            <i class="fas fa-sync fa-spin-slow"></i>
+        <div
+            class="absolute -right-4 -top-4 w-16 h-16 bg-blue-500/10 rounded-full group-hover:scale-150 transition duration-500">
         </div>
         <p
             class="text-[10px] md:text-sm font-bold text-blue-500 uppercase tracking-widest mb-1 relative z-10 flex items-center gap-2">
@@ -76,8 +69,8 @@
 
     <div
         class="bg-surface rounded-2xl p-5 border border-primary/10 shadow-sm relative overflow-hidden group hover:-translate-y-1 transition duration-300">
-        <div class="absolute -right-2 -bottom-2 text-6xl text-primary/10 -rotate-12 group-hover:rotate-0 transition-transform duration-500">
-            <i class="fas fa-hand-holding-usd"></i>
+        <div
+            class="absolute -right-4 -top-4 w-16 h-16 bg-primary/10 rounded-full group-hover:scale-150 transition duration-500">
         </div>
         <p class="text-[10px] md:text-sm font-bold text-mutedText uppercase tracking-widest mb-1 relative z-10">Total
             Paid</p>
@@ -88,8 +81,8 @@
     @if ($dashboardData['tds_enabled'])
         <div
             class="bg-surface rounded-2xl p-5 border border-red-500/10 shadow-sm relative overflow-hidden group hover:-translate-y-1 transition duration-300">
-            <div class="absolute -right-2 -bottom-2 text-6xl text-red-500/10 -rotate-12 group-hover:rotate-0 transition-transform duration-500">
-                <i class="fas fa-file-invoice-dollar"></i>
+            <div
+                class="absolute -right-4 -top-4 w-16 h-16 bg-red-500/5 rounded-full group-hover:scale-150 transition duration-500">
             </div>
             <p class="text-[10px] md:text-sm font-bold text-red-500/70 uppercase tracking-widest mb-1 relative z-10">TDS
                 Deducted</p>

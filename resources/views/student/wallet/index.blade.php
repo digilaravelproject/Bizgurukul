@@ -2,15 +2,6 @@
 
 @section('content')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        @keyframes spin-slow {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        .fa-spin-slow {
-            animation: spin-slow 8s linear infinite;
-        }
-    </style>
     <div class="space-y-6 md:space-y-8 font-sans text-mainText" x-data="walletManager()" x-init="init()">
 
         {{-- HEADER --}}
@@ -45,12 +36,12 @@
         <div x-data="{ tab: 'history' }">
             <div class="flex items-center border-b border-primary/10 mb-6 gap-6 overflow-x-auto no-scrollbar">
                 <button @click="tab = 'history'" :class="tab === 'history' ? 'border-primary text-primary' :
-                            'border-transparent text-mutedText hover:text-mainText'"
+                                'border-transparent text-mutedText hover:text-mainText'"
                     class="pb-3 border-b-2 font-black uppercase text-xs md:text-sm tracking-widest whitespace-nowrap transition-colors">
                     Commission History
                 </button>
                 <button @click="tab = 'withdrawals'" :class="tab === 'withdrawals' ? 'border-primary text-primary' :
-                            'border-transparent text-mutedText hover:text-mainText'"
+                                'border-transparent text-mutedText hover:text-mainText'"
                     class="pb-3 border-b-2 font-black uppercase text-xs md:text-sm tracking-widest whitespace-nowrap transition-colors">
                     Withdrawal Requests
                 </button>
@@ -152,7 +143,7 @@
                         <button type="button" @click="withdrawModal = false"
                             class="flex-1 py-3 bg-navy text-mainText font-black text-xs uppercase tracking-widest rounded-xl hover:bg-mainText hover:text-navy transition">Cancel</button>
                         <button type="submit" :disabled="Object.keys(selectedData).length === 0"
-                             class="flex-1 py-3 brand-gradient text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg hover:shadow-primary/50 transition disabled:opacity-50 disabled:cursor-not-allowed">Confirm</button>
+                            class="flex-1 py-3 brand-gradient text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg hover:shadow-primary/50 transition disabled:opacity-50 disabled:cursor-not-allowed">Confirm</button>
                     </div>
                 </form>
             </div>
