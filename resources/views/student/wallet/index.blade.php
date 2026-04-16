@@ -2,6 +2,15 @@
 
 @section('content')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .fa-spin-slow {
+            animation: spin-slow 8s linear infinite;
+        }
+    </style>
     <div class="space-y-6 md:space-y-8 font-sans text-mainText" x-data="walletManager()" x-init="init()">
 
         {{-- HEADER --}}
