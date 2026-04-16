@@ -179,16 +179,6 @@ class DashboardController extends Controller
                 default   => 7
             };
 
-            // If lifetime, we might need to handle it differently in AffiliateService
-            // Let's check how many days back the lifetime goes
-            if ($days === 0) {
-                $firstPayment = $user->commissions()->oldest()->first();
-                $days = $firstPayment ? Carbon::now()->diffInDays($firstPayment->created_at) + 1 : 365;
-                
-                // Cap it at 1000 days or something reasonable for labels if needed
-                // but getGraphData fills every day... 
-            }
-
             $data = $this->affiliateService->getGraphData($user, (int)$days);
 
             return response()->json($data);

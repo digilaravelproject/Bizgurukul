@@ -128,7 +128,15 @@ class AffiliateService
     public function getGraphData(User $user, $days = 30)
     {
         try {
-            $startDate = Carbon::now()->subDays($days);
+            // Determine grouping: Daily for < 2 months, Monthly for longer ranges
+            $isMonthly = ($days > 60 || $days === 0);
+
+            if ($isMonthly) {
+                return $this->getMonthlyGraphData($user, $days);
+            }
+
+            // --- DAILY LOGIC ---
+            $startDate = Carbon::now()->subDays($days)->startOfDay();
 
             $earnings = $user->commissions()
                 ->where('created_at', '>=', $startDate)
@@ -139,7 +147,6 @@ class AffiliateService
             $labels = [];
             $data = [];
 
-            // Fill missing dates safely
             for ($i = $days - 1; $i >= 0; $i--) {
                 $dateObj = Carbon::now()->subDays($i);
                 $labels[] = $dateObj->format('d M');
@@ -151,6 +158,47 @@ class AffiliateService
             Log::error("AffiliateService Error [getGraphData]: " . $e->getMessage(), ['user_id' => $user->id]);
             return ['labels' => [], 'data' => []];
         }
+    }
+
+    /**
+     * Group earnings by month for longer timeframes (6mo, Lifetime)
+     */
+    protected function getMonthlyGraphData(User $user, int $days)
+    {
+        // If days is 0, fetch since beginning. Otherwise, fetch since N days ago.
+        $query = $user->commissions();
+        if ($days > 0) {
+            $query->where('created_at', '>=', Carbon::now()->subDays($days)->startOfMonth());
+        }
+
+        $earnings = $query->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month_key, SUM(amount) as total')
+            ->groupBy('month_key')
+            ->pluck('total', 'month_key');
+
+        $labels = [];
+        $data = [];
+
+        // Determine range for iteration
+        // If 6 months, iterate 6 months back. If lifetime, find first commission.
+        if ($days > 0) {
+            $monthsCount = (int) ceil($days / 30);
+            $start = Carbon::now()->subMonths($monthsCount - 1)->startOfMonth();
+        } else {
+            $first = $user->commissions()->oldest()->first();
+            $start = $first ? $first->created_at->startOfMonth() : Carbon::now()->subYear()->startOfMonth();
+        }
+        
+        $current = $start->clone();
+        $end = Carbon::now()->startOfMonth();
+
+        while ($current->lte($end)) {
+            $key = $current->format('Y-m');
+            $labels[] = $current->format('M Y');
+            $data[] = (float) ($earnings[$key] ?? 0);
+            $current->addMonth();
+        }
+
+        return ['labels' => $labels, 'data' => $data];
     }
 
     public function getCategoryPerformance(User $user)
