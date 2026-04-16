@@ -45,7 +45,7 @@ class WalletService
         return $commission;
     }
 
-    public function getWalletDashboardData(int $userId)
+    public function getWalletDashboardData(int $userId, $startDate = null, $endDate = null)
     {
         $this->syncAvailableCommissions($userId);
 
@@ -58,6 +58,8 @@ class WalletService
             'total_earnings'        => $this->walletRepo->getTotalEarnings($userId),
             'total_withdrawn'       => $this->walletRepo->getTotalWithdrawn($userId),
             'total_tds'             => $this->walletRepo->getTotalTdsDeducted($userId),
+            'range_earnings'        => $this->walletRepo->getEarningsSumInRange($userId, $startDate, $endDate),
+            'is_filtered'           => ($startDate || $endDate),
             'tds_enabled'           => (bool) Setting::get('tds_enabled', true),
         ];
     }

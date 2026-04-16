@@ -90,6 +90,15 @@ class WalletRepository
             ->paginate($perPage, ['*'], 'commission_page');
     }
 
+    public function getEarningsSumInRange(int $userId, $startDate = null, $endDate = null)
+    {
+        return AffiliateCommission::where('affiliate_id', $userId)
+            ->whereIn('status', ['on_hold', 'available', 'paid', 'requested', 'processing'])
+            ->when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
+            ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
+            ->sum('amount');
+    }
+
     public function getWithdrawalRequests(int $userId, int $perPage = 15, $startDate = null, $endDate = null)
     {
         return WithdrawalRequest::with('commissions')

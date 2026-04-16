@@ -29,7 +29,7 @@ class WalletController extends Controller
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
 
-        $dashboardData = $this->walletService->getWalletDashboardData($user->id);
+        $dashboardData = $this->walletService->getWalletDashboardData($user->id, $startDate, $endDate);
 
         $commissions = $this->walletRepo->getEarnedCommissions($user->id, $perPage, $startDate, $endDate);
         $withdrawals = $this->walletRepo->getWithdrawalRequests($user->id, $perPage, $startDate, $endDate);

@@ -1,4 +1,16 @@
-<div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 md:gap-6">
+<div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 md:gap-6">
+    @if ($dashboardData['is_filtered'])
+        <div
+            class="bg-surface rounded-2xl p-5 border-2 border-indigo-500 shadow-lg shadow-indigo-500/20 relative overflow-hidden group hover:-translate-y-1 transition duration-300">
+            <div class="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-indigo-500/10 to-transparent"></div>
+            <p class="text-[10px] md:text-sm font-bold text-indigo-400 uppercase tracking-widest mb-1 relative z-10">
+                Range Earnings
+            </p>
+            <h3 class="text-xl md:text-2xl font-black text-mainText tracking-tight relative z-10">
+                ₹{{ number_format($dashboardData['range_earnings'], 2) }}
+            </h3>
+        </div>
+    @endif
     <div
         class="bg-surface rounded-2xl p-5 border border-primary/10 shadow-sm relative overflow-hidden group hover:-translate-y-1 transition duration-300">
         <div
