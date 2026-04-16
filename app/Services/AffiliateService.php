@@ -321,15 +321,17 @@ class AffiliateService
 
             if ($filter === 'today') {
                 $query->whereDate('created_at', Carbon::today());
+            } elseif ($filter === 'this_week') {
+                $query->where('created_at', '>=', Carbon::now()->startOfWeek(1));
+            } elseif ($filter === 'this_month') {
+                $query->where('created_at', '>=', Carbon::now()->startOfMonth());
             } elseif ($filter === 'last_7_days') {
                 $query->where('created_at', '>=', Carbon::today()->subDays(6));
             } elseif ($filter === 'last_30_days') {
                 $query->where('created_at', '>=', Carbon::today()->subDays(29));
             } elseif ($filter === 'this_year') {
-                // YEARLY FILTER ADDED HERE
                 $query->where('created_at', '>=', Carbon::now()->startOfYear());
-                // Note: For 'last 365 days', use 'Carbon::now()->subDays(365)'
-            } // 'all_time' no date filter
+            }
 
             return $query->orderByDesc('total_earnings')
                 ->take($limit)
@@ -347,12 +349,15 @@ class AffiliateService
 
             if ($filter === 'today') {
                 $userEarningsQuery->whereDate('created_at', Carbon::today());
+            } elseif ($filter === 'this_week') {
+                $userEarningsQuery->where('created_at', '>=', Carbon::now()->startOfWeek(1));
+            } elseif ($filter === 'this_month') {
+                $userEarningsQuery->where('created_at', '>=', Carbon::now()->startOfMonth());
             } elseif ($filter === 'last_7_days') {
                 $userEarningsQuery->where('created_at', '>=', Carbon::today()->subDays(6));
             } elseif ($filter === 'last_30_days') {
                 $userEarningsQuery->where('created_at', '>=', Carbon::today()->subDays(29));
             } elseif ($filter === 'this_year') {
-                // YEARLY FILTER ADDED HERE
                 $userEarningsQuery->where('created_at', '>=', Carbon::now()->startOfYear());
             }
 
@@ -368,12 +373,15 @@ class AffiliateService
 
             if ($filter === 'today') {
                 $query->whereDate('created_at', Carbon::today());
+            } elseif ($filter === 'this_week') {
+                $query->where('created_at', '>=', Carbon::now()->startOfWeek(1));
+            } elseif ($filter === 'this_month') {
+                $query->where('created_at', '>=', Carbon::now()->startOfMonth());
             } elseif ($filter === 'last_7_days') {
                 $query->where('created_at', '>=', Carbon::today()->subDays(6));
             } elseif ($filter === 'last_30_days') {
                 $query->where('created_at', '>=', Carbon::today()->subDays(29));
             } elseif ($filter === 'this_year') {
-                // YEARLY FILTER ADDED HERE
                 $query->where('created_at', '>=', Carbon::now()->startOfYear());
             }
 

@@ -12,7 +12,7 @@ use Exception;
 class LeaderboardController extends Controller
 {
     /** Valid filter values accepted from the frontend */
-    private const ALLOWED_FILTERS = ['last_7_days', 'last_30_days', 'this_year', 'all_time'];
+    private const ALLOWED_FILTERS = ['this_week', 'this_month', 'this_year', 'all_time', 'last_7_days', 'last_30_days'];
 
     protected AffiliateService $affiliateService;
 
@@ -84,6 +84,6 @@ class LeaderboardController extends Controller
     {
         return in_array($filter, self::ALLOWED_FILTERS, true)
             ? $filter
-            : 'last_30_days';
+            : 'this_month';
     }
 }

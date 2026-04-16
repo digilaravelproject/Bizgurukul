@@ -302,7 +302,7 @@
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('leaderboardData', () => ({
-            filter: 'last_30_days',
+            filter: 'this_month',
             loading: true,
             topThree: [],
             restOfTopTen: [],
@@ -315,8 +315,8 @@
                 profile_picture: null
             },
             availableFilters: [
-                { label: 'Weekly', value: 'last_7_days' },
-                { label: 'Monthly', value: 'last_30_days' },
+                { label: 'Weekly', value: 'this_week' },
+                { label: 'Monthly', value: 'this_month' },
                 { label: 'Yearly', value: 'this_year' },
                 { label: 'All Time', value: 'all_time' }
             ],

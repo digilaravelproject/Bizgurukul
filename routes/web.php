@@ -59,6 +59,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/onboarding/referral', [App\Http\Controllers\OnboardingController::class, 'showReferralStep'])->name('onboarding.referral');
     Route::post('/onboarding/referral', [App\Http\Controllers\OnboardingController::class, 'storeReferrer'])->name('onboarding.referral.store');
     Route::get('/onboarding/skip', [App\Http\Controllers\OnboardingController::class, 'skip'])->name('onboarding.skip');
+
 });
 
 // 5. Load Separate Route Files
