@@ -128,36 +128,63 @@ class AffiliateService
     public function getGraphData(User $user, $days = 30)
     {
         try {
-            // Determine grouping: Daily for < 2 months, Monthly for longer ranges
-            $isMonthly = ($days > 60 || $days === 0);
+            /** 
+             * User request: 
+             * - 7 days ('week') -> Mon to Now
+             * - 30 days ('month') -> 1st to Now
+             * - > 60 days -> Monthly aggregation
+             */
+            if ($days === 7) {
+                // This Week (Mon to Now)
+                $start = Carbon::now()->startOfWeek(1); // 1 = MONDAY
+                $end = Carbon::now();
+                return $this->getDailyDataInRange($user, $start, $end);
+            }
 
+            if ($days === 30) {
+                // This Month (1st to Now)
+                $start = Carbon::now()->startOfMonth();
+                $end = Carbon::now();
+                return $this->getDailyDataInRange($user, $start, $end);
+            }
+
+            $isMonthly = ($days > 60 || $days === 0);
             if ($isMonthly) {
                 return $this->getMonthlyGraphData($user, $days);
             }
 
-            // --- DAILY LOGIC ---
-            $startDate = Carbon::now()->subDays($days)->startOfDay();
+            // Fallback: Custom days back
+            return $this->getDailyDataInRange($user, Carbon::now()->subDays($days - 1), Carbon::now());
 
-            $earnings = $user->commissions()
-                ->where('created_at', '>=', $startDate)
-                ->selectRaw('DATE(created_at) as date, SUM(amount) as total')
-                ->groupBy('date')
-                ->pluck('total', 'date');
-
-            $labels = [];
-            $data = [];
-
-            for ($i = $days - 1; $i >= 0; $i--) {
-                $dateObj = Carbon::now()->subDays($i);
-                $labels[] = $dateObj->format('d M');
-                $data[] = (float) ($earnings[$dateObj->format('Y-m-d')] ?? 0);
-            }
-
-            return ['labels' => $labels, 'data' => $data];
         } catch (Exception $e) {
             Log::error("AffiliateService Error [getGraphData]: " . $e->getMessage(), ['user_id' => $user->id]);
             return ['labels' => [], 'data' => []];
         }
+    }
+
+    /**
+     * Helper for daily data generation
+     */
+    protected function getDailyDataInRange(User $user, Carbon $start, Carbon $end)
+    {
+        $earnings = $user->commissions()
+            ->where('created_at', '>=', $start->clone()->startOfDay())
+            ->where('created_at', '<=', $end->clone()->endOfDay())
+            ->selectRaw('DATE(created_at) as date, SUM(amount) as total')
+            ->groupBy('date')
+            ->pluck('total', 'date');
+
+        $labels = [];
+        $data = [];
+
+        $current = $start->clone();
+        while ($current->lte($end)) {
+            $labels[] = $current->format('d M');
+            $data[] = (float) ($earnings[$current->format('Y-m-d')] ?? 0);
+            $current->addDay();
+        }
+
+        return ['labels' => $labels, 'data' => $data];
     }
 
     /**

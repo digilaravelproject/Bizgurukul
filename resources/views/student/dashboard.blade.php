@@ -636,41 +636,6 @@
     </div>
 
     <script>
-        const bundles = @json($availableBundles);
-        const courses = @json($availableCourses);
-
-        function toggleTargetSelect() {
-            const type = document.getElementById('target_type').value;
-            const container = document.getElementById('target_id_container');
-            const select = document.getElementById('target_id');
-
-            // Clear existing options
-            select.innerHTML = '';
-            container.style.display = 'none';
-
-            if (type === 'bundle') {
-                container.style.display = 'block';
-                bundles.forEach(b => {
-                    const opt = document.createElement('option');
-                    opt.value = b.id;
-                    opt.text = b.title;
-                    select.appendChild(opt);
-                });
-            } else if (type === 'course') {
-                container.style.display = 'block';
-                courses.forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c.id;
-                    opt.text = c.title;
-                    select.appendChild(opt);
-                });
-            }
-        }
-        // Initialize on load
-        document.addEventListener('DOMContentLoaded', toggleTargetSelect);
-    </script>
-
-    <script>
         function dashboardHandler() {
             return {
                 chartInstance: null,
@@ -707,13 +672,14 @@
                         if (data.labels && data.data) {
                             this.chartInstance.updateOptions({
                                 xaxis: {
-                                    categories: data.labels
-                                }
+                                    categories: data.labels,
+                                    type: 'category'
+                                },
+                                series: [{
+                                    name: 'Earnings',
+                                    data: data.data
+                                }]
                             });
-                            this.chartInstance.updateSeries([{
-                                name: 'Earnings',
-                                data: data.data
-                            }]);
                         }
                     } catch (error) {
                         console.error('Failed to fetch chart data:', error);
@@ -757,6 +723,7 @@
                         stroke: { curve: 'smooth', width: 3 },
                         xaxis: {
                             categories: @json($graphData['labels']),
+                            type: 'category',
                             labels: {
                                 show: !isMobile,
                                 style: { colors: '#555555', fontSize: '11px', fontWeight: 600 },
