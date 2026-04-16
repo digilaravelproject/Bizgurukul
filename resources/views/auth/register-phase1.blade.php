@@ -33,33 +33,39 @@
                 <div>
                     <label class="block text-xs font-bold text-mutedText uppercase tracking-widest mb-2">Email ID <span
                             class="text-red-500">*</span></label>
-                    <div class="relative">
-                        <input type="hidden" name="email" :value="email">
-                        <input id="email_real" type="email" x-show="!showMasked" x-model="email"
-                            @blur="if(email.length > 0) showMasked = true"
-                            @input.debounce.500ms="validateEmail(email); checkEmailMatch()" :readonly="isLocked"
-                            placeholder="name@example.com"
-                            class="w-full px-4 py-3.5 bg-navy/20 border border-primary/10 rounded-xl text-mainText placeholder-slate-500 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm"
-                            :class="{'opacity-75 cursor-not-allowed': isLocked}">
+                    <div class="relative group">
+                        <input type="hidden" name="email" x-model="email">
+                        
+                        {{-- Single Unified Input for better UI stability --}}
+                        <input :type="(showMasked && isLocked) ? 'text' : 'email'" 
+                               :value="showMasked ? maskedEmailDisplay : email"
+                               @input="email = $event.target.value; validateEmail(email); checkEmailMatch()"
+                               @focus="if(!isLocked) showMasked = false"
+                               @blur="if(email.length > 0) showMasked = true"
+                               :readonly="isLocked"
+                               placeholder="name@example.com"
+                               class="w-full px-4 py-3.5 bg-navy/20 border border-primary/10 rounded-xl text-mainText placeholder-slate-500 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm"
+                               :class="{'opacity-75 cursor-not-allowed bg-navy/10': isLocked, 'border-red-500/50 ring-4 ring-red-500/10': emailError}">
 
-                        <input id="email_display" type="text" x-show="showMasked" :value="maskedEmailDisplay"
-                            @focus="if(!isLocked) showMasked = false" :readonly="true" placeholder="name@example.com"
-                            class="w-full px-4 py-3.5 bg-navy/20 border border-primary/10 rounded-xl text-mainText placeholder-slate-500 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm cursor-pointer"
-                            :class="{'opacity-75 cursor-not-allowed': isLocked}">
-
-                        <div class="absolute inset-y-0 right-3 flex items-center" x-show="isLocked">
+                        <div class="absolute inset-y-0 right-3 flex items-center" x-show="isLocked" x-cloak>
                             <button type="button"
-                                @click="isLocked = false; showMasked = false; $nextTick(() => document.getElementById('email_real').focus())"
-                                class="text-[10px] uppercase font-black bg-primary/10 text-primary px-2.5 py-1.5 rounded-lg hover:bg-primary/20 transition-all">
+                                @click="isLocked = false; showMasked = false; $nextTick(() => $el.closest('.relative').querySelector('input').focus())"
+                                class="text-[10px] uppercase font-black bg-primary/10 text-primary px-3 py-1.5 rounded-lg hover:bg-primary hover:text-white transition-all duration-300 shadow-sm shadow-primary/20">
                                 Change
                             </button>
                         </div>
                     </div>
                     <template x-if="emailError">
-                        <p class="text-[10px] text-red-500 font-bold mt-1.5" x-text="emailError"></p>
+                        <p class="text-[10px] text-red-500 font-bold mt-1.5 flex items-center" x-cloak>
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                            <span x-text="emailError"></span>
+                        </p>
                     </template>
                     <x-input-error :messages="$errors->get('email')" class="mt-1" />
                 </div>
+
 
                 <div>
                     <label for="email_confirmation"
@@ -201,8 +207,13 @@
         </div>
 
         <button type="submit" :disabled="loading || isFormInvalid()"
-            class="w-full mt-8 flex justify-center items-center py-4 px-4 rounded-2xl text-white text-lg font-black bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-all duration-300 shadow-xl shadow-primary/20 transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider">
-            <span x-show="!loading">Next: Select Product</span>
+            class="w-full mt-8 flex justify-center items-center py-4 px-4 rounded-2xl text-white text-base font-black bg-gradient-to-br from-primary via-primary to-secondary hover:shadow-2xl hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-300 transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none uppercase tracking-wider group">
+            <span x-show="!loading" class="flex items-center">
+                Next: Select Product
+                <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-cloak>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+            </span>
             <span x-show="loading" x-cloak class="flex items-center">
                 <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
                     viewBox="0 0 24 24">
@@ -218,7 +229,7 @@
 
     <!-- Footer Links & Copyright -->
     <div class="mt-8 space-y-4 text-center">
-        <p class="text-sm text-mutedText font-medium">
+        <p class="text-[11px] text-mutedText font-bold uppercase tracking-wider">
             Already have an account?
             <a href="{{ route('login') }}"
                 class="font-black text-primary hover:text-secondary transition-colors underline decoration-primary/20 underline-offset-4">Log

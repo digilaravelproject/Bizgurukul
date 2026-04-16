@@ -30,6 +30,9 @@
             'withdrawal_requested'    => ['icon' => 'fa-money-bill-wave',   'color' => 'text-yellow-400',  'bg' => 'bg-yellow-400/10'],
             'withdrawal_approved'     => ['icon' => 'fa-check-double',      'color' => 'text-green-400',   'bg' => 'bg-green-400/10'],
             'admin_notification'      => ['icon' => 'fa-bell',              'color' => 'text-indigo-400',  'bg' => 'bg-indigo-400/10'],
+            'contact_user'            => ['icon' => 'fa-paper-plane',       'color' => 'text-blue-400',    'bg' => 'bg-blue-400/10'],
+            'contact_admin'           => ['icon' => 'fa-comment-alt',       'color' => 'text-orange-400',  'bg' => 'bg-orange-400/10'],
+            'contact_reply'           => ['icon' => 'fa-reply-all',         'color' => 'text-cyan-400',    'bg' => 'bg-cyan-400/10'],
         ];
         $meta = $icons[$template->key] ?? ['icon' => 'fa-envelope', 'color' => 'text-primary', 'bg' => 'bg-primary/10'];
     @endphp

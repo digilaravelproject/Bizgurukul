@@ -108,6 +108,13 @@ class EmailTemplateSeeder extends Seeder
                 'variables' => ['user_name', 'user_email', 'subject', 'message', 'site_name'],
                 'body' => $this->contactAdmin(),
             ],
+            [
+                'key' => 'contact_reply',
+                'name' => 'Contact Inquiry Reply (Admin to User)',
+                'subject' => 'Re: {{subject}} — {{site_name}} Support',
+                'variables' => ['user_name', 'reply_message', 'site_name', 'subject'],
+                'body' => $this->contactReply(),
+            ],
         ];
 
         foreach ($templates as $template) {
@@ -322,6 +329,19 @@ HTML;
   <p style="margin:0; border-top:1px solid #e2e8f0; padding-top:12px; margin-top:12px;"><strong>Message:</strong><br>{{message}}</p>
 </div>
 <p>Please log in to the admin panel to reply to this message.</p>
+HTML;
+    }
+
+    private function contactReply(): string
+    {
+        return <<<HTML
+<p>Hi <strong>{{user_name}}</strong>,</p>
+<p>Thank you for your patience. This is a follow-up response regarding your inquiry: <strong>"{{subject}}"</strong>.</p>
+<div style="background:#f8fafc; border-left:4px solid #6366f1; border-radius:8px; padding:20px; margin:24px 0;">
+  <p style="margin:0; color:#334155; line-height:1.6;">{{reply_message}}</p>
+</div>
+<p>We hope this addresses your concerns. If you have any further questions, simply reply to this email or visit our website.</p>
+<p>Best regards,<br><strong>The {{site_name}} Support Team</strong></p>
 HTML;
     }
 }
