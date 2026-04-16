@@ -43,7 +43,7 @@
 
             {{-- Compact Progress --}}
             @php
-                $allVideos = $videos->sortBy('order_column');
+                $allVideos = $categories->pluck('videos')->flatten();
                 $totalCount = $allVideos->count();
                 $_progress = $progressData ?? [];
                 $completedCount = $allVideos->filter(fn($v) => isset($_progress[$v->id]) && $_progress[$v->id]['completed'])->count();
@@ -108,8 +108,8 @@
                             <div class="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-10">
                                 <div class="space-y-3">
                                     <div class="flex items-center gap-3">
-                                        <span class="px-4 py-1 rounded-full text-[9px] font-black text-white bg-primary uppercase tracking-widest category-badge-{{ $selected->category }} shadow-lg shadow-primary/20">
-                                            {{ $selected->category }}
+                                        <span class="px-4 py-1 rounded-full text-[9px] font-black text-white bg-primary uppercase tracking-widest shadow-lg shadow-primary/20">
+                                            {{ optional($selected->category_rel)->name }}
                                         </span>
                                         @php $_curProg = $progressData ?? []; @endphp
                                         @if(isset($_curProg[$selected->id]) && $_curProg[$selected->id]['completed'])
@@ -168,14 +168,9 @@
                     </div>
 
                     <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-8">
-                        @php
-                            $categoryOrder = ['foundation','growth','scale'];
-                            $grouped = $videos->groupBy('category');
-                        @endphp
-
-                        @foreach($categoryOrder as $cat)
+                        @foreach($categories as $category)
                             @php
-                                $catVideos = $grouped->get($cat, collect());
+                                $catVideos = $category->videos;
                                 if($catVideos->isEmpty()) continue;
                                 $_prog = $progressData ?? [];
                                 $catCompleted = $catVideos->filter(fn($v) => isset($_prog[$v->id]) && $_prog[$v->id]['completed'])->count();
@@ -184,12 +179,12 @@
 
                             <div class="space-y-4">
                                 <div class="flex items-center justify-between px-2 mb-1">
-                                    <h4 class="text-[9px] font-black text-mutedText uppercase tracking-[0.2em] opacity-40">{{ $cat }}</h4>
+                                    <h4 class="text-[9px] font-black text-mutedText uppercase tracking-[0.2em] opacity-40">{{ $category->name }}</h4>
                                     <span class="text-[8px] font-black text-primary/60 uppercase tracking-widest">{{ $catPerc }}% Done</span>
                                 </div>
 
                                 <div class="space-y-2">
-                                    @foreach($catVideos->sortBy('order_column') as $v)
+                                    @foreach($catVideos as $v)
                                         @php
                                             $isActive = isset($selected) && $selected->id == $v->id;
                                             $_inProg = $progressData ?? [];
@@ -213,7 +208,7 @@
                                                     {{ $v->title }}
                                                 </h5>
                                                 <span class="text-[8px] font-bold text-mutedText uppercase tracking-widest opacity-40 italic">
-                                                    {{ $v->category }} Module
+                                                    {{ $category->name }} Module
                                                 </span>
                                             </div>
 

@@ -160,6 +160,10 @@ Route::middleware(['auth'])
                 ->name('resources');
             Route::post('/beginner-guide/store', [\App\Http\Controllers\Admin\BeginnerGuideController::class, 'store'])
                 ->name('beginner-guide.store');
+            Route::post('/beginner-guide/category/store', [\App\Http\Controllers\Admin\BeginnerGuideController::class, 'storeCategory'])
+                ->name('beginner-guide.category.store');
+            Route::delete('/beginner-guide/category/{id}', [\App\Http\Controllers\Admin\BeginnerGuideController::class, 'destroyCategory'])
+                ->name('beginner-guide.category.destroy');
             // legacy upload route kept for compatibility
             Route::post('/beginner-guide/upload', [\App\Http\Controllers\Admin\BeginnerGuideController::class, 'store'])
                 ->name('beginner-guide.upload');

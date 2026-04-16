@@ -8,7 +8,8 @@ class BeginnerGuideVideo extends Model
 {
     protected $fillable = [
         'title',
-        'category',
+        'category_id',
+        'category', // keeping for compatibility until logic updated
         'description',
         'resources',
         'video_path',
@@ -16,6 +17,11 @@ class BeginnerGuideVideo extends Model
         'bunny_embed_url',
         'order_column'
     ];
+
+    public function category_rel()
+    {
+        return $this->belongsTo(BeginnerGuideCategory::class, 'category_id');
+    }
 
     // Accessor for video URL
     public function getVideoUrlAttribute()

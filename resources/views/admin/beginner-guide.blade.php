@@ -50,10 +50,10 @@
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="space-y-1">
                                     <label class="text-[10px] font-black text-mutedText uppercase tracking-[0.15em] ml-1">Category</label>
-                                    <select name="category" required class="w-full px-4 py-3 rounded-xl border-gray-200 text-sm font-bold bg-gray-50 focus:border-primary outline-none">
-                                        <option value="foundation" {{ old('category') == 'foundation' ? 'selected' : '' }}>Foundation</option>
-                                        <option value="growth" {{ old('category') == 'growth' ? 'selected' : '' }}>Growth</option>
-                                        <option value="scale" {{ old('category') == 'scale' ? 'selected' : '' }}>Scale</option>
+                                    <select name="category_id" required class="w-full px-4 py-3 rounded-xl border-gray-200 text-sm font-bold bg-gray-50 focus:border-primary outline-none">
+                                        @foreach($categories as $category)
+                                            <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 <div class="space-y-1">
@@ -62,7 +62,6 @@
                                         class="w-full px-4 py-3 rounded-xl border-gray-200 text-sm font-bold focus:border-primary outline-none" />
                                 </div>
                             </div>
-
                             <div class="p-4 rounded-2xl bg-primary/5 border border-primary/10 space-y-4">
                                 <div class="flex items-center gap-2 mb-1">
                                     <i class="fas fa-external-link-alt text-primary text-xs"></i>
@@ -98,6 +97,26 @@
                                 <i class="fas fa-save mr-2"></i> Deploy Module
                             </button>
                         </form>
+
+                        {{-- Add Category Form --}}
+                        <div class="p-6 border-t border-gray-100 bg-gray-50/20">
+                            <div class="flex items-center gap-2 mb-4">
+                                <i class="fas fa-folder-plus text-primary text-xs"></i>
+                                <h3 class="text-[10px] font-black text-mainText uppercase tracking-widest">Create Roadmap Category</h3>
+                            </div>
+                            <form action="{{ route('admin.beginner-guide.category.store') }}" method="POST" class="space-y-3">
+                                @csrf
+                                <input type="text" name="name" placeholder="Category Name (e.g. Mastery)" required
+                                    class="w-full px-4 py-2 text-xs font-bold rounded-lg border-gray-200 focus:border-primary outline-none" />
+                                <div class="flex gap-2">
+                                    <input type="number" name="order_column" placeholder="Order" value="0"
+                                        class="w-20 px-3 py-2 text-xs font-bold rounded-lg border-gray-200 focus:border-primary outline-none" />
+                                    <button type="submit" class="flex-1 bg-navy text-white text-[10px] font-black uppercase rounded-lg hover:bg-black transition-colors">
+                                        Add Category
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
 
@@ -111,15 +130,24 @@
 
                         <div class="divide-y divide-gray-50">
                             @php $found = false; @endphp
-                            @foreach(['foundation', 'growth', 'scale'] as $cat)
-                                @php $catVideos = $videos->where('category', $cat)->sortBy('order_column'); @endphp
-                                @if($catVideos->count() > 0)
+                            @foreach($categories as $category)
+                                @php $catVideos = $category->videos; @endphp
+                                @if($catVideos->count() > 0 || true) {{-- show all categories --}}
                                     @php $found = true; @endphp
                                     <div class="p-6">
                                         <div class="flex items-center gap-3 mb-4">
                                             <div class="px-3 py-1 rounded-full bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest">
-                                                {{ $cat }}
+                                                {{ $category->name }}
                                             </div>
+                                            @if($catVideos->count() == 0)
+                                                <form action="{{ route('admin.beginner-guide.category.destroy', $category->id) }}" method="POST" onsubmit="return confirm('Remove empty category?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-[9px] text-rose-500 hover:text-rose-700 font-bold uppercase tracking-wider">
+                                                        <i class="fas fa-trash-alt mr-1"></i> Delete
+                                                    </button>
+                                                </form>
+                                            @endif
                                             <div class="h-px flex-1 bg-gray-50"></div>
                                         </div>
                                         

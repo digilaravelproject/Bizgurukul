@@ -159,19 +159,25 @@ class StudentController extends Controller
      */
     public function beginnerGuide(Request $request)
     {
-        $videos = \App\Models\BeginnerGuideVideo::orderBy('category')->orderBy('order_column')->get();
+        $categories = \App\Models\BeginnerGuideCategory::orderBy('order_column')
+            ->with(['videos' => function($q) {
+                $q->orderBy('order_column');
+            }])
+            ->get();
+
+        $allVideos = \App\Models\BeginnerGuideVideo::all();
         $progressData = session('beginner_guide.progress', []);
 
-        // determine selected video by query param, default to first available
         $selectedId = $request->query('video');
+        $selected = null;
         if ($selectedId) {
-            $selected = $videos->firstWhere('id', $selectedId);
+            $selected = $allVideos->firstWhere('id', $selectedId);
         }
         if (empty($selected)) {
-            $selected = $videos->first();
+            $selected = $allVideos->sortBy('order_column')->first();
         }
 
-        return view('users.beginner-guide', compact('videos', 'selected', 'progressData'));
+        return view('users.beginner-guide', compact('categories', 'selected', 'progressData'));
     }
 
     /**
@@ -180,7 +186,7 @@ class StudentController extends Controller
     public function resources(Request $request)
     {
         $productKnowledge = \App\Models\CourseResource::orderBy('created_at', 'desc')->get();
-        $beginnersGuide = \App\Models\BeginnerGuideVideo::orderBy('category')->orderBy('order_column')->get();
+        $beginnersGuide = \App\Models\BeginnerGuideVideo::with('category_rel')->orderBy('order_column')->get();
         
         // Fetch dynamic categories with their resources
         $resourceCategories = \App\Models\ResourceCategory::active()

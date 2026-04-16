@@ -72,7 +72,7 @@
                         <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 overflow-hidden group flex flex-col h-full">
                             <div class="h-40 bg-gradient-to-b from-blue-400 to-blue-600 opacity-90 flex items-center justify-center relative overflow-hidden">
                                 <div class="absolute inset-0 bg-white/10 transform -rotate-12 scale-150"></div>
-                                <div class="absolute top-3 left-3 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 border border-white/30 text-white text-xs font-bold uppercase tracking-wider">{{ $video->category }}</div>
+                                <div class="absolute top-3 left-3 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 border border-white/30 text-white text-xs font-bold uppercase tracking-wider">{{ optional($video->category_rel)->name }}</div>
                                 <div class="relative w-20 h-20 bg-white rounded-2xl shadow-inner flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300"><i class="fas fa-play text-4xl text-blue-500 ml-1"></i></div>
                             </div>
                             <div class="p-5 flex-1 flex flex-col justify-between bg-white text-center border-t border-gray-100">
