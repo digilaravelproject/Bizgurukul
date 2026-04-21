@@ -1,261 +1,370 @@
 @extends('layouts.admin')
-@section('title', 'KYC Verifications')
+@section('title', 'KYC Verification Management')
 
 @section('content')
     <div x-data="kycManager()" class="space-y-8 font-sans text-mainText">
 
         {{-- Header Section --}}
-        <div class="flex flex-col md:flex-row justify-between items-end gap-4">
+        <div class="flex flex-col md:flex-row justify-between items-end gap-4 px-2">
             <div>
-                <h1 class="text-3xl font-extrabold tracking-tight text-mainText">KYC Verifications</h1>
-                <p class="text-mutedText mt-1 text-sm font-medium">Review and approve user identity documents.</p>
+                <h1 class="text-3xl font-extrabold tracking-tight text-mainText uppercase">KYC Center</h1>
+                <p class="text-mutedText mt-1 text-sm font-semibold tracking-wide">High-priority identity verification and validation.</p>
             </div>
-        </div>
 
-        {{-- Request Table --}}
-        <div class="bg-surface rounded-2xl shadow-sm border border-primary/10 overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-primary/5 text-[11px] uppercase font-black text-primary tracking-widest border-b border-primary/5">
-                        <tr>
-                            <th class="px-6 py-5">User Details</th>
-                            <th class="px-6 py-5">Submitted Date</th>
-                            <th class="px-6 py-5">Status</th>
-                            <th class="px-6 py-5 text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-primary/5">
-                        @forelse($pendingKyc as $user)
-                            <tr class="hover:bg-primary/5 transition-colors group">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-navy/30 flex items-center justify-center text-primary font-black border border-primary/10">
-                                            {{ substr($user->name, 0, 1) }}
-                                        </div>
-                                        <div>
-                                            <p class="font-bold text-mainText">{{ $user->name }}</p>
-                                            <p class="text-[10px] text-mutedText font-medium tracking-tight">{{ $user->email }}</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 font-bold text-mutedText">
-                                    {{ $user->kyc->updated_at->format('d M, Y') }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border
-                                        {{ $user->kyc->status == 'pending' ? 'bg-amber-100 text-amber-700 border-amber-200' : '' }}
-                                        {{ $user->kyc->status == 'verified' ? 'bg-primary/10 text-primary border-primary/20' : '' }}
-                                        {{ $user->kyc->status == 'rejected' ? 'bg-secondary/10 text-secondary border-secondary/20' : '' }}">
-                                        {{ $user->kyc->status }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <button @click="openModal({{ $user->id }}, '{{ addslashes($user->name) }}', '{{ $user->dob ? $user->dob->format('d M, Y') : 'N/A' }}', '{{ $user->kyc->pan_name }}', '{{ asset('storage/' . $user->kyc->document_path) }}', '{{ pathinfo($user->kyc->document_path, PATHINFO_EXTENSION) }}')"
-                                        class="bg-surface border border-primary/20 text-primary px-4 py-2 rounded-xl font-black hover:bg-primary hover:text-white transition-all shadow-sm text-[10px] uppercase tracking-widest">
-                                        Review
-                                    </button>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4" class="px-6 py-10 text-center text-mutedText font-bold italic">No pending KYC requests found.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            @if($pendingKyc->hasPages())
-                <div class="p-4 bg-primary/5 border-t border-primary/5">
-                    {{ $pendingKyc->links() }}
+            <div class="flex bg-white/50 backdrop-blur-sm p-1 rounded-2xl border border-primary/10 shadow-sm">
+                <div class="flex items-center gap-1 px-4 py-2 bg-primary/5 rounded-xl border border-primary/5">
+                    <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                    <span class="text-[11px] font-black uppercase text-primary tracking-tighter">
+                        {{ $pendingKyc->count() }} PENDING REQUESTS
+                    </span>
                 </div>
-            @endif
-        </div>
-
-        {{-- History Table (Optional, for recent actions) --}}
-        @if($recentKyc->count() > 0)
-        <div class="pt-8">
-            <h2 class="text-xl font-black text-mainText mb-4">Recent Actions</h2>
-            <div class="bg-surface rounded-2xl shadow-sm border border-primary/10 overflow-hidden opacity-80">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-navy/5 text-[10px] uppercase font-black text-mutedText tracking-widest border-b border-primary/5">
-                        <tr>
-                            <th class="px-6 py-4">User</th>
-                            <th class="px-6 py-4">Decision</th>
-                            <th class="px-6 py-4">Date</th>
-                            <th class="px-6 py-4">Note</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-primary/5">
-                        @foreach($recentKyc as $user)
-                            <tr>
-                                <td class="px-6 py-3 font-bold text-mainText">{{ $user->name }}</td>
-                                <td class="px-6 py-3">
-                                    <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider
-                                        {{ $user->kyc->status == 'verified' ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50' }}">
-                                        {{ $user->kyc->status }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-3 text-xs text-mutedText">{{ $user->kyc->updated_at->format('d M, H:i') }}</td>
-                                <td class="px-6 py-3 text-xs text-mutedText italic">{{ Str::limit($user->kyc->admin_note, 30) }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
             </div>
         </div>
-        @endif
 
-        {{-- MODERN REVIEW MODAL --}}
-        <div x-show="showModal"
-             x-cloak
-             class="fixed inset-0 z-50 overflow-y-auto"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100">
+        {{-- Pending Verifications Section --}}
+        <section class="space-y-4">
+            <div class="flex items-center justify-between px-2">
+                <h2 class="text-sm font-black uppercase tracking-[2px] text-primary flex items-center gap-2">
+                    <i class="fas fa-clock"></i>
+                    Pending Approval
+                </h2>
+            </div>
+            
+            <div class="bg-surface rounded-[32px] shadow-sm border border-primary/10 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm border-collapse">
+                        <thead class="bg-primary/5 text-[11px] uppercase font-black text-primary tracking-[1px] border-b border-primary/10">
+                            <tr>
+                                <th class="px-8 py-6">Identity Profile</th>
+                                <th class="px-8 py-6">ID Document Name</th>
+                                <th class="px-8 py-6">Date Submitted</th>
+                                <th class="px-8 py-6 text-right">Verification</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-primary/5">
+                            @forelse($pendingKyc as $user)
+                                <tr class="hover:bg-primary/5 transition-all group">
+                                    <td class="px-8 py-5">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-12 h-12 rounded-2xl bg-navy text-primary flex items-center justify-center font-black text-lg border border-primary/10 shadow-sm group-hover:scale-110 transition-transform">
+                                                {{ substr($user->name, 0, 1) }}
+                                            </div>
+                                            <div>
+                                                <p class="font-black text-mainText text-base">{{ $user->name }}</p>
+                                                <p class="text-[11px] font-bold text-mutedText/70 tracking-tight">{{ $user->email }}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <div class="flex flex-col">
+                                            <span class="text-xs font-black text-mainText uppercase bg-navy/30 px-3 py-1 rounded-lg inline-block w-fit">
+                                                {{ $user->kyc->pan_name }}
+                                            </span>
+                                            <span class="text-[10px] text-mutedText font-bold mt-1 px-1">Legal Name Match Required</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <div class="flex flex-col">
+                                            <span class="text-xs font-black text-mainText">{{ $user->kyc->created_at->format('d M, Y') }}</span>
+                                            <span class="text-[10px] text-mutedText font-bold">{{ $user->kyc->created_at->format('h:i A') }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-5 text-right">
+                                        <button @click="openModal({{ json_encode($user) }}, '{{ asset('storage/' . $user->kyc->document_path) }}', '{{ pathinfo($user->kyc->document_path, PATHINFO_EXTENSION) }}')"
+                                            class="brand-gradient text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[2px] shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:scale-[1.03] transition-all">
+                                            Start Review
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="px-8 py-16 text-center">
+                                        <div class="flex flex-col items-center gap-3">
+                                            <div class="w-16 h-16 bg-navy/20 rounded-full flex items-center justify-center text-mutedText/30">
+                                                <i class="fas fa-check-double text-2xl"></i>
+                                            </div>
+                                            <p class="text-mutedText font-black uppercase tracking-widest text-xs">All clear! No pending KYC requests.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
 
-            <div class="fixed inset-0 bg-navy/80 backdrop-blur-md"></div>
+        {{-- Verification History --}}
+        <section class="space-y-4">
+            <h2 class="text-sm font-black uppercase tracking-[2px] text-mutedText/60 px-2 flex items-center gap-2">
+                <i class="fas fa-history"></i>
+                Review Archive
+            </h2>
+            <div class="bg-surface rounded-[32px] shadow-sm border border-navy/5 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm border-collapse">
+                        <thead class="bg-navy/10 text-[10px] uppercase font-black text-mutedText tracking-[1px]">
+                            <tr>
+                                <th class="px-8 py-5">User Account</th>
+                                <th class="px-8 py-5">ID Ref</th>
+                                <th class="px-8 py-5">Final Status</th>
+                                <th class="px-8 py-5 text-right">View Archive</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-navy/5">
+                            @foreach($recentKyc as $user)
+                                <tr class="hover:bg-navy/5 transition-colors">
+                                    <td class="px-8 py-4">
+                                        <p class="font-bold text-mainText text-sm">{{ $user->name }}</p>
+                                        <p class="text-[10px] text-mutedText/60 font-bold uppercase">{{ $user->email }}</p>
+                                    </td>
+                                    <td class="px-8 py-4">
+                                        <p class="text-[10px] font-black text-mainText uppercase bg-white border border-navy/10 px-2 py-0.5 rounded shadow-sm w-fit">
+                                            {{ $user->kyc->pan_name }}
+                                        </p>
+                                    </td>
+                                    <td class="px-8 py-4">
+                                        @if ($user->kyc->status === 'verified')
+                                            <span class="bg-emerald-50 text-emerald-600 px-4 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-widest border border-emerald-100 shadow-sm shadow-emerald-500/5">Verified</span>
+                                        @else
+                                            <span class="bg-secondary/5 text-secondary px-4 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-widest border border-secondary/10 shadow-sm shadow-secondary/5">Rejected</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-8 py-4 text-right">
+                                        <button @click="openModal({{ json_encode($user) }}, '{{ asset('storage/' . $user->kyc->document_path) }}', '{{ pathinfo($user->kyc->document_path, PATHINFO_EXTENSION) }}')"
+                                            class="bg-navy text-mainText border border-navy/10 px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-navy/80 hover:text-white transition-all shadow-sm">
+                                            View Details
+                                        </button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
 
-            <div class="flex min-h-full items-center justify-center p-4">
-                <div @click.away="showModal = false"
-                    class="bg-surface w-full max-w-6xl h-[85vh] rounded-3xl flex flex-col md:flex-row overflow-hidden shadow-2xl relative border border-primary/10">
-
-                    <button @click="showModal = false"
-                        class="absolute top-4 right-4 z-10 bg-white/10 hover:bg-secondary text-mainText md:text-white p-2 rounded-full transition-all">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        {{-- Verification Reality View Modal --}}
+        <div x-show="modalOpen" x-cloak class="fixed inset-0 z-[100] overflow-hidden">
+            {{-- Backdrop --}}
+            <div class="fixed inset-0 bg-mainText/90 backdrop-blur-xl transition-opacity animate-fadeIn" @click="modalOpen = false"></div>
+            
+            {{-- Modal Content --}}
+            <div class="flex min-h-screen items-center justify-center p-4 md:p-8 relative">
+                <div @click.away="modalOpen = false" 
+                    class="bg-surface w-full max-w-[1400px] h-[90vh] rounded-[48px] flex flex-col md:flex-row overflow-hidden shadow-2xl border border-white/10 animate-scaleUp">
+                    
+                    {{-- Exit Trigger --}}
+                    <button @click="modalOpen = false" class="fixed top-12 right-12 z-[110] bg-white text-mainText hover:bg-secondary hover:text-white w-12 h-12 rounded-full flex items-center justify-center shadow-2xl transition-all hover:rotate-90">
+                        <i class="fas fa-times text-xl"></i>
                     </button>
 
-                    {{-- LEFT SIDE: Doc --}}
-                    <div class="w-full md:w-1/2 bg-black flex flex-col items-center justify-center relative p-8">
-                        <h4 class="absolute top-6 left-6 text-primary text-[10px] font-black uppercase tracking-[2px]">ID Proof Document</h4>
+                    {{-- Left View: Document Evidence --}}
+                    <div class="w-full md:w-3/5 bg-black flex flex-col relative p-8 md:p-12">
+                        <div class="absolute top-8 left-8 z-10 flex items-center gap-3">
+                            <span class="px-3 py-1 bg-primary rounded-lg text-[9px] font-black text-white uppercase tracking-widest">Document Evidence</span>
+                            <span class="text-white/40 text-[9px] font-bold uppercase tracking-widest" x-text="'Format: ' + kycData.ext"></span>
+                        </div>
 
-                        <div class="w-full h-full flex items-center justify-center rounded-2xl overflow-hidden border border-white/5 bg-navy/20">
-                            <template x-if="data.ext === 'pdf'">
-                                <iframe :src="data.url" class="w-full h-full border-0"></iframe>
+                        <div class="flex-1 w-full rounded-[32px] overflow-hidden bg-navy/10 border border-white/5 shadow-inner group relative">
+                            <template x-if="kycData.ext === 'pdf'">
+                                <iframe :src="kycData.docUrl" class="w-full h-full border-0"></iframe>
                             </template>
-                            <template x-if="data.ext !== 'pdf'">
-                                <img :src="data.url" class="max-w-full max-h-full object-contain">
+                            <template x-if="kycData.ext !== 'pdf'">
+                                <div class="w-full h-full flex items-center justify-center">
+                                    <img :src="kycData.docUrl" class="max-w-full max-h-full object-contain cursor-zoom-in transition-transform duration-500 hover:scale-110">
+                                </div>
                             </template>
                         </div>
 
-                        <a :href="data.url" target="_blank"
-                            class="mt-6 brand-gradient text-white px-6 py-3 rounded-full text-xs font-black flex items-center gap-2 uppercase tracking-widest">
-                            <i class="fas fa-expand"></i> View Full Resolution
-                        </a>
+                        <div class="mt-8 flex justify-between items-center px-4">
+                            <a :href="kycData.docUrl" target="_blank" class="text-white hover:text-primary text-[10px] font-black uppercase tracking-[2px] flex items-center gap-2 transition-colors">
+                                <i class="fas fa-external-link-alt"></i> Open Full Quality Original
+                            </a>
+                            <div class="flex gap-2">
+                                <span class="w-2 h-2 rounded-full bg-white/20"></span>
+                                <span class="w-2 h-2 rounded-full bg-white/20"></span>
+                                <span class="w-2 h-2 rounded-full bg-white/20"></span>
+                            </div>
+                        </div>
                     </div>
 
-                    {{-- RIGHT SIDE: Check --}}
-                    <div class="w-full md:w-1/2 flex flex-col bg-surface">
-                        <div class="p-8 border-b border-primary/5">
-                            <h3 class="text-2xl font-black text-mainText">Identity Verification</h3>
-                            <p class="text-sm text-mutedText">Compare system profile with submitted document.</p>
+                    {{-- Right View: Decision Matrix --}}
+                    <div class="w-full md:w-2/5 flex flex-col bg-surface border-l border-navy/5 overflow-hidden">
+                        {{-- Identity Title --}}
+                        <div class="p-10 border-b border-navy/5 bg-navy/5">
+                            <h3 class="text-3xl font-black text-mainText leading-none" x-text="kycData.user?.name"></h3>
+                            <div class="flex items-center gap-2 mt-3">
+                                <span class="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/5 px-2 py-0.5 rounded border border-primary/10" x-text="'UID: #' + kycData.user?.id"></span>
+                                <span class="text-[10px] font-black text-mutedText uppercase tracking-widest">Pending Verification</span>
+                            </div>
                         </div>
 
-                        <div class="p-8 flex-1 overflow-y-auto space-y-8">
-                            <div class="grid grid-cols-2 gap-8">
-                                <div class="space-y-5">
-                                    <h4 class="text-[10px] font-black text-mutedText uppercase tracking-widest border-b border-primary/5 pb-2">Profile Data</h4>
+                        {{-- Metadata Scroll --}}
+                        <div class="p-10 flex-1 overflow-y-auto space-y-10">
+                            {{-- Section 1: Official Data --}}
+                            <div class="space-y-6">
+                                <h4 class="text-[11px] font-bold text-mutedText uppercase tracking-[3px] flex items-center gap-2">
+                                    <div class="w-5 h-[1px] bg-mutedText/30"></div>
+                                    System Profile
+                                </h4>
+                                <div class="grid grid-cols-2 gap-8">
                                     <div>
-                                        <p class="text-[10px] text-mutedText uppercase font-bold mb-1">Name</p>
-                                        <p class="text-base font-black text-mainText" x-text="data.system_name"></p>
+                                        <label class="text-[9px] font-black text-mutedText/50 uppercase tracking-widest block mb-1">Email Authority</label>
+                                        <p class="font-black text-mainText text-xs truncate" x-text="kycData.user?.email"></p>
                                     </div>
                                     <div>
-                                        <p class="text-[10px] text-mutedText uppercase font-bold mb-1">DOB</p>
-                                        <p class="text-sm font-bold text-mainText" x-text="data.system_dob"></p>
+                                        <label class="text-[9px] font-black text-mutedText/50 uppercase tracking-widest block mb-1">Mobile Line</label>
+                                        <p class="font-black text-mainText text-xs" x-text="kycData.user?.mobile ? kycData.user.mobile : 'N/A'"></p>
                                     </div>
-                                </div>
-                                <div class="space-y-5">
-                                    <h4 class="text-[10px] font-black text-primary uppercase tracking-widest border-b border-primary/5 pb-2">Submitted Proof</h4>
-                                    <div>
-                                        <p class="text-[10px] text-primary uppercase font-bold mb-1">Name on ID</p>
-                                        <p class="text-base font-black text-primary" x-text="data.id_name"></p>
+                                    <div class="col-span-2 p-5 bg-navy/5 border border-navy/10 rounded-3xl">
+                                        <label class="text-[9px] font-black text-mutedText/50 uppercase tracking-widest block mb-2 text-center">Referral Source (Sponsor)</label>
+                                        <div class="flex items-center justify-center gap-4">
+                                            <div class="w-10 h-10 rounded-full bg-mainText text-white flex items-center justify-center font-black">
+                                                S
+                                            </div>
+                                            <div>
+                                                <p class="text-xs font-black text-mainText uppercase" x-text="kycData.sponsor?.name || 'Self-Registered'"></p>
+                                                <p class="text-[9px] font-bold text-mutedText" x-text="kycData.sponsor?.email || 'N/A'"></p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div x-show="data.system_name && data.id_name && data.system_name.toLowerCase() !== data.id_name.toLowerCase()"
-                                class="bg-secondary/5 border border-secondary/20 p-5 rounded-2xl flex gap-4 animate-pulse">
-                                <i class="fas fa-exclamation-triangle text-secondary text-2xl"></i>
-                                <div>
-                                    <p class="text-sm text-secondary font-black uppercase">Name Conflict Detected</p>
-                                    <p class="text-xs text-mutedText mt-1">Names differ between profile and ID. Verification might fail.</p>
+                            {{-- Section 2: Submitted Identification --}}
+                            <div class="space-y-6">
+                                <h4 class="text-[11px] font-bold text-emerald-600 uppercase tracking-[3px] flex items-center gap-2">
+                                    <div class="w-5 h-[1px] bg-emerald-600/30"></div>
+                                    Official Evidence
+                                </h4>
+                                <div class="p-8 bg-emerald-50/50 border border-emerald-500/10 rounded-[32px] text-center group hover:bg-emerald-50 transition-all duration-300 transform hover:-translate-y-1">
+                                    <label class="text-[10px] font-bold text-emerald-600/70 uppercase tracking-widest block mb-2">Legal Identity Name</label>
+                                    <p class="text-4xl font-black text-emerald-700 tracking-tight leading-none group-hover:scale-105 transition-transform" x-text="kycData.user?.kyc?.pan_name"></p>
+                                    <p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest mt-4 opacity-50 italic">Verify spelling matches document exactly</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="p-8 bg-navy/10 border-t border-primary/5">
-                            <div class="space-y-4">
-                                <div class="flex gap-4" x-show="!showReject">
-                                    <button @click="confirmAction('approve')"
-                                        class="flex-1 brand-gradient text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 hover:opacity-90 flex justify-center items-center gap-2 uppercase tracking-widest text-xs">
-                                        Approve
-                                    </button>
-                                    <button @click="showReject = true"
-                                        class="flex-1 bg-surface border border-secondary/30 text-secondary py-4 rounded-2xl font-black hover:bg-secondary/5 uppercase tracking-widest text-xs">
-                                        Reject
-                                    </button>
-                                </div>
+                        {{-- Section 3: Final Action --}}
+                        <div class="p-10 bg-navy/10 border-t border-navy/5">
+                            <div x-show="!showRejectForm" class="flex gap-4 animate-fadeIn">
+                                <button @click="processApproval()" 
+                                    class="flex-1 brand-gradient text-white py-5 rounded-[24px] font-black text-[11px] uppercase tracking-[2px] shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all">
+                                    Approve Identification
+                                </button>
+                                <button @click="showRejectForm = true"
+                                    class="flex-1 bg-surface border-2 border-secondary/20 text-secondary py-5 rounded-[24px] font-black text-[11px] uppercase tracking-[2px] hover:bg-secondary/5 transition-all">
+                                    Reject Request
+                                </button>
+                            </div>
 
-                                <div x-show="showReject" x-transition class="space-y-4">
-                                    <textarea x-model="adminNote"
-                                        class="w-full border-primary/10 bg-white rounded-xl text-sm p-4 focus:ring-secondary focus:border-secondary font-medium"
-                                        rows="3" placeholder="Reason for rejection..."></textarea>
-                                    <div class="flex justify-end gap-3">
-                                        <button @click="showReject = false" class="px-4 py-2 text-xs font-bold text-mutedText uppercase tracking-widest">Cancel</button>
-                                        <button @click="confirmAction('reject')" class="px-6 py-2 bg-secondary text-white text-xs font-black rounded-xl shadow-lg shadow-secondary/20 uppercase tracking-widest">Confirm Reject</button>
-                                    </div>
+                            <div x-show="showRejectForm" x-transition class="space-y-4 animate-scaleUp">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h5 class="text-[10px] font-black text-secondary uppercase tracking-widest">Rejection Reason</h5>
+                                    <button @click="showRejectForm = false" class="text-[10px] font-bold text-mutedText hover:text-mainText">Cancel</button>
                                 </div>
+                                <textarea x-model="adminNote" 
+                                    class="w-full rounded-[24px] border-secondary/10 bg-white p-5 text-sm font-bold text-mainText focus:ring-secondary/20 focus:border-secondary transition-all" 
+                                    rows="4" 
+                                    placeholder="Provide a professional explanation for rejection..."></textarea>
+                                <button @click="processRejection()" 
+                                    class="w-full bg-secondary text-white py-5 rounded-[24px] font-black text-[11px] uppercase tracking-[2px] shadow-xl shadow-secondary/20 hover:bg-secondary/90 transition-all">
+                                    Confirm Formal Rejection
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 
     <script>
         function kycManager() {
             return {
-                showModal: false,
-                showReject: false,
+                modalOpen: false,
+                showRejectForm: false,
                 adminNote: '',
-                data: {},
+                kycData: {},
 
-                openModal(id, systemName, systemDob, idName, url, ext) {
-                    this.data = { id, system_name: systemName, system_dob: systemDob, id_name: idName, url, ext };
+                openModal(userData, docUrl, ext) {
+                    this.kycData = {
+                        user: userData,
+                        sponsor: userData.referrer || null,
+                        docUrl: docUrl,
+                        ext: ext.toLowerCase()
+                    };
                     this.adminNote = '';
-                    this.showReject = false;
-                    this.showModal = true;
+                    this.showRejectForm = false;
+                    this.modalOpen = true;
                 },
 
-                confirmAction(action) {
-                    if (action === 'reject' && !this.adminNote) {
-                        return Swal.fire('Error', 'Please provide a reason for rejection.', 'error');
-                    }
-
-                    const url = action === 'approve'
-                        ? `{{ route('admin.verifications.kyc.approve', ':id') }}`.replace(':id', this.data.id)
-                        : `{{ route('admin.verifications.kyc.reject', ':id') }}`.replace(':id', this.data.id);
-
+                processApproval() {
                     Swal.fire({
-                        title: 'Are you sure?',
-                        text: `You are about to ${action} this KYC request.`,
-                        icon: 'warning',
+                        title: '<span class="font-black text-mainText">APPROVE KYC?</span>',
+                        text: "This will officially verify the user's identity in the system.",
+                        icon: 'question',
                         showCancelButton: true,
-                        confirmButtonColor: action === 'approve' ? '#F7941D' : '#e11d48',
-                        confirmButtonText: 'Yes, proceed!'
+                        confirmButtonText: 'Yes, Verify Now',
+                        confirmButtonColor: '#F7941D',
+                        cancelButtonText: 'Discard',
+                        borderRadius: '24px',
+                        customClass: {
+                            title: 'font-sans',
+                            content: 'font-sans text-xs font-bold'
+                        }
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            axios.post(url, { admin_note: this.adminNote })
-                                .then(res => {
-                                    Swal.fire('Success', res.data.message, 'success').then(() => location.reload());
-                                })
-                                .catch(err => {
-                                    Swal.fire('Error', err.response.data.message || 'Something went wrong', 'error');
-                                });
+                            this.sendRequest('{{ route('admin.verifications.kyc.approve', ':id') }}'.replace(':id', this.kycData.user.id), 'approve');
                         }
                     });
+                },
+
+                processRejection() {
+                    if (!this.adminNote.trim()) {
+                        return Swal.fire({
+                            title: 'Note Required',
+                            text: 'Please provide a reason for the rejection.',
+                            icon: 'warning',
+                            borderRadius: '24px'
+                        });
+                    }
+                    this.sendRequest('{{ route('admin.verifications.kyc.reject', ':id') }}'.replace(':id', this.kycData.user.id), 'reject');
+                },
+
+                sendRequest(url, action) {
+                    Swal.showLoading();
+                    axios.post(url, { admin_note: this.adminNote })
+                        .then(response => {
+                            Swal.fire({
+                                title: 'Success',
+                                text: 'KYC status has been updated.',
+                                icon: 'success',
+                                borderRadius: '24px'
+                            }).then(() => location.reload());
+                        })
+                        .catch(error => {
+                            Swal.fire({
+                                title: 'System Error',
+                                text: 'Failed to process request. Please try again.',
+                                icon: 'error',
+                                borderRadius: '24px'
+                            });
+                        });
                 }
             }
         }
     </script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
+        .animate-scaleUp { animation: scaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-thumb { background: #F7941D; border-radius: 10px; }
+    </style>
 @endsection
