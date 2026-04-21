@@ -17,6 +17,17 @@ class ProductSelectionController extends Controller
 {
     public function index()
     {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if ($user) {
+            $user->load([
+                'bundles',
+                'payments' => function($q) {
+                    $q->where('status', 'success');
+                }
+            ]);
+        }
+
         try {
             $filteredCourses = collect();
             $filteredBundles = collect();

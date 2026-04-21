@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Bundle extends Model
 {
@@ -36,7 +37,7 @@ class Bundle extends Model
         'final_price',
         'thumbnail',
         'is_published',
-        'is_active'
+        'is_active',
     ];
 
     protected $casts = [
@@ -61,7 +62,6 @@ class Bundle extends Model
         return $this->thumbnail ? asset($this->thumbnail) : null;
     }
 
-
     public function courses()
     {
         return $this->morphedByMany(Course::class, 'item', 'bundle_items')
@@ -82,6 +82,7 @@ class Bundle extends Model
         foreach ($this->childBundles as $child) {
             $allCourses = $allCourses->merge($child->getAllCoursesFlat());
         }
+
         return $allCourses->unique('id');
     }
 
@@ -90,12 +91,16 @@ class Bundle extends Model
      */
     public function isPurchasedBy($userId)
     {
+        // Use currently authenticated user to avoid redundant find()
         /** @var \App\Models\User $user */
-        $user = \App\Models\User::find($userId);
-        if (!$user) {
-            return false;
+        $user = Auth::user();
+        if (! $user || $user->id != $userId) {
+            $user = User::find($userId);
         }
 
+        if (! $user) {
+            return false;
+        }
 
         return in_array($this->id, $user->unlockedBundleIds());
     }
@@ -113,6 +118,7 @@ class Bundle extends Model
      */
     public function getEffectivePriceForUser($user)
     {
+        /** @var \App\Models\User $user */
         // Base price depends on whether user was referred
         $basePrice = ($user && $user->referrer) ? $this->affiliate_price : $this->final_price;
         $price = $basePrice;
@@ -131,6 +137,7 @@ class Bundle extends Model
                 }
             }
         }
+
         return $price;
     }
 
@@ -139,6 +146,7 @@ class Bundle extends Model
      */
     public function getUpgradeDiscountAmount($user)
     {
+        /** @var \App\Models\User $user */
         if ($user) {
             $maxPref = $user->maxBundlePreferenceIndex();
             if ($maxPref > 0 && $this->preference_index > $maxPref && $user->canUpgradeBundles()) {
@@ -148,6 +156,7 @@ class Bundle extends Model
                 }
             }
         }
+
         return 0;
     }
 
@@ -156,4 +165,3 @@ class Bundle extends Model
         return $this->hasMany(Payment::class);
     }
 }
-

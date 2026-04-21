@@ -272,6 +272,9 @@ class User extends Authenticatable
      */
     public function maxBundlePreferenceIndex()
     {
+        if ($this->relationLoaded('bundles')) {
+            return $this->bundles->max('preference_index') ?? 0;
+        }
         return $this->bundles()->max('preference_index') ?? 0;
     }
 
@@ -281,10 +284,12 @@ class User extends Authenticatable
     public function unlockedBundleIds()
     {
         $maxPref = $this->maxBundlePreferenceIndex();
-        return Bundle::where('preference_index', '<=', $maxPref)
+        
+        // Cache this per-instance to prevent repeated queries in the same request
+        return once(fn() => Bundle::where('preference_index', '<=', $maxPref)
             ->where('is_published', true)
             ->pluck('id')
-            ->toArray();
+            ->toArray());
     }
 
     /**
@@ -331,6 +336,14 @@ class User extends Authenticatable
         if (!$highestBundle)
             return null;
 
+        if ($this->relationLoaded('payments')) {
+            return $this->payments
+                ->where('status', 'success')
+                ->where('bundle_id', $highestBundle->id)
+                ->sortByDesc('created_at')
+                ->first();
+        }
+
         return Payment::where('user_id', $this->id)
             ->where('status', 'success')
             ->where('bundle_id', $highestBundle->id)
@@ -340,22 +353,30 @@ class User extends Authenticatable
 
     public function canUpgradeBundles()
     {
-        return $this->upgradeTimeLeftSeconds() > 0;
+        $timeLeft = $this->upgradeTimeLeftSeconds();
+        return $timeLeft !== null && $timeLeft > 0;
     }
 
-    public function upgradeTimeLeftSeconds()
+    /**
+     * Calculate remaining upgrade time dynamically based on CURRENT admin window.
+     * Formula: Remaining = Admin_Window_Hours - Elapsed_Hours
+     */
+    public function upgradeTimeLeftSeconds(): ?int
     {
         $payment = $this->maxBundlePayment();
-        if (!$payment)
-            return 0;
+        if (!$payment) return null;
 
-        $hours = (int) Setting::get('upgrade_window_hours', 72);
-        if ($hours <= 0)
-            return 0;
+        // Fetch current global window (defaults to 24 if not set)
+        $windowHours = (int) Setting::get('upgrade_window_hours', 24);
+        if ($windowHours <= 0) return 0;
 
-        $expiresAt = (clone $payment->created_at)->addHours($hours);
-        $seconds = now()->diffInSeconds($expiresAt, false);
-        return $seconds > 0 ? $seconds : 0;
+        // Calculate elapsed time from purchase to now
+        $elapsedSeconds = $payment->created_at->diffInSeconds(now(), true);
+        $windowSeconds = $windowHours * 3600;
+
+        $remainingSeconds = $windowSeconds - $elapsedSeconds;
+
+        return $remainingSeconds > 0 ? (int) $remainingSeconds : 0;
     }
 
     // Name Attribute Accessor and Mutator
