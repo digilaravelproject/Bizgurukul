@@ -107,12 +107,12 @@ class AchievementController extends Controller
 
     public function qualifiedUsers(Achievement $achievement)
     {
-        $userAchievements = $achievement->userAchievements()
+        $qualifiedUsers = $achievement->userAchievements()
             ->with('user')
-            ->whereIn('status', ['unlocked', 'claimed'])
-            ->orderBy('unlocked_at', 'desc')
-            ->get();
+            ->whereIn('user_achievements.status', ['unlocked', 'claimed'])
+            ->orderBy('user_achievements.unlocked_at', 'desc')
+            ->paginate(20);
 
-        return view('admin.achievements.qualified', compact('achievement', 'userAchievements'));
+        return view('admin.achievements.qualified', compact('achievement', 'qualifiedUsers'));
     }
 }
