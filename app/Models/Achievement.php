@@ -37,7 +37,7 @@ class Achievement extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('status', true);
+        return $query->where('achievements.status', true);
     }
 
     public function getRewardImageUrlAttribute(): ?string

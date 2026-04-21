@@ -21,10 +21,10 @@ class RewardReportController extends Controller
         try {
             // 1. Achievers List (With highest achieved milestone)
             $achievers = User::whereHas('userAchievements', function ($query) {
-                    $query->whereIn('status', ['unlocked', 'claimed']);
+                    $query->whereIn('user_achievements.status', ['unlocked', 'claimed']);
                 })
                 ->with(['userAchievements' => function ($query) {
-                    $query->whereIn('status', ['unlocked', 'claimed'])
+                    $query->whereIn('user_achievements.status', ['unlocked', 'claimed'])
                         ->join('achievements', 'user_achievements.achievement_id', '=', 'achievements.id')
                         ->orderBy('achievements.target_amount', 'desc');
                 }])
@@ -61,9 +61,9 @@ class RewardReportController extends Controller
 
             // 4. Early Achievers Timeline (Historic sequence)
             $timeline = UserAchievement::with(['user', 'achievement'])
-                ->whereIn('status', ['unlocked', 'claimed'])
-                ->whereNotNull('unlocked_at')
-                ->orderBy('unlocked_at', 'desc')
+                ->whereIn('user_achievements.status', ['unlocked', 'claimed'])
+                ->whereNotNull('user_achievements.unlocked_at')
+                ->orderBy('user_achievements.unlocked_at', 'desc')
                 ->paginate(15, ['*'], 'timeline_page');
 
             return view('admin.rewards.dashboard', compact(

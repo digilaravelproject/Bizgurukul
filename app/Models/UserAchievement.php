@@ -33,16 +33,16 @@ class UserAchievement extends Model
 
     public function scopeLocked($query)
     {
-        return $query->where('status', 'locked');
+        return $query->where('user_achievements.status', 'locked');
     }
 
     public function scopeUnlocked($query)
     {
-        return $query->where('status', 'unlocked');
+        return $query->where('user_achievements.status', 'unlocked');
     }
 
     public function scopeClaimed($query)
     {
-        return $query->where('status', 'claimed');
+        return $query->where('user_achievements.status', 'claimed');
     }
 }
