@@ -55,9 +55,8 @@
                 <div class="relative w-full aspect-[4/3] flex items-center justify-center -mt-6 sm:-mt-4">
                     @php
                         $totalActive = $allMilestones->count();
-                        $dashTotal = 125.66; 
-                        $gap = 2;
-                        $segmentWidth = ($dashTotal - (($totalActive - 1) * $gap)) / ($totalActive ?: 1);
+                        $fullLength = 125.66; // pi * r (40)
+                        $gap = 1.5;
                         
                         $achievedCount = 0;
                         $currentIndex = -1;
@@ -70,85 +69,80 @@
                             }
                         }
                         $currentMilestonePercent = $achievementData['percentage'] ?? 0;
+                        
+                        // Overall progress fraction [0 to 1]
+                        $overallProgress = $totalActive > 0 
+                            ? ($achievedCount + ($currentIndex !== -1 ? ($currentMilestonePercent / 100) : 0)) / $totalActive 
+                            : 0;
+                        
+                        $progressLength = $overallProgress * $fullLength;
                     @endphp
 
-                    <svg viewBox="0 0 100 70" class="w-full h-auto max-w-[320px] filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.1)]">
+                    <svg viewBox="0 0 100 70" class="w-full h-auto max-w-[320px] filter drop-shadow-[0_15px_30px_rgba(var(--color-primary),0.15)]">
                         <defs>
-                            <linearGradient id="achieved-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <linearGradient id="guage-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
                                 <stop offset="0%" style="stop-color:rgb(var(--color-primary))" />
                                 <stop offset="100%" style="stop-color:rgb(var(--color-secondary))" />
                             </linearGradient>
-                            <linearGradient id="target-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" style="stop-color:#F59E0B" />
-                                <stop offset="100%" style="stop-color:#ef4444" />
-                            </linearGradient>
-                            <filter id="glow">
-                                <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
-                                <feMerge>
-                                    <feMergeNode in="coloredBlur"/>
-                                    <feMergeNode in="SourceGraphic"/>
-                                </feMerge>
+                            <filter id="needle-glow">
+                                <feGaussianBlur stdDeviation="1" result="blur"/>
+                                <feComposite in="SourceGraphic" in2="blur" operator="over"/>
                             </filter>
                         </defs>
 
-                        {{-- Glow Layer --}}
-                        <path d="M 10 55 A 40 40 0 0 1 90 55" fill="none" stroke="rgba(var(--color-primary), 0.03)" stroke-width="18" stroke-linecap="round" />
-                        
                         {{-- Background Track --}}
-                        <path d="M 10 55 A 40 40 0 0 1 90 55" fill="none" stroke="rgba(var(--color-primary), 0.08)" stroke-width="14" stroke-linecap="round" />
+                        <path d="M 10 55 A 40 40 0 0 1 90 55" 
+                              fill="none" 
+                              stroke="rgba(var(--color-primary), 0.1)" 
+                              stroke-width="12" 
+                              stroke-linecap="round" />
 
-                        {{-- Segments --}}
+                        {{-- Progress Arc (The Achievement) --}}
+                        <path d="M 10 55 A 40 40 0 0 1 90 55" 
+                              fill="none" 
+                              stroke="url(#guage-gradient)" 
+                              stroke-width="12" 
+                              stroke-linecap="round"
+                              stroke-dasharray="{{ $progressLength }} {{ $fullLength }}" 
+                              class="transition-all duration-1000 ease-out" />
+
+                        {{-- Milestone Markers --}}
                         @foreach($allMilestones as $idx => $m)
                             @php
                                 $status = $userMilestones[$m->id] ?? 'locked';
-                                $isAchieved = in_array($status, ['unlocked', 'claimed']);
-                                $isTarget = ($idx === $currentIndex);
-                                // The dash offset formula to place each segment correctly
-                                // Since dashTotal is 125.66 (pi*r), we move backward from the end
-                                $startOffset = $dashTotal - ($idx * ($segmentWidth + $gap));
+                                $isDone = in_array($status, ['unlocked', 'claimed']);
+                                $angle = 180 - (180 * (($idx + 1) / $totalActive));
+                                // Math for marker position
+                                $rad = deg2rad($angle);
+                                $mx = 50 + 40 * cos($rad);
+                                $my = 55 - 40 * sin($rad);
                             @endphp
-                            
-                            {{-- Base track segments --}}
-                            <path d="M 10 55 A 40 40 0 0 1 90 55" 
-                                  fill="none" 
-                                  stroke="{{ $isAchieved ? 'url(#achieved-gradient)' : 'rgba(var(--color-primary), 0.04)' }}" 
-                                  stroke-width="12" 
-                                  stroke-linecap="round"
-                                  stroke-dasharray="{{ $segmentWidth }} {{ $dashTotal }}" 
-                                  stroke-dashoffset="{{ $startOffset }}"
-                                  class="transition-all duration-700" />
-                            
-                            @if($isTarget)
-                                {{-- Progress within current segment --}}
-                                <path d="M 10 55 A 40 40 0 0 1 90 55" 
-                                      fill="none" 
-                                      stroke="url(#target-gradient)" 
-                                      stroke-width="12" 
-                                      stroke-linecap="round"
-                                      stroke-dasharray="{{ ($currentMilestonePercent / 100) * $segmentWidth }} {{ $dashTotal }}" 
-                                      stroke-dashoffset="{{ $startOffset }}"
-                                      filter="url(#glow)"
-                                      class="transition-all duration-1000 ease-out" />
-                            @endif
+                            <circle cx="{{ $mx }}" cy="{{ $my }}" r="1.5" 
+                                    fill="{{ $isDone ? 'white' : 'white' }}" 
+                                    fill-opacity="0.6"
+                                    class="transition-all duration-500" />
                         @endforeach
 
                         {{-- Needle --}}
                         @php
-                            $currentPos = $achievedCount + ($currentIndex !== -1 ? ($currentMilestonePercent / 100) : 0);
-                            $totalPos = $totalActive ?: 1;
-                            $needleAngle = 180 * ($currentPos / $totalPos); // 0% = Left, 100% = Right
+                            $needleAngle = 180 * $overallProgress;
                         @endphp
                         <g transform="rotate({{ $needleAngle }} 50 55)" class="transition-all duration-[1500ms] ease-out origin-[50px_55px]">
-                            <path d="M 50 55 L 14 55" stroke="rgba(0,0,0,0.1)" stroke-width="4" stroke-linecap="round" transform="translate(0, 1.5)" />
-                            <path d="M 50 55 L 14 55" stroke="#fff" stroke-width="3" stroke-linecap="round" class="needle-glow" />
+                            {{-- Needle Base Shadow --}}
+                            <path d="M 50 55 L 14 55" stroke="rgba(0,0,0,0.2)" stroke-width="4" stroke-linecap="round" transform="translate(0, 1)" />
+                            {{-- Needle --}}
+                            <path d="M 50 55 L 14 55" stroke="#fff" stroke-width="2.5" stroke-linecap="round" filter="url(#needle-glow)" />
+                            {{-- Needle Cap --}}
+                            <circle cx="50" cy="55" r="4" fill="#fff" shadow="0 0 10px rgba(var(--color-primary), 0.5)" />
+                            <circle cx="50" cy="55" r="2" fill="rgb(var(--color-primary))" />
                         </g>
                     </svg>
 
                     <div class="absolute bottom-2 sm:bottom-0 left-1/2 -translate-x-1/2 text-center w-full pointer-events-none">
-                        <span class="block text-4xl sm:text-6xl font-black text-mainText tracking-tighter leading-none text-glow">{{ round($currentMilestonePercent) }}%</span>
+                        <span class="block text-4xl sm:text-6xl font-black text-mainText tracking-tighter leading-none text-glow">{{ round($overallProgress * 100) }}%</span>
                         <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mt-2">
                              <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-                             <span class="text-[9px] sm:text-[10px] font-black text-primary uppercase tracking-[2px]">Next Level</span>
+                             <span class="text-[9px] sm:text-[10px] font-black text-primary uppercase tracking-[2px]">Rank Mastery</span>
                         </div>
                     </div>
                 </div>
