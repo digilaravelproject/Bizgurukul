@@ -15,7 +15,7 @@
                 <span class="text-xs font-medium text-mutedText px-3" x-text="'Last updated: ' + lastUpdated"></span>
                 <button @click="fetchStats()" class="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        :class="{'animate-spin': loading}">
+                        :class="{ 'animate-spin': loading }">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
                         </path>
@@ -155,9 +155,9 @@
                             <span
                                 class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">Net</span>
                         </div>
-                        <p class="text-xs font-semibold text-mutedText uppercase tracking-wider">Today Profit</p>
+                        {{-- <p class="text-xs font-semibold text-mutedText uppercase tracking-wider">Today Profit</p> --}}
                         <h3 class="text-2xl font-bold text-emerald-600 mt-1" x-text="formatCurrency(stats.today_profit)"></h3>
-                        <p class="text-[10px] text-mutedText mt-2 leading-relaxed">After GST · Commission · 2% GW</p>
+                        {{-- <p class="text-[10px] text-mutedText mt-2 leading-relaxed">After GST · Commission · 2% GW</p> --}}
                     </div>
                 </div>
 
@@ -178,9 +178,10 @@
                             <span
                                 class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-blue-100 text-blue-700">Net</span>
                         </div>
-                        <p class="text-xs font-semibold text-mutedText uppercase tracking-wider">7 Days Profit</p>
-                        <h3 class="text-2xl font-bold text-blue-600 mt-1" x-text="formatCurrency(stats.seven_days_profit)"></h3>
-                        <p class="text-[10px] text-mutedText mt-2 leading-relaxed">After GST · Commission · 2% GW</p>
+                        {{-- <p class="text-xs font-semibold text-mutedText uppercase tracking-wider">7 Days Profit</p> --}}
+                        <h3 class="text-2xl font-bold text-blue-600 mt-1" x-text="formatCurrency(stats.seven_days_profit)">
+                        </h3>
+                        {{-- <p class="text-[10px] text-mutedText mt-2 leading-relaxed">After GST · Commission · 2% GW</p> --}}
                     </div>
                 </div>
 
@@ -201,10 +202,10 @@
                             <span
                                 class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-violet-100 text-violet-700">Net</span>
                         </div>
-                        <p class="text-xs font-semibold text-mutedText uppercase tracking-wider">30 Days Profit</p>
+                        {{-- <p class="text-xs font-semibold text-mutedText uppercase tracking-wider">30 Days Profit</p> --}}
                         <h3 class="text-2xl font-bold text-violet-600 mt-1" x-text="formatCurrency(stats.thirty_days_profit)">
                         </h3>
-                        <p class="text-[10px] text-mutedText mt-2 leading-relaxed">After GST · Commission · 2% GW</p>
+                        {{-- <p class="text-[10px] text-mutedText mt-2 leading-relaxed">After GST · Commission · 2% GW</p> --}}
                     </div>
                 </div>
 
@@ -225,9 +226,10 @@
                             <span
                                 class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-amber-100 text-amber-700">Net</span>
                         </div>
-                        <p class="text-xs font-semibold text-mutedText uppercase tracking-wider">All Time Profit</p>
-                        <h3 class="text-2xl font-bold text-amber-600 mt-1" x-text="formatCurrency(stats.all_time_profit)"></h3>
-                        <p class="text-[10px] text-mutedText mt-2 leading-relaxed">After GST · Commission · 2% GW</p>
+                        {{-- <p class="text-xs font-semibold text-mutedText uppercase tracking-wider">All Time Profit</p> --}}
+                        <h3 class="text-2xl font-bold text-amber-600 mt-1" x-text="formatCurrency(stats.all_time_profit)">
+                        </h3>
+                        {{-- <p class="text-[10px] text-mutedText mt-2 leading-relaxed">After GST · Commission · 2% GW</p> --}}
                     </div>
                 </div>
 
@@ -284,7 +286,8 @@
                     </div>
                     <div class="relative z-10">
                         <p class="text-sm font-medium text-mutedText">All Time Revenue</p>
-                        <h3 class="text-2xl font-bold text-mainText mt-1" x-text="formatCurrency(stats.all_time_revenue)"></h3>
+                        <h3 class="text-2xl font-bold text-mainText mt-1" x-text="formatCurrency(stats.all_time_revenue)">
+                        </h3>
                     </div>
                 </div>
             </div>
@@ -305,14 +308,14 @@
                                 <p class="text-sm text-mutedText">Financial performance over time.</p>
                             </div>
                             <div class="flex bg-navy p-1 rounded-xl">
-                                <button @click="period = 'week'; fetchStats()"
-                                    :class="period === 'week' ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'text-mutedText hover:text-mainText'"
+                                <button @click="period = 'week'; fetchStats()" :class="period === 'week' ? 'bg-primary text-white shadow-lg shadow-primary/30' :
+                                                'text-mutedText hover:text-mainText'"
                                     class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all">Week</button>
-                                <button @click="period = 'month'; fetchStats()"
-                                    :class="period === 'month' ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'text-mutedText hover:text-mainText'"
+                                <button @click="period = 'month'; fetchStats()" :class="period === 'month' ? 'bg-primary text-white shadow-lg shadow-primary/30' :
+                                                'text-mutedText hover:text-mainText'"
                                     class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all">Month</button>
-                                <button @click="period = '6months'; fetchStats()"
-                                    :class="period === '6months' ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'text-mutedText hover:text-mainText'"
+                                <button @click="period = '6months'; fetchStats()" :class="period === '6months' ? 'bg-primary text-white shadow-lg shadow-primary/30' :
+                                                'text-mutedText hover:text-mainText'"
                                     class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all">6 Months</button>
                             </div>
                         </div>
@@ -382,7 +385,8 @@
                 <div class="bg-surface p-6 rounded-2xl shadow-sm border border-primary/10">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-lg font-bold text-mainText">New Students</h3>
-                        <a href="{{ route('admin.users.index') }}" class="text-xs font-bold text-primary hover:text-secondary">View All</a>
+                        <a href="{{ route('admin.users.index') }}"
+                            class="text-xs font-bold text-primary hover:text-secondary">View All</a>
                     </div>
                     <div class="space-y-4">
                         <template x-for="user in stats.recent_registrations" :key="user.id">
@@ -411,7 +415,8 @@
                     <div class="bg-surface p-6 rounded-2xl shadow-sm border border-primary/10">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-lg font-bold text-mainText">Recent Transactions</h3>
-                            <a href="{{ route('admin.orders.index') }}" class="text-xs font-bold text-primary hover:text-secondary">View All</a>
+                            <a href="{{ route('admin.orders.index') }}"
+                                class="text-xs font-bold text-primary hover:text-secondary">View All</a>
                         </div>
                         <div class="space-y-4">
                             <template x-for="txn in stats.recent_transactions" :key="txn.id">
@@ -478,17 +483,24 @@
                         this.$nextTick(() => {
                             this.fetchStats();
                         });
-                        setInterval(() => { this.fetchStats(); }, 300000);
+                        setInterval(() => {
+                            this.fetchStats();
+                        }, 300000);
                     },
 
                     async fetchStats() {
                         if (this.loading) return;
                         this.loading = true;
                         try {
-                            const response = await fetch(`{{ route('admin.dashboard.stats') }}?period=${this.period}&refresh=1`);
+                            const response = await fetch(
+                                `{{ route('admin.dashboard.stats') }}?period=${this.period}&refresh=1`
+                            );
                             if (!response.ok) throw new Error('Network error');
                             const data = await response.json();
-                            this.stats = { ...this.stats, ...data.aggregate };
+                            this.stats = {
+                                ...this.stats,
+                                ...data.aggregate
+                            };
                             this.lastUpdated = new Date().toLocaleTimeString();
                             this.renderChart(data.chart || {});
                             this.renderBundleChart();
@@ -501,7 +513,9 @@
 
                     formatCurrency(value) {
                         return new Intl.NumberFormat('en-IN', {
-                            style: 'currency', currency: 'INR', maximumFractionDigits: 0
+                            style: 'currency',
+                            currency: 'INR',
+                            maximumFractionDigits: 0
                         }).format(value || 0);
                     },
 
@@ -537,9 +551,14 @@
                             options: {
                                 responsive: true,
                                 maintainAspectRatio: false,
-                                interaction: { mode: 'index', intersect: false },
+                                interaction: {
+                                    mode: 'index',
+                                    intersect: false
+                                },
                                 plugins: {
-                                    legend: { display: false },
+                                    legend: {
+                                        display: false
+                                    },
                                     tooltip: {
                                         backgroundColor: '#FFFFFF',
                                         titleColor: '#2D2D2D',
@@ -548,26 +567,49 @@
                                         borderWidth: 1,
                                         padding: 10,
                                         displayColors: false,
-                                        titleFont: { family: "'Outfit', sans-serif", size: 13 },
-                                        bodyFont: { family: "'Outfit', sans-serif", size: 12 },
+                                        titleFont: {
+                                            family: "'Outfit', sans-serif",
+                                            size: 13
+                                        },
+                                        bodyFont: {
+                                            family: "'Outfit', sans-serif",
+                                            size: 12
+                                        },
                                         callbacks: {
-                                            label: (c) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(c.parsed.y)
+                                            label: (c) => new Intl.NumberFormat('en-IN', {
+                                                style: 'currency',
+                                                currency: 'INR'
+                                            }).format(c.parsed.y)
                                         }
                                     }
                                 },
                                 scales: {
                                     y: {
                                         beginAtZero: true,
-                                        grid: { color: 'rgba(0,0,0,0.03)', drawBorder: false },
+                                        grid: {
+                                            color: 'rgba(0,0,0,0.03)',
+                                            drawBorder: false
+                                        },
                                         ticks: {
                                             color: '#888888',
-                                            font: { family: "'Outfit', sans-serif", size: 11 },
+                                            font: {
+                                                family: "'Outfit', sans-serif",
+                                                size: 11
+                                            },
                                             callback: (v) => '₹' + v.toLocaleString('en-IN')
                                         }
                                     },
                                     x: {
-                                        grid: { display: false },
-                                        ticks: { color: '#888888', font: { family: "'Outfit', sans-serif", size: 11 } }
+                                        grid: {
+                                            display: false
+                                        },
+                                        ticks: {
+                                            color: '#888888',
+                                            font: {
+                                                family: "'Outfit', sans-serif",
+                                                size: 11
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -583,7 +625,7 @@
                             '#8B5CF6', // Violet
                             '#EC4899', // Pink
                             '#F59E0B', // Amber
-                            '#06B6D4'  // Cyan
+                            '#06B6D4' // Cyan
                         ];
                         return colors[index % colors.length];
                     },
@@ -596,13 +638,15 @@
 
                     renderBundleChart() {
                         const canvas = document.getElementById('bundleChart');
-                        if (!canvas || !this.stats.bundle_stats || this.stats.bundle_stats.length === 0) return;
+                        if (!canvas || !this.stats.bundle_stats || this.stats.bundle_stats.length === 0)
+                            return;
                         const ctx = canvas.getContext('2d');
                         if (window.bundleChartInstance) window.bundleChartInstance.destroy();
 
                         const labels = this.stats.bundle_stats.map(b => b.title);
                         const data = this.stats.bundle_stats.map(b => b.sales_count);
-                        const backgroundColors = this.stats.bundle_stats.map((_, i) => this.getBundleColor(i));
+                        const backgroundColors = this.stats.bundle_stats.map((_, i) => this.getBundleColor(
+                            i));
 
                         window.bundleChartInstance = new Chart(ctx, {
                             type: 'doughnut',
@@ -621,7 +665,9 @@
                                 responsive: true,
                                 maintainAspectRatio: false,
                                 plugins: {
-                                    legend: { display: false },
+                                    legend: {
+                                        display: false
+                                    },
                                     tooltip: {
                                         backgroundColor: '#FFFFFF',
                                         titleColor: '#2D2D2D',
