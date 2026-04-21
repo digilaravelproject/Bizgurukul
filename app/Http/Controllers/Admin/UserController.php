@@ -126,6 +126,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users,email,' . $id,
+            'password' => 'nullable|min:6',
             'role' => 'required',
             'mobile' => 'nullable|numeric|digits:10',
             'gender' => 'nullable|in:male,female,other',

@@ -145,6 +145,14 @@
                             </div>
                             <div>
                                 <label
+                                    class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-1.5 ml-1">Password
+                                    <span x-show="modalMode === 'create'" class="text-secondary">*</span></label>
+                                <input type="password" x-model="form.password" :required="modalMode === 'create'"
+                                    class="w-full rounded-2xl bg-navy/50 px-5 py-3.5 text-sm font-bold text-mainText focus:bg-white focus:border-primary outline-none"
+                                    placeholder="Min. 6 characters">
+                            </div>
+                            <div>
+                                <label
                                     class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-1.5 ml-1">Mobile</label>
                                 <input type="text" x-model="form.mobile"
                                     class="w-full rounded-2xl bg-navy/50 px-5 py-3.5 text-sm font-bold text-mainText focus:bg-white focus:border-primary outline-none"
