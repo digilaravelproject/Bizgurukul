@@ -325,7 +325,7 @@
                                     'bg-navy border-primary/5 text-mutedText': viewData.kyc_status === 'not_submitted'
                                 }">
                                 <p class="text-[8px] font-black uppercase tracking-widest opacity-80 mb-0.5">KYC Status</p>
-                                <p class="text-[10px] font-black x-text" x-text="viewData.kyc_status.replace('_', ' ').toUpperCase()"></p>
+                                <p class="text-[10px] font-black x-text" x-text="(viewData.kyc_status || 'not_submitted').replace('_', ' ').toUpperCase()"></p>
                             </div>
                             <div class="p-4 rounded-2xl text-left border shadow-sm flex flex-col justify-center"
                                 :class="{
@@ -335,7 +335,7 @@
                                     'bg-navy border-primary/5 text-mutedText': !viewData.bank || viewData.bank.status === 'not_submitted'
                                 }">
                                 <p class="text-[8px] font-black uppercase tracking-widest opacity-80 mb-0.5">Bank Status</p>
-                                <p class="text-[10px] font-black x-text" x-text="(viewData.bank ? viewData.bank.status : 'not_submitted').replace('_', ' ').toUpperCase()"></p>
+                                <p class="text-[10px] font-black x-text" x-text="(viewData.bank?.status || 'not_submitted').replace('_', ' ').toUpperCase()"></p>
                             </div>
                         </div>
 
@@ -390,6 +390,7 @@
                 users: [],
                 pagination: {},
                 isLoading: false,
+                loading: false,
                 search: '',
                 perPage: 20,
                 viewTrash: false,
@@ -461,6 +462,7 @@
                     this.controller = new AbortController();
 
                     this.isLoading = true;
+                    this.loading = true;
                     try {
                         let targetUrl = new URL(targetUrlRaw.includes('http') ? targetUrlRaw : window.location.origin + targetUrlRaw);
 
@@ -488,6 +490,7 @@
                         if (error.name !== 'AbortError') console.error('Fetch error:', error);
                     } finally {
                         this.isLoading = false;
+                        this.loading = false;
                     }
                 },
 
