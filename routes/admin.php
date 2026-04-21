@@ -89,6 +89,7 @@ Route::middleware(['auth'])
             Route::resource('achievements', \App\Http\Controllers\Admin\AchievementController::class)->except(['show']);
             Route::post('achievements/{achievement}/toggle-status', [\App\Http\Controllers\Admin\AchievementController::class, 'toggleStatus'])->name('achievements.toggle-status');
             Route::get('achievements/{achievement}/qualified', [\App\Http\Controllers\Admin\AchievementController::class, 'qualifiedUsers'])->name('achievements.qualified');
+            Route::get('reward-dashboard', [\App\Http\Controllers\Admin\RewardReportController::class, 'index'])->name('rewards.dashboard');
         });
 
         // Transactions (managed by manage-transactions)

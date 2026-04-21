@@ -26,7 +26,7 @@
             promoOpen: {{ request()->routeIs('admin.coupons.*', 'admin.coupon-packages.*') ? 'true' : 'false' }},
             resourceHubOpen: {{ request()->routeIs('admin.resource-categories.*', 'admin.general-resources.*') ? 'true' : 'false' }},
             userOpen: {{ request()->routeIs('admin.users.*', 'admin.leads.*', 'admin.kyc.*', 'admin.verifications.*', 'admin.communities.*', 'admin.contact-inquiries.*') ? 'true' : 'false' }},
-            affiliateOpen: {{ request()->routeIs('admin.affiliate.*', 'admin.payouts.*', 'admin.achievements.*') ? 'true' : 'false' }},
+            affiliateOpen: {{ request()->routeIs('admin.affiliate.*', 'admin.payouts.*', 'admin.achievements.*', 'admin.rewards.dashboard') ? 'true' : 'false' }},
             settingsOpen: {{ request()->routeIs('admin.settings.*', 'admin.taxes.*', 'admin.email-templates.*', 'admin.roles.*', 'admin.activity-logs.*') ? 'true' : 'false' }}
         }">
 
@@ -239,6 +239,10 @@
                     <a href="{{ route('admin.payouts.index') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.payouts.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
                         <i class="fas fa-hand-holding-usd text-[14px]"></i>
                         Withdrawal Requests
+                    </a>
+                    <a href="{{ route('admin.rewards.dashboard') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.rewards.dashboard') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                        <i class="fas fa-medal text-[14px]"></i>
+                        Reward Mastery
                     </a>
                     <a href="{{ route('admin.affiliate.history') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.affiliate.history') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
