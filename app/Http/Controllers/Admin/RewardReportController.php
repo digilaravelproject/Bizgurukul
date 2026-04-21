@@ -19,21 +19,24 @@ class RewardReportController extends Controller
     public function index()
     {
         try {
+            $now = now();
+
             // 1. Achievers List (With highest achieved milestone)
             $achievers = User::whereHas('userAchievements', function ($query) {
                     $query->whereIn('user_achievements.status', ['unlocked', 'claimed']);
                 })
                 ->with(['userAchievements' => function ($query) {
                     $query->whereIn('user_achievements.status', ['unlocked', 'claimed'])
+                        ->with('achievement') // Fix N+1: properly eager load achievement relation
                         ->join('achievements', 'user_achievements.achievement_id', '=', 'achievements.id')
+                        ->select('user_achievements.*')
                         ->orderBy('achievements.target_amount', 'desc');
                 }])
                 ->withSum('commissions', 'amount')
                 ->paginate(10, ['*'], 'achievers_page');
 
             // 2. Progress Tracker (Users nearing their next milestones)
-            // Optimized with individual total earnings and subquery for next achievement
-            $progressTracker = User::role('student') // assuming students track rewards
+            $progressTracker = User::role('student')
                 ->withSum('commissions', 'amount')
                 ->addSelect(['next_milestone_target' => Achievement::select('target_amount')
                     ->whereRaw('target_amount > (SELECT COALESCE(SUM(amount), 0) FROM affiliate_commissions WHERE affiliate_id = users.id)')
@@ -48,14 +51,30 @@ class RewardReportController extends Controller
                     ->limit(1)
                 ])
                 ->having('next_milestone_target', '>', 0)
-                ->orderByRaw('next_milestone_target - commissions_sum_amount ASC') // Closest to next milestone first
+                ->orderByRaw('next_milestone_target - commissions_sum_amount ASC')
                 ->paginate(10, ['*'], 'progress_page');
 
             // 3. Top Performers (Leaderboard)
             $leaderboard = User::role('student')
                 ->where('hide_from_leaderboard', false)
                 ->withSum('commissions', 'amount')
-                ->orderByDesc('commissions_sum_amount')
+                ->addSelect([
+                    'earliest_unlock' => UserAchievement::select('unlocked_at')
+                        ->whereColumn('user_id', 'users.id')
+                        ->whereIn('status', ['unlocked', 'claimed'])
+                        ->orderBy('unlocked_at', 'asc')
+                        ->limit(1),
+                    'max_achievement_level' => UserAchievement::join('achievements', 'user_achievements.achievement_id', '=', 'achievements.id')
+                        ->select('achievements.target_amount')
+                        ->whereColumn('user_achievements.user_id', 'users.id')
+                        ->whereIn('user_achievements.status', ['unlocked', 'claimed'])
+                        ->orderBy('achievements.target_amount', 'desc')
+                        ->limit(1)
+                ])
+                ->orderByRaw('CASE WHEN earliest_unlock IS NULL THEN 1 ELSE 0 END ASC')
+                ->orderBy('earliest_unlock', 'asc')
+                ->orderBy('id', 'asc')
+                ->orderBy('max_achievement_level', 'desc')
                 ->take(20)
                 ->get();
 

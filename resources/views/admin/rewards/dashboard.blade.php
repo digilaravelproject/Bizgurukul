@@ -128,8 +128,8 @@
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="text-[10px] font-black text-slate-400 uppercase leading-none mb-1">Needs</p>
-                                <p class="text-sm font-black text-slate-800 leading-none">₹{{ number_format($remaining) }}</p>
+                                <p class="text-sm font-bold text-slate-600 leading-none mb-1">Needs</p>
+                                <p class="text-sm font-black text-slate-900 leading-none">₹{{ number_format($remaining) }}</p>
                             </div>
                         </div>
                         <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden p-[1px] border border-slate-200/50">
@@ -178,14 +178,14 @@
                             <div class="flex items-center gap-3">
                                 <img src="{{ $user->profile_image_url }}" class="w-10 h-10 rounded-full border-2 border-white/20" />
                                 <div>
-                                    <p class="font-bold text-sm tracking-tight">{{ $user->name }}</p>
-                                    <p class="text-[10px] text-white/50 font-black uppercase tracking-widest">Active Partner</p>
+                                    <p class="font-bold text-sm tracking-tight text-white">{{ $user->name }}</p>
+                                    <p class="text-[10px] text-indigo-200 font-black uppercase tracking-widest">Active Partner</p>
                                 </div>
                             </div>
                         </div>
                         <div class="text-right">
-                            <p class="text-[10px] font-black text-white/40 uppercase tracking-widest leading-none mb-1">Lifetime</p>
-                            <p class="text-lg font-black tracking-tighter">₹{{ number_format($user->commissions_sum_amount) }}</p>
+                            <p class="text-[10px] font-black text-indigo-300 uppercase tracking-widest leading-none mb-1">Lifetime</p>
+                            <p class="text-lg font-black tracking-tighter text-white">₹{{ number_format($user->commissions_sum_amount) }}</p>
                         </div>
                     </div>
                 @empty
