@@ -517,16 +517,27 @@
 
                 async viewUser(id) {
                     try {
-                        let response = await fetch(`/admin/users/${id}/details`);
+                        let baseUrl = "{{ url('admin/users') }}";
+                        let response = await fetch(`${baseUrl}/${id}/details`, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                        
                         let result = await response.json();
-                        if (result.status) {
+                        
+                        if (response.ok && result.status) {
                             this.viewData = result.data;
                             this.viewModal = true;
+                        } else {
+                            throw new Error(result.message || 'Server error occurred');
                         }
                     } catch (error) {
+                        console.error('View User Error:', error);
                         this.Toast.fire({
                             icon: 'error',
-                            title: 'Could not fetch details'
+                            title: error.message || 'Could not fetch details'
                         });
                     }
                 },
@@ -552,7 +563,7 @@
                 async submitForm() {
                     this.isSubmitting = true;
                     let url = this.modalMode === 'create' ? "{{ route('admin.users.store') }}" :
-                        `/admin/users/update/${this.form.id}`;
+                        "{{ url('admin/users/update') }}/" + this.form.id;
 
                     try {
                         let response = await fetch(url, {
@@ -596,8 +607,7 @@
                         let response = await fetch(url, {
                             method: 'POST',
                             headers: {
-                                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute(
-                                    'content'),
+                                "X-CSRF-TOKEN": "{{ csrf_token() }}",
                                 "Accept": "application/json"
                             }
                         });
@@ -627,7 +637,7 @@
                         background: '#FFFFFF',
                         color: '#2D2D2D'
                     }).then(async (result) => {
-                        if (result.isConfirmed) await this.postAction(`/admin/users/ban/${id}`);
+                        if (result.isConfirmed) await this.postAction("{{ url('admin/users/ban') }}/" + id);
                     });
                 },
 
@@ -643,11 +653,11 @@
                     }).then(async (result) => {
                         if (result.isConfirmed) {
                             try {
-                                let response = await fetch(`/admin/users/delete/${id}`, {
+                                let baseUrl = "{{ url('admin/users/delete') }}";
+                                let response = await fetch(`${baseUrl}/${id}`, {
                                     method: 'DELETE',
                                     headers: {
-                                        "X-CSRF-TOKEN": document.querySelector(
-                                            'meta[name="csrf-token"]').getAttribute('content')
+                                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
                                     }
                                 });
                                 let res = await response.json();
@@ -686,11 +696,11 @@
                     }).then(async (result) => {
                         if (result.isConfirmed) {
                             try {
-                                let response = await fetch(`/admin/users/force-delete/${id}`, {
+                                let baseUrl = "{{ url('admin/users/force-delete') }}";
+                                let response = await fetch(`${baseUrl}/${id}`, {
                                     method: 'DELETE',
                                     headers: {
-                                        "X-CSRF-TOKEN": document.querySelector(
-                                            'meta[name="csrf-token"]').getAttribute('content')
+                                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
                                     }
                                 });
                                 let res = await response.json();

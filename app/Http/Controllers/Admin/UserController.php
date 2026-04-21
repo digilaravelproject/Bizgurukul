@@ -64,13 +64,13 @@ class UserController extends Controller
                 'email' => $user->email,
                 'mobile' => $user->mobile,
                 'gender' => $user->gender,
-                'dob' => $user->dob ? $user->dob->format('Y-m-d') : null,
+                'dob' => $user->dob ? ($user->dob instanceof \Carbon\Carbon ? $user->dob->format('Y-m-d') : $user->dob) : null,
                 'state_id' => $user->state_id,
                 'state_name' => $user->state?->name ?? 'N/A',
                 'city' => $user->city,
                 'role' => $user->roles->pluck('name')->implode(', '),
                 'kyc_status' => $user->kyc_status,
-                'joined_at' => $user->created_at->format('d M, Y'),
+                'joined_at' => $user->created_at ? ($user->created_at instanceof \Carbon\Carbon ? $user->created_at->format('d M, Y') : $user->created_at) : 'N/A',
                 'profile_picture' => $user->profile_picture ? asset('storage/' . $user->profile_picture) : null,
                 'profile_photo_url' => $user->profile_photo_url ? (str_starts_with($user->profile_photo_url, 'http') ? $user->profile_photo_url : asset('storage/' . $user->profile_photo_url)) : null,
                 'hide_from_leaderboard' => $user->hide_from_leaderboard,
@@ -101,10 +101,18 @@ class UserController extends Controller
             }
             return view('admin.users.show', compact('user', 'userData'));
         } catch (Exception $e) {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json(['status' => false, 'message' => $e->getMessage()], 404);
+            \Illuminate\Support\Facades\Log::error('Admin User Show Error: ' . $e->getMessage(), [
+                'id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Error: ' . $e->getMessage()
+                ], 404);
             }
-            return back()->with('error', $e->getMessage());
+            return back()->with('error', 'User details not found: ' . $e->getMessage());
         }
     }
 
