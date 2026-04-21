@@ -234,7 +234,7 @@ Route::middleware(['auth'])
         // KYC Management (managed by manage-kyc)
         Route::middleware(['permission:manage-kyc'])->group(function () {
             Route::prefix('kyc-requests')->name('kyc.')->group(function () {
-                Route::get('/', [KycController::class, 'index'])->name('index');
+                Route::get('/', [KycController::class, 'index'])->name('requests');
                 Route::get('/{id}', [KycController::class, 'show'])->name('show');
                 Route::post('/{id}/status', [KycController::class, 'updateStatus'])->name('status');
             });

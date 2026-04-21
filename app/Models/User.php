@@ -270,12 +270,12 @@ class User extends Authenticatable
     /**
      * Get the highest preference_index among purchased bundles.
      */
-    public function maxBundlePreferenceIndex()
+    public function maxBundlePreferenceIndex(): int
     {
         if ($this->relationLoaded('bundles')) {
-            return $this->bundles->max('preference_index') ?? 0;
+            return (int) ($this->bundles->max('preference_index') ?? 0);
         }
-        return $this->bundles()->max('preference_index') ?? 0;
+        return (int) ($this->bundles()->max('preference_index') ?? 0);
     }
 
     /**

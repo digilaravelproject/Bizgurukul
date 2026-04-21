@@ -13,6 +13,18 @@
                 <h1 class="text-3xl font-extrabold tracking-tight text-mainText">KYC Verifications</h1>
                 <p class="text-mutedText mt-1 text-sm font-medium">Review and approve affiliate identity documents.</p>
             </div>
+            
+            {{-- Status Tabs --}}
+            <div class="bg-primary/5 p-1 rounded-xl flex items-center gap-1">
+                <a href="{{ route('admin.kyc.requests', ['status' => 'pending']) }}" 
+                    class="px-6 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all {{ $status === 'pending' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-mutedText hover:text-primary hover:bg-primary/5' }}">
+                    Pending
+                </a>
+                <a href="{{ route('admin.kyc.requests', ['status' => 'verified']) }}" 
+                    class="px-6 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all {{ $status === 'verified' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-mutedText hover:text-primary hover:bg-primary/5' }}">
+                    Verified
+                </a>
+            </div>
         </div>
 
         {{-- Request Table --}}
@@ -64,7 +76,7 @@
                 </table>
             </div>
             <div class="p-4 bg-primary/5 border-t border-primary/5">
-                {{ $kycUsers->links() }}
+                {{ $kycUsers->appends(['status' => $status])->links() }}
             </div>
         </div>
 
@@ -187,16 +199,45 @@
                                 </div>
                             </template>
 
-                            <template x-if="data.kyc_status !== 'pending'">
-                                <div class="text-center p-4 rounded-2xl border border-primary/5 bg-surface shadow-sm">
-                                    <p class="text-[10px] text-mutedText font-black uppercase tracking-[2px] mb-3">Verification Complete</p>
-                                    <span class="px-8 py-2 rounded-full font-black text-xs uppercase tracking-[3px] border"
-                                        :class="data.kyc_status === 'verified' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-secondary/10 text-secondary border-secondary/20'"
-                                        x-text="data.kyc_status">
-                                    </span>
+                            <template x-if="data.kyc_status === 'verified'">
+                                <div class="space-y-4">
+                                    <div class="text-center p-6 rounded-2xl border border-primary/20 bg-primary/5 shadow-sm">
+                                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mx-auto mb-4 border border-primary/20">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        </div>
+                                        <p class="text-[10px] text-mutedText font-black uppercase tracking-[2px] mb-1 text-center">User Identity Verified</p>
+                                        <p class="text-xs text-mainText font-bold mb-4 text-center">Verification completed on <span x-text="data.submitted_at"></span></p>
+                                        
+                                        <button @click="confirmRejectVerified()"
+                                            class="block mx-auto text-[10px] font-black text-secondary hover:text-white hover:bg-secondary border border-secondary/30 px-6 py-2 rounded-xl transition-all uppercase tracking-widest">
+                                            Reject Verified User
+                                        </button>
+                                    </div>
+
+                                    {{-- Reject Input (for Verified users) --}}
+                                    <div x-show="showReject" x-transition class="bg-surface p-6 rounded-2xl border border-secondary/20 shadow-inner">
+                                        <label class="text-[10px] font-black text-secondary uppercase mb-2 block tracking-widest">Reason for Rejection (Required)</label>
+                                        <textarea x-model="rejectReason"
+                                            class="w-full border-primary/10 bg-navy/5 rounded-xl text-sm p-4 focus:ring-secondary focus:border-secondary mb-4 font-medium"
+                                            rows="3" placeholder="Explain why this verification is being revoked..."></textarea>
+                                        <div class="flex justify-end gap-3">
+                                            <button @click="showReject = false; rejectReason = ''" class="px-5 py-2 text-xs font-bold text-mutedText uppercase">Cancel</button>
+                                            <button @click="updateStatus('rejected')" class="px-6 py-2 bg-secondary text-white text-xs font-black rounded-xl shadow-lg shadow-secondary/20 uppercase tracking-widest">Confirm & Reject</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <template x-if="data.kyc_status === 'rejected'">
+                                <div class="text-center p-8 rounded-2xl border border-secondary/20 bg-secondary/5 shadow-sm">
+                                    <div class="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center text-secondary mx-auto mb-4 border border-secondary/20">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </div>
+                                    <p class="text-[10px] text-secondary font-black uppercase tracking-[2px] mb-2">Verification Rejected</p>
+                                    <p class="text-xs text-mutedText font-medium mb-4" x-text="data.admin_note || 'No reason provided'"></p>
                                     <button @click="data.kyc_status = 'pending'"
-                                        class="block mx-auto mt-6 text-[10px] font-black text-primary hover:underline uppercase tracking-widest">
-                                        Reset Status
+                                        class="text-[10px] font-black text-primary hover:underline uppercase tracking-widest">
+                                        Re-evaluate Request
                                     </button>
                                 </div>
                             </template>
@@ -225,6 +266,29 @@
                         this.showModal = true;
                     }).catch(err => {
                         Swal.fire('Error', 'Could not fetch data', 'error');
+                    });
+                },
+
+                confirmRejectVerified() {
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "This user is already verified. Rejecting them now will revoke their verification status. Do you want to proceed?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#F7941D',
+                        cancelButtonColor: '#2D2D2D',
+                        confirmButtonText: 'Yes, reject them',
+                        background: '#FFFFFF',
+                        color: '#2D2D2D'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            this.showReject = true;
+                            // Scroll to reject reason box
+                            this.$nextTick(() => {
+                                const el = document.querySelector('textarea');
+                                if (el) el.focus();
+                            });
+                        }
                     });
                 },
 

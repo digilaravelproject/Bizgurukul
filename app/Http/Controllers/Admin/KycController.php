@@ -18,8 +18,14 @@ class KycController extends Controller
 
     public function index(Request $request)
     {
-        $kycUsers = User::whereHas('kyc')->with('kyc')->latest()->paginate(15);
-        return view('admin.kyc.index', compact('kycUsers'));
+        $status = $request->query('status', 'pending');
+        
+        // Use service method for consistency if available, otherwise use query directly
+        $kycUsers = User::whereHas('kyc', function ($query) use ($status) {
+            $query->where('status', $status);
+        })->with('kyc')->latest()->paginate(15);
+        
+        return view('admin.kyc.index', compact('kycUsers', 'status'));
     }
 
     public function show($id)
@@ -39,7 +45,8 @@ class KycController extends Controller
                 'pan_name' => $user->kyc->pan_name, // Submitted Name
                 'doc_url' => asset('storage/' . $user->kyc->document_path),
                 'doc_type' => pathinfo($user->kyc->document_path, PATHINFO_EXTENSION) == 'pdf' ? 'pdf' : 'image',
-                'submitted_at' => $user->kyc->updated_at->format('d M, Y h:i A')
+                'submitted_at' => $user->kyc->updated_at->format('d M, Y h:i A'),
+                'admin_note' => $user->kyc->admin_note
             ]
         ]);
     }
