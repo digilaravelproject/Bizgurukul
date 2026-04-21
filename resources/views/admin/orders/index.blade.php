@@ -28,15 +28,13 @@
             :export-route="route('admin.orders.export')"
             placeholder="Search orders, transactions..."
         >
-            <x-slot name="extraFilters">
-                <select x-model="status" @change="updateTable(1)" 
-                    class="appearance-none bg-surface border border-primary/10 rounded-xl pl-4 pr-8 py-2 text-[10px] font-black uppercase text-mutedText focus:border-primary outline-none focus:ring-4 focus:ring-primary/5 transition-all shadow-sm">
-                    <option value="all">All Status</option>
-                    <option value="success">Success</option>
-                    <option value="pending">Pending</option>
-                    <option value="failed">Failed</option>
-                </select>
-            </x-slot>
+            <select x-model="status" @change="updateTable(1)" 
+                class="appearance-none bg-surface border border-primary/10 rounded-xl pl-4 pr-8 py-2 text-[10px] font-black uppercase text-mutedText focus:border-primary outline-none focus:ring-4 focus:ring-primary/5 transition-all shadow-sm">
+                <option value="all">All Status</option>
+                <option value="success">Success</option>
+                <option value="pending">Pending</option>
+                <option value="failed">Failed</option>
+            </select>
         </x-admin.table.filter>
     </div>
 
