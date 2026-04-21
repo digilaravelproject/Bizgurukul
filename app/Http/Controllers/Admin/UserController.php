@@ -46,57 +46,65 @@ class UserController extends Controller
 
         $roles = Role::all();
         $states = \App\Models\State::orderBy('name')->get();
-        
+
         $users = $this->userService->getUsers($perPage, $search, $viewTrash, $startDate, $endDate);
 
         return view('admin.users.index', compact('roles', 'states', 'users'));
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         try {
             $user = $this->userService->getUserDetails($id);
-            $user->load(['bank', 'roles', 'referrer']);
+            $user->load(['bank', 'roles', 'referrer', 'state']);
 
-            return response()->json([
-                'status' => true,
-                'data' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'mobile' => $user->mobile,
-                    'gender' => $user->gender,
-                    'dob' => $user->dob ? $user->dob->format('Y-m-d') : null,
-                    'state_id' => $user->state_id,
-                    'state_name' => $user->state?->name ?? 'N/A',
-                    'city' => $user->city,
-                    'role' => $user->roles->pluck('name')->implode(', '),
-                    'kyc_status' => $user->kyc_status,
-                    'joined_at' => $user->created_at->format('d M, Y'),
-                    'profile_picture' => $user->profile_picture ? asset('storage/' . $user->profile_picture) : null,
-                    'profile_photo_url' => $user->profile_photo_url ? asset('storage/' . $user->profile_photo_url) : null,
-                    'hide_from_leaderboard' => $user->hide_from_leaderboard,
-                    'initials' => strtoupper(substr($user->name, 0, 1)),
+            $userData = [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'mobile' => $user->mobile,
+                'gender' => $user->gender,
+                'dob' => $user->dob ? $user->dob->format('Y-m-d') : null,
+                'state_id' => $user->state_id,
+                'state_name' => $user->state?->name ?? 'N/A',
+                'city' => $user->city,
+                'role' => $user->roles->pluck('name')->implode(', '),
+                'kyc_status' => $user->kyc_status,
+                'joined_at' => $user->created_at->format('d M, Y'),
+                'profile_picture' => $user->profile_picture ? asset('storage/' . $user->profile_picture) : null,
+                'profile_photo_url' => $user->profile_photo_url ? (str_starts_with($user->profile_photo_url, 'http') ? $user->profile_photo_url : asset('storage/' . $user->profile_photo_url)) : null,
+                'hide_from_leaderboard' => $user->hide_from_leaderboard,
+                'initials' => strtoupper(substr($user->name, 0, 1)),
 
-                    // Affiliate Stats
-                    'total_earnings' => $user->commissions()->where('status', 'paid')->sum('amount'),
-                    'wallet_balance' => $user->wallet_balance,
+                // Affiliate Stats
+                'total_earnings' => $user->commissions()->where('status', 'paid')->sum('amount'),
+                'wallet_balance' => $user->wallet_balance,
 
-                    // Bank Details
-                    'bank' => $user->bank ? [
-                        'name' => $user->bank->bank_name,
-                        'holder' => $user->bank->account_holder_name,
-                        'account' => $user->bank->account_number,
-                        'ifsc' => $user->bank->ifsc_code,
-                        'upi' => $user->bank->upi_id,
-                        'status' => $user->bank->status ?? 'not_submitted',
-                    ] : null,
+                // Bank Details
+                'bank' => $user->bank ? [
+                    'name' => $user->bank->bank_name,
+                    'holder' => $user->bank->account_holder_name,
+                    'account' => $user->bank->account_number,
+                    'ifsc' => $user->bank->ifsc_code,
+                    'upi' => $user->bank->upi_id,
+                    'status' => $user->bank->status ?? 'not_submitted',
+                ] : null,
 
-                    'sponsor_name' => $user->referrer ? $user->referrer->name : 'N/A',
-                ]
-            ]);
+                'sponsor_name' => $user->referrer ? $user->referrer->name : 'N/A',
+            ];
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'status' => true,
+                    'data' => $userData
+                ]);
+            }
+            return view('admin.users.show', compact('user', 'userData'));
         } catch (Exception $e) {
-            return response()->json(['status' => false, 'message' => $e->getMessage()], 404);
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => false, 'message' => $e->getMessage()], 404);
+            }
+            return back()->with('error', $e->getMessage());
         }
     }
 
