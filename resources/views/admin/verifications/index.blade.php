@@ -16,7 +16,7 @@
                 <button @click="activeTab = 'kyc'"
                     :class="activeTab === 'kyc' ? 'bg-customWhite shadow-sm text-primary' : 'text-mutedText hover:bg-navy/5'"
                     class="px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all">
-                    KYC Requests ({{ $pendingKyc->count() }})
+                    KYC ({{ $pendingKycCount + $verifiedKycCount }})
                 </button>
                 <button @click="activeTab = 'bank'"
                     :class="activeTab === 'bank' ? 'bg-customWhite shadow-sm text-primary' : 'text-mutedText hover:bg-navy/5'"
@@ -28,6 +28,19 @@
 
         {{-- 1. KYC TAB --}}
         <div x-show="activeTab === 'kyc'" x-transition.opacity class="space-y-6">
+            
+            {{-- KYC Status Mini-Tabs --}}
+            <div class="flex items-center gap-2 px-2">
+                <a href="{{ route('admin.verifications.index', ['kyc_status' => 'pending', 'activeTab' => 'kyc']) }}" 
+                    class="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all {{ $kycStatus === 'pending' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-primary/5 text-mutedText hover:bg-primary/10' }}">
+                    Pending Requests ({{ $pendingKycCount }})
+                </a>
+                <a href="{{ route('admin.verifications.index', ['kyc_status' => 'verified', 'activeTab' => 'kyc']) }}" 
+                    class="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all {{ $kycStatus === 'verified' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' }}">
+                    Verified Users ({{ $verifiedKycCount }})
+                </a>
+            </div>
+
             <div class="bg-surface rounded-3xl shadow-sm border border-primary/10 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
@@ -36,15 +49,16 @@
                                 <th class="px-6 py-5">User Details</th>
                                 <th class="px-6 py-5">Sponsor Details</th>
                                 <th class="px-6 py-5">Date</th>
+                                <th class="px-6 py-5">Status</th>
                                 <th class="px-6 py-5 text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-primary/5">
-                            @forelse($pendingKyc as $user)
+                            @forelse($kycUsers as $user)
                                 <tr class="hover:bg-primary/5 transition-colors group">
                                     <td class="px-6 py-4">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-10 h-10 rounded-xl bg-navy/30 flex items-center justify-center text-primary font-black border border-primary/10">
+                                            <div class="w-10 h-10 rounded-xl {{ $user->kyc->status === 'verified' ? 'bg-emerald-50 text-emerald-600' : 'bg-navy/30 text-primary' }} flex items-center justify-center font-black border border-current/10">
                                                 {{ substr($user->name, 0, 1) }}
                                             </div>
                                             <div>
@@ -69,24 +83,31 @@
                                     <td class="px-6 py-4 font-bold text-mutedText text-xs">
                                         {{ $user->kyc->created_at->format('d M, Y') }}
                                     </td>
+                                    <td class="px-6 py-4">
+                                        @if($user->kyc->status === 'verified')
+                                            <span class="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-lg font-black text-[9px] uppercase tracking-widest border border-emerald-100">Verified</span>
+                                        @else
+                                            <span class="bg-primary/5 text-primary px-3 py-1 rounded-lg font-black text-[9px] uppercase tracking-widest border border-primary/10">Pending</span>
+                                        @endif
+                                    </td>
                                     <td class="px-6 py-4 text-right">
-                                        <button @click="openKycModal({{ $user->id }}, '{{ addslashes($user->name) }}', '{{ $user->email }}', '{{ $user->mobile }}', '{{ $user->dob ? $user->dob->format('d M, Y') : 'N/A' }}', '{{ $user->kyc->pan_name }}', '{{ asset('storage/' . $user->kyc->document_path) }}', '{{ pathinfo($user->kyc->document_path, PATHINFO_EXTENSION) }}', '{{ $user->referrer ? addslashes($user->referrer->name) : 'No Sponsor' }}', '{{ $user->referrer ? $user->referrer->email : '' }}', '{{ $user->referrer ? $user->referrer->mobile : '' }}')"
-                                            class="brand-gradient text-white px-5 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:scale-[1.02] transition">
-                                            Review KYC
+                                        <button @click="openKycModal({{ $user->id }}, '{{ addslashes($user->name) }}', '{{ $user->email }}', '{{ $user->mobile }}', '{{ $user->dob ? $user->dob->format('d M, Y') : 'N/A' }}', '{{ $user->kyc->pan_name }}', '{{ asset('storage/' . $user->kyc->document_path) }}', '{{ pathinfo($user->kyc->document_path, PATHINFO_EXTENSION) }}', '{{ $user->referrer ? addslashes($user->referrer->name) : 'No Sponsor' }}', '{{ $user->referrer ? $user->referrer->email : '' }}', '{{ $user->referrer ? $user->referrer->mobile : '' }}', '{{ $user->kyc->status }}')"
+                                            class="{{ $user->kyc->status === 'verified' ? 'bg-navy text-white' : 'brand-gradient text-white' }} px-5 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:scale-[1.02] transition">
+                                            {{ $user->kyc->status === 'verified' ? 'View Details' : 'Review KYC' }}
                                         </button>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-6 py-10 text-center text-mutedText font-bold italic">No pending KYC requests found.</td>
+                                    <td colspan="5" class="px-6 py-10 text-center text-mutedText font-bold italic">No {{ $kycStatus }} KYC records found.</td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
-                @if($pendingKyc->hasPages())
+                @if($kycUsers->hasPages())
                     <div class="p-4 bg-primary/5 border-t border-primary/5">
-                        {{ $pendingKyc->links() }}
+                        {{ $kycUsers->appends(['kyc_status' => $kycStatus, 'activeTab' => 'kyc'])->links() }}
                     </div>
                 @endif
             </div>
@@ -275,11 +296,16 @@
                         {{-- Action Area --}}
                         <div class="p-10 bg-navy/5 border-t border-primary/5">
                             <div class="flex gap-4">
-                                <button @click="processKyc('approve')" class="flex-1 brand-gradient text-white py-4 rounded-2xl font-black text-[10px] uppercase shadow-lg shadow-primary/20">Approve</button>
-                                <button @click="showRejectKyc = true" class="flex-1 bg-surface border border-secondary text-secondary py-4 rounded-2xl font-black text-[10px] uppercase">Reject</button>
+                                <template x-if="kycData.status !== 'verified'">
+                                    <button @click="processKyc('approve')" class="flex-1 brand-gradient text-white py-4 rounded-2xl font-black text-[10px] uppercase shadow-lg shadow-primary/20">Approve</button>
+                                </template>
+                                <button @click="showRejectKyc = true" class="flex-1 bg-surface border border-secondary text-secondary py-4 rounded-2xl font-black text-[10px] uppercase" x-text="kycData.status === 'verified' ? 'Reject Verified User' : 'Reject'"></button>
                             </div>
 
                             <div x-show="showRejectKyc" class="mt-4 animate-fadeIn">
+                                <template x-if="kycData.status === 'verified'">
+                                    <p class="text-[10px] font-bold text-secondary mb-2 italic">⚠️ Warning: Revoking an already verified user. Provide reason below.</p>
+                                </template>
                                 <textarea x-model="adminNote" class="w-full border-secondary/20 rounded-xl bg-white text-xs p-4 font-bold" rows="3" placeholder="Explain the reason for rejection..."></textarea>
                                 <div class="flex justify-end gap-3 mt-3">
                                     <button @click="showRejectKyc = false" class="text-[10px] font-black text-mutedText p-2 uppercase">Cancel</button>
@@ -454,7 +480,7 @@
     <script>
         function verificationManager() {
             return {
-                activeTab: 'kyc',
+                activeTab: new URLSearchParams(window.location.search).get('activeTab') || 'kyc',
                 kycModalOpen: false,
                 bankUpdateModalOpen: false,
                 bankInitialModalOpen: false,
@@ -471,8 +497,8 @@
                 activeBankId: null,
                 activeBankType: 'initial',
 
-                openKycModal(id, name, email, mobile, dob, id_name, url, ext, r_name, r_email, r_mobile) {
-                    this.kycData = { id, name, email, mobile, dob, id_name, url, ext, referrer_name: r_name, referrer_email: r_email, referrer_mobile: r_mobile };
+                openKycModal(id, name, email, mobile, dob, id_name, url, ext, r_name, r_email, r_mobile, status) {
+                    this.kycData = { id, name, email, mobile, dob, id_name, url, ext, referrer_name: r_name, referrer_email: r_email, referrer_mobile: r_mobile, status };
                     this.adminNote = '';
                     this.showRejectKyc = false;
                     this.kycModalOpen = true;
@@ -501,13 +527,23 @@
                         ? `{{ route('admin.verifications.kyc.approve', ':id') }}`.replace(':id', this.kycData.id)
                         : `{{ route('admin.verifications.kyc.reject', ':id') }}`.replace(':id', this.kycData.id);
 
+                    let title = 'Are you sure?';
+                    let text = `You want to ${action} this KYC.`;
+                    let icon = 'warning';
+
+                    if (action === 'reject' && this.kycData.status === 'verified') {
+                        title = '<span class="text-secondary">Reject Verified User?</span>';
+                        text = 'This user is already verified. Rejecting them will revoke their verified status and reset their KYC. Are you absolutely sure?';
+                        icon = 'error';
+                    }
+
                     Swal.fire({
-                        title: 'Are you sure?',
-                        text: `You want to ${action} this KYC.`,
-                        icon: 'warning',
+                        title: title,
+                        html: text,
+                        icon: icon,
                         showCancelButton: true,
                         confirmButtonText: 'Yes, Proceed!',
-                        confirmButtonColor: '#F7941D'
+                        confirmButtonColor: action === 'reject' ? '#e11d48' : '#F7941D'
                     }).then(res => {
                         if (res.isConfirmed) {
                             axios.post(url, { admin_note: this.adminNote })

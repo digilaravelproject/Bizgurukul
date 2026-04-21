@@ -19,10 +19,16 @@ class ProfileVerificationController extends Controller
 
     public function index(Request $request)
     {
-        // 1. Pending KYC Requests
-        $pendingKyc = User::whereHas('kyc', function($q) {
-            $q->where('status', 'pending');
+        $kycStatus = $request->get('kyc_status', 'pending');
+
+        // 1. KYC Requests (Filtered by status)
+        $kycUsers = User::whereHas('kyc', function($q) use ($kycStatus) {
+            $q->where('status', $kycStatus);
         })->with(['kyc', 'referrer'])->latest()->paginate(10, ['*'], 'kyc_page');
+
+        // Counts for tabs
+        $pendingKycCount = User::whereHas('kyc', function($q) { $q->where('status', 'pending'); })->count();
+        $verifiedKycCount = User::whereHas('kyc', function($q) { $q->where('status', 'verified'); })->count();
 
         // 2. Pending Bank Initial Setup
         $pendingBankInitial = \App\Models\BankDetail::where('status', 'pending')
@@ -47,7 +53,14 @@ class ProfileVerificationController extends Controller
             ] : null;
         }
 
-        return view('admin.verifications.index', compact('pendingKyc', 'pendingBankInitial', 'pendingBankUpdates'));
+        return view('admin.verifications.index', compact(
+            'kycUsers', 
+            'kycStatus', 
+            'pendingKycCount', 
+            'verifiedKycCount',
+            'pendingBankInitial', 
+            'pendingBankUpdates'
+        ));
     }
 
     public function checkNew()
