@@ -137,10 +137,21 @@
 
                     {{-- Blackout Overlay (Soft DRM) --}}
                     <div id="video-blackout" class="absolute inset-0 bg-black z-[100] flex flex-col items-center justify-center text-white text-center p-6" style="display: none;">
-                         <div class="space-y-4">
+                         <div id="protection-message" class="space-y-4 max-w-md">
                             <i class="fas fa-user-shield text-4xl text-primary mb-2"></i>
                             <p class="font-bold text-lg">Protected Content</p>
-                            <p class="text-xs opacity-60">Screen recording or sharing is strictly prohibited.</p>
+                            <p id="protection-text" class="text-xs opacity-60">Screen recording or sharing is strictly prohibited.</p>
+                            
+                            {{-- Actionable Fix for Hardware Acceleration --}}
+                            <div id="hardware-acceleration-fix" class="mt-6 p-4 bg-white/5 rounded-xl border border-white/10 hidden">
+                                <p class="text-[11px] font-bold text-primary uppercase tracking-widest mb-2">Likely Solution</p>
+                                <p class="text-xs opacity-80 mb-4">It looks like Hardware Acceleration is disabled in your browser. This is required for secure video playback.</p>
+                                <div class="flex flex-col gap-2">
+                                    <a href="https://support.google.com/chrome/answer/95414?hl=en" target="_blank" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-[10px] font-bold transition-all">Enable in Chrome/Edge</a>
+                                    <a href="https://support.mozilla.org/en-US/kb/performance-settings" target="_blank" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-[10px] font-bold transition-all">Enable in Firefox</a>
+                                </div>
+                            </div>
+
                             <p class="text-[10px] uppercase tracking-widest text-primary font-bold mt-4">Focus to Resume</p>
                         </div>
                     </div>
@@ -302,9 +313,32 @@
             // Soft DRM Protection Logic
             const blackout = document.getElementById('video-blackout');
             const bunnyIframe = document.getElementById('bunny-player');
+            let blackoutTimeout = null;
 
-            function showBlackout() {
+            function showBlackout(reason = 'general') {
+                console.log('Blackout triggered. Reason:', reason);
+                if (blackoutTimeout) clearTimeout(blackoutTimeout);
+                
                 blackout.style.display = 'flex';
+                
+                // Show specific message for hardware acceleration
+                const hardwareFix = document.getElementById('hardware-acceleration-fix');
+                const protectionText = document.getElementById('protection-text');
+                
+                if (reason === 'no-drm') {
+                    protectionText.innerText = 'Your browser security settings are preventing playback.';
+                    hardwareFix.classList.remove('hidden');
+                } else if (reason === 'devtools') {
+                    protectionText.innerText = 'Please close Developer Tools to continue.';
+                    hardwareFix.classList.add('hidden');
+                } else if (reason === 'focus-loss') {
+                    protectionText.innerText = 'Playback paused. Please focus on this tab to continue.';
+                    hardwareFix.classList.add('hidden');
+                } else {
+                    protectionText.innerText = 'Screen recording or sharing is strictly prohibited.';
+                    hardwareFix.classList.add('hidden');
+                }
+                
                 // Pause legacy video.js if exists
                 if (typeof player !== 'undefined' && player && !player.paused()) {
                     player.pause();
@@ -317,31 +351,61 @@
 
             function hideBlackout() {
                 blackout.style.display = 'none';
+                if (blackoutTimeout) clearTimeout(blackoutTimeout);
             }
 
-            // 0. Advanced Action: DevTools Detector
-            const devtoolsThreshold = 160;
-            setInterval(() => {
-                if (window.outerWidth - window.innerWidth > devtoolsThreshold ||
-                    window.outerHeight - window.innerHeight > devtoolsThreshold) {
-                    showBlackout();
+            // DRM/Hardware Acceleration Check
+            async function checkDRMSupport() {
+                try {
+                    const config = [{
+                        initDataTypes: ['cenc'],
+                        videoCapabilities: [{ contentType: 'video/mp4; codecs="avc1.42E01E"', robustness: 'SW_SECURE_DECODE' }]
+                    }];
+                    const access = await navigator.requestMediaKeySystemAccess('com.widevine.alpha', config);
+                    console.log('Widevine DRM supported.');
+                } catch (e) {
+                    console.warn('Widevine DRM not supported or Hardware Acceleration disabled.', e);
+                    // We don't show blackout immediately, but if playback fails, we know why
+                    window.drmFailed = true;
                 }
-            }, 1000);
+            }
+            checkDRMSupport();
 
-            // 1. Focus Tracking
-            window.addEventListener('blur', function() {
-                // If focus moved to the iframe (user clicked the video), do not blackout
-                if (document.activeElement && document.activeElement.tagName.toLowerCase() === 'iframe') {
-                    return;
+            // 0. Advanced Action: DevTools Detector (Refined)
+            const devtoolsThreshold = 250; 
+            setInterval(() => {
+                const widthDiff = window.outerWidth - window.innerWidth;
+                const heightDiff = window.outerHeight - window.innerHeight;
+                
+                if (widthDiff > devtoolsThreshold || heightDiff > devtoolsThreshold) {
+                    if (blackout.style.display !== 'flex') {
+                        showBlackout('devtools');
+                    }
                 }
-                showBlackout();
+            }, 2000);
+
+            // 1. Focus Tracking (with Debounce to prevent false positives on iframe clicks)
+            window.addEventListener('blur', function() {
+                // Short delay to check if focus shifted to our own iframe
+                blackoutTimeout = setTimeout(() => {
+                    const activeEl = document.activeElement;
+                    if (activeEl && (activeEl.tagName.toLowerCase() === 'iframe' || activeEl === bunnyIframe)) {
+                        console.log('Focus shifted to player iframe, ignoring blur.');
+                        return;
+                    }
+                    showBlackout('focus-loss');
+                }, 500);
             });
-            window.addEventListener('focus', hideBlackout);
+            
+            window.addEventListener('focus', () => {
+                console.log('Window regained focus.');
+                hideBlackout();
+            });
 
             // 2. Visibility API (Tab Switching)
             document.addEventListener('visibilitychange', function() {
                 if (document.hidden) {
-                    showBlackout();
+                    showBlackout('tab-hidden');
                 } else {
                     hideBlackout();
                 }
@@ -357,9 +421,10 @@
                     e.key === 'F12'
                 ) {
                     e.preventDefault();
-                    showBlackout();
+                    showBlackout('keyboard-shortcut');
+                    // Auto-hide after 3 seconds for keyboard accidental triggers
                     setTimeout(hideBlackout, 3000);
-                    // Add to clipboard empty string if possible (hacky snippet preventions)
+                    
                     try { navigator.clipboard.writeText(""); } catch(err) {}
                     return false;
                 }
@@ -397,7 +462,16 @@
             window.addEventListener('message', function(event) {
                 try {
                     const data = JSON.parse(event.data);
-                    // data.event includes ended, timeupdate, etc.
+                    // data.event includes ended, timeupdate, error, etc.
+                    
+                    if (data.event === 'error') {
+                        console.error('Bunny Player Error:', data);
+                        // If it's a security/DRM error or we previously detected DRM failure
+                        if (window.drmFailed) {
+                            showBlackout('no-drm');
+                        }
+                    }
+
                     if (data.event === 'ended' && !isAlreadyCompleted) {
                         saveProgress(9999, true);
                         isAlreadyCompleted = true; // prevent multiple reloads
