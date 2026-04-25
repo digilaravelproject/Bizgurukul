@@ -34,6 +34,8 @@ Route::middleware(['auth'])
         // Secret Manual Onboarding (Hidden)
         Route::get('/secret-manual-onboarding', [\App\Http\Controllers\Admin\ManualOnboardingController::class, 'index'])->name('secret-onboarding');
         Route::post('/secret-manual-onboarding', [\App\Http\Controllers\Admin\ManualOnboardingController::class, 'store'])->name('secret-onboarding.store');
+        Route::get('/api/leads', [\App\Http\Controllers\Admin\ManualOnboardingController::class, 'getLeads'])->name('api.leads');
+        Route::get('/api/leads/{id}', [\App\Http\Controllers\Admin\ManualOnboardingController::class, 'getLeadDetails'])->name('api.leads.details');
 
         // Dashboard (Accessible to all admins)
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
