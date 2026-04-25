@@ -40,8 +40,7 @@ class ManualOnboardingController extends Controller
     public function getLeads(Request $request)
     {
         $search = $request->query('q');
-        $leads = Lead::where('status', '!=', 'converted')
-            ->where(function($q) use ($search) {
+        $leads = Lead::where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('mobile', 'like', "%{$search}%");
