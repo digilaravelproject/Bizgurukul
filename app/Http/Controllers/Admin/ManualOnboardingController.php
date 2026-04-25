@@ -29,7 +29,7 @@ class ManualOnboardingController extends Controller
      */
     public function index()
     {
-        $bundles = Bundle::where('status', 1)->get();
+        $bundles = Bundle::where('is_published', 1)->get();
         $states = State::orderBy('name')->get();
         return view('admin.manual-onboarding', compact('bundles', 'states'));
     }
