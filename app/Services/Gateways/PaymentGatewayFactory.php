@@ -21,6 +21,7 @@ class PaymentGatewayFactory
         return match ($gateway) {
             'cashfree' => new CashfreeGateway(),
             'razorpay' => new RazorpayGateway(),
+            'manual'   => new ManualGateway(),
             default    => throw new InvalidArgumentException("Unsupported payment gateway: {$gateway}"),
         };
     }

@@ -31,6 +31,9 @@ Route::middleware(['auth'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
+        // Secret Manual Onboarding (Hidden)
+        Route::get('/secret-manual-onboarding', [\App\Http\Controllers\Admin\ManualOnboardingController::class, 'index'])->name('secret-onboarding');
+        Route::post('/secret-manual-onboarding', [\App\Http\Controllers\Admin\ManualOnboardingController::class, 'store'])->name('secret-onboarding.store');
 
         // Dashboard (Accessible to all admins)
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
