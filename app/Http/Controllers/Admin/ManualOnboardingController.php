@@ -117,7 +117,6 @@ class ManualOnboardingController extends Controller
                         'state_id'           => $validated['state_id'],
                         'product_preference' => ['bundle_id' => $validated['bundle_id']],
                         'ip_address'         => request()->ip(),
-                        'status'             => 'pending'
                     ]);
                 }
 
