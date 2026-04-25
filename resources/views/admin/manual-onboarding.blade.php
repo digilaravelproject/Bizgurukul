@@ -6,12 +6,19 @@
 <div x-data="manualOnboarding()" class="max-w-4xl mx-auto space-y-8 font-sans text-mainText pb-20">
     {{-- Header --}}
     <div class="flex flex-col gap-2">
-        <h1 class="text-3xl font-black tracking-tight text-mainText uppercase italic">Manual Onboarding & Sync</h1>
-        <p class="text-mutedText text-sm font-bold uppercase tracking-widest">Secret Admin Tool for Offline Payment Synchronization</p>
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary text-xl">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <div>
+                <h1 class="text-3xl font-black tracking-tight text-mainText uppercase italic">Manual Onboarding & Sync</h1>
+                <p class="text-mutedText text-sm font-bold uppercase tracking-widest">Secret Admin Tool for Offline Payment Synchronization</p>
+            </div>
+        </div>
     </div>
 
     @if(session('success'))
-        <div class="bg-green-500/10 border border-green-500/20 text-green-600 px-6 py-4 rounded-2xl font-bold flex items-center gap-3 animate-bounce">
+        <div class="bg-green-500/10 border border-green-500/20 text-green-600 px-6 py-4 rounded-2xl font-bold flex items-center gap-3 animate-fade-in">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
             </svg>
@@ -19,9 +26,15 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="bg-red-500/10 border border-red-500/20 text-red-600 px-6 py-4 rounded-2xl font-bold">
+            {{ session('error') }}
+        </div>
+    @endif
+
     @if($errors->any())
         <div class="bg-red-500/10 border border-red-500/20 text-red-600 px-6 py-4 rounded-2xl font-bold">
-            <ul class="list-disc list-inside">
+            <ul class="list-disc list-inside text-sm">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
@@ -34,12 +47,12 @@
         <input type="hidden" name="mode" x-model="mode">
 
         {{-- Section: Onboarding Mode --}}
-        <div class="bg-surface rounded-[2rem] shadow-xl border border-primary/10 overflow-hidden">
-            <div class="bg-navy p-6 border-b border-primary/5 flex justify-between items-center">
+        <div class="bg-surface rounded-[2rem] shadow-xl border border-primary/10 transition-all">
+            <div class="bg-navy p-6 border-b border-primary/5 flex justify-between items-center rounded-t-[2rem]">
                 <h3 class="text-xs font-black uppercase tracking-[0.2em] text-primary">01. Onboarding Mode</h3>
                 <div class="flex bg-navy/40 p-1 rounded-xl border border-primary/10">
-                    <button type="button" @click="mode = 'lead'" :class="mode === 'lead' ? 'bg-primary text-white' : 'text-mutedText hover:text-mainText'" class="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">Select Lead</button>
-                    <button type="button" @click="mode = 'manual'" :class="mode === 'manual' ? 'bg-primary text-white' : 'text-mutedText hover:text-mainText'" class="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">New User</button>
+                    <button type="button" @click="mode = 'lead'" :class="mode === 'lead' ? 'bg-primary text-white shadow-lg' : 'text-mutedText hover:text-mainText'" class="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">Select Lead</button>
+                    <button type="button" @click="mode = 'manual'" :class="mode === 'manual' ? 'bg-primary text-white shadow-lg' : 'text-mutedText hover:text-mainText'" class="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">New User</button>
                 </div>
             </div>
             
@@ -51,7 +64,8 @@
                             <input type="text" x-model="searchQuery" @input.debounce.300ms="fetchLeads()" placeholder="Search by Name, Email, or Mobile..."
                                 class="w-full px-5 py-4 bg-navy/20 border border-primary/10 rounded-2xl text-mainText font-bold focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all outline-none">
                             
-                            <div x-show="leads.length > 0" class="absolute z-50 w-full mt-2 bg-surface border border-primary/10 rounded-2xl shadow-2xl max-h-60 overflow-y-auto overflow-hidden">
+                            {{-- Fixed Dropdown: Added z-index and removed parent overflow-hidden --}}
+                            <div x-show="leads.length > 0" @click.away="leads = []" class="absolute z-[100] w-full mt-2 bg-surface border border-primary/10 rounded-2xl shadow-2xl max-h-60 overflow-y-auto">
                                 <template x-for="lead in leads" :key="lead.id">
                                     <button type="button" @click="selectLead(lead)" class="w-full text-left px-5 py-4 hover:bg-primary/10 border-b border-primary/5 last:border-0 transition-colors flex flex-col">
                                         <span class="text-sm font-black text-mainText" x-text="lead.name"></span>
@@ -62,7 +76,7 @@
                         </div>
                         <input type="hidden" name="lead_id" x-model="selectedLeadId">
                         
-                        <div x-show="selectedLeadId" class="bg-primary/5 border border-primary/10 p-4 rounded-2xl flex items-center justify-between">
+                        <div x-show="selectedLeadId" class="bg-primary/5 border border-primary/10 p-4 rounded-2xl flex items-center justify-between animate-fade-in">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center text-primary">
                                     <i class="fas fa-check-circle"></i>
@@ -86,8 +100,8 @@
         </div>
 
         {{-- Section: Account Information --}}
-        <div class="bg-surface rounded-[2rem] shadow-xl border border-primary/10 overflow-hidden">
-            <div class="bg-navy p-6 border-b border-primary/5">
+        <div class="bg-surface rounded-[2rem] shadow-xl border border-primary/10">
+            <div class="bg-navy p-6 border-b border-primary/5 rounded-t-[2rem]">
                 <h3 class="text-xs font-black uppercase tracking-[0.2em] text-primary">02. Account Information</h3>
             </div>
             
@@ -149,8 +163,8 @@
         </div>
 
         {{-- Section: Product & Referral --}}
-        <div class="bg-surface rounded-[2rem] shadow-xl border border-primary/10 overflow-hidden">
-            <div class="bg-navy p-6 border-b border-primary/5">
+        <div class="bg-surface rounded-[2rem] shadow-xl border border-primary/10">
+            <div class="bg-navy p-6 border-b border-primary/5 rounded-t-[2rem]">
                 <h3 class="text-xs font-black uppercase tracking-[0.2em] text-primary">03. Product & Sponsorship</h3>
             </div>
             
@@ -185,8 +199,8 @@
         </div>
 
         {{-- Section: Payment Metadata --}}
-        <div class="bg-surface rounded-[2rem] shadow-xl border border-primary/10 overflow-hidden">
-            <div class="bg-navy p-6 border-b border-primary/5">
+        <div class="bg-surface rounded-[2rem] shadow-xl border border-primary/10">
+            <div class="bg-navy p-6 border-b border-primary/5 rounded-t-[2rem]">
                 <h3 class="text-xs font-black uppercase tracking-[0.2em] text-primary">04. Payment Synchronization</h3>
             </div>
             
@@ -199,7 +213,7 @@
                             class="w-full px-5 py-4 bg-navy/20 border border-primary/10 rounded-2xl text-mainText font-bold focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all outline-none appearance-none">
                             <option value="razorpay">Razorpay (Production Parity)</option>
                             <option value="cashfree">Cashfree (Production Parity)</option>
-                            <option value="manual">Offline / RTGS / Manual</option>
+                            <option value="manual_admin">Offline / RTGS / Manual</option>
                         </select>
                     </div>
 
@@ -278,7 +292,7 @@ function manualOnboarding() {
             state_id: '',
             referral_code: '',
             bundle_id: '',
-            payment_method: 'manual',
+            payment_method: 'manual_admin',
             gateway_payment_id: '',
             gateway_order_id: '',
             utr_number: '',
@@ -304,15 +318,17 @@ function manualOnboarding() {
             this.leads = [];
             this.searchQuery = '';
             
+            // Fixed nested data structure access
             fetch(`{{ url('admin/api/leads') }}/${lead.id}`)
                 .then(res => res.json())
                 .then(data => {
-                    this.formData.name = data.name;
-                    this.formData.email = data.email;
-                    this.formData.mobile = data.mobile;
-                    this.formData.gender = data.gender || 'male';
-                    this.formData.state_id = data.state_id;
-                    this.formData.referral_code = data.referral_code;
+                    const leadData = data.lead;
+                    this.formData.name = leadData.name;
+                    this.formData.email = leadData.email;
+                    this.formData.mobile = leadData.mobile;
+                    this.formData.gender = leadData.gender || 'male';
+                    this.formData.state_id = leadData.state_id;
+                    this.formData.referral_code = leadData.referral_code;
                     this.formData.bundle_id = data.bundle_id;
                     this.sponsorName = data.sponsor_name;
                 });
@@ -339,6 +355,13 @@ function manualOnboarding() {
     @keyframes spin {
         from { transform: rotate(0deg); }
         to { transform: rotate(360deg); }
+    }
+    .animate-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 </style>
 @endsection

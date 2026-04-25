@@ -3,15 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Bundle;
 use App\Models\Lead;
+use App\Models\Bundle;
+use App\Models\Payment;
+use App\Models\User;
 use App\Models\State;
 use App\Services\RegistrationService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class ManualOnboardingController extends Controller
 {
@@ -27,139 +29,139 @@ class ManualOnboardingController extends Controller
      */
     public function index()
     {
-        $bundles = Bundle::where('is_active', true)->ordered()->get();
+        $bundles = Bundle::where('status', 1)->get();
         $states = State::orderBy('name')->get();
-
         return view('admin.manual-onboarding', compact('bundles', 'states'));
     }
 
     /**
-     * Get leads for searchable dropdown.
+     * API: Search leads for auto-fill.
      */
     public function getLeads(Request $request)
     {
-        $search = $request->input('q');
-        $leads = Lead::when($search, function($query) use ($search) {
-            $query->where('name', 'like', "%{$search}%")
+        $search = $request->query('q');
+        $leads = Lead::where('status', '!=', 'converted')
+            ->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('mobile', 'like', "%{$search}%");
-        })
-        ->latest()
-        ->limit(20)
-        ->get(['id', 'name', 'email', 'mobile']);
+            })
+            ->limit(10)
+            ->get(['id', 'name', 'email', 'mobile']);
 
         return response()->json($leads);
     }
 
     /**
-     * Get specific lead details.
+     * API: Get specific lead details.
      */
     public function getLeadDetails($id)
     {
-        $lead = Lead::with('sponsor:id,name,referral_code')->findOrFail($id);
+        $lead = Lead::with('sponsor')->findOrFail($id);
         
+        $bundleId = null;
+        if ($lead->product_preference) {
+            $pref = $lead->product_preference;
+            $bundleId = $pref['bundle_id'] ?? null;
+        }
+
         return response()->json([
-            'id'                => $lead->id,
-            'name'              => $lead->name,
-            'email'             => $lead->email,
-            'mobile'            => $lead->mobile,
-            'gender'            => $lead->gender,
-            'state_id'          => $lead->state_id,
-            'referral_code'     => $lead->referral_code,
-            'sponsor_name'      => $lead->sponsor ? $lead->sponsor->name : null,
-            'bundle_id'         => $lead->product_preference['bundle_id'] ?? null,
+            'lead' => $lead,
+            'bundle_id' => $bundleId,
+            'sponsor_name' => $lead->sponsor ? $lead->sponsor->name : 'No Sponsor'
         ]);
     }
 
     /**
-     * Store the manual onboarding data and sync with production registration flow.
+     * Store the manual onboarding request.
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'mode'               => 'required|in:lead,manual',
             'lead_id'            => 'required_if:mode,lead|nullable|exists:leads,id',
             'name'               => 'required|string|max:255',
-            'email'              => 'required|email|unique:users,email',
-            'mobile'             => 'required|numeric|digits:10',
+            'email'              => 'required|email',
+            'mobile'             => 'required|string|max:15',
             'password'           => 'required|min:8',
             'gender'             => 'required|in:male,female,other',
             'state_id'           => 'required|exists:states,id',
             'bundle_id'          => 'required|exists:bundles,id',
-            'referral_code'      => 'nullable|string|exists:users,referral_code',
-            'payment_method'     => 'required|in:razorpay,cashfree,manual',
-            'gateway_payment_id' => 'required|string|unique:payments,gateway_payment_id',
+            'referral_code'      => 'nullable|string',
+            'amount'             => 'required|numeric|min:0',
+            'gateway_payment_id' => 'required|string',
             'gateway_order_id'   => 'nullable|string',
             'utr_number'         => 'nullable|string',
-            'amount'             => 'required|numeric|min:0',
             'payment_date'       => 'required|date',
+            'payment_method'     => 'required|string'
         ]);
 
         try {
-            return DB::transaction(function () use ($request) {
-                // 1. Resolve or Create Lead
-                if ($request->mode === 'lead') {
-                    $lead = Lead::findOrFail($request->lead_id);
-                    // Ensure lead data matches request if it was edited
-                    $lead->update([
-                        'name'               => $request->name,
-                        'email'              => $request->email,
-                        'mobile'             => $request->mobile,
-                        'gender'             => $request->gender,
-                        'state_id'           => $request->state_id,
-                        'product_preference' => ['bundle_id' => $request->bundle_id],
-                        'referral_code'      => $request->referral_code,
-                    ]);
+            return DB::transaction(function () use ($validated) {
+                // 1. Resolve or Create Lead (To satisfy RegistrationService requirements)
+                if ($validated['mode'] === 'lead') {
+                    $lead = Lead::findOrFail($validated['lead_id']);
                 } else {
+                    // Check if user already exists
+                    if (User::where('email', $validated['email'])->exists()) {
+                        throw new \Exception("User with this email already exists.");
+                    }
+
+                    // Create a temporary Lead to bridge into RegistrationService
                     $lead = Lead::create([
-                        'name'               => $request->name,
-                        'email'              => $request->email,
-                        'mobile'             => $request->mobile,
-                        'password'           => Hash::make($request->password),
-                        'gender'             => $request->gender,
-                        'state_id'           => $request->state_id,
-                        'product_preference' => ['bundle_id' => $request->bundle_id],
-                        'referral_code'      => $request->referral_code,
-                        'ip_address'         => $request->ip(),
+                        'name'               => $validated['name'],
+                        'email'              => $validated['email'],
+                        'mobile'             => $validated['mobile'],
+                        'password'           => $validated['password'],
+                        'referral_code'      => $validated['referral_code'],
+                        'gender'             => $validated['gender'],
+                        'state_id'           => $validated['state_id'],
+                        'product_preference' => ['bundle_id' => $validated['bundle_id']],
+                        'ip_address'         => request()->ip(),
+                        'status'             => 'pending'
                     ]);
                 }
 
-                // 2. Prepare data for RegistrationService
-                $verifyData = [
-                    'gateway'             => $request->payment_method,
-                    'is_webhook'          => true, // Skips verification signature checks
-                    'lead_id'             => $lead->id,
-                    'gateway_order_id'    => $request->gateway_order_id ?: 'MANUAL_ORD_' . time(),
-                    'gateway_payment_id'  => $request->gateway_payment_id,
-                    'coupon_code'         => null,
+                // 2. Prepare Registration Data
+                $regData = [
+                    'lead_id'            => $lead->id,
+                    'gateway'            => $validated['payment_method'],
+                    'is_webhook'         => true, 
+                    'gateway_order_id'   => $validated['gateway_order_id'] ?: 'MANUAL_ORD_' . time(),
+                    'gateway_payment_id' => $validated['gateway_payment_id'],
                 ];
 
                 // 3. Execute production registration sequence
-                $user = $this->registrationService->verifyAndCompleteRegistration($verifyData);
+                $result = $this->registrationService->verifyAndCompleteRegistration($regData);
 
-                // 4. Update payment details (amount, date, UTR)
-                $payment = $user->payments()->latest()->first();
-                if ($payment) {
-                    $payment->update([
-                        'amount'       => $request->amount,
-                        'total_amount' => $request->amount,
-                        'status'       => 'success',
-                        'utr_number'   => $request->utr_number,
-                        'created_at'   => $request->payment_date,
-                    ]);
+                // Fetch the payment record created by the service
+                $user = is_a($result, User::class) ? $result : User::where('email', $lead->email)->first();
+                $payment = Payment::where('user_id', $user->id)->latest()->first();
+
+                if (!$payment) {
+                    throw new \Exception("Registration sequence completed but no payment record was found.");
                 }
+
+                // 4. Update payment details for 100% parity
+                $payment->update([
+                    'amount'             => $validated['amount'],
+                    'total_amount'       => $validated['amount'],
+                    'status'             => 'success',
+                    'gateway_payment_id' => $validated['gateway_payment_id'],
+                    'utr_number'         => $validated['utr_number'] ?: $validated['gateway_payment_id'],
+                    'created_at'         => Carbon::parse($validated['payment_date']),
+                ]);
 
                 Log::info("Manual Onboarding Success: User ID {$user->id} by Admin ID " . Auth::id());
 
-                return redirect()->back()->with('success', "Account for '{$user->name}' created successfully.");
+                return redirect()->back()->with('success', "Account for '{$user->name}' onboarded successfully. Invoice is ready.");
             });
         } catch (\Exception $e) {
             Log::error('Manual Onboarding Failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'admin_id' => Auth::id()
             ]);
-
-            return redirect()->back()->withInput()->withErrors(['error' => 'Onboarding failed: ' . $e->getMessage()]);
+            return redirect()->back()->with('error', "Onboarding Error: " . $e->getMessage())->withInput();
         }
     }
 }
