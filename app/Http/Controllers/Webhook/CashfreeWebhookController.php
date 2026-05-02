@@ -13,7 +13,7 @@ use Illuminate\Auth\Events\Registered;
 
 class CashfreeWebhookController extends Controller
 {
-    protected $registrationService;
+    protected RegistrationService $registrationService;
 
     public function __construct(RegistrationService $registrationService)
     {
@@ -24,7 +24,7 @@ class CashfreeWebhookController extends Controller
     {
         $payload = $request->getContent();
         $headers = $request->headers->all();
-        
+
         Log::info('Cashfree Webhook Raw Debug:', [
             'url' => $request->fullUrl(),
             'method' => $request->method(),
@@ -79,7 +79,7 @@ class CashfreeWebhookController extends Controller
             }
 
             // Check if this payment is already recorded
-            $existingPayment = Payment::where('gateway_order_id', $orderId)->first();
+            $existingPayment = Payment::query()->where('gateway_order_id', $orderId)->first();
 
             if ($existingPayment && $existingPayment->status === 'success') {
                 Log::info('Cashfree Webhook: Order already processed - ' . $orderId);
@@ -89,10 +89,10 @@ class CashfreeWebhookController extends Controller
             // If pending payment exists, update it to success but DON'T return yet —
             // we must also complete registration if it hasn't been done
             if ($existingPayment && $existingPayment->status !== 'success') {
-                $existingPayment->update([
+                $existingPayment->fill([
                     'gateway_payment_id' => $cfPaymentId,
                     'status' => 'success',
-                ]);
+                ])->save();
                 Log::info('Cashfree Webhook: Updated existing payment for order ' . $orderId);
             }
 
@@ -109,7 +109,7 @@ class CashfreeWebhookController extends Controller
             }
 
             if ($leadId) {
-                $lead = Lead::find($leadId);
+                $lead = Lead::query()->find($leadId);
                 if (!$lead) {
                     Log::info('Cashfree Webhook: Lead not found (ID: ' . $leadId . ')');
                     return response()->json(['status' => 'success', 'message' => 'Lead already processed'], 200);
@@ -138,7 +138,6 @@ class CashfreeWebhookController extends Controller
 
                     Log::info('Cashfree Webhook: Successfully processed lead ' . $leadId);
                     return response()->json(['status' => 'success'], 200);
-
                 } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
                     Log::info('Cashfree Webhook: Lead concurrently processed ' . $orderId);
                     return response()->json(['status' => 'success'], 200);

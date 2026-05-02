@@ -120,7 +120,7 @@ class RegistrationFlowController extends Controller
 
     /**
      * Phase 2: Product Selection & Sponsor Verification
-     * 
+     *
      * @param Request $request
      * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
      */
@@ -132,7 +132,7 @@ class RegistrationFlowController extends Controller
 
             /** @var string|null $referralCode */
             $referralCode = $lead->referral_code ?? (session('referral_code') ?? Cookie::get('referral_code'));
-            
+
             /** @var User|null $sponsor */
             $sponsor = $referralCode ? User::where('referral_code', '=', $referralCode, 'and')->first() : null;
 
@@ -239,13 +239,31 @@ class RegistrationFlowController extends Controller
     public function showPhase3(Request $request)
     {
         try {
-            $lead = Lead::findOrFail($request->query('lead_id'));
+            $leadId = $request->query('lead_id');
+            $lead = Lead::query()->find($leadId);
+
+            // [Race Condition Fix] If lead is missing, it might have been converted to a user by a background webhook
+            if (! $lead) {
+                // Check if there's a successful payment for this lead_id
+                $hasSuccessPayment = Payment::query()
+                    ->where('lead_id', $leadId)
+                    ->where('status', 'success')
+                    ->exists();
+
+                if ($hasSuccessPayment) {
+                    Log::info("Phase 3: Lead {$leadId} not found but successful payment exists. Redirecting to login.");
+                    return redirect()->route('login')->with('success', 'Registration completed successfully. Please login.');
+                }
+
+                // If no lead and no payment, it's a genuine 404 or expired session
+                abort(404, 'Registration session expired or lead not found.');
+            }
 
             if (empty($lead->product_preference['bundle_id'])) {
                 return redirect()->route('register.phase2', ['lead_id' => $lead->id]);
             }
 
-            $bundle = Bundle::findOrFail($lead->product_preference['bundle_id']);
+            $bundle = Bundle::query()->findOrFail($lead->product_preference['bundle_id']);
 
             $hasReferral = ! empty($lead->referral_code) || ! empty(session('referral_code')) || ! empty(Cookie::get('referral_code'));
 
@@ -261,7 +279,11 @@ class RegistrationFlowController extends Controller
         } catch (\Exception $e) {
             Log::error('Phase 3 Error: ' . $e->getMessage());
 
-            return redirect()->route('register.phase2', ['lead_id' => $request->lead_id]);
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
+                throw $e;
+            }
+
+            return redirect()->route('register.phase2', ['lead_id' => $request->query('lead_id')]);
         }
     }
 
@@ -277,8 +299,8 @@ class RegistrationFlowController extends Controller
                 'lead_id' => 'required|exists:leads,id',
             ]);
 
-            $bundle = Bundle::findOrFail($request->bundle_id);
-            $lead = Lead::findOrFail($request->lead_id);
+            $bundle = Bundle::query()->findOrFail($request->bundle_id);
+            $lead = Lead::query()->findOrFail($request->lead_id);
 
             $hasReferral = ! empty($lead->referral_code) || ! empty(session('referral_code')) || ! empty(Cookie::get('referral_code'));
             $pricing = $this->registrationService->calculatePricing($bundle, $request->code, $hasReferral);
@@ -312,8 +334,8 @@ class RegistrationFlowController extends Controller
                 'coupon_code' => 'nullable|string',
             ]);
 
-            $lead = Lead::findOrFail($request->lead_id);
-            $bundle = Bundle::findOrFail($lead->product_preference['bundle_id']);
+            $lead = Lead::query()->findOrFail($request->lead_id);
+            $bundle = Bundle::query()->findOrFail($lead->product_preference['bundle_id']);
 
             $hasReferral = ! empty($lead->referral_code) || ! empty(session('referral_code')) || ! empty(Cookie::get('referral_code'));
 
@@ -324,17 +346,17 @@ class RegistrationFlowController extends Controller
             $gateway = \App\Services\Gateways\PaymentGatewayFactory::make();
 
             $orderData = [
-                'receipt'  => 'rcpt_' . $lead->id . '_' . time(),
-                'amount'   => $pricing['totalAmount'],
+                'receipt' => 'rcpt_' . $lead->id . '_' . time(),
+                'amount' => $pricing['totalAmount'],
                 'currency' => 'INR',
                 'customer' => [
-                    'id'    => $lead->id,
-                    'name'  => $lead->name,
+                    'id' => $lead->id,
+                    'name' => $lead->name,
                     'email' => $lead->email,
                     'phone' => $lead->mobile,
                 ],
                 'notes' => [
-                    'lead_id'     => $lead->id,
+                    'lead_id' => $lead->id,
                     'coupon_code' => $request->coupon_code ?? '',
                 ],
                 'return_url' => route('register.phase3', ['lead_id' => $lead->id]),
@@ -344,15 +366,15 @@ class RegistrationFlowController extends Controller
             $gatewayName = $gateway->getGatewayName();
 
             // Store pending payment in database for audit trail
-            Payment::create([
-                'lead_id'            => $lead->id, // Associate with lead
-                'amount'             => $pricing['totalAmount'],
-                'subtotal'           => $pricing['taxableAmount'],
-                'total_amount'       => $pricing['totalAmount'],
-                'status'             => 'pending',
-                'payment_gateway'    => $gatewayName,
-                'gateway_order_id'   => $orderResult['order_id'],
-                'razorpay_order_id'  => $gatewayName === 'razorpay' ? $orderResult['order_id'] : null,
+            Payment::query()->create([
+                'lead_id' => $lead->id, // Associate with lead
+                'amount' => $pricing['totalAmount'],
+                'subtotal' => $pricing['taxableAmount'],
+                'total_amount' => $pricing['totalAmount'],
+                'status' => 'pending',
+                'payment_gateway' => $gatewayName,
+                'gateway_order_id' => $orderResult['order_id'],
+                'razorpay_order_id' => $gatewayName === 'razorpay' ? $orderResult['order_id'] : null,
             ]);
 
             $response = [
@@ -408,12 +430,15 @@ class RegistrationFlowController extends Controller
                 $user = $this->registrationService->verifyAndCompleteRegistration($request->all());
 
                 // Fire Registered Event (Only if we just created the user)
-                event(new Registered($user));
+                if ($user) {
+                    event(new Registered($user));
+                }
             } catch (\Exception $e) {
                 // If it failed, check if it was because the lead was already processed (e.g., by a webhook)
                 $orderId = $request->razorpay_order_id ?? $request->cashfree_order_id;
-                $payment = Payment::where('gateway_order_id', '=', $orderId, 'and')
-                    ->orWhere('razorpay_order_id', '=', $orderId)
+                $payment = Payment::query()
+                    ->where('gateway_order_id', $orderId)
+                    ->orWhere('razorpay_order_id', $orderId)
                     ->first();
 
                 if ($payment && $payment->user) {
@@ -428,6 +453,10 @@ class RegistrationFlowController extends Controller
                         'message' => 'Payment verification failed. Please contact support if amount was deducted.',
                     ]);
                 }
+            }
+
+            if (! $user) {
+                return response()->json(['status' => 'error', 'message' => 'User not found or registration incomplete.']);
             }
 
             // Authenticate and Regenerate Session (Auto-login)
@@ -448,8 +477,8 @@ class RegistrationFlowController extends Controller
             Log::error('Registration Flow Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
 
             return response()->json([
-                'status' => 'error', 
-                'message' => $e->getMessage() ?: 'An unexpected error occurred. Please contact support.'
+                'status' => 'error',
+                'message' => $e->getMessage() ?: 'An unexpected error occurred. Please contact support.',
             ]);
         }
     }

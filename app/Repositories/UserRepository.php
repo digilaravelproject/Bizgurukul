@@ -6,7 +6,7 @@ use App\Models\User;
 
 class UserRepository
 {
-    protected $model;
+    protected User $model;
 
     public function __construct(User $user)
     {
@@ -14,20 +14,22 @@ class UserRepository
     }
 
     // List with Pagination, Search & Trash logic
-    public function getPaginatedUsers($perPage, $search, $viewTrash, $startDate = null, $endDate = null)
+    public function getPaginatedUsers(int $perPage, string $search, string $viewTrash, $startDate = null, $endDate = null)
     {
         $searchTerm = trim($search);
 
         return $this->model->query()
             // Optimization: Only fetch columns needed for the table
-            ->select('id', 'name', 'email', 'mobile', 'gender','state_id', 'referred_by', 'dob', 'profile_picture', 'profile_photo_url', 'referral_code', 'kyc_status', 'is_banned', 'hide_from_leaderboard', 'created_at', 'deleted_at')
-            ->addSelect(['bank_status' => \App\Models\BankDetail::select('status')
-                ->whereColumn('user_id', 'users.id')
-                ->limit(1)
+            ->select(['id', 'name', 'email', 'mobile', 'gender', 'state_id', 'referred_by', 'dob', 'profile_picture', 'profile_photo_url', 'referral_code', 'kyc_status', 'is_banned', 'hide_from_leaderboard', 'created_at', 'deleted_at'])
+            ->addSelect([
+                'bank_status' => \App\Models\BankDetail::query()->select(['status'])
+                    ->whereColumn('user_id', '=', 'users.id', 'and')
+                    ->limit(1)
             ])
-            ->addSelect(['total_earnings' => \App\Models\AffiliateCommission::selectRaw('SUM(amount)')
-                ->whereColumn('affiliate_id', 'users.id')
-                ->where('status', 'paid')
+            ->addSelect([
+                'total_earnings' => \App\Models\AffiliateCommission::query()->selectRaw('SUM(amount)')
+                    ->whereColumn('affiliate_id', '=', 'users.id', 'and')
+                    ->where('status', '=', 'paid')
             ])
             ->with(['roles:id,name', 'state:id,name', 'referrer:id,name,referral_code'])
             ->when($viewTrash === 'true', function ($q) {
@@ -36,9 +38,9 @@ class UserRepository
             ->when($searchTerm, function ($q) use ($searchTerm) {
                 $q->where(function ($sub) use ($searchTerm) {
                     $sub->where('name', 'like', "%{$searchTerm}%")
-                      ->orWhere('email', 'like', "%{$searchTerm}%")
-                      ->orWhere('mobile', 'like', "%{$searchTerm}%")
-                      ->orWhere('referral_code', 'like', "%{$searchTerm}%");
+                        ->orWhere('email', 'like', "%{$searchTerm}%")
+                        ->orWhere('mobile', 'like', "%{$searchTerm}%")
+                        ->orWhere('referral_code', 'like', "%{$searchTerm}%");
                 });
             })
             ->when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
@@ -50,20 +52,21 @@ class UserRepository
     // Active & Unbanned Users List
     public function getActiveUnbannedUsers()
     {
-        return $this->model->where('is_active', 1)
-                           ->where('is_banned', 0)
-                           ->get();
+        return $this->model->query()
+            ->where('is_active', 1)
+            ->where('is_banned', 0)
+            ->get();
     }
 
     // Find User (Normal)
-    public function findById($id, $withTrashed = false)
+    public function findById(int $id, $withTrashed = false)
     {
         $query = $this->model->with(['roles', 'referrer', 'state']);
         return $withTrashed ? $query->withTrashed()->find($id) : $query->find($id);
     }
 
     // **DB Locking:** Find User and Lock Row (for Updates/Transactions)
-    public function findForUpdate($id, $withTrashed = false)
+    public function findForUpdate(int $id, bool $withTrashed = false): ?User
     {
         $query = $this->model->with(['roles', 'state']);
         if ($withTrashed) {
@@ -78,15 +81,15 @@ class UserRepository
         return $this->model->create($data);
     }
 
-    public function update(User $user, array $data)
+    public function update(User $user, array $data): User
     {
-        $user->update($data);
+        $user->fill($data)->save();
         return $user;
     }
 
     public function delete(User $user)
     {
-        return $user->delete();
+        return User::destroy($user->id);
     }
 
     public function restore(User $user)
