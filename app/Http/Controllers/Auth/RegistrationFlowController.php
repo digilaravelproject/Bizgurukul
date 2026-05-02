@@ -19,10 +19,12 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
+use App\Exceptions\InvalidCouponException;
 use Razorpay\Api\Api;
 
 class RegistrationFlowController extends Controller
 {
+    /** @var RegistrationService */
     protected $registrationService;
 
     public function __construct(RegistrationService $registrationService)
@@ -35,7 +37,7 @@ class RegistrationFlowController extends Controller
      */
     public function showPhase1(Request $request)
     {
-        $states = State::orderBy('name')->get();
+        $states = State::orderBy('name', 'asc')->get();
 
         return view('auth.register-phase1', [
             'email' => $request->query('email'),
@@ -71,12 +73,12 @@ class RegistrationFlowController extends Controller
 
             $productPreference = null;
             if ($request->intent === 'bundle' && $request->target_bundle_id) {
-                if (Bundle::where('id', $request->target_bundle_id)->exists()) {
+                if (Bundle::where('id', '=', $request->target_bundle_id, 'and')->exists()) {
                     $productPreference = ['bundle_id' => $request->target_bundle_id];
                 }
             } elseif ($request->intent === 'course' && $request->target_bundle_id) {
                 /** @var Course|null $course */
-                $course = Course::find($request->target_bundle_id);
+                $course = Course::find($request->target_bundle_id, ['*']);
                 if ($course) {
                     $bundle = $course->bundles()->first();
                     if ($bundle) {
@@ -118,16 +120,23 @@ class RegistrationFlowController extends Controller
 
     /**
      * Phase 2: Product Selection & Sponsor Verification
+     * 
+     * @param Request $request
+     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
      */
     public function showPhase2(Request $request)
     {
         try {
+            /** @var Lead $lead */
             $lead = Lead::findOrFail($request->query('lead_id'));
 
+            /** @var string|null $referralCode */
             $referralCode = $lead->referral_code ?? (session('referral_code') ?? Cookie::get('referral_code'));
-            $sponsor = $referralCode ? User::where('referral_code', $referralCode)->first() : null;
+            
+            /** @var User|null $sponsor */
+            $sponsor = $referralCode ? User::where('referral_code', '=', $referralCode, 'and')->first() : null;
 
-            // Masked Sponsor for UI (consistent with AlpineJS expectations)
+            /** @var object|null $maskedSponsor */
             $maskedSponsor = null;
             if ($sponsor) {
                 $maskedSponsor = (object) [
@@ -138,24 +147,29 @@ class RegistrationFlowController extends Controller
 
             // Affiliate link logic
 
+            /** @var \Illuminate\Database\Eloquent\Collection|Bundle[] $bundles */
             $bundles = Bundle::with(['courses' => function ($q) {
-                $q->where('is_published', 1);
-            }])->where('is_active', true)->where('is_published', 1)->ordered()->get();
+                $q->where('is_published', '=', 1, 'and');
+            }])->where('is_active', '=', true, 'and')->where('is_published', '=', 1, 'and')->ordered()->get();
 
             // Filter if lead has a preference
             if (! empty($lead->product_preference['bundle_id'])) {
-                $preferredBundle = Bundle::find($lead->product_preference['bundle_id']);
+                /** @var Bundle|null $preferredBundle */
+                $preferredBundle = Bundle::find($lead->product_preference['bundle_id'], ['*']);
                 if ($preferredBundle && $preferredBundle->is_active && $preferredBundle->is_published) {
                     $bundles = collect([$preferredBundle]);
                 }
             }
 
+            /** @var string|null $affiliateLinkSlug */
             $affiliateLinkSlug = session('affiliate_link_slug');
 
             if ($affiliateLinkSlug) {
-                $affiliateLink = AffiliateLink::where('slug', $affiliateLinkSlug)->first();
+                /** @var AffiliateLink|null $affiliateLink */
+                $affiliateLink = AffiliateLink::where('slug', '=', $affiliateLinkSlug, 'and')->first();
                 if ($affiliateLink && $affiliateLink->target_type === 'specific_bundle') {
-                    $specificBundle = Bundle::find($affiliateLink->target_id);
+                    /** @var Bundle|null $specificBundle */
+                    $specificBundle = Bundle::find($affiliateLink->target_id, ['*']);
                     if ($specificBundle && $specificBundle->is_active && $specificBundle->is_published) {
                         $bundles = collect([$specificBundle]);
                     }
@@ -176,7 +190,7 @@ class RegistrationFlowController extends Controller
     public function checkReferralPhase2(Request $request)
     {
         try {
-            $sponsor = User::where('referral_code', $request->code)->first();
+            $sponsor = User::where('referral_code', '=', $request->code, 'and')->first();
 
             if ($sponsor) {
                 return response()->json([
@@ -362,6 +376,8 @@ class RegistrationFlowController extends Controller
             }
 
             return response()->json($response);
+        } catch (InvalidCouponException $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()]);
         } catch (\Exception $e) {
             Log::error('Payment Initiation Failed: ' . $e->getMessage());
 
@@ -396,8 +412,8 @@ class RegistrationFlowController extends Controller
             } catch (\Exception $e) {
                 // If it failed, check if it was because the lead was already processed (e.g., by a webhook)
                 $orderId = $request->razorpay_order_id ?? $request->cashfree_order_id;
-                $payment = Payment::where('gateway_order_id', $orderId)
-                    ->orWhere('razorpay_order_id', $orderId)
+                $payment = Payment::where('gateway_order_id', '=', $orderId, 'and')
+                    ->orWhere('razorpay_order_id', '=', $orderId)
                     ->first();
 
                 if ($payment && $payment->user) {
@@ -431,14 +447,17 @@ class RegistrationFlowController extends Controller
         } catch (\Exception $e) {
             Log::error('Registration Flow Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
 
-            return response()->json(['status' => 'error', 'message' => 'An unexpected error occurred. Please contact support.']);
+            return response()->json([
+                'status' => 'error', 
+                'message' => $e->getMessage() ?: 'An unexpected error occurred. Please contact support.'
+            ]);
         }
     }
 
     /**
      * Helper: Mask Strings (Mobile/Email/Name)
      */
-    private function maskString($string, $type = 'text')
+    private function maskString(string $string, string $type = 'text')
     {
         if (empty($string)) {
             return '';

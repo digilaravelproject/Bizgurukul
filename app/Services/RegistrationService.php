@@ -15,10 +15,12 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Mail\WelcomeMail;
 use App\Mail\AdminNotificationMail;
+use App\Exceptions\InvalidCouponException;
 use Exception;
 
 class RegistrationService
 {
+    /** @var \Razorpay\Api\Api|null */
     protected $api;
 
     public function __construct()
@@ -39,11 +41,11 @@ class RegistrationService
                 // 1. Verify Payment (Bypass redirect-signature-verification if it's already verified by Webhook)
                 if (empty($data['is_webhook'])) {
                     $verifyResult = $gateway->verifyPayment($data);
-                    
+
                     if (!$verifyResult['verified']) {
                         throw new Exception('Payment verification failed: ' . ($verifyResult['error'] ?? 'Invalid details'));
                     }
-                    
+
                     // Update data with the actual gateway payment ID if found during verification
                     if (!empty($verifyResult['payment_id'])) {
                         $data['gateway_payment_id'] = $verifyResult['payment_id'];
@@ -51,7 +53,13 @@ class RegistrationService
                 }
 
                 // 2. Retrieve Data with Lock to prevent duplicate processing
-                $lead = Lead::where('id', $data['lead_id'])->lockForUpdate()->firstOrFail();
+                /** @var Lead|null $lead */
+                $lead = Lead::where('id', '=', $data['lead_id'], 'and')->lockForUpdate()->first();
+
+                if (!$lead) {
+                    $txnId = $data['gateway_payment_id'] ?? $data['gateway_order_id'] ?? 'N/A';
+                    throw new Exception("Registration record (Lead) not found. Your payment might have been successful, but we couldn't complete the registration automatically. Please contact support with Transaction ID: {$txnId}");
+                }
 
                 $bundleId = $lead->product_preference['bundle_id'] ?? null;
                 if (!$bundleId) {
@@ -77,7 +85,7 @@ class RegistrationService
                 $this->processCommission($referrer, $user, $bundle);
 
                 // 8. Cleanup Lead
-                $lead->delete();
+                Lead::destroy($lead->id);
 
                 // 9. Send Notifications
                 try {
@@ -116,19 +124,19 @@ class RegistrationService
         $discountAmount = 0;
 
         if ($couponCode) {
-            $coupon = Coupon::where('code', $couponCode)->active()->first();
+            $coupon = Coupon::where('code', '=', $couponCode, 'and')->active()->first();
 
             if (!$coupon) {
-                throw new Exception('Invalid Coupon Code');
+                throw new InvalidCouponException('This coupon code is invalid or expired. Please remove it to proceed with the payment.');
             }
             if ($coupon->isExpired()) {
-                throw new Exception('Coupon Expired');
+                throw new InvalidCouponException('This coupon code is invalid or expired. Please remove it to proceed with the payment.');
             }
             if ($coupon->isLimitReached()) {
-                throw new Exception('Coupon Limit Reached');
+                throw new InvalidCouponException('This coupon code limit has been reached. Please remove it to proceed with the payment.');
             }
             if (!$coupon->isValidForItems([], [$bundle->id])) {
-                throw new Exception('Coupon not valid for this bundle');
+                throw new InvalidCouponException('This coupon is not valid for the selected bundle. Please remove it to proceed with the payment.');
             }
 
             $discountAmount = $coupon->calculateDiscount($basePrice);
@@ -136,7 +144,7 @@ class RegistrationService
 
         $baseAmountDue = max(0, $basePrice - $discountAmount);
 
-        $taxes = Tax::where('is_active', true)->get();
+        $taxes = Tax::where('is_active', '=', true, 'and')->get();
         $totalTaxAmount = 0;
         $totalExclusiveTaxAmount = 0;
         $inclusiveTaxRateAmount = 0;
@@ -197,7 +205,7 @@ class RegistrationService
     {
         $referralCode = $lead->referral_code ?: (session('referral_code') ?: Cookie::get('referral_code'));
         if ($referralCode) {
-            return User::where('referral_code', $referralCode)->first();
+            return User::where('referral_code', '=', $referralCode, 'and')->first();
         }
         return null;
     }
@@ -229,9 +237,9 @@ class RegistrationService
         if (!$couponCode)
             return null;
 
-        $coupon = Coupon::where('code', $couponCode)->active()->first();
+        $coupon = Coupon::where('code', '=', $couponCode, 'and')->active()->first();
         if ($coupon) {
-            $coupon->increment('used_count');
+            $coupon->increment('used_count', 1);
             return $coupon;
         }
         return null;
@@ -240,10 +248,10 @@ class RegistrationService
     protected function recordPayment(User $user, Bundle $bundle, array $data, array $pricing, ?Coupon $coupon)
     {
         $gatewayName = $data['gateway'] ?? 'razorpay';
-        
+
         // Resolve the order ID from gateway-specific keys
         $orderId = $data['razorpay_order_id'] ?? $data['cashfree_order_id'] ?? $data['gateway_order_id'] ?? null;
-        
+
         $paymentData = [
             'user_id' => $user->id,
             'lead_id' => null, // Clear lead association since user now exists
@@ -275,17 +283,15 @@ class RegistrationService
             $paymentData['razorpay_payment_id'] = $paymentData['gateway_payment_id'];
         }
 
-        // Try to find and update existing pending payment (created by initiatePayment) 
+        // Try to find and update existing pending payment (created by initiatePayment)
         // instead of creating a duplicate record
-        $existingPayment = null;
-        if ($orderId) {
-            $existingPayment = Payment::where('gateway_order_id', $orderId)
-                ->orWhere('razorpay_order_id', $orderId)
-                ->first();
-        }
+        /** @var Payment|null $existingPayment */
+        $existingPayment = Payment::where('gateway_order_id', '=', $orderId, 'and')
+            ->orWhere('razorpay_order_id', '=', $orderId)
+            ->first();
 
-        if ($existingPayment) {
-            $existingPayment->update($paymentData);
+        if ($existingPayment instanceof Payment) {
+            $existingPayment->fill($paymentData)->save();
             return $existingPayment->fresh();
         }
 
