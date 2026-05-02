@@ -14,9 +14,9 @@ class UserRepository
     }
 
     // List with Pagination, Search & Trash logic
-    public function getPaginatedUsers(int $perPage, string $search, string $viewTrash, $startDate = null, $endDate = null)
+    public function getPaginatedUsers(int $perPage, ?string $search, ?string $viewTrash, $startDate = null, $endDate = null)
     {
-        $searchTerm = trim($search);
+        $searchTerm = trim($search ?? '');
 
         return $this->model->query()
             // Optimization: Only fetch columns needed for the table
