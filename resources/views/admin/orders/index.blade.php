@@ -83,18 +83,40 @@
             loading: false,
             search: @json(request('search', '')),
             filter: @json(request('filter', 'all_time')),
-            status: @json(request('status', 'all')),
+            status: @json(request('status', 'success')),
             startDate: @json(request('start_date', '')),
             endDate: @json(request('end_date', '')),
+            perPage: @json(request('per_page', 20)),
             page: 1,
 
             init() {
-                // Initialize if needed
+                if (typeof Swal !== 'undefined') {
+                    this.Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                        background: '#FFFFFF',
+                        color: '#2D2D2D'
+                    });
+                }
             },
 
             updateTable(page = 1) {
                 this.page = page;
                 this.fetchOrders();
+            },
+
+            goToPage(url) {
+                if (!url) return;
+                try {
+                    const urlObj = new URL(url);
+                    this.page = urlObj.searchParams.get('page') || 1;
+                    this.fetchOrders();
+                } catch (e) {
+                    console.error('Invalid URL:', url);
+                }
             },
 
             async fetchOrders() {
@@ -107,10 +129,11 @@
                         status: this.status,
                         start_date: this.startDate,
                         end_date: this.endDate,
+                        per_page: this.perPage,
                         _t: new Date().getTime()
                     });
 
-                    const response = await fetch(`{{ route('admin.orders.index') }}?${params.toString()}`, {
+                    const response = await fetch("{{ route('admin.orders.index') }}?" + params.toString(), {
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
                             'Accept': 'application/json'
@@ -121,9 +144,7 @@
                     if (data.status) {
                         document.getElementById('ordersTable').innerHTML = data.table;
                         document.getElementById('paginationLinks').innerHTML = data.pagination;
-                        
-                        // Update URL without reload
-                        window.history.pushState({}, '', `?${params.toString()}`);
+                        window.history.pushState({}, '', "?" + params.toString());
                     }
                 } catch (error) {
                     console.error('Fetch error:', error);
@@ -134,7 +155,6 @@
 
             async postAction(url) {
                 if (!confirm('Are you sure you want to proceed?')) return;
-                
                 this.loading = true;
                 try {
                     const response = await fetch(url, {
@@ -145,15 +165,17 @@
                         }
                     });
                     const data = await response.json();
-                    if (data.status) {
-                        Toast.success(data.message);
-                        this.fetchOrders();
+                    if (this.Toast) {
+                        this.Toast.fire({
+                            icon: data.status ? 'success' : 'error',
+                            title: data.message
+                        });
                     } else {
-                        Toast.error(data.message);
+                        alert(data.message);
                     }
+                    if (data.status) this.fetchOrders();
                 } catch (error) {
                     console.error(error);
-                    Toast.error('Something went wrong');
                 } finally {
                     this.loading = false;
                 }
@@ -162,7 +184,7 @@
             resetFilters() {
                 this.search = '';
                 this.filter = 'all_time';
-                this.status = 'all';
+                this.status = 'success';
                 this.startDate = '';
                 this.endDate = '';
                 this.updateTable(1);
@@ -174,9 +196,10 @@
                     filter: this.filter,
                     status: this.status,
                     start_date: this.startDate,
-                    end_date: this.endDate
+                    end_date: this.endDate,
+                    per_page: this.perPage
                 });
-                window.location.href = `{{ route('admin.orders.export') }}?${params.toString()}`;
+                window.location.href = "{{ route('admin.orders.export') }}?" + params.toString();
             }
         }));
     }

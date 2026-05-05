@@ -30,8 +30,8 @@ class OrderController extends Controller
         $query = Payment::with(['user.referrer', 'bundle', 'course', 'paymentable']);
 
         // Applying Status Filter
-        $status = $request->input('status');
-        if ($status && $status !== 'all') {
+        $status = $request->input('status', 'success');
+        if ($status !== 'all') {
             $query->where('status', $status);
         }
 
