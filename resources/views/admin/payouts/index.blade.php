@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="space-y-6" x-data="payoutManager()" x-init="init()">
+<div class="space-y-6" x-data="payoutManager" x-init="init()">
 
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -40,8 +40,8 @@
 
 @push('scripts')
 <script>
-    function payoutManager() {
-        return {
+    const initPayoutManager = () => {
+        Alpine.data('payoutManager', () => ({
             perPage: 20,
             isLoading: false,
 
@@ -91,7 +91,13 @@
                     this.isLoading = false;
                 }
             }
-        }
+        }));
+    }
+
+    if (window.Alpine) {
+        initPayoutManager();
+    } else {
+        document.addEventListener('alpine:init', initPayoutManager);
     }
 </script>
 @endpush

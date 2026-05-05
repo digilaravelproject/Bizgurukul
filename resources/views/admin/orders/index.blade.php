@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="space-y-6 font-sans text-mainText" 
-     x-data="orderManager()" 
+     x-data="orderManager" 
      x-init="init()">
 
     {{-- Header & Filters --}}
@@ -63,14 +63,14 @@
                         <th class="px-6 py-5 border-b border-primary/5 text-center whitespace-nowrap">Action</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-primary/5" id="orders-tbody">
+                <tbody class="divide-y divide-primary/5" id="ordersTable">
                     @include('admin.orders.partials.history_table')
                 </tbody>
             </table>
         </div>
 
         {{-- Standard Pagination Component --}}
-        <div id="pagination-wrapper" class="border-t border-primary/5 bg-navy/20 p-4">
+        <div id="paginationLinks" class="border-t border-primary/5 bg-navy/20 p-4">
             <x-admin.table.pagination :records="$orders" />
         </div>
     </div>
@@ -78,75 +78,85 @@
 
 @push('scripts')
 <script>
-    function orderManager() {
-        return {
+    const initOrderManager = () => {
+        Alpine.data('orderManager', () => ({
             loading: false,
-            search: '',
-            filter: 'all_time',
-            status: 'all',
-            startDate: '',
-            endDate: '',
-            perPage: 20,
+            search: '{{ request('search') }}',
+            filter: '{{ request('filter', 'all_time') }}',
+            status: '{{ request('status', 'all') }}',
+            startDate: '{{ request('start_date') }}',
+            endDate: '{{ request('end_date') }}',
             page: 1,
 
             init() {
-                // Listen for changes from filter components
-                window.addEventListener('search-changed', (e) => {
-                    this.search = e.detail.search || '';
-                    this.updateTable(1);
-                });
-
-                window.addEventListener('date-changed', (e) => {
-                    this.startDate = e.detail.start_date;
-                    this.endDate = e.detail.end_date;
-                    this.updateTable(1);
-                });
-
-                window.addEventListener('per-page-changed', (e) => {
-                    this.perPage = e.detail.per_page;
-                    this.updateTable(1);
-                });
-
-                window.addEventListener('page-changed', (e) => {
-                    this.goToPage(e.detail.url);
-                });
+                // Initialize if needed
             },
 
-            async updateTable(page = 1) {
+            updateTable(page = 1) {
                 this.page = page;
-                this.loading = true;
+                this.fetchOrders();
+            },
 
+            async fetchOrders() {
+                this.loading = true;
                 try {
                     const params = new URLSearchParams({
                         page: this.page,
                         search: this.search,
                         filter: this.filter,
                         status: this.status,
-                        per_page: this.perPage,
                         start_date: this.startDate,
-                        end_date: this.endDate
+                        end_date: this.endDate,
+                        _t: new Date().getTime()
                     });
 
                     const response = await fetch(`{{ route('admin.orders.index') }}?${params.toString()}`, {
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
                     });
-
-                    if (!response.ok) throw new Error('Network error');
-
+                    
                     const data = await response.json();
-                    document.getElementById('orders-tbody').innerHTML = data.table;
-                    document.getElementById('pagination-wrapper').innerHTML = data.pagination;
+                    if (data.status) {
+                        document.getElementById('ordersTable').innerHTML = data.table;
+                        document.getElementById('paginationLinks').innerHTML = data.pagination;
+                        
+                        // Update URL without reload
+                        window.history.pushState({}, '', `?${params.toString()}`);
+                    }
                 } catch (error) {
-                    console.error('Error:', error);
+                    console.error('Fetch error:', error);
                 } finally {
                     this.loading = false;
                 }
             },
 
-            goToPage(url) {
-                if (!url) return;
-                const page = new URL(url).searchParams.get('page');
-                this.updateTable(page);
+            async postAction(url) {
+                if (!confirm('Are you sure you want to proceed?')) return;
+                
+                this.loading = true;
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+                    const data = await response.json();
+                    if (data.status) {
+                        Toast.success(data.message);
+                        this.fetchOrders();
+                    } else {
+                        Toast.error(data.message);
+                    }
+                } catch (error) {
+                    console.error(error);
+                    Toast.error('Something went wrong');
+                } finally {
+                    this.loading = false;
+                }
             },
 
             resetFilters() {
@@ -168,7 +178,13 @@
                 });
                 window.location.href = `{{ route('admin.orders.export') }}?${params.toString()}`;
             }
-        }
+        });
+    }
+
+    if (window.Alpine) {
+        initOrderManager();
+    } else {
+        document.addEventListener('alpine:init', initOrderManager);
     }
 </script>
 @endpush

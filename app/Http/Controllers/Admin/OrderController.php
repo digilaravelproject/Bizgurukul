@@ -78,6 +78,7 @@ class OrderController extends Controller
 
         if ($request->ajax()) {
             return response()->json([
+                'status' => true,
                 'table' => view('admin.orders.partials.history_table', compact('orders'))->render(),
                 'pagination' => view('components.admin.table.pagination', ['records' => $orders])->render()
             ]);
@@ -91,10 +92,7 @@ class OrderController extends Controller
      */
     public function export(Request $request)
     {
-        $filters = $request->only(['search', 'filter', 'start_date', 'end_date']);
-        $filename = "orders_" . now()->format('Y-m-d_H-i-s') . ".xlsx";
-
-        return Excel::download(new OrdersExport($filters), $filename);
+        return Excel::download(new OrdersExport($request->all()), 'orders_' . now()->format('Y-m-d') . '.xlsx');
     }
 
     /**

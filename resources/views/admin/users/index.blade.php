@@ -5,7 +5,7 @@
     {{-- SweetAlert2 --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <div x-data="userManager()" x-init="init()" class="container-fluid font-sans antialiased">
+    <div x-data="userManager" x-init="init()" class="container-fluid font-sans antialiased">
 
         {{-- 1. TOP HEADER & ACTIONS --}}
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 animate-fade-in text-mainText">
@@ -385,8 +385,8 @@
     </div>
 
     <script>
-        function userManager() {
-            return {
+    const initUserManager = () => {
+        Alpine.data('userManager', () => ({
                 users: [],
                 pagination: {},
                 isLoading: false,
@@ -738,7 +738,13 @@
                     });
                     window.location.href = `{{ route('admin.users.export') }}?${params.toString()}`;
                 }
-            }
+            }));
+        }
+
+        if (window.Alpine) {
+            initUserManager();
+        } else {
+            document.addEventListener('alpine:init', initUserManager);
         }
     </script>
 @endsection

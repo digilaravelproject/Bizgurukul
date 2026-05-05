@@ -3,7 +3,7 @@
 @section('title', 'Referral History')
 
 @section('content')
-<div class="space-y-8 font-sans text-mainText" x-data="historyManager()" x-init="init()">
+<div class="space-y-8 font-sans text-mainText" x-data="historyManager" x-init="init()">
 
     <x-admin.table.filter 
         placeholder="Search affiliates..." 
@@ -54,8 +54,8 @@
 
 @push('scripts')
 <script>
-    function historyManager() {
-        return {
+    const initHistoryManager = () => {
+        Alpine.data('historyManager', () => ({
             loading: false,
             search: '',
             perPage: 20,
@@ -134,7 +134,13 @@
                     this.loading = false;
                 }
             }
-        }
+        }));
+    }
+
+    if (window.Alpine) {
+        initHistoryManager();
+    } else {
+        document.addEventListener('alpine:init', initHistoryManager);
     }
 </script>
 @endpush
