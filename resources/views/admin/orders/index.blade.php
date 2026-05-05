@@ -178,7 +178,7 @@
                 });
                 window.location.href = `{{ route('admin.orders.export') }}?${params.toString()}`;
             }
-        });
+        }));
     }
 
     if (window.Alpine) {
