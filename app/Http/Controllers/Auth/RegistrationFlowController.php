@@ -368,6 +368,9 @@ class RegistrationFlowController extends Controller
             // Store pending payment in database for audit trail
             Payment::query()->create([
                 'lead_id' => $lead->id, // Associate with lead
+                'bundle_id' => $bundle->id, // Track product even in pending state
+                'paymentable_type' => get_class($bundle),
+                'paymentable_id' => $bundle->id,
                 'amount' => $pricing['totalAmount'],
                 'subtotal' => $pricing['taxableAmount'],
                 'total_amount' => $pricing['totalAmount'],

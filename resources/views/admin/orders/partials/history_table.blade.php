@@ -22,11 +22,11 @@
         <td class="px-6 py-4">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-full bg-navy flex items-center justify-center text-mutedText text-xs font-bold border border-white shrink-0">
-                    {{ substr($order->user->name ?? '?', 0, 1) }}
+                    {{ substr($order->user->name ?? ($order->lead->name ?? '?'), 0, 1) }}
                 </div>
                 <div>
-                    <span class="text-sm font-bold text-mainText block">{{ $order->user->name ?? 'Unknown' }}</span>
-                    <span class="text-xs text-mutedText block">{{ $order->user->email ?? '' }}</span>
+                    <span class="text-sm font-bold text-mainText block">{{ $order->user->name ?? ($order->lead->name ?? 'Unknown') }}</span>
+                    <span class="text-xs text-mutedText block">{{ $order->user->email ?? ($order->lead->email ?? '') }}</span>
                 </div>
             </div>
         </td>

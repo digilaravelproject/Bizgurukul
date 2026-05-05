@@ -13,7 +13,7 @@ use Carbon\Carbon;
 
 class OrdersExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize, WithStyles
 {
-    protected $filters;
+    protected array $filters;
 
     public function __construct(array $filters)
     {
@@ -30,14 +30,26 @@ class OrdersExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSi
         // Applying Search
         if (!empty($this->filters['search'])) {
             $search = $this->filters['search'];
-            $query->whereHas('user', function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('mobile', 'like', "%{$search}%");
-            })->orWhere('razorpay_order_id', 'like', "%{$search}%")
-              ->orWhere('gateway_order_id', 'like', "%{$search}%")
-              ->orWhere('razorpay_payment_id', 'like', "%{$search}%")
-              ->orWhere('gateway_payment_id', 'like', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->whereHas('user', function($uq) use ($search) {
+                    $uq->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('mobile', 'like', "%{$search}%");
+                })->orWhereHas('lead', function($lq) use ($search) {
+                    $lq->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('mobile', 'like', "%{$search}%");
+                })->orWhere('razorpay_order_id', 'like', "%{$search}%")
+                  ->orWhere('gateway_order_id', 'like', "%{$search}%")
+                  ->orWhere('razorpay_payment_id', 'like', "%{$search}%")
+                  ->orWhere('gateway_payment_id', 'like', "%{$search}%");
+            });
+        }
+
+        // Applying Status Filter
+        $status = $this->filters['status'] ?? 'all';
+        if ($status !== 'all') {
+            $query->where('status', $status);
         }
 
         // Applying Date Filter
@@ -45,9 +57,9 @@ class OrdersExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSi
         $startDate = $this->filters['start_date'] ?? null;
         $endDate = $this->filters['end_date'] ?? null;
 
-        if ($filter === 'custom' && $startDate && $endDate) {
+        if ($startDate && $endDate) {
             $query->whereBetween('created_at', [Carbon::parse($startDate)->startOfDay(), Carbon::parse($endDate)->endOfDay()]);
-        } else {
+        } elseif ($filter !== 'all_time') {
             switch ($filter) {
                 case 'today':
                     $query->whereDate('created_at', Carbon::today());
@@ -100,7 +112,7 @@ class OrdersExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSi
         return [
             $order->invoice_no,
             $order->created_at->format('d-m-Y'),
-            $order->user->name ?? 'N/A',
+            $order->user->name ?? ($order->lead->name ?? 'N/A'),
             '999293', // Hardcoded HSN (updated by user)
             number_format($baseAmount, 2, '.', ''),
             number_format($cgst, 2, '.', ''),

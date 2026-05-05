@@ -27,7 +27,7 @@ class OrderController extends Controller
             $perPage = 20;
         }
 
-        $query = Payment::with(['user.referrer', 'bundle', 'course', 'paymentable']);
+        $query = Payment::with(['user.referrer', 'lead', 'bundle', 'course', 'paymentable']);
 
         // Applying Status Filter
         $status = $request->input('status', 'success');
@@ -42,6 +42,10 @@ class OrderController extends Controller
                     $uq->where('name', 'like', "%{$search}%")
                       ->orWhere('email', 'like', "%{$search}%")
                       ->orWhere('mobile', 'like', "%{$search}%");
+                })->orWhereHas('lead', function($lq) use ($search) {
+                    $lq->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('mobile', 'like', "%{$search}%");
                 })->orWhere('razorpay_order_id', 'like', "%{$search}%")
                   ->orWhere('gateway_order_id', 'like', "%{$search}%")
                   ->orWhere('razorpay_payment_id', 'like', "%{$search}%")
@@ -54,9 +58,9 @@ class OrderController extends Controller
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
 
-        if ($filter === 'custom' && $startDate && $endDate) {
+        if ($startDate && $endDate) {
             $query->whereBetween('created_at', [Carbon::parse($startDate)->startOfDay(), Carbon::parse($endDate)->endOfDay()]);
-        } else {
+        } elseif ($filter !== 'all_time') {
             switch ($filter) {
                 case 'today':
                     $query->whereDate('created_at', Carbon::today());
@@ -66,10 +70,6 @@ class OrderController extends Controller
                     break;
                 case '30_days':
                     $query->where('created_at', '>=', Carbon::now()->subDays(30));
-                    break;
-                case 'all_time':
-                default:
-                    // no date filter
                     break;
             }
         }
