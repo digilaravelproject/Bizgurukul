@@ -147,6 +147,26 @@
                 if (!url) return;
                 const page = new URL(url).searchParams.get('page');
                 this.updateTable(page);
+            },
+
+            resetFilters() {
+                this.search = '';
+                this.filter = 'all_time';
+                this.status = 'all';
+                this.startDate = '';
+                this.endDate = '';
+                this.updateTable(1);
+            },
+
+            exportData() {
+                const params = new URLSearchParams({
+                    search: this.search,
+                    filter: this.filter,
+                    status: this.status,
+                    start_date: this.startDate,
+                    end_date: this.endDate
+                });
+                window.location.href = `{{ route('admin.orders.export') }}?${params.toString()}`;
             }
         }
     }

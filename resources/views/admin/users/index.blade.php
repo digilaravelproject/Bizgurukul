@@ -721,6 +721,22 @@
                             }
                         }
                     });
+                },
+
+                resetFilters() {
+                    this.search = '';
+                    this.startDate = '';
+                    this.endDate = '';
+                    this.updateTable();
+                },
+
+                exportData() {
+                    const params = new URLSearchParams({
+                        search: this.search,
+                        start_date: this.startDate,
+                        end_date: this.endDate
+                    });
+                    window.location.href = `{{ route('admin.users.export') }}?${params.toString()}`;
                 }
             }
         }
