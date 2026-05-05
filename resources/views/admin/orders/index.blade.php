@@ -81,11 +81,11 @@
     const initOrderManager = () => {
         Alpine.data('orderManager', () => ({
             loading: false,
-            search: '{{ request('search') }}',
-            filter: '{{ request('filter', 'all_time') }}',
-            status: '{{ request('status', 'all') }}',
-            startDate: '{{ request('start_date') }}',
-            endDate: '{{ request('end_date') }}',
+            search: @json(request('search', '')),
+            filter: @json(request('filter', 'all_time')),
+            status: @json(request('status', 'all')),
+            startDate: @json(request('start_date', '')),
+            endDate: @json(request('end_date', '')),
             page: 1,
 
             init() {
