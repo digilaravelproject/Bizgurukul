@@ -602,28 +602,28 @@
                             </div>
                         </template>
 
-                        <div class="flex items-center justify-between gap-6 pt-4">
-                            <div class="flex gap-2">
+                        <div class="flex items-center justify-between gap-4 pt-6 border-t border-primary/5">
+                            <div class="flex gap-1.5">
                                 <template x-for="(q, index) in questions" :key="'dot-' + q.id">
-                                    <div class="h-2 rounded-full transition-all duration-500"
-                                        :class="currentStep === index ? 'w-8 bg-primary shadow-lg shadow-primary/20' : 'w-2 bg-primary/20'"></div>
+                                    <div class="h-1.5 rounded-full transition-all duration-500"
+                                        :class="currentStep === index ? 'w-6 bg-primary shadow-lg shadow-primary/20' : 'w-1.5 bg-primary/20'"></div>
                                 </template>
                             </div>
 
-                            <div class="flex gap-3">
-                                <button type="button" x-show="currentStep > 0" @click="prevStep()"
-                                    class="px-6 py-3.5 rounded-xl bg-navy text-mutedText text-[10px] font-black uppercase tracking-widest hover:text-primary transition-all">Back</button>
-                                
+                            <div class="flex flex-row-reverse items-center gap-3">
                                 <button type="button" x-show="currentStep < questions.length - 1" @click="nextStep()"
-                                    class="brand-gradient px-8 py-3.5 rounded-xl text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/25 hover:-translate-y-0.5 transition-all">
+                                    class="brand-gradient px-6 md:px-8 py-3 rounded-xl text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/25 hover:-translate-y-0.5 transition-all">
                                     Next Step
                                 </button>
                                 
                                 <button type="submit" x-show="currentStep === questions.length - 1" :disabled="isSubmitting"
-                                    class="brand-gradient px-10 py-3.5 rounded-xl text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/25 hover:-translate-y-0.5 disabled:opacity-50 transition-all flex items-center gap-2">
+                                    class="brand-gradient px-8 md:px-10 py-3 rounded-xl text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/25 hover:-translate-y-0.5 disabled:opacity-50 transition-all flex items-center gap-2">
                                     <i x-show="isSubmitting" class="fas fa-circle-notch fa-spin"></i>
                                     <span x-text="isSubmitting ? 'Submitting...' : 'Finish Survey'"></span>
                                 </button>
+
+                                <button type="button" x-show="currentStep > 0" @click="prevStep()"
+                                    class="px-5 py-3 rounded-xl bg-navy text-mutedText text-[10px] font-black uppercase tracking-widest hover:text-primary transition-all">Back</button>
                             </div>
                         </div>
                     </form>
