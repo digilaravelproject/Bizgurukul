@@ -154,6 +154,13 @@
                 <i class="fas fa-file-invoice-dollar w-5 h-5 mr-3 flex items-center justify-center"></i>
                 <span class="text-sm font-bold">My Invoices</span>
             </a>
+
+            {{-- Help & Support --}}
+            <a href="{{ route('student.support.index') }}"
+                class="flex items-center px-4 py-3 rounded-2xl transition-all duration-300 group {{ request()->routeIs('student.support.*') ? 'bg-primary/10 text-primary shadow-sm' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
+                <i class="fas fa-headset w-5 h-5 mr-3 flex items-center justify-center"></i>
+                <span class="text-sm font-bold">Help & Support</span>
+            </a>
         </nav>
 
         {{-- Sidebar User Footer (Fixed) --}}

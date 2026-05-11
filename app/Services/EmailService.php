@@ -116,4 +116,20 @@ class EmailService
     {
         return Setting::get('admin_notification_email') ?: Setting::get('company_email');
     }
+
+    /**
+     * Send Support Query emails (to Admin and Auto-Reply to User)
+     */
+    public static function sendSupportQuery($user, $subject, $message): void
+    {
+        self::applyMailConfig();
+        
+        $adminEmail = self::adminEmail();
+        
+        if ($adminEmail) {
+            Mail::to($adminEmail)->queue(new \App\Mail\SupportQueryToAdminMail($user, $subject, $message));
+        }
+
+        Mail::to($user->email)->queue(new \App\Mail\SupportQueryAutoReplyMail($user, $subject, $message));
+    }
 }

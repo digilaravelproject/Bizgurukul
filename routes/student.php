@@ -54,6 +54,10 @@ Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')
     // This specific route needs to be accessible by Admin for previews too
     Route::get('/video-key/{lesson}', [StudentController::class, 'getVideoKey'])->name('video.key')->withoutMiddleware(['role:Student'])->middleware(['role:Student|Admin']);
 
+    // Support Routes
+    Route::get('/support', [\App\Http\Controllers\Student\SupportController::class, 'index'])->name('support.index');
+    Route::post('/support/submit', [\App\Http\Controllers\Student\SupportController::class, 'submit'])->name('support.submit');
+
     // Paid Student Features (Protected by Purchase Check)
     Route::middleware(['check.purchase'])->group(function () {
         // Dashboard
