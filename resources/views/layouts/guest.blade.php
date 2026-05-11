@@ -32,29 +32,29 @@
             </div>
 
             <a href="{{ route('home') }}" class="relative z-10 text-center block group">
-            @if (Storage::exists('site_images/logo1.png'))
-                {{-- 1. Image agar file system mein exist karti hai --}}
-                <img src="{{ Storage::url('site_images/logo1.png') }}" alt="Logo"
-                    class="h-[100px] w-auto transform group-hover:scale-105 transition duration-500 object-contain mx-auto">
-            @else
-                {{-- 2. Agar image nahi hai toh ye CSS wala logo dikhega --}}
-                <div
-                    class="inline-flex items-center bg-white border-2 border-primary p-1 shadow-2xl transform group-hover:scale-105 transition duration-500">
+                @if (Storage::exists('site_images/logo1.png'))
+                    {{-- 1. Image agar file system mein exist karti hai --}}
+                    <img src="{{ Storage::url('site_images/logo1.png') }}" alt="Logo"
+                        class="h-[100px] w-auto transform group-hover:scale-105 transition duration-500 object-contain mx-auto">
+                @else
+                    {{-- 2. Agar image nahi hai toh ye CSS wala logo dikhega --}}
                     <div
-                        class="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 font-extrabold text-4xl tracking-tight">
-                        SKILLS
+                        class="inline-flex items-center bg-white border-2 border-primary p-1 shadow-2xl transform group-hover:scale-105 transition duration-500">
+                        <div
+                            class="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 font-extrabold text-4xl tracking-tight">
+                            SKILLS
+                        </div>
+                        <div
+                            class="px-6 py-3 bg-white text-secondary font-extrabold text-4xl tracking-tight flex items-center relative">
+                            P<span class="text-primary">₹</span>HLE
+                            <div class="absolute bottom-2 left-6 right-4 h-0.5 bg-secondary"></div>
+                            <svg class="absolute bottom-[5px] right-4 w-3 h-3 text-secondary fill-current"
+                                viewBox="0 0 24 24">
+                                <path d="M24 12l-12-8v16l12-8z" />
+                            </svg>
+                        </div>
                     </div>
-                    <div
-                        class="px-6 py-3 bg-white text-secondary font-extrabold text-4xl tracking-tight flex items-center relative">
-                        P<span class="text-primary">₹</span>HLE
-                        <div class="absolute bottom-2 left-6 right-4 h-0.5 bg-secondary"></div>
-                        <svg class="absolute bottom-[5px] right-4 w-3 h-3 text-secondary fill-current"
-                            viewBox="0 0 24 24">
-                            <path d="M24 12l-12-8v16l12-8z" />
-                        </svg>
-                    </div>
-                </div>
-            @endif
+                @endif
             </a>
 
             <div class="mt-12 space-y-4 text-center">
@@ -80,8 +80,7 @@
                     <div class="lg:hidden flex justify-center mb-8">
                         <a href="{{ route('home') }}"
                             class="inline-flex items-center border border-primary p-0.5 shadow-md scale-75 origin-center">
-                            <div
-                                class="bg-gradient-to-r from-primary to-secondary text-white px-3 py-1 font-bold text-xl">
+                            <div class="bg-gradient-to-r from-primary to-secondary text-white px-3 py-1 font-bold text-xl">
                                 SKILLS
                             </div>
                             <div class="px-3 py-1 bg-white text-secondary font-bold text-xl">
@@ -100,7 +99,7 @@
 
             <div class="mt-8 text-center">
                 <p class="text-xs text-mutedText">
-                    &copy; {{ date('Y') }}. All Rights Reserved by Shrivardhankar Enterprises ( Skillspehle ).
+                    &copy; {{ date('Y') }}. All Rights Reserved by Skillspehle.
                 </p>
             </div>
         </div>
