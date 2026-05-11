@@ -136,9 +136,9 @@
                     <div>
                         <p class="text-[10px] font-bold text-mutedText uppercase mb-1 tracking-widest">Investment</p>
                         <div class="flex items-end gap-2">
-                            <p class="text-3xl font-black text-secondary tracking-tighter">₹{{ number_format($effectivePrice, 0) }}</p>
+                            <p class="text-3xl font-black text-secondary tracking-tighter">₹@indianCurrency($effectivePrice, 0)</p>
                             @if($canUpgrade && $effectivePrice < $originalPrice)
-                                <span class="text-sm text-mutedText line-through font-semibold mb-1">₹{{ number_format($originalPrice, 0) }}</span>
+                                <span class="text-sm text-mutedText line-through font-semibold mb-1">₹@indianCurrency($originalPrice, 0)</span>
                             @endif
                         </div>
                     </div>
@@ -181,7 +181,7 @@
                 <div class="mt-auto pt-6 border-t border-primary/10 flex items-center justify-between">
                     <div>
                         <p class="text-[10px] font-bold text-mutedText uppercase mb-1 tracking-widest">Investment</p>
-                        <p class="text-3xl font-black text-primary tracking-tighter">₹{{ number_format($coursePrice, 0) }}</p>
+                        <p class="text-3xl font-black text-primary tracking-tighter">₹@indianCurrency($coursePrice, 0)</p>
                     </div>
                     <a href="{{ route('student.courses.show', $course->id) }}" class="w-14 h-14 rounded-2xl bg-navy flex items-center justify-center text-customWhite shadow-lg hover:brand-gradient transition-all group/btn">
                         <i class="fas fa-arrow-right transition-transform group-hover/btn:translate-x-1"></i>

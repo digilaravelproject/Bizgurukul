@@ -602,7 +602,7 @@
                                             </td>
                                             <td
                                                 style="width: {{ $itemWidth / 2 }}%; text-align: center; padding: 12px; border: none;{{ !$loop->last ? ' border-right: 1px solid #eaeaea;' : '' }} font-size: 12px; color: #555555;">
-                                                {{ $td['name'] ?? 'Tax' }}: INR @indianCurrency($tdAmount, 2)
+                                                {{ $td['name'] ?? 'Tax' }}: ₹@indianCurrency($tdAmount, 2)
                                             </td>
                                         @endforeach
                                     </tr>
@@ -621,19 +621,19 @@
                                             CGST: 9%</td>
                                         <td
                                             style="width: 20%; text-align: center; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-size: 12px; color: #555555;">
-                                            CGST: INR @indianCurrency($cgst, 2)</td>
+                                            CGST: ₹@indianCurrency($cgst, 2)</td>
                                         <td
                                             style="width: 10%; text-align: center; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-size: 12px; color: #555555;">
                                             SGST: 9%</td>
                                         <td
                                             style="width: 20%; text-align: center; padding: 12px; border: none; font-size: 12px; color: #555555;">
-                                            SGST: INR @indianCurrency($sgst, 2)</td>
+                                            SGST: ₹@indianCurrency($sgst, 2)</td>
                                     </tr>
                                 @endif
                             </table>
                         </td>
                         <td class="text-center" style="vertical-align: middle; background-color: #fafafa;">
-                            <strong>INR @indianCurrency($taxAmount, 2)</strong>
+                            <strong>₹@indianCurrency($taxAmount, 2)</strong>
                         </td>
                     </tr>
 
@@ -641,7 +641,7 @@
                     <tr>
                         <td colspan="3" class="text-right" style="font-size: 16px;"><strong>Total:</strong></td>
                         <td class="text-right" style="font-size: 16px;">
-                            <strong>INR @indianCurrency($totalAmount, 2)</strong>
+                            <strong>₹@indianCurrency($totalAmount, 2)</strong>
                         </td>
                     </tr>
 

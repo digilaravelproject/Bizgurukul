@@ -4,7 +4,7 @@
         <span class="block text-mainText">{{ $withdrawal->created_at->format('d M Y') }}</span>
         <span class="block text-[10px] text-mutedText">{{ $withdrawal->created_at->format('h:i A') }}</span>
     </td>
-    <td class="px-6 py-4 text-right text-mainText font-black">₹{{ number_format($withdrawal->payable_amount, 2) }}</td>
+    <td class="px-6 py-4 text-right text-mainText font-black">₹@indianCurrency($withdrawal->payable_amount, 2)</td>
     <td class="px-6 py-4 text-center">
     @if($withdrawal->status === 'pending' || $withdrawal->status === 'processing')
         <span class="inline-flex px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest {{ $withdrawal->status === 'pending' ? 'bg-amber-500/10 text-amber-500' : 'bg-blue-500/10 text-blue-500' }}">

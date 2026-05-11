@@ -83,6 +83,24 @@
     <div x-show="sidebarOpen" @click="sidebarOpen = false" x-cloak
         class="fixed inset-0 bg-mainText/60 z-40 md:hidden backdrop-blur-sm"></div>
 
+    <script>
+        function formatCurrencyIndian(number, precision = 0) {
+            if (isNaN(number) || number === null) return '0';
+            let n = Number(number).toFixed(precision);
+            let parts = n.split('.');
+            let integer = parts[0];
+            let fraction = parts[1] ? '.' + parts[1] : '';
+
+            let lastThree = integer.substring(integer.length - 3);
+            let otherNumbers = integer.substring(0, integer.length - 3);
+            if (otherNumbers !== '') {
+                lastThree = ',' + lastThree;
+            }
+            let res = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree + fraction;
+            return res;
+        }
+        window.formatCurrencyIndian = formatCurrencyIndian;
+    </script>
     @include('layouts.partials.global-toast')
     @stack('scripts')
 </body>

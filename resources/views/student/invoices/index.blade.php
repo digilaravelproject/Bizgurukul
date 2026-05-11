@@ -53,7 +53,7 @@
                             @endif
                         </td>
                         <td class="px-8 py-5 text-sm font-black text-mainText">
-                            ₹{{ number_format($invoice->amount) }}
+                            ₹@indianCurrency($invoice->amount)
                         </td>
                         <td class="px-8 py-5 text-right">
                             <a href="{{ route('student.invoices.show', $invoice->id) }}" target="_blank"

@@ -52,8 +52,8 @@
                     <div
                         x-data="{
                             time: {{ $upgradeTimeLeft }},
-                            effectivePrice: '₹{{ number_format($effectivePrice, 0) }}',
-                            originalPrice: '₹{{ number_format($originalPrice, 0) }}'
+                            effectivePrice: '₹@indianCurrency($effectivePrice, 0)',
+                            originalPrice: '₹@indianCurrency($originalPrice, 0)'
                         }"
                         x-init="if (time > 0) setInterval(() => { if (time > 0) time--; }, 1000)"
                         class="bg-surface rounded-2xl border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full group relative">

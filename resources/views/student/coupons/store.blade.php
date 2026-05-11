@@ -63,12 +63,12 @@
                         <div class="flex justify-between items-end border-t border-dashed border-primary/10 pt-4">
                             <div>
                                 <p class="text-[9px] font-black text-mutedText uppercase tracking-widest mb-1">Selling Price</p>
-                                <p class="text-2xl font-black text-mainText">₹{{ number_format($pkg->selling_price) }}</p>
+                                <p class="text-2xl font-black text-mainText">₹@indianCurrency($pkg->selling_price)</p>
                             </div>
                             <div class="text-right">
                                 <p class="text-[9px] font-black text-green-600 uppercase tracking-widest mb-1">User Gets</p>
                                 <p class="text-lg font-black text-green-600">
-                                    {{ $pkg->type === 'percentage' ? $pkg->discount_value . '%' : '₹' . number_format($pkg->discount_value) }} OFF
+                                    {{ $pkg->type === 'percentage' ? $pkg->discount_value . '%' : '₹' . formatCurrencyIndian($pkg->discount_value) }} OFF
                                 </p>
                             </div>
                         </div>

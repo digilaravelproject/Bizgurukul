@@ -106,7 +106,7 @@
                                 @if($coupon->type === 'percentage')
                                     {{ (int)$coupon->value }}% <small class="text-[10px] uppercase opacity-60 ml-0.5">OFF</small>
                                 @else
-                                    ₹{{ number_format($coupon->value) }} <small class="text-[10px] uppercase opacity-60 ml-0.5">OFF</small>
+                                    ₹@indianCurrency($coupon->value) <small class="text-[10px] uppercase opacity-60 ml-0.5">OFF</small>
                                 @endif
                             </span>
                         </div>

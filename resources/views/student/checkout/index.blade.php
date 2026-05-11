@@ -176,19 +176,19 @@
             <div class="space-y-3 text-sm mb-6">
                 <div class="flex justify-between text-mutedText font-medium text-sm">
                     <span>Base Price <span class="text-[10px] uppercase">(Subtotal)</span></span>
-                    <span>₹{{ number_format($basePrice, 2) }}</span>
+                    <span>₹@indianCurrency($basePrice, 2)</span>
                 </div>
 
                 <template x-for="tax in taxes" :key="tax.id">
                     <div class="flex justify-between text-mutedText font-medium text-sm" x-show="Number(tax.calculated_amount) > 0">
                         <span x-text="tax.name + ' (' + (tax.type === 'percentage' ? tax.value + '%' : 'Fixed') + ' ' + (tax.tax_type === 'inclusive' ? 'Incl.' : 'Excl.') + ')'"></span>
-                        <span x-text="'₹' + Number(tax.calculated_amount || 0).toFixed(2)"></span>
+                        <span x-text="'₹' + window.formatCurrencyIndian(tax.calculated_amount || 0, 2)"></span>
                     </div>
                 </template>
 
                 <div class="flex justify-between items-center text-xl font-black text-mainText border-t border-dashed border-gray-200 pt-4 mt-3">
                     <span>Total Amount</span>
-                    <span class="text-primary">₹<span x-text="Number(total).toFixed(2)"></span></span>
+                    <span class="text-primary">₹<span x-text="window.formatCurrencyIndian(total, 2)"></span></span>
                 </div>
             </div>
 

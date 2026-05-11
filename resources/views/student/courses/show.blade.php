@@ -22,7 +22,7 @@
                 class="bg-customWhite p-8 rounded-3xl border border-primary/10 shadow-xl flex flex-col items-center gap-4 min-w-[280px]">
                 <p class="text-xs font-bold text-mutedText uppercase tracking-wider">One-Time Enrollment</p>
                 <p class="text-4xl font-bold text-mainText">
-                    ₹{{ number_format($course->price, 2) }}
+                    ₹@indianCurrency($course->price, 2)
                 </p>
 
                 {{-- Payment Button Logic --}}
