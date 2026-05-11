@@ -124,7 +124,7 @@ class RazorpayController extends Controller
 
             // If amount is 0 (maybe fully discounted/upgraded), handle 0 payment automatically
             if ($orderData['amount'] == 0) {
-                // Directly create a successful payment
+                // Directly create a successful payment with explicit zero tax fields
                 Payment::create([
                     'user_id' => $user->id,
                     'course_id' => $type === 'course' ? $id : null,
@@ -132,6 +132,10 @@ class RazorpayController extends Controller
                     'razorpay_order_id' => 'free_upg_' . time(),
                     'razorpay_payment_id' => 'free_upg_' . $user->id . '_' . time(),
                     'amount' => 0,
+                    'subtotal' => 0,
+                    'tax_amount' => 0,
+                    'tax_details' => [],
+                    'total_amount' => 0,
                     'status' => 'success',
                 ]);
                 // Success - Flash message for dashboard
@@ -175,7 +179,21 @@ class RazorpayController extends Controller
                 'return_url' => url('/'),
             ]);
 
-            // Store pending payment in database
+            // Calculate tax breakdown using the same logic as checkout display
+            $pricing = $this->calculatePricing($amount);
+
+            // Build tax_details array matching RegistrationService format
+            $taxDetails = collect($pricing['taxes'])->map(function ($tax) {
+                return [
+                    'name' => $tax->name,
+                    'value' => $tax->value,
+                    'type' => $tax->type,
+                    'tax_type' => $tax->tax_type,
+                    'calculated_amount' => $tax->calculated_amount ?? 0,
+                ];
+            })->toArray();
+
+            // Store pending payment in database with full tax data
             Payment::create([
                 'user_id' => $user->id,
                 'course_id' => $type === 'course' ? $id : null,
@@ -183,9 +201,11 @@ class RazorpayController extends Controller
                 'razorpay_order_id' => $gatewayName === 'razorpay' ? $orderResult['order_id'] : null,
                 'gateway_order_id' => $orderResult['order_id'],
                 'payment_gateway' => $gatewayName,
-                'amount' => $amount,
-                'subtotal' => $amount,
-                'total_amount' => $amount,
+                'amount' => $pricing['totalAmount'],
+                'subtotal' => $pricing['taxableAmount'],
+                'tax_amount' => $pricing['taxAmount'],
+                'tax_details' => $taxDetails,
+                'total_amount' => $pricing['totalAmount'],
                 'status' => 'pending',
             ]);
 

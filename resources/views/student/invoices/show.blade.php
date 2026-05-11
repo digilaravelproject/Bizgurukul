@@ -7,11 +7,11 @@
     <title>Invoice #{{ $invoice->invoice_no }}</title>
 
     @if(!isset($is_pdf) || !$is_pdf)
-    <!-- Importing your custom fonts normally -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <!-- Importing your custom fonts normally -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     @endif
 
     <style>
@@ -25,39 +25,48 @@
         }
 
         body {
-            font-family: @if(isset($is_pdf) && $is_pdf) 'DejaVu Sans', sans-serif @else 'Outfit', sans-serif @endif;
+            font-family:
+                @if(isset($is_pdf) && $is_pdf)
+                'DejaVu Sans', sans-serif @else 'Outfit', sans-serif @endif;
             color: var(--color-text-main);
-            line-height: @if(isset($is_pdf) && $is_pdf) 1.2 @else 1.5 @endif;
-            padding: @if(isset($is_pdf) && $is_pdf) 0 @else 40px 20px @endif;
+            line-height:
+                @if(isset($is_pdf) && $is_pdf)
+                1.2 @else 1.5 @endif;
+            padding:
+                @if(isset($is_pdf) && $is_pdf)
+                0 @else 40px 20px @endif;
             margin: 0;
-            background-color: @if(isset($is_pdf) && $is_pdf) #fff @else var(--color-bg-body) @endif;
+            background-color:
+                @if(isset($is_pdf) && $is_pdf)
+                #fff @else var(--color-bg-body) @endif;
             font-size: 14px;
             -webkit-font-smoothing: antialiased;
             width: 100%;
         }
 
         @if(isset($is_pdf) && $is_pdf)
-        * {
-            font-family: 'DejaVu Sans', sans-serif !important;
-        }
-        @endif
+            * {
+                font-family: 'DejaVu Sans', sans-serif !important;
+            }
 
-        .invoice-wrapper {
+        @endif .invoice-wrapper {
             @if(isset($is_pdf) && $is_pdf)
                 width: 100%;
                 margin: 0;
                 padding: 0;
                 border: none;
-            @else
-                max-width: 900px;
+            @else max-width: 900px;
                 width: auto;
                 margin: 20px auto;
                 padding: 40px;
                 border-top: 6px solid var(--color-primary);
-            @endif
-            background: var(--color-bg-card);
-            box-shadow: @if(isset($is_pdf) && $is_pdf) none @else 0 10px 25px rgba(0, 0, 0, 0.05) @endif;
-            border-radius: @if(isset($is_pdf) && $is_pdf) 0 @else 4px @endif;
+            @endif background: var(--color-bg-card);
+            box-shadow:
+                @if(isset($is_pdf) && $is_pdf)
+                none @else 0 10px 25px rgba(0, 0, 0, 0.05) @endif;
+            border-radius:
+                @if(isset($is_pdf) && $is_pdf)
+                0 @else 4px @endif;
             overflow: visible;
         }
 
@@ -287,7 +296,8 @@
                 background-color: #fff;
                 padding: 0 !important;
                 margin: 0 !important;
-                font-size: 11pt; /* Better for A4 */
+                font-size: 11pt;
+                /* Better for A4 */
                 width: 210mm;
                 height: 297mm;
             }
@@ -296,34 +306,43 @@
                 box-shadow: none !important;
                 border: none !important;
                 margin: 0 auto !important;
-                padding: 15mm !important; /* Balanced padding on ALL sides */
-                width: 180mm !important; /* Centered width */
+                padding: 15mm !important;
+                /* Balanced padding on ALL sides */
+                width: 180mm !important;
+                /* Centered width */
                 max-width: 180mm !important;
                 box-sizing: border-box;
                 display: block;
             }
 
             .header-top {
-                margin-bottom: 15px; /* Reduced gap */
+                margin-bottom: 15px;
+                /* Reduced gap */
             }
 
             .invoice-meta-box {
-                margin-bottom: 15px; /* Reduced gap */
-                padding: 10px 15px; /* Compact padding */
+                margin-bottom: 15px;
+                /* Reduced gap */
+                padding: 10px 15px;
+                /* Compact padding */
                 background-color: #fcfcfc !important;
                 border: 1px solid #eaeaea !important;
             }
 
             .billed-to {
-                margin-bottom: 15px; /* Reduced gap */
+                margin-bottom: 15px;
+                /* Reduced gap */
             }
 
             table {
-                margin-bottom: 10px; /* Reduced gap */
+                margin-bottom: 10px;
+                /* Reduced gap */
             }
 
-            th, td {
-                padding: 8px 10px; /* More compact cells */
+            th,
+            td {
+                padding: 8px 10px;
+                /* More compact cells */
             }
 
             .bottom-actions {
@@ -389,7 +408,8 @@
 
             table {
                 font-size: 12px;
-                min-width: 600px; /* Allow horizontal scroll for table stability */
+                min-width: 600px;
+                /* Allow horizontal scroll for table stability */
             }
 
             .tax-flex-container {
@@ -423,21 +443,25 @@
         $rawStatus = strtolower($invoice->status ?? 'paid');
         $displayStatus = $rawStatus === 'success' ? 'PAID' : strtoupper($rawStatus);
 
-        // Calculation Logic ensuring values are properly formatted
+        // Use stored tax data as the primary source of truth
         $totalAmount = $invoice->total_amount ?? $invoice->amount;
+        $taxDetails = $invoice->tax_details ?? [];
+        $taxAmount = $invoice->tax_amount ?? 0;
 
-        // If tax details exist, calculate subtotal and tax.
-        // Defaulting to 18% reverse calculation if exact values are missing.
-        if (isset($invoice->tax_amount) && $invoice->tax_amount > 0) {
-            $taxAmount = $invoice->tax_amount;
+        if (!empty($taxDetails)) {
+            // Best case: full tax_details stored — use them directly
+            $taxAmount = collect($taxDetails)->sum('calculated_amount');
+            $subTotal = ($invoice->subtotal && $invoice->subtotal > 0)
+                ? $invoice->subtotal
+                : $totalAmount - $taxAmount;
+        } elseif ($taxAmount > 0) {
+            // Fallback: tax_amount is stored but no detailed breakdown
             $subTotal = $totalAmount - $taxAmount;
         } else {
+            // Legacy fallback for very old records with no tax data at all
             $subTotal = $totalAmount / 1.18;
             $taxAmount = $totalAmount - $subTotal;
         }
-
-        $cgst = $taxAmount / 2;
-        $sgst = $taxAmount / 2;
     @endphp
 
     <div class="invoice-wrapper">
@@ -451,19 +475,24 @@
                             @php
                                 $logoPath = (isset($is_pdf) && $is_pdf) ? public_path('storage/' . $settings->company_logo) : asset('storage/' . $settings->company_logo);
                             @endphp
-                            <img src="{{ $logoPath }}" alt="{{ $settings->site_name ?? 'Logo' }}" style="max-height: 70px; width: auto; object-fit: contain;">
+                            <img src="{{ $logoPath }}" alt="{{ $settings->site_name ?? 'Logo' }}"
+                                style="max-height: 70px; width: auto; object-fit: contain;">
                         @else
                             <!-- Fallback if no logo -->
-                            <h1 style="margin: 0; color: #F7941D; font-size: 28px; font-weight: 700;">{{ $settings->site_name ?? 'SKILLS PEHLE' }}</h1>
+                            <h1 style="margin: 0; color: #F7941D; font-size: 28px; font-weight: 700;">
+                                {{ $settings->site_name ?? 'SKILLS PEHLE' }}
+                            </h1>
                         @endif
                     </div>
                 </td>
                 <td style="border: none; text-align: right; padding: 0; vertical-align: top; width: 50%;">
                     <div style="line-height: 1.5; color: #555555; font-size: 13px;">
-                        <strong style="color: #2D2D2D; font-size: 15px; margin-bottom: 4px; display: inline-block;">{{ strtoupper($settings->site_name ?? 'SKILLS PEHLE PRIVATE LIMITED') }}</strong><br>
+                        <strong
+                            style="color: #2D2D2D; font-size: 15px; margin-bottom: 4px; display: inline-block;">{{ strtoupper($settings->site_name ?? 'SKILLS PEHLE PRIVATE LIMITED') }}</strong><br>
                         Regd. Add: {{ $settings->company_address ?? '123 Business Park, Tech Hub' }}<br>
                         {{ $settings->company_city ?? 'Mumbai' }}<br>
-                        {{ $settings->company_state ?? 'Maharashtra' }}, India - {{ $settings->company_zip ?? '400001' }}<br>
+                        {{ $settings->company_state ?? 'Maharashtra' }}, India -
+                        {{ $settings->company_zip ?? '400001' }}<br>
                         GSTIN: {{ $settings->company_gstin ?? '27HCHPS9578D1ZS' }}<br>
                         State Name: {{ $settings->company_state ?? 'Maharashtra' }}, Code : 27<br>
                         PAN: {{ $settings->company_pan ?? 'HCHPS9578D' }}
@@ -473,20 +502,28 @@
         </table>
 
         <!-- Invoice Meta Data -->
-        <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #fcfcfc; border: 1px solid #eaeaea; border-radius: 6px; margin-bottom: 30px; font-size: 13px; color: #555555;">
+        <table
+            style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #fcfcfc; border: 1px solid #eaeaea; border-radius: 6px; margin-bottom: 30px; font-size: 13px; color: #555555;">
             <tr style="border: none;">
-                <td style="padding: 15px 20px; border-right: 1px solid #eaeaea; border-bottom: none; border-top: none; border-left: none; width: 25%; text-align: left; vertical-align: middle;">
-                    <strong style="color: #2D2D2D; display: block; margin-bottom: 3px;">Invoice Number:</strong> {{ $invoice->invoice_no }}
+                <td
+                    style="padding: 15px 20px; border-right: 1px solid #eaeaea; border-bottom: none; border-top: none; border-left: none; width: 25%; text-align: left; vertical-align: middle;">
+                    <strong style="color: #2D2D2D; display: block; margin-bottom: 3px;">Invoice Number:</strong>
+                    {{ $invoice->invoice_no }}
                 </td>
-                <td style="padding: 15px 20px; border-right: 1px solid #eaeaea; border-bottom: none; border-top: none; border-left: none; width: 25%; text-align: left; vertical-align: middle;">
-                    <strong style="color: #2D2D2D; display: block; margin-bottom: 3px;">Order ID:</strong> {{ $invoice->razorpay_order_id ?? $invoice->id }}
+                <td
+                    style="padding: 15px 20px; border-right: 1px solid #eaeaea; border-bottom: none; border-top: none; border-left: none; width: 25%; text-align: left; vertical-align: middle;">
+                    <strong style="color: #2D2D2D; display: block; margin-bottom: 3px;">Order ID:</strong>
+                    {{ $invoice->razorpay_order_id ?? $invoice->id }}
                 </td>
-                <td style="padding: 15px 20px; border-right: 1px solid #eaeaea; border-bottom: none; border-top: none; border-left: none; width: 25%; text-align: left; vertical-align: middle;">
-                    <strong style="color: #2D2D2D; display: block; margin-bottom: 3px;">Invoice Date:</strong> {{ $invoice->created_at->format('d-m-Y') }}
+                <td
+                    style="padding: 15px 20px; border-right: 1px solid #eaeaea; border-bottom: none; border-top: none; border-left: none; width: 25%; text-align: left; vertical-align: middle;">
+                    <strong style="color: #2D2D2D; display: block; margin-bottom: 3px;">Invoice Date:</strong>
+                    {{ $invoice->created_at->format('d-m-Y') }}
                 </td>
                 <td style="padding: 15px 20px; border: none; width: 25%; text-align: left; vertical-align: middle;">
                     <strong style="color: #2D2D2D; display: block; margin-bottom: 3px;">Status:</strong>
-                    <span class="status-badge" style="background-color: #10b981; color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px;">{{ $displayStatus }}</span>
+                    <span class="status-badge"
+                        style="background-color: #10b981; color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px;">{{ $displayStatus }}</span>
                 </td>
             </tr>
         </table>
@@ -535,17 +572,64 @@
                         <td class="text-right"><strong>INR {{ number_format($subTotal, 2) }}</strong></td>
                     </tr>
 
-                    <!-- Tax Split Row (Table structure for strict PDF printing compatibility) -->
+                    <!-- Tax Row — Dynamic from stored tax_details -->
                     <tr class="tax-row">
                         <td colspan="3" style="padding: 0; background-color: #fafafa; border: 1px solid #eaeaea;">
                             <table style="width: 100%; border-collapse: collapse; margin: 0; border: none;">
-                                <tr>
-                                    <td style="width: 35%; text-align: right; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-weight: 600; color: #2D2D2D; font-size: 12px;">Tax 18%:</td>
-                                    <td style="width: 15%; text-align: center; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-size: 12px; color: #555555;">CGST: 9%</td>
-                                    <td style="width: 20%; text-align: center; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-size: 12px; color: #555555;">CGST: INR {{ number_format($cgst, 2) }}</td>
-                                    <td style="width: 10%; text-align: center; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-size: 12px; color: #555555;">SGST: 9%</td>
-                                    <td style="width: 20%; text-align: center; padding: 12px; border: none; font-size: 12px; color: #555555;">SGST: INR {{ number_format($sgst, 2) }}</td>
-                                </tr>
+                                @if(!empty($taxDetails))
+                                    @php
+                                        $taxCount = count($taxDetails);
+                                        // Calculate widths based on number of tax items
+                                        $labelWidth = 35;
+                                        $itemWidth = (int) ((100 - $labelWidth) / max(1, $taxCount));
+                                        $totalRate = collect($taxDetails)->sum(function ($t) {
+                                            return ($t['type'] ?? '') === 'percentage' ? $t['value'] : 0;
+                                        });
+                                    @endphp
+                                    <tr>
+                                        <td
+                                            style="width: {{ $labelWidth }}%; text-align: right; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-weight: 600; color: #2D2D2D; font-size: 12px;">
+                                            Tax {{ $totalRate > 0 ? number_format($totalRate, 0) . '%' : '' }}:
+                                        </td>
+                                        @foreach($taxDetails as $td)
+                                            @php
+                                                $rate = ($td['type'] ?? '') === 'percentage' ? $td['value'] . '%' : 'Fixed';
+                                                $tdAmount = $td['calculated_amount'] ?? 0;
+                                            @endphp
+                                            <td
+                                                style="width: {{ $itemWidth / 2 }}%; text-align: center; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-size: 12px; color: #555555;">
+                                                {{ $td['name'] ?? 'Tax' }}: {{ $rate }}
+                                            </td>
+                                            <td
+                                                style="width: {{ $itemWidth / 2 }}%; text-align: center; padding: 12px; border: none;{{ !$loop->last ? ' border-right: 1px solid #eaeaea;' : '' }} font-size: 12px; color: #555555;">
+                                                {{ $td['name'] ?? 'Tax' }}: INR {{ number_format($tdAmount, 2) }}
+                                            </td>
+                                        @endforeach
+                                    </tr>
+                                @else
+                                    {{-- Fallback for legacy records without tax_details --}}
+                                    @php
+                                        $cgst = $taxAmount / 2;
+                                        $sgst = $taxAmount / 2;
+                                    @endphp
+                                    <tr>
+                                        <td
+                                            style="width: 35%; text-align: right; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-weight: 600; color: #2D2D2D; font-size: 12px;">
+                                            Tax 18%:</td>
+                                        <td
+                                            style="width: 15%; text-align: center; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-size: 12px; color: #555555;">
+                                            CGST: 9%</td>
+                                        <td
+                                            style="width: 20%; text-align: center; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-size: 12px; color: #555555;">
+                                            CGST: INR {{ number_format($cgst, 2) }}</td>
+                                        <td
+                                            style="width: 10%; text-align: center; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-size: 12px; color: #555555;">
+                                            SGST: 9%</td>
+                                        <td
+                                            style="width: 20%; text-align: center; padding: 12px; border: none; font-size: 12px; color: #555555;">
+                                            SGST: INR {{ number_format($sgst, 2) }}</td>
+                                    </tr>
+                                @endif
                             </table>
                         </td>
                         <td class="text-center" style="vertical-align: middle; background-color: #fafafa;">
@@ -557,13 +641,15 @@
                     <tr>
                         <td colspan="3" class="text-right" style="font-size: 16px;"><strong>Total:</strong></td>
                         <td class="text-right" style="font-size: 16px;">
-                            <strong>INR {{ number_format($totalAmount, 2) }}</strong></td>
+                            <strong>INR {{ number_format($totalAmount, 2) }}</strong>
+                        </td>
                     </tr>
 
                     <!-- Declaration -->
                     <tr class="declaration-row">
                         <td colspan="4">
-                            <strong>Declaration: We declare that this invoice shows the actual price of the goods/ services
+                            <strong>Declaration: We declare that this invoice shows the actual price of the goods/
+                                services
                                 described and that all particulars are true and correct.</strong>
                         </td>
                     </tr>
@@ -580,15 +666,18 @@
 
         <!-- Print Action -->
         @if(!isset($is_pdf) || !$is_pdf)
-        <div class="bottom-actions" id="action-area">
-            @if(isset($downloadUrl))
-                <a href="{{ $downloadUrl }}" class="print-btn" style="text-decoration: none; display: inline-block;">Download Invoice (PDF)</a>
-            @else
-                <button onclick="window.print()" class="print-btn">Print Invoice</button>
-            @endif
-            <button onclick="window.print()" style="background:none; border:none; text-decoration:underline; cursor:pointer; color:var(--color-text-muted); font-size:12px; margin-top:5px;">Print Instead</button>
-            <span>Generated on {{ now()->format('d-m-Y H:i:s') }}</span>
-        </div>
+            <div class="bottom-actions" id="action-area">
+                @if(isset($downloadUrl))
+                    <a href="{{ $downloadUrl }}" class="print-btn"
+                        style="text-decoration: none; display: inline-block;">Download Invoice (PDF)</a>
+                @else
+                    <button onclick="window.print()" class="print-btn">Print Invoice</button>
+                @endif
+                <button onclick="window.print()"
+                    style="background:none; border:none; text-decoration:underline; cursor:pointer; color:var(--color-text-muted); font-size:12px; margin-top:5px;">Print
+                    Instead</button>
+                <span>Generated on {{ now()->format('d-m-Y H:i:s') }}</span>
+            </div>
         @endif
 
     </div>

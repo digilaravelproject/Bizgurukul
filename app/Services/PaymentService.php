@@ -56,11 +56,55 @@ class PaymentService
                 'return_url' => url('/'),
             ]);
 
-            // Create payment record with gateway tracking
+            // Calculate tax breakdown
+            $taxes = \App\Models\Tax::where('is_active', true)->get();
+            $baseAmountDue = max(0, $amount);
+            $totalTaxAmount = 0;
+            $totalExclusiveTaxAmount = 0;
+            $inclusiveTaxRateAmount = 0;
+
+            foreach ($taxes as $tax) {
+                if ($tax->tax_type === 'exclusive') {
+                    $currentTax = ($tax->type == 'percentage') ? ($baseAmountDue * $tax->value / 100) : $tax->value;
+                    $totalTaxAmount += $currentTax;
+                    $totalExclusiveTaxAmount += $currentTax;
+                    $tax->calculated_amount = $currentTax;
+                }
+            }
+
+            foreach ($taxes as $tax) {
+                if ($tax->tax_type === 'inclusive') {
+                    $currentTax = ($tax->type == 'percentage')
+                        ? ($baseAmountDue - ($baseAmountDue / (1 + ($tax->value / 100))))
+                        : $tax->value;
+                    $totalTaxAmount += $currentTax;
+                    $inclusiveTaxRateAmount += $currentTax;
+                    $tax->calculated_amount = $currentTax;
+                }
+            }
+
+            $pureSubtotal = $baseAmountDue - $inclusiveTaxRateAmount;
+            $totalAmount = $baseAmountDue + $totalExclusiveTaxAmount;
+
+            $taxDetails = $taxes->map(function ($tax) {
+                return [
+                    'name' => $tax->name,
+                    'value' => $tax->value,
+                    'type' => $tax->type,
+                    'tax_type' => $tax->tax_type,
+                    'calculated_amount' => $tax->calculated_amount ?? 0,
+                ];
+            })->toArray();
+
+            // Create payment record with gateway tracking and tax data
             $payment = $this->paymentRepo->create([
                 'user_id'            => $user->id,
                 'razorpay_order_id'  => $gatewayName === 'razorpay' ? $orderResult['order_id'] : null,
-                'amount'             => $amount,
+                'amount'             => $totalAmount,
+                'subtotal'           => $pureSubtotal,
+                'tax_amount'         => $totalTaxAmount,
+                'tax_details'        => $taxDetails,
+                'total_amount'       => $totalAmount,
                 'status'             => 'pending',
                 'paymentable_type'   => get_class($payableEntity),
                 'paymentable_id'     => $payableEntity->id,
