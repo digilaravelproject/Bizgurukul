@@ -133,6 +133,7 @@ class ProfileController extends Controller
             $request->validate([
                 'bank_name' => 'required|string',
                 'holder_name' => 'required|string',
+                'account_type' => 'required|in:Current,Saving',
                 'account_number' => 'required|confirmed',
                 'ifsc_code' => 'required|string',
                 'document' => 'required|mimes:jpg,jpeg,png,pdf|max:3072',

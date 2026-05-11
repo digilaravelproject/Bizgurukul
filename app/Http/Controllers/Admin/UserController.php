@@ -73,6 +73,7 @@ class UserController extends Controller
                 'joined_at' => $user->created_at ? ($user->created_at instanceof \Carbon\Carbon ? $user->created_at->format('d M, Y') : $user->created_at) : 'N/A',
                 'profile_picture' => $user->profile_picture ? asset('storage/' . $user->profile_picture) : null,
                 'profile_photo_url' => $user->profile_photo_url ? (str_starts_with($user->profile_photo_url, 'http') ? $user->profile_photo_url : asset('storage/' . $user->profile_photo_url)) : null,
+                'account_type' => $user->bank?->account_type ?? 'N/A',
                 'hide_from_leaderboard' => $user->hide_from_leaderboard,
                 'initials' => strtoupper(substr($user->name, 0, 1)),
 
@@ -125,7 +126,6 @@ class UserController extends Controller
             'role' => 'required',
             'mobile' => 'nullable|numeric|digits:10',
             'gender' => 'nullable|in:male,female,other',
-            'dob' => 'nullable|date',
             'state_id' => 'nullable|integer',
         ]);
 
@@ -146,7 +146,6 @@ class UserController extends Controller
             'role' => 'required',
             'mobile' => 'nullable|numeric|digits:10',
             'gender' => 'nullable|in:male,female,other',
-            'dob' => 'nullable|date',
             'state_id' => 'nullable|integer',
             'hide_from_leaderboard' => 'nullable',
         ]);

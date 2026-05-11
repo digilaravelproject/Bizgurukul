@@ -14,6 +14,7 @@ class BankUpdateRequest extends Model
         'user_id',
         'bank_name',
         'account_holder_name',
+        'account_type',
         'account_number',
         'ifsc_code',
         'upi_id',

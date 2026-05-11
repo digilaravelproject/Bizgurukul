@@ -122,6 +122,7 @@ class ProfileService
                     'user_id' => $userId,
                     'bank_name' => $data['bank_name'],
                     'account_holder_name' => $data['holder_name'],
+                    'account_type' => $data['account_type'],
                     'account_number' => $data['account_number'],
                     'ifsc_code' => strtoupper($data['ifsc_code']),
                     'upi_id' => $data['upi_id'] ?? null,
@@ -140,6 +141,7 @@ class ProfileService
                 [
                     'bank_name' => $data['bank_name'],
                     'account_holder_name' => $data['holder_name'],
+                    'account_type' => $data['account_type'],
                     'account_number' => $data['account_number'],
                     'ifsc_code' => strtoupper($data['ifsc_code']),
                     'upi_id' => $data['upi_id'] ?? null,
@@ -235,6 +237,7 @@ class ProfileService
                 $bank->update([
                     'bank_name' => $request->bank_name,
                     'account_holder_name' => $request->account_holder_name,
+                    'account_type' => $request->account_type,
                     'account_number' => $request->account_number,
                     'ifsc_code' => $request->ifsc_code,
                     'upi_id' => $request->upi_id,

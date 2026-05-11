@@ -48,6 +48,7 @@
                             <tr>
                                 <th class="px-8 py-7">User Profile</th>
                                 <th class="px-8 py-7">Network Sponsor</th>
+                                <th class="px-8 py-7">Bank / Type</th>
                                 <th class="px-8 py-7">Reg. Date</th>
                                 <th class="px-8 py-7">Status</th>
                                 <th class="px-8 py-7 text-right">Verification</th>
@@ -81,6 +82,12 @@
                                         @endif
                                     </td>
                                     <td class="px-8 py-6">
+                                        <div class="flex flex-col">
+                                            <span class="text-xs font-black text-mainText uppercase">{{ $user->bank->bank_name ?? 'NOT_SET' }}</span>
+                                            <span class="text-[9px] font-black {{ ($user->bank->account_type ?? '') === 'Saving' ? 'text-primary' : 'text-secondary' }} uppercase tracking-widest mt-1">{{ $user->bank->account_type ?? 'N/A' }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6">
                                         <span class="text-xs font-black text-mainText block">{{ $user->kyc->created_at->format('d M, Y') }}</span>
                                         <span class="text-[10px] text-mutedText font-bold uppercase">{{ $user->kyc->created_at->format('h:i A') }}</span>
                                     </td>
@@ -92,8 +99,8 @@
                                         @endif
                                     </td>
                                     <td class="px-8 py-6 text-right">
-                                        <button @click="openKycModal({{ $user->id }}, '{{ addslashes($user->name) }}', '{{ $user->email }}', '{{ $user->mobile }}', '{{ $user->dob ? $user->dob->format('d M, Y') : 'N/A' }}', '{{ $user->kyc->pan_name }}', '{{ asset('storage/' . $user->kyc->document_path) }}', '{{ pathinfo($user->kyc->document_path, PATHINFO_EXTENSION) }}', '{{ $user->referrer ? addslashes($user->referrer->name) : 'No Sponsor' }}', '{{ $user->referrer ? $user->referrer->email : '' }}', '{{ $user->referrer ? $user->referrer->mobile : '' }}', '{{ $user->kyc->status }}')"
-                                            class="{{ $user->kyc->status === 'verified' ? 'bg-navy text-white' : 'brand-gradient text-white shadow-lg shadow-primary/20' }} px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[2px] transition-all hover:scale-[1.05]">
+                                        <button @click="openKycModal({{ $user->id }}, '{{ addslashes($user->name) }}', '{{ $user->email }}', '{{ $user->mobile }}', '{{ $user->dob ? $user->dob->format('d M, Y') : 'N/A' }}', '{{ $user->kyc->pan_name }}', '{{ asset('storage/' . $user->kyc->document_path) }}', '{{ pathinfo($user->kyc->document_path, PATHINFO_EXTENSION) }}', '{{ $user->referrer ? addslashes($user->referrer->name) : 'No Sponsor' }}', '{{ $user->referrer ? $user->referrer->email : '' }}', '{{ $user->referrer ? $user->referrer->mobile : '' }}', '{{ $user->kyc->status }}', '{{ $user->bank->account_type ?? 'N/A' }}', '{{ $user->bank->bank_name ?? 'N/A' }}')"
+                                            class="{{ $user->kyc->status === 'verified' ? 'bg-primary text-white' : 'brand-gradient text-white shadow-lg shadow-primary/20' }} px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[2px] transition-all hover:scale-[1.05]">
                                             {{ $user->kyc->status === 'verified' ? 'View Archive' : 'Execute Review' }}
                                         </button>
                                     </td>
@@ -298,6 +305,11 @@
                                         <label class="text-[10px] font-black text-mutedText/40 uppercase tracking-widest block mb-1">Declared DOB</label>
                                         <p class="text-xs font-black text-mainText uppercase" x-text="kycData.dob"></p>
                                     </div>
+                                    <div>
+                                        <label class="text-[10px] font-black text-mutedText/40 uppercase tracking-widest block mb-1">Account Structure</label>
+                                        <p class="text-[11px] font-black text-primary uppercase tracking-[2px]" x-text="kycData.bank_name"></p>
+                                        <p class="text-xs font-black text-secondary uppercase mt-0.5" x-text="kycData.account_type"></p>
+                                    </div>
                                     <div class="col-span-2 p-8 bg-navy/5 border border-navy/10 rounded-[32px] group relative overflow-hidden">
                                         <div class="absolute -right-6 -top-6 w-20 h-20 bg-navy/10 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
                                         <label class="text-[10px] font-black text-mutedText uppercase tracking-[2px] block mb-4">Sponsor Authority</label>
@@ -486,8 +498,8 @@
                 activeInitialBankReq: {},
                 activeBankDoc: '',
 
-                openKycModal(id, name, email, mobile, dob, id_name, url, ext, r_name, r_email, r_mobile, status) {
-                    this.kycData = { id, name, email, mobile, dob, id_name, url, ext, referrer_name: r_name, referrer_email: r_email, referrer_mobile: r_mobile, status };
+                openKycModal(id, name, email, mobile, dob, id_name, url, ext, r_name, r_email, r_mobile, status, acc_type, b_name) {
+                    this.kycData = { id, name, email, mobile, dob, id_name, url, ext, referrer_name: r_name, referrer_email: r_email, referrer_mobile: r_mobile, status, account_type: acc_type, bank_name: b_name };
                     this.adminNote = '';
                     this.showRejectKyc = false;
                     this.kycModalOpen = true;

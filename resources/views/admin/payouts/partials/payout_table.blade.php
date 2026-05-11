@@ -82,6 +82,7 @@
                                                 </div>
                                                 <div class="space-y-2">
                                                     <div class="flex justify-between gap-4"><span class="flex-shrink-0">Bank Name:</span> <span class="text-mainText text-right break-words">{{ $withdrawal->user->bank->bank_name ?? 'N/A' }}</span></div>
+                                                    <div class="flex justify-between gap-4"><span class="flex-shrink-0">Account Type:</span> <span class="text-secondary text-right break-words font-black uppercase">{{ $withdrawal->user->bank->account_type ?? 'N/A' }}</span></div>
                                                     <div class="flex justify-between gap-4"><span class="flex-shrink-0">Account No:</span> <span class="text-mainText text-right break-words">{{ $withdrawal->user->bank->account_number ?? 'N/A' }}</span></div>
                                                     <div class="flex justify-between gap-4"><span class="flex-shrink-0">IFSC:</span> <span class="text-mainText text-right break-words">{{ $withdrawal->user->bank->ifsc_code ?? 'N/A' }}</span></div>
                                                 </div>

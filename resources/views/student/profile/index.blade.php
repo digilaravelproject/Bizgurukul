@@ -273,6 +273,7 @@
                                         @endforeach
                                     </select>
                                 </div>
+
                             </div>
 
                             <div class="mt-8 flex justify-end">
@@ -439,7 +440,17 @@
                                         <label class="block text-sm font-bold text-mutedText mb-1">Account Holder Name (As
                                             per Bank)</label>
                                         <input type="text" x-model="bank.holder_name" required
+                                            class="w-full rounded-xl bg-navy border-primary/10 text-mainText focus:ring-primary focus:border-primary"
+                                            placeholder="John Doe">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-mutedText mb-1">Account Type</label>
+                                        <select x-model="bank.account_type" required
                                             class="w-full rounded-xl bg-navy border-primary/10 text-mainText focus:ring-primary focus:border-primary">
+                                            <option value="">Select Type</option>
+                                            <option value="Current">Current</option>
+                                            <option value="Saving">Saving</option>
+                                        </select>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-bold text-mutedText mb-1">Account Number</label>
@@ -503,9 +514,9 @@
                             <div x-show="!changeBankMode && bankStatus !== 'not_submitted' && bankStatus !== 'rejected'"
                                 x-cloak class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="bg-navy/5 p-4 rounded-2xl border border-primary/5">
-                                    <p class="text-[10px] uppercase font-black tracking-widest text-mutedText mb-1">Account
-                                        Holder</p>
                                     <p class="font-bold text-mainText">{{ $currentBank->account_holder_name }}</p>
+                                    <p class="text-[10px] uppercase font-black tracking-widest text-mutedText mt-3 mb-1">Account Type</p>
+                                    <p class="font-bold text-mainText">{{ $currentBank->account_type ?? 'N/A' }}</p>
                                 </div>
                                 <div class="bg-navy/5 p-4 rounded-2xl border border-primary/5">
                                     <p class="text-[10px] uppercase font-black tracking-widest text-mutedText mb-1">Bank
@@ -625,6 +636,7 @@
                 // Bank Data
                 bank: {
                     holder_name: '{{ $user->bank?->account_holder_name ?? '' }}',
+                    account_type: '{{ $user->bank?->account_type ?? '' }}',
                     account_number: '', // Reset for security
                     account_number_confirmation: '',
                     bank_name: '{{ $user->bank?->bank_name ?? '' }}',
@@ -688,6 +700,7 @@
                     let fd = new FormData();
                     fd.append('bank_name', this.bank.bank_name);
                     fd.append('holder_name', this.bank.holder_name);
+                    fd.append('account_type', this.bank.account_type);
                     fd.append('account_number', this.bank.account_number);
                     fd.append('account_number_confirmation', this.bank.account_number_confirmation);
                     fd.append('ifsc_code', this.bank.ifsc_code);
