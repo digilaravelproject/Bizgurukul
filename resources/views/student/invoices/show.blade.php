@@ -563,13 +563,13 @@
                         </td>
                         <td>1</td>
                         <td>999293</td>
-                        <td class="text-right">INR {{ number_format($subTotal, 2) }}</td>
+                        <td class="text-right">INR @indianCurrency($subTotal, 2)</td>
                     </tr>
 
                     <!-- Sub Total Row -->
                     <tr>
                         <td colspan="3" class="text-right"><strong>Sub Total:</strong></td>
-                        <td class="text-right"><strong>INR {{ number_format($subTotal, 2) }}</strong></td>
+                        <td class="text-right"><strong>INR @indianCurrency($subTotal, 2)</strong></td>
                     </tr>
 
                     <!-- Tax Row — Dynamic from stored tax_details -->
@@ -602,7 +602,7 @@
                                             </td>
                                             <td
                                                 style="width: {{ $itemWidth / 2 }}%; text-align: center; padding: 12px; border: none;{{ !$loop->last ? ' border-right: 1px solid #eaeaea;' : '' }} font-size: 12px; color: #555555;">
-                                                {{ $td['name'] ?? 'Tax' }}: INR {{ number_format($tdAmount, 2) }}
+                                                {{ $td['name'] ?? 'Tax' }}: INR @indianCurrency($tdAmount, 2)
                                             </td>
                                         @endforeach
                                     </tr>
@@ -621,19 +621,19 @@
                                             CGST: 9%</td>
                                         <td
                                             style="width: 20%; text-align: center; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-size: 12px; color: #555555;">
-                                            CGST: INR {{ number_format($cgst, 2) }}</td>
+                                            CGST: INR @indianCurrency($cgst, 2)</td>
                                         <td
                                             style="width: 10%; text-align: center; padding: 12px; border: none; border-right: 1px solid #eaeaea; font-size: 12px; color: #555555;">
                                             SGST: 9%</td>
                                         <td
                                             style="width: 20%; text-align: center; padding: 12px; border: none; font-size: 12px; color: #555555;">
-                                            SGST: INR {{ number_format($sgst, 2) }}</td>
+                                            SGST: INR @indianCurrency($sgst, 2)</td>
                                     </tr>
                                 @endif
                             </table>
                         </td>
                         <td class="text-center" style="vertical-align: middle; background-color: #fafafa;">
-                            <strong>INR {{ number_format($taxAmount, 2) }}</strong>
+                            <strong>INR @indianCurrency($taxAmount, 2)</strong>
                         </td>
                     </tr>
 
@@ -641,7 +641,7 @@
                     <tr>
                         <td colspan="3" class="text-right" style="font-size: 16px;"><strong>Total:</strong></td>
                         <td class="text-right" style="font-size: 16px;">
-                            <strong>INR {{ number_format($totalAmount, 2) }}</strong>
+                            <strong>INR @indianCurrency($totalAmount, 2)</strong>
                         </td>
                     </tr>
 

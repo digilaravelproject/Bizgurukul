@@ -7,7 +7,7 @@
                 Range Earnings
             </p>
             <h3 class="text-lg md:text-xl font-black text-mainText tracking-tight relative z-10">
-                ₹{{ number_format($dashboardData['range_earnings'], 2) }}
+                ₹@indianCurrency($dashboardData['range_earnings'], 2)
             </h3>
         </div>
     @endif
@@ -20,7 +20,7 @@
         <p class="text-[9px] md:text-xs font-bold text-mutedText uppercase tracking-widest mb-1 relative z-10">Total
             Revenue</p>
         <h3 class="text-lg md:text-xl font-black text-mainText tracking-tight relative z-10">
-            ₹{{ number_format($dashboardData['total_earnings'], 2) }}</h3>
+            ₹@indianCurrency($dashboardData['total_earnings'], 2)</h3>
     </div>
 
     <div
@@ -31,10 +31,10 @@
             <i class="fas fa-check-circle"></i> Available
         </p>
         <h3 class="text-lg md:text-xl font-black text-mainText tracking-tight relative z-10">
-            ₹{{ number_format($dashboardData['available_balance'], 2) }}</h3>
+            ₹@indianCurrency($dashboardData['available_balance'], 2)</h3>
         @if ($dashboardData['tds_enabled'])
             <p class="text-[8px] font-bold text-mutedText/60 uppercase tracking-tighter relative z-10">Payout:
-                ₹{{ number_format($dashboardData['available_balance_net'], 2) }}</p>
+                ₹@indianCurrency($dashboardData['available_balance_net'], 2)</p>
         @endif
     </div>
 
@@ -48,10 +48,10 @@
             <i class="fas fa-hourglass-half text-xs"></i> On Hold
         </p>
         <h3 class="text-lg md:text-xl font-black text-mainText tracking-tight relative z-10">
-            ₹{{ number_format($dashboardData['on_hold_balance'], 2) }}</h3>
+            ₹@indianCurrency($dashboardData['on_hold_balance'], 2)</h3>
         @if ($dashboardData['tds_enabled'])
             <p class="text-[8px] font-bold text-mutedText/60 uppercase tracking-tighter relative z-10">Net:
-                ₹{{ number_format($dashboardData['on_hold_balance_net'], 2) }}</p>
+                ₹@indianCurrency($dashboardData['on_hold_balance_net'], 2)</p>
         @endif
     </div>
 
@@ -65,7 +65,7 @@
             <i class="fas fa-spinner fa-spin text-xs"></i> Pending
         </p>
         <h3 class="text-lg md:text-xl font-black text-mainText tracking-tight relative z-10">
-            ₹{{ number_format($dashboardData['pending_balance'], 2) }}</h3>
+            ₹@indianCurrency($dashboardData['pending_balance'], 2)</h3>
     </div>
 
     <div
@@ -76,7 +76,7 @@
         <p class="text-[9px] md:text-xs font-bold text-mutedText uppercase tracking-widest mb-1 relative z-10">Total
             Paid</p>
         <h3 class="text-lg md:text-xl font-black text-mainText tracking-tight relative z-10">
-            ₹{{ number_format($dashboardData['total_withdrawn'], 2) }}</h3>
+            ₹@indianCurrency($dashboardData['total_withdrawn'], 2)</h3>
     </div>
 
     @if ($dashboardData['tds_enabled'])
@@ -88,7 +88,7 @@
             <p class="text-[9px] md:text-xs font-bold text-red-500/70 uppercase tracking-widest mb-1 relative z-10">TDS
                 Deducted</p>
             <h3 class="text-lg md:text-xl font-black text-mainText tracking-tight relative z-10">
-                ₹{{ number_format($dashboardData['total_tds'], 2) }}</h3>
+                ₹@indianCurrency($dashboardData['total_tds'], 2)</h3>
         </div>
     @endif
 </div>

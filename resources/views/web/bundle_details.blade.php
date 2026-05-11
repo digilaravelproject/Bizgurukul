@@ -142,16 +142,16 @@
                     <div class="text-center mb-6">
                         <div class="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">{{ $bundle->title }} Investment</div>
                         <div class="flex justify-center items-end gap-2">
-                            <span class="text-4xl font-black text-mainText tracking-tight">₹{{ number_format($effectivePrice, 0) }}</span>
+                            <span class="text-4xl font-black text-mainText tracking-tight">₹@indianCurrency($effectivePrice, 0)</span>
                             @if ($effectivePrice < $bundle->website_price)
-                                <span class="text-lg text-gray-400 line-through mb-1">₹{{ number_format($bundle->website_price, 0) }}</span>
+                                <span class="text-lg text-gray-400 line-through mb-1">₹@indianCurrency($bundle->website_price, 0)</span>
                             @endif
                         </div>
                         @if($isUpgrade)
                             <div class="mt-2 inline-block px-2.5 py-1 bg-red-50 text-red-600 font-bold text-[10px] rounded uppercase tracking-wider">Upgrade Discount Applied</div>
                         @else
                             @if ($effectivePrice < $bundle->website_price)
-                            <div class="mt-2 text-green-600 font-bold text-xs">You save ₹{{ number_format($bundle->website_price - $effectivePrice, 0) }}!</div>
+                            <div class="mt-2 text-green-600 font-bold text-xs">You save ₹@indianCurrency($bundle->website_price - $effectivePrice, 0)!</div>
                             @endif
                         @endif
                     </div>

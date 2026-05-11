@@ -134,7 +134,7 @@
                             <p class="text-[10px] md:text-xs font-bold text-mutedText uppercase tracking-widest mb-1">
                                 {{ $card['title'] }}</p>
                             <h3 class="text-2xl md:text-3xl font-black text-mainText tracking-tight">
-                                ₹{{ number_format($card['amount']) }}</h3>
+                                ₹@indianCurrency($card['amount'])</h3>
                         </div>
                         <div
                             class="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl {{ $card['bg'] }} flex items-center justify-center {{ $card['text'] }} text-base md:text-xl group-hover:rotate-12 transition-transform duration-300">
@@ -215,7 +215,7 @@
                                 </div>
                                 <div class="flex items-center justify-between mt-2 pt-2 border-t border-primary/10">
                                     <p class="text-[9px] font-bold text-mutedText uppercase tracking-widest">Earnings</p>
-                                    <p class="text-xs font-black text-mainText">₹{{ number_format($stat['revenue']) }}</p>
+                                    <p class="text-xs font-black text-mainText">₹@indianCurrency($stat['revenue'])</p>
                                 </div>
                             </div>
                         @empty
@@ -476,9 +476,9 @@
             @php
                 $secStats = [
                     ['label' => 'Programs Enrolled', 'val' => $enrolledCount, 'icon' => 'fa-graduation-cap', 'color' => 'text-primary'],
-                    ['label' => 'Pending Earnings', 'val' => '₹' . number_format($secondaryStats['pending_earnings']), 'icon' => 'fa-hourglass-half', 'color' => 'text-amber-500'],
-                    ['label' => 'Wallet Balance', 'val' => '₹' . number_format($secondaryStats['wallet_balance']), 'icon' => 'fa-wallet', 'color' => 'text-emerald-500'],
-                    ['label' => 'Total Paid Out', 'val' => '₹' . number_format($secondaryStats['total_payouts']), 'icon' => 'fa-money-check-alt', 'color' => 'text-emerald-500']
+                    ['label' => 'Pending Earnings', 'val' => '₹' . formatCurrencyIndian($secondaryStats['pending_earnings']), 'icon' => 'fa-hourglass-half', 'color' => 'text-amber-500'],
+                    ['label' => 'Wallet Balance', 'val' => '₹' . formatCurrencyIndian($secondaryStats['wallet_balance']), 'icon' => 'fa-wallet', 'color' => 'text-emerald-500'],
+                    ['label' => 'Total Paid Out', 'val' => '₹' . formatCurrencyIndian($secondaryStats['total_payouts']), 'icon' => 'fa-money-check-alt', 'color' => 'text-emerald-500']
                 ];
             @endphp
             @foreach($secStats as $stat)

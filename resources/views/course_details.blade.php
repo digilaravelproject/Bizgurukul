@@ -165,10 +165,10 @@
 
                     <div class="mb-8">
                         <span
-                            class="text-4xl font-bold text-primary">₹{{ number_format($course->final_price, 0) }}</span>
+                            class="text-4xl font-bold text-primary">₹@indianCurrency($course->final_price, 0)</span>
                         @if ($course->final_price < $course->price)
                             <span
-                                class="text-gray-400 line-through ml-3 text-xl">₹{{ number_format($course->price, 0) }}</span>
+                                class="text-gray-400 line-through ml-3 text-xl">₹@indianCurrency($course->price, 0)</span>
                         @endif
                     </div>
 

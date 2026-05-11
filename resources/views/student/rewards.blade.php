@@ -34,7 +34,7 @@
         </div>
         <div class="bg-surface px-5 py-3 md:px-6 md:py-3 rounded-2xl border border-primary/10 premium-shadow flex flex-col md:block items-center text-center md:text-left">
             <span class="text-[9px] md:text-[10px] font-black text-mutedText uppercase tracking-widest block">Total Earnings</span>
-            <span class="text-lg md:text-xl font-black text-primary">₹{{ number_format($earningsStats['all_time']) }}</span>
+            <span class="text-lg md:text-xl font-black text-primary">₹@indianCurrency($earningsStats['all_time'])</span>
         </div>
     </div>
 
@@ -173,7 +173,7 @@
                 <div class="mt-6 sm:mt-8 p-4 sm:p-5 bg-navy/40 rounded-[1.5rem] sm:rounded-[2rem] border border-primary/10 backdrop-blur-sm">
                     <div class="flex justify-between items-center mb-3">
                         <span class="text-[9px] sm:text-[10px] font-black text-mutedText uppercase tracking-widest">Requirement</span>
-                        <span class="text-xs sm:text-sm font-black text-primary">₹{{ number_format($achievementData['remaining_to_next']) }}</span>
+                        <span class="text-xs sm:text-sm font-black text-primary">₹@indianCurrency($achievementData['remaining_to_next'])</span>
                     </div>
                     <div class="w-full h-2 bg-primary/10 rounded-full overflow-hidden p-[1px] border border-white/5">
                         <div class="h-full bg-primary transition-all duration-1500 shadow-[0_0_10px_rgba(var(--color-primary),0.6)] rounded-full" style="width: {{ $currentMilestonePercent }}%"></div>
@@ -248,7 +248,7 @@
                                             </span>
                                         </div>
                                     </div>
-                                    <span class="shrink-0 text-sm font-black order-1 sm:order-2 {{ $isLocked ? 'text-mutedText' : 'text-primary' }}">₹{{ number_format($milestone->target_amount) }}</span>
+                                    <span class="shrink-0 text-sm font-black order-1 sm:order-2 {{ $isLocked ? 'text-mutedText' : 'text-primary' }}">₹@indianCurrency($milestone->target_amount)</span>
                                 </div>
                                 <p class="text-[10px] sm:text-xs text-mutedText font-medium line-clamp-2 mt-2 leading-relaxed">{{ $milestone->reward_description }}</p>
 
@@ -261,7 +261,7 @@
                                         <div class="space-y-2">
                                             <div class="flex justify-between text-[9px] font-black uppercase tracking-widest text-mutedText">
                                                 <span>Progress</span>
-                                                <span>₹{{ number_format($progress) }} / ₹{{ number_format($milestone->target_amount) }}</span>
+                                                <span>₹@indianCurrency($progress) / ₹@indianCurrency($milestone->target_amount)</span>
                                             </div>
                                             <div class="w-full h-2 bg-navy rounded-full overflow-hidden p-[1px]">
                                                 <div class="h-full brand-gradient rounded-full shadow-[0_0_10px_rgba(var(--color-primary),0.5)] transition-all duration-1000" style="width: {{ $percent }}%"></div>

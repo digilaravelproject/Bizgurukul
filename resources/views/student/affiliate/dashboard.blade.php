@@ -30,7 +30,7 @@
                 </div>
                 <span class="bg-indigo-500/10 text-indigo-500 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg">All Time</span>
             </div>
-            <h3 class="text-3xl font-black text-mainText tracking-tight">₹{{ number_format($totalEarnings) }}</h3>
+            <h3 class="text-3xl font-black text-mainText tracking-tight">₹@indianCurrency($totalEarnings)</h3>
             <p class="text-xs font-bold text-mutedText uppercase tracking-widest mt-1">Total Earnings</p>
         </div>
 
@@ -42,7 +42,7 @@
                 </div>
                 <span class="bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg">This Month</span>
             </div>
-            <h3 class="text-3xl font-black text-mainText tracking-tight">₹{{ number_format($thisMonthEarnings) }}</h3>
+            <h3 class="text-3xl font-black text-mainText tracking-tight">₹@indianCurrency($thisMonthEarnings)</h3>
             <p class="text-xs font-bold text-mutedText uppercase tracking-widest mt-1">Monthly Income</p>
         </div>
 
@@ -54,7 +54,7 @@
                 </div>
                 <span class="bg-amber-500/10 text-amber-500 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg">Today</span>
             </div>
-            <h3 class="text-3xl font-black text-mainText tracking-tight">₹{{ number_format($todaysEarnings) }}</h3>
+            <h3 class="text-3xl font-black text-mainText tracking-tight">₹@indianCurrency($todaysEarnings)</h3>
             <p class="text-xs font-bold text-mutedText uppercase tracking-widest mt-1">Today's Income</p>
         </div>
 
@@ -66,7 +66,7 @@
                 </div>
                 <span class="bg-rose-500/10 text-rose-500 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg">Network</span>
             </div>
-            <h3 class="text-3xl font-black text-mainText tracking-tight">{{ number_format($totalReferrals) }}</h3>
+            <h3 class="text-3xl font-black text-mainText tracking-tight">@indianCurrency($totalReferrals)</h3>
             <p class="text-xs font-bold text-mutedText uppercase tracking-widest mt-1">Active Referrals</p>
         </div>
     </div>
@@ -121,7 +121,7 @@
                             <span class="ml-2 text-xs font-bold text-mainText">{{ $commission->reference->title ?? 'N/A' }}</span>
                         </td>
                         <td class="px-8 py-5 text-sm font-black text-green-600 font-mono">
-                            +₹{{ number_format($commission->amount) }}
+                            +₹@indianCurrency($commission->amount)
                         </td>
                         <td class="px-8 py-5 text-right">
                             @if($commission->status == 'paid')

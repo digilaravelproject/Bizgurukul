@@ -22,11 +22,11 @@
         <span class="block text-mainText">{{ $comm->referredUser->name ?? 'Unknown' }}</span>
         <span class="block text-[10px] uppercase text-primary mt-0.5 tracking-wider">{{ $comm->reference->title ?? 'Product' }}</span>
     </td>
-    <td class="px-6 py-4 text-right text-mutedText">₹{{ number_format($comm->amount, 2) }}</td>
+    <td class="px-6 py-4 text-right text-mutedText">₹@indianCurrency($comm->amount, 2)</td>
     @if($dashboardData['tds_enabled'] || $dashboardData['total_tds'] > 0)
-    <td class="px-6 py-4 text-right text-red-500/70">-₹{{ number_format($comm->tds_amount, 2) }}</td>
+    <td class="px-6 py-4 text-right text-red-500/70">-₹@indianCurrency($comm->tds_amount, 2)</td>
     @endif
-    <td class="px-6 py-4 text-right text-mainText font-black">₹{{ number_format($comm->payable_amount, 2) }}</td>
+    <td class="px-6 py-4 text-right text-mainText font-black">₹@indianCurrency($comm->payable_amount, 2)</td>
     <td class="px-6 py-4 text-center">
         @if($comm->status === 'on_hold')
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-500">
