@@ -23,7 +23,7 @@
                     this.processingPayment = true;
 
                     try {
-                        const response = await fetch('{{ route('razorpay.create', ['type' => $type, 'id' => $id]) }}', {
+                        const response = await fetch('{{ route('student.payment.create', ['type' => $type, 'id' => $id]) }}', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -113,7 +113,7 @@
                     this.processingRedirect = true;
                     try {
                         console.log('Verifying payment...', verificationData);
-                        const response = await fetch('{{ route('razorpay.verify') }}', {
+                        const response = await fetch('{{ route('student.payment.verify') }}', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',

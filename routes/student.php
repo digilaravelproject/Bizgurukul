@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Student\DashboardController;
 use App\Http\Controllers\Student\CourseController;
-use App\Http\Controllers\Student\RazorpayController;
+use App\Http\Controllers\Student\CheckoutController;
 use App\Http\Controllers\Student\ProductSelectionController;
 use App\Http\Controllers\Student\AffiliateLinkController;
 use App\Http\Controllers\Student\StudentController;
@@ -27,9 +27,9 @@ Route::middleware(['auth', 'role:Student|Admin'])->group(function () {
     Route::post('/product-selection/apply-referral', [ProductSelectionController::class, 'applyReferral'])->name('student.apply_referral');
 
     // 2. Student Course Purchase Payment
-    Route::get('/checkout/{type}/{id}', [RazorpayController::class, 'checkout'])->name('student.checkout');
-    Route::post('/payment/create/{type}/{id}', [RazorpayController::class, 'createOrder'])->name('razorpay.create');
-    Route::post('/student/payment/verify', [RazorpayController::class, 'verifyPayment'])->name('razorpay.verify');
+    Route::get('/checkout/{type}/{id}', [CheckoutController::class, 'checkout'])->name('student.checkout');
+    Route::post('/payment/create/{type}/{id}', [CheckoutController::class, 'createOrder'])->name('student.payment.create');
+    Route::post('/student/payment/verify', [CheckoutController::class, 'verifyPayment'])->name('student.payment.verify');
 });
 
 // Strictly Student Only Routes

@@ -14,7 +14,7 @@ use App\Mail\PlanUpgradedMail;
 use App\Mail\AdminNotificationMail;
 use App\Services\EmailService;
 
-class RazorpayController extends Controller
+class CheckoutController extends Controller
 {
     private $commissionService;
 
