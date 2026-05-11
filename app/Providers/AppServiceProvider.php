@@ -27,6 +27,11 @@ class AppServiceProvider extends ServiceProvider
         // Apply Dynamic SMTP Configuration from Database
         \App\Services\EmailService::applyMailConfig();
 
+        // Register Indian Currency Formatting Blade Directive
+        \Illuminate\Support\Facades\Blade::directive('indianCurrency', function ($expression) {
+            return "<?php echo formatCurrencyIndian($expression); ?>";
+        });
+
 
         Gate::before(function ($user, $ability) {
             return $user->hasRole('Admin') ? true : null;
