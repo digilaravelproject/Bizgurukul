@@ -175,8 +175,6 @@
                     },
 
                     init() {
-                        this.$watch('search', () => this.updateTable());
-
                         // Handle pagination clicks
                         document.addEventListener('click', (e) => {
                             const link = e.target.closest('#commissionsPagination a, #withdrawalsPagination a');
@@ -212,6 +210,7 @@
                     },
 
                     updateTable() {
+                        if (this.search.length > 0 && this.search.length < 3) return;
                         this.fetchData("{{ route('student.wallet.index') }}");
                     },
 

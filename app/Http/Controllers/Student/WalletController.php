@@ -28,11 +28,12 @@ class WalletController extends Controller
         $perPage = $request->input('per_page', 20);
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
+        $search = $request->input('search');
 
         $dashboardData = $this->walletService->getWalletDashboardData($user->id, $startDate, $endDate);
 
-        $commissions = $this->walletRepo->getEarnedCommissions($user->id, $perPage, $startDate, $endDate);
-        $withdrawals = $this->walletRepo->getWithdrawalRequests($user->id, $perPage, $startDate, $endDate);
+        $commissions = $this->walletRepo->getEarnedCommissions($user->id, $perPage, $startDate, $endDate, $search);
+        $withdrawals = $this->walletRepo->getWithdrawalRequests($user->id, $perPage, $startDate, $endDate, $search);
 
         if ($request->ajax()) {
             return response()->json([

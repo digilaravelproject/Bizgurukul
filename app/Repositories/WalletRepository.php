@@ -4,6 +4,8 @@ namespace App\Repositories;
 
 use App\Models\AffiliateCommission;
 use App\Models\WithdrawalRequest;
+use App\Models\Bundle;
+use App\Models\Course;
 use Illuminate\Support\Facades\DB;
 
 class WalletRepository
@@ -80,12 +82,25 @@ class WalletRepository
             ->sum('amount');
     }
 
-    public function getEarnedCommissions(int $userId, int $perPage = 15, $startDate = null, $endDate = null)
+    public function getEarnedCommissions(int $userId, int $perPage = 15, $startDate = null, $endDate = null, $search = null)
     {
-        return AffiliateCommission::with('reference')
+        return AffiliateCommission::with(['reference', 'referredUser'])
             ->where('affiliate_id', $userId)
             ->when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
             ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
+            ->when($search, function($q) use ($search) {
+                $q->where(function($sq) use ($search) {
+                    $sq->where('status', 'like', "%{$search}%")
+                       ->orWhere('amount', 'like', "%{$search}%")
+                       ->orWhereHas('referredUser', function($uq) use ($search) {
+                           $uq->where('name', 'like', "%{$search}%")
+                              ->orWhere('email', 'like', "%{$search}%");
+                       })
+                       ->orWhereHasMorph('reference', [Bundle::class, Course::class], function($rq) use ($search) {
+                           $rq->where('title', 'like', "%{$search}%");
+                       });
+                });
+            })
             ->latest()
             ->paginate($perPage, ['*'], 'commission_page');
     }
@@ -99,12 +114,18 @@ class WalletRepository
             ->sum('amount');
     }
 
-    public function getWithdrawalRequests(int $userId, int $perPage = 15, $startDate = null, $endDate = null)
+    public function getWithdrawalRequests(int $userId, int $perPage = 15, $startDate = null, $endDate = null, $search = null)
     {
         return WithdrawalRequest::with('commissions')
             ->where('user_id', $userId)
             ->when($startDate, fn($q) => $q->whereDate('created_at', '>=', $startDate))
             ->when($endDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
+            ->when($search, function($q) use ($search) {
+                $q->where(function($sq) use ($search) {
+                    $sq->where('status', 'like', "%{$search}%")
+                       ->orWhere('amount', 'like', "%{$search}%");
+                });
+            })
             ->latest()
             ->paginate($perPage, ['*'], 'withdrawal_page');
     }

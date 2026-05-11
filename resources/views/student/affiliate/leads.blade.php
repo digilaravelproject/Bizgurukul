@@ -174,6 +174,7 @@
                         <thead
                             class="bg-primary/5 text-[10px] md:text-xs uppercase text-mutedText font-black tracking-widest border-b border-primary/10">
                             <tr>
+                                <th class="px-6 py-5 whitespace-nowrap">Date</th>
                                 <th class="px-6 py-5 whitespace-nowrap">User Profile</th>
                                 <th class="px-6 py-5 whitespace-nowrap">Product</th>
                                 <th class="px-6 py-5 whitespace-nowrap">Contact Details</th>
@@ -204,6 +205,7 @@
                         <thead
                             class="bg-primary/5 text-[10px] md:text-xs uppercase text-mutedText font-black tracking-widest border-b border-primary/10">
                             <tr>
+                                <th class="px-6 py-5 whitespace-nowrap">Date</th>
                                 <th class="px-6 py-5 whitespace-nowrap">Lead Profile</th>
                                 <th class="px-6 py-5 whitespace-nowrap">Product</th>
                                 <th class="px-6 py-5 whitespace-nowrap">Contact Details</th>

@@ -14,7 +14,7 @@
         </div>
         <input type="text" 
                x-model="search" 
-               @input.debounce.{{ $searchDebounce }}="updateTable()"
+               @input.debounce.{{ $searchDebounce }}="if(search.length >= 3 || search.length == 0) updateTable()"
                placeholder="{{ $placeholder }}" 
                class="w-full bg-surface border border-primary/10 rounded-xl pl-11 pr-4 py-2.5 text-sm font-medium text-mainText focus:border-primary outline-none focus:ring-4 focus:ring-primary/5 transition-all shadow-sm">
         <div x-show="loading" class="absolute inset-y-0 right-0 pr-4 flex items-center" x-cloak>
