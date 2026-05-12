@@ -115,13 +115,13 @@
         }
 
         .name-container {
-            width: 75%; /* More compact width for the name */
-            height: 38mm; /* Fixed vertical space for name */
+            width: 75%; 
+            height: 38mm; 
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 2mm 0;
-            overflow: hidden; 
+            overflow: visible; /* Allow measurement */
         }
 
         .student-name {
@@ -133,9 +133,10 @@
             line-height: 1.1;
             text-transform: uppercase;
             text-align: center;
-            width: 100%;
-            display: block;
+            width: auto; /* Shrink-to-fit for measurement */
+            display: inline-block;
             margin: 0;
+            white-space: nowrap; /* Strictly one line */
         }
 
         .course-container {
@@ -313,7 +314,7 @@
         // Function to dynamically adjust certificate font sizes
         function adjustCertificateText() {
             const configs = [
-                { id: 'studentName', baseSize: 48, minSize: 14 },
+                { id: 'studentName', baseSize: 48, minSize: 12 },
                 { id: 'courseTitle', baseSize: 24, minSize: 12 }
             ];
 
@@ -325,11 +326,10 @@
                 let fontSize = config.baseSize;
                 el.style.fontSize = fontSize + 'pt';
 
-                // Force layout reflow calculation
-                // Reduce font size until it fits within the fixed-height container
+                // Shrink font size until element fits both width and height constraints
                 let attempts = 0;
-                while (el.scrollHeight > container.offsetHeight && fontSize > config.minSize && attempts < 50) {
-                    fontSize -= 1;
+                while ((el.scrollWidth > container.offsetWidth || el.scrollHeight > container.offsetHeight) && fontSize > config.minSize && attempts < 100) {
+                    fontSize -= 0.5;
                     el.style.fontSize = fontSize + 'pt';
                     attempts++;
                 }
