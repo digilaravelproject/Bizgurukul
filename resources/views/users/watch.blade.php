@@ -316,7 +316,7 @@
             let blackoutTimeout = null;
 
             function showBlackout(reason = 'general') {
-                console.log('Blackout triggered. Reason:', reason);
+                // console.log('Blackout triggered. Reason:', reason);
                 if (blackoutTimeout) clearTimeout(blackoutTimeout);
                 
                 blackout.style.display = 'flex';
@@ -362,7 +362,7 @@
                         videoCapabilities: [{ contentType: 'video/mp4; codecs="avc1.42E01E"', robustness: 'SW_SECURE_DECODE' }]
                     }];
                     const access = await navigator.requestMediaKeySystemAccess('com.widevine.alpha', config);
-                    console.log('Widevine DRM supported.');
+                    // console.log('Widevine DRM supported.');
                 } catch (e) {
                     console.warn('Widevine DRM not supported or Hardware Acceleration disabled.', e);
                     // We don't show blackout immediately, but if playback fails, we know why
@@ -390,7 +390,7 @@
                 blackoutTimeout = setTimeout(() => {
                     const activeEl = document.activeElement;
                     if (activeEl && (activeEl.tagName.toLowerCase() === 'iframe' || activeEl === bunnyIframe)) {
-                        console.log('Focus shifted to player iframe, ignoring blur.');
+                        // console.log('Focus shifted to player iframe, ignoring blur.');
                         return;
                     }
                     showBlackout('focus-loss');
@@ -398,7 +398,7 @@
             });
             
             window.addEventListener('focus', () => {
-                console.log('Window regained focus.');
+                // console.log('Window regained focus.');
                 hideBlackout();
             });
 
@@ -457,31 +457,59 @@
             let lastSaved = 0;
             const lessonId = "{{ $currentLesson ? $currentLesson->id : '' }}";
             let isAlreadyCompleted = "{{ ($progress && $progress->is_completed) ? 1 : 0 }}" == 1;
+            let lastWatchedTime = {{ optional($progress)->last_watched_second ?? 0 }};
 
-            // Bunny Stream API Event Listener
+            // Bunny Stream API Event Listener (Player.js Standard)
             window.addEventListener('message', function(event) {
                 try {
                     const data = JSON.parse(event.data);
-                    // data.event includes ended, timeupdate, error, etc.
                     
-                    if (data.event === 'error') {
-                        console.error('Bunny Player Error:', data);
-                        // If it's a security/DRM error or we previously detected DRM failure
-                        if (window.drmFailed) {
-                            showBlackout('no-drm');
+                    if (data.context === 'player.js') {
+                        // 1. Player Ready - Handle Resume
+                        if (data.event === 'ready') {
+                            // console.log('Bunny Player Ready. Last watched:', lastWatchedTime);
+                            if (lastWatchedTime > 0 && !isAlreadyCompleted) {
+                                bunnyIframe.contentWindow.postMessage(JSON.stringify({
+                                    context: 'player.js',
+                                    method: 'setCurrentTime',
+                                    value: lastWatchedTime
+                                }), '*');
+                            }
                         }
-                    }
 
-                    if (data.event === 'ended' && !isAlreadyCompleted) {
-                        saveProgress(9999, true);
-                        isAlreadyCompleted = true; // prevent multiple reloads
-                        setTimeout(() => location.reload(), 800);
-                    }
-                    if (data.event === 'timeupdate' && !isAlreadyCompleted) {
-                        const now = Math.floor(data.value);
-                        if (now > 0 && now % 10 === 0 && now !== lastSaved) {
-                            lastSaved = now;
-                            saveProgress(now, false);
+                        // 2. Time Update - Track Progress & Auto-Complete
+                        if (data.event === 'timeupdate' && !isAlreadyCompleted) {
+                            const now = Math.floor(data.value.seconds || 0);
+                            const duration = Math.floor(data.value.duration || 0);
+                            
+                            // Auto-complete if >= 95% watched
+                            if (duration > 0 && now >= (duration * 0.95)) {
+                                // console.log('Auto-completing lesson (95% reached)');
+                                saveProgress(now, true);
+                                isAlreadyCompleted = true;
+                                setTimeout(() => location.reload(), 1000);
+                            } 
+                            // Regular progress save every 10 seconds
+                            else if (now > 0 && now % 10 === 0 && now !== lastSaved) {
+                                lastSaved = now;
+                                saveProgress(now, false);
+                            }
+                        }
+
+                        // 3. Ended - Final Completion
+                        if (data.event === 'ended' && !isAlreadyCompleted) {
+                            // console.log('Video ended.');
+                            saveProgress(9999, true);
+                            isAlreadyCompleted = true;
+                            setTimeout(() => location.reload(), 800);
+                        }
+
+                        // 4. Error Handling
+                        if (data.event === 'error') {
+                            console.error('Bunny Player Error:', data.value);
+                            if (window.drmFailed) {
+                                showBlackout('no-drm');
+                            }
                         }
                     }
                 } catch (e) {
@@ -490,10 +518,26 @@
             });
 
             @if(!$currentLesson || (!$currentLesson->bunny_video_id && !$currentLesson->bunny_embed_url))
+                player.ready(function() {
+                    if (lastWatchedTime > 0 && !isAlreadyCompleted) {
+                        // console.log('Video.js Player Ready. Resuming at:', lastWatchedTime);
+                        player.currentTime(lastWatchedTime);
+                    }
+                });
+
                 player.on('timeupdate', function() {
                     if (isAlreadyCompleted) return;
                     const now = Math.floor(player.currentTime());
-                    if (now > 0 && now % 10 === 0 && now !== lastSaved) {
+                    const duration = Math.floor(player.duration());
+
+                    // Auto-complete if >= 95% watched
+                    if (duration > 0 && now >= (duration * 0.95)) {
+                        // console.log('Auto-completing lesson via Video.js (95% reached)');
+                        saveProgress(now, true);
+                        isAlreadyCompleted = true;
+                        setTimeout(() => location.reload(), 1000);
+                    } 
+                    else if (now > 0 && now % 10 === 0 && now !== lastSaved) {
                         lastSaved = now;
                         saveProgress(now, false);
                     }

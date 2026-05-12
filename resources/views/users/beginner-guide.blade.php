@@ -81,7 +81,7 @@
                                 $token = hash('sha256', $securityKey . $videoId . $expires);
                                 $bunnySrc = "https://iframe.mediadelivery.net/embed/{$libraryId}/{$videoId}?token={$token}&expires={$expires}&autoplay=true";
                             @endphp
-                            <iframe src="{{ $bunnySrc }}" loading="lazy"
+                            <iframe id="bunny-player" src="{{ $bunnySrc }}" loading="lazy"
                                 style="border:0;position:absolute;top:0;height:100%;width:100%;"
                                 allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" allowfullscreen>
                             </iframe>
@@ -91,6 +91,10 @@
                                 $embed = $selected->bunny_embed_url;
                                 if(str_contains($embed, '<iframe')) {
                                     $embed = str_replace(['width="', 'height="'], ['width="100%" height="100%" data-old="', 'data-old2="'], $embed);
+                                    // Add ID for postMessage if not present
+                                    if(!str_contains($embed, 'id="')) {
+                                        $embed = str_replace('<iframe', '<iframe id="bunny-player"', $embed);
+                                    }
                                 }
                             @endphp
                             {!! $embed !!}
@@ -229,22 +233,92 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const videoEl = document.getElementById('roadmap-player');
+            const bunnyIframe = document.getElementById('bunny-player');
             let player = null;
             let lastSaved = 0;
             @php $_finalProg = $progressData ?? []; @endphp
             let isCompleted = {{ (isset($selected) && isset($_finalProg[$selected->id]) && $_finalProg[$selected->id]['completed']) ? 'true' : 'false' }};
+            let lastWatchedTime = {{ (isset($selected) && isset($_finalProg[$selected->id])) ? $_finalProg[$selected->id]['seconds'] : 0 }};
             const videoId = "{{ isset($selected) ? $selected->id : '' }}";
 
+            // 1. Bunny Stream API Event Listener (Player.js Standard)
+            window.addEventListener('message', function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.context === 'player.js') {
+                        // Player Ready - Handle Resume
+                        if (data.event === 'ready') {
+                            // console.log('Bunny Player Ready. Last watched:', lastWatchedTime);
+                            if (lastWatchedTime > 0 && !isCompleted && bunnyIframe) {
+                                bunnyIframe.contentWindow.postMessage(JSON.stringify({
+                                    context: 'player.js',
+                                    method: 'setCurrentTime',
+                                    value: lastWatchedTime
+                                }), '*');
+                            }
+                        }
+
+                        // Time Update - Track Progress & Auto-Complete
+                        if (data.event === 'timeupdate' && !isCompleted) {
+                            const now = Math.floor(data.value.seconds || 0);
+                            const duration = Math.floor(data.value.duration || 0);
+                            
+                            // Auto-complete if >= 95% watched
+                            if (duration > 0 && now >= (duration * 0.95)) {
+                                // console.log('Auto-completing guide (95% reached)');
+                                saveProgress(now, true);
+                                isCompleted = true;
+                                setTimeout(() => location.reload(), 1000);
+                            } 
+                            // Regular progress save every 10 seconds
+                            else if (now > 0 && now % 10 === 0 && now !== lastSaved) {
+                                lastSaved = now;
+                                saveProgress(now, false);
+                            }
+                        }
+
+                        // Ended - Final Completion
+                        if (data.event === 'ended' && !isCompleted) {
+                            saveProgress(9999, true);
+                            isCompleted = true;
+                            setTimeout(() => location.reload(), 800);
+                        }
+                    }
+                } catch (e) {
+                    // Ignore non-bunny / non-JSON messages
+                }
+            });
+
+            // 2. Video.js Support (Legacy/Fallback)
             if (videoEl) {
                 player = videojs(videoEl, { fluid: true });
+
+                player.ready(function() {
+                    if (lastWatchedTime > 0 && !isCompleted) {
+                        // console.log('Video.js Player Ready. Resuming at:', lastWatchedTime);
+                        player.currentTime(lastWatchedTime);
+                    }
+                });
+
                 player.on('timeupdate', function() {
                     if (isCompleted) return;
                     const now = Math.floor(player.currentTime());
-                    if (now % 10 === 0 && now !== lastSaved) {
+                    const duration = Math.floor(player.duration());
+
+                    // Auto-complete if >= 95% watched
+                    if (duration > 0 && now >= (duration * 0.95)) {
+                        // console.log('Auto-completing guide via Video.js (95% reached)');
+                        saveProgress(now, true);
+                        isCompleted = true;
+                        setTimeout(() => location.reload(), 1000);
+                    } 
+                    else if (now > 0 && now % 10 === 0 && now !== lastSaved) {
                         lastSaved = now;
                         saveProgress(now, false);
                     }
                 });
+
                 player.on('ended', function() {
                     if (!isCompleted) {
                         saveProgress(Math.floor(player.duration()), true);
