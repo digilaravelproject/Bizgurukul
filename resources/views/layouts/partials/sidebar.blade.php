@@ -27,7 +27,8 @@
             resourceHubOpen: {{ request()->routeIs('admin.resource-categories.*', 'admin.general-resources.*') ? 'true' : 'false' }},
             userOpen: {{ request()->routeIs('admin.users.*', 'admin.leads.*', 'admin.kyc.*', 'admin.verifications.*', 'admin.communities.*', 'admin.contact-inquiries.*') ? 'true' : 'false' }},
             affiliateOpen: {{ request()->routeIs('admin.affiliate.*', 'admin.payouts.*', 'admin.achievements.*', 'admin.rewards.dashboard') ? 'true' : 'false' }},
-            settingsOpen: {{ request()->routeIs('admin.settings.*', 'admin.taxes.*', 'admin.email-templates.*', 'admin.roles.*', 'admin.activity-logs.*') ? 'true' : 'false' }}
+            careerOpen: {{ request()->routeIs('admin.career-jobs.*', 'admin.career-titles.*', 'admin.career-locations.*', 'admin.career-experiences.*', 'admin.career-salaries.*', 'admin.career-skills.*') ? 'true' : 'false' }},
+            settingsOpen: {{ request()->routeIs('admin.settings.*', 'admin.taxes.*', 'admin.email-templates.*', 'admin.roles.*', 'admin.activity-logs.*', 'admin.surveys.*') ? 'true' : 'false' }}
         }">
 
             {{-- OPERATIONS — Dashboard is visible to everyone in admin panel --}}
@@ -66,7 +67,7 @@
             <div class="pt-2">
                 <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">Content Engine</p>
                 <button @click="lmsOpen = !lmsOpen"
-                    class="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group {{ request()->routeIs('admin.courses.*', 'admin.categories.*', 'admin.bundles.*', 'admin.beginner-guide', 'admin.resources', 'admin.certificate.*') ? 'bg-navy text-primary' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
+                    class="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group {{ request()->routeIs('admin.courses.*', 'admin.categories.*', 'admin.bundles.*', 'admin.beginner-guide*', 'admin.resources*', 'admin.certificate.*') ? 'bg-navy text-primary' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
                     <div class="flex items-center">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
@@ -93,11 +94,11 @@
                         Bundles (Combos)
                     </a>
                     @endcan
-                    <a href="{{ route('admin.beginner-guide') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.beginner-guide') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                    <a href="{{ route('admin.beginner-guide') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.beginner-guide*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Beginner's Guide
                     </a>
-                    <a href="{{ route('admin.resources') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.resources') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                    <a href="{{ route('admin.resources') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.resources*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                         Resources
                     </a>
@@ -175,7 +176,7 @@
             <div class="pt-2">
                 <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">User Hub</p>
                 <button @click="userOpen = !userOpen"
-                    class="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group {{ request()->routeIs('admin.users.*', 'admin.kyc.*', 'admin.verifications.*') ? 'bg-navy text-primary' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
+                    class="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group {{ request()->routeIs('admin.users.*', 'admin.leads.*', 'admin.kyc.*', 'admin.verifications.*', 'admin.communities.*', 'admin.contact-inquiries.*') ? 'bg-navy text-primary' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
                     <div class="flex items-center">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -219,7 +220,7 @@
             <div class="pt-2">
                 <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">Revenue Hub</p>
                 <button @click="affiliateOpen = !affiliateOpen"
-                    class="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group {{ request()->routeIs('admin.affiliate.*', 'admin.payouts.*', 'admin.achievements.*') ? 'bg-navy text-primary' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
+                    class="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group {{ request()->routeIs('admin.affiliate.*', 'admin.payouts.*', 'admin.achievements.*', 'admin.rewards.*') ? 'bg-navy text-primary' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
                     <div class="flex items-center">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -260,12 +261,65 @@
             </div>
             @endcan
 
+            {{-- CAREER HUB — manage-courses permission --}}
+            @can('manage-courses')
+            <div class="pt-2">
+                <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">Career Hub</p>
+                <button @click="careerOpen = !careerOpen"
+                    class="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group {{ request()->routeIs('admin.career-jobs.*', 'admin.career-titles.*', 'admin.career-locations.*', 'admin.career-experiences.*', 'admin.career-salaries.*', 'admin.career-skills.*') ? 'bg-navy text-primary' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                        <span class="font-bold text-sm">Job Portal</span>
+                    </div>
+                    <svg class="w-4 h-4 transition-transform duration-300" :class="careerOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+
+                <div x-show="careerOpen" x-cloak x-transition class="ml-4 pl-4 mt-2 space-y-1 border-l-2 border-primary/20">
+                    <a href="{{ route('admin.career-jobs.index') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.career-jobs.index', 'admin.career-jobs.edit', 'admin.career-jobs.show') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                        <i class="fas fa-briefcase text-[12px]"></i>
+                        Manage Jobs
+                    </a>
+                    <a href="{{ route('admin.career-jobs.create') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.career-jobs.create') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                        <i class="fas fa-plus-circle text-[12px]"></i>
+                        Post New Job
+                    </a>
+                    <div class="pt-2 pb-1">
+                        <p class="text-[9px] font-bold text-mutedText/40 uppercase tracking-widest px-4">Master Data</p>
+                    </div>
+                    <a href="{{ route('admin.career-titles.index') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.career-titles.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                        <i class="fas fa-heading text-[12px]"></i>
+                        Job Titles
+                    </a>
+                    <a href="{{ route('admin.career-locations.index') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.career-locations.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                        <i class="fas fa-map-marker-alt text-[12px]"></i>
+                        Locations
+                    </a>
+                    <a href="{{ route('admin.career-experiences.index') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.career-experiences.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                        <i class="fas fa-history text-[12px]"></i>
+                        Experience Levels
+                    </a>
+                    <a href="{{ route('admin.career-salaries.index') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.career-salaries.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                        <i class="fas fa-money-bill-wave text-[12px]"></i>
+                        Salary Ranges
+                    </a>
+                    <a href="{{ route('admin.career-skills.index') }}" class="flex items-center gap-3 py-2 px-4 text-xs rounded-lg transition-all {{ request()->routeIs('admin.career-skills.*') ? 'text-primary font-bold bg-primary/5' : 'text-mutedText hover:text-primary' }}">
+                        <i class="fas fa-tools text-[12px]"></i>
+                        Skills
+                    </a>
+                </div>
+            </div>
+            @endcan
+
             {{-- PLATFORM SETTINGS — manage-settings permission --}}
             @can('manage-settings')
             <div class="pt-2">
                 <p class="text-[10px] font-bold text-mutedText/50 uppercase tracking-[0.2em] px-4 mb-2">Config</p>
                 <button @click="settingsOpen = !settingsOpen"
-                    class="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group {{ request()->routeIs('admin.settings.*', 'admin.taxes.*', 'admin.email-templates.*', 'admin.roles.*', 'admin.activity-logs.*') ? 'bg-navy text-primary' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
+                    class="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group {{ request()->routeIs('admin.settings.*', 'admin.taxes.*', 'admin.email-templates.*', 'admin.roles.*', 'admin.activity-logs.*', 'admin.surveys.*') ? 'bg-navy text-primary' : 'text-mutedText hover:bg-navy hover:text-primary' }}">
                     <div class="flex items-center">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         <span class="font-bold text-sm">Platform Settings</span>

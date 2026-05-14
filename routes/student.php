@@ -105,6 +105,11 @@ Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')
         Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
         Route::get('/courses/{id}', [CourseController::class, 'show'])->name('courses.show');
 
+        // Career Portal
+        Route::get('/career', [\App\Http\Controllers\Student\CareerJobController::class, 'index'])->name('career_jobs.index');
+        Route::get('/career/fetch', [\App\Http\Controllers\Student\CareerJobController::class, 'fetch'])->name('career_jobs.fetch');
+        Route::get('/career/{id}', [\App\Http\Controllers\Student\CareerJobController::class, 'show'])->name('career_jobs.show');
+
         // Survey Response
         Route::post('/survey/submit', [\App\Http\Controllers\Student\SurveyResponseController::class, 'store'])->name('survey.submit');
     });

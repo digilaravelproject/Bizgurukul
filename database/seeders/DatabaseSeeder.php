@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             RoleAndUserSeeder::class,      // 2. Roles & Base Users
             CategorySeeder::class,         // 3. Categories
             SettingsSeeder::class,         // 4. Global Settings
+            CareerJobMasterSeeder::class,  // 5. Career Job Master Data
         ]);
     }
 }

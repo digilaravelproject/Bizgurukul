@@ -310,6 +310,18 @@ Route::middleware(['auth'])
             });
         });
 
+        // Career Management
+        Route::middleware(['permission:manage-courses'])->group(function () {
+            Route::resource('career-jobs', \App\Http\Controllers\Admin\CareerJobController::class);
+            
+            // Career Master Data
+            Route::resource('career-titles', \App\Http\Controllers\Admin\CareerJobTitleController::class)->except(['show']);
+            Route::resource('career-locations', \App\Http\Controllers\Admin\CareerJobLocationController::class)->except(['show']);
+            Route::resource('career-experiences', \App\Http\Controllers\Admin\CareerJobExperienceController::class)->except(['show']);
+            Route::resource('career-salaries', \App\Http\Controllers\Admin\CareerJobSalaryController::class)->except(['show']);
+            Route::resource('career-skills', \App\Http\Controllers\Admin\CareerJobSkillController::class)->except(['show']);
+        });
+
         // Database Cleanup (Production Prep)
         Route::middleware(['permission:manage-settings'])->group(function () {
             Route::get('/database-cleanup', [DatabaseCleanupController::class, 'index'])->name('database-cleanup');
