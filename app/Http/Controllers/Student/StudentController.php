@@ -102,7 +102,11 @@ class StudentController extends Controller
                 $videoId = $request->input('video_id');
                 if ($videoId) {
                     $progress = session('beginner_guide.progress', []);
-                    $progress[$videoId] = ['seconds' => (int)$seconds, 'completed' => $completed];
+                    $oldCompleted = $progress[$videoId]['completed'] ?? false;
+                    $progress[$videoId] = [
+                        'seconds' => (int)$seconds, 
+                        'completed' => ($completed || $oldCompleted)
+                    ];
                     session(['beginner_guide.progress' => $progress]);
                 }
             }

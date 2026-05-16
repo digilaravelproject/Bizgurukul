@@ -241,15 +241,67 @@
             let lastWatchedTime = {{ (isset($selected) && isset($_finalProg[$selected->id])) ? $_finalProg[$selected->id]['seconds'] : 0 }};
             const videoId = "{{ isset($selected) ? $selected->id : '' }}";
 
-            // 1. Bunny Stream API Event Listener (Player.js Standard)
+            function updateUIOnComplete() {
+                // 1. Update Main Button
+                const markBtn = document.getElementById('mark-complete-btn');
+                if (markBtn) {
+                    markBtn.innerHTML = '<i class="fas fa-check-double mr-2"></i> Validated';
+                    markBtn.classList.remove('bg-primary', 'text-white', 'hover:scale-[1.05]');
+                    markBtn.classList.add('bg-emerald-500/10', 'text-emerald-500', 'border', 'border-emerald-500/20');
+                }
+
+                // 2. Update Sidebar Icon (if applicable)
+                const activeVideoLink = document.querySelector('a.border-l-primary');
+                if (activeVideoLink) {
+                    const statusDiv = activeVideoLink.querySelector('.w-6.h-6');
+                    if (statusDiv) {
+                        statusDiv.innerHTML = '<i class="fas fa-check text-[10px]"></i>';
+                        statusDiv.classList.remove('bg-primary/10', 'text-primary');
+                        statusDiv.classList.add('bg-emerald-500', 'text-white');
+                    }
+                }
+
+                // 3. Update Circular Progress Mastery Score
+                updateCircularProgress();
+
+                // 4. Show Toast
+                showToast("Module validated successfully!");
+            }
+
+            function updateCircularProgress() {
+                const totalModules = {{ $categories->pluck('videos')->flatten()->count() }};
+                // Count checkmarks in sidebar
+                const completedModules = document.querySelectorAll('.fa-check').length;
+                const percent = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
+                
+                const circle = document.querySelector('circle.text-primary');
+                const percentText = document.querySelector('.absolute.text-\\[10px\\].font-black');
+                const countText = document.querySelector('.text-sm.font-black.text-mainText');
+
+                if (circle) {
+                    const radius = 20;
+                    const circumference = 2 * Math.PI * radius;
+                    const offset = circumference * (1 - percent / 100);
+                    circle.style.strokeDashoffset = offset;
+                }
+                if (percentText) percentText.innerText = percent + '%';
+                if (countText) countText.innerText = `${completedModules} / ${totalModules} Modules`;
+            }
+
+            function showToast(message) {
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-2xl shadow-2xl z-[9999] flex items-center gap-3 animate-bounce';
+                toast.innerHTML = `<i class="fas fa-certificate text-yellow-400"></i> <span class="text-[10px] font-black uppercase tracking-widest">${message}</span>`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 4000);
+            }
+
+            // 1. Bunny Stream API Event Listener
             window.addEventListener('message', function(event) {
                 try {
                     const data = JSON.parse(event.data);
-                    
-                    if (data.context === 'player.js') {
-                        // Player Ready - Handle Resume
+                    if (data.context === 'player.js' || data.event) {
                         if (data.event === 'ready') {
-                            // console.log('Bunny Player Ready. Last watched:', lastWatchedTime);
                             if (lastWatchedTime > 0 && !isCompleted && bunnyIframe) {
                                 bunnyIframe.contentWindow.postMessage(JSON.stringify({
                                     context: 'player.js',
@@ -259,70 +311,58 @@
                             }
                         }
 
-                        // Time Update - Track Progress & Auto-Complete
                         if (data.event === 'timeupdate' && !isCompleted) {
-                            const now = Math.floor(data.value.seconds || 0);
-                            const duration = Math.floor(data.value.duration || 0);
+                            let now = 0;
+                            let duration = 0;
+                            if (typeof data.value === 'object') {
+                                now = Math.floor(data.value.seconds || 0);
+                                duration = Math.floor(data.value.duration || 0);
+                            } else {
+                                now = Math.floor(data.value || 0);
+                            }
                             
-                            // Auto-complete if >= 95% watched
-                            if (duration > 0 && now >= (duration * 0.95)) {
-                                // console.log('Auto-completing guide (95% reached)');
-                                saveProgress(now, true);
+                            if (duration > 0 && now >= (duration * 0.90)) {
                                 isCompleted = true;
-                                setTimeout(() => location.reload(), 1000);
+                                saveProgress(now, true, true);
                             } 
-                            // Regular progress save every 10 seconds
-                            else if (now > 0 && now % 10 === 0 && now !== lastSaved) {
+                            else if (now > 0 && now % 15 === 0 && now !== lastSaved) {
                                 lastSaved = now;
-                                saveProgress(now, false);
+                                saveProgress(now, false, false);
                             }
                         }
 
-                        // Ended - Final Completion
                         if (data.event === 'ended' && !isCompleted) {
-                            saveProgress(9999, true);
                             isCompleted = true;
-                            setTimeout(() => location.reload(), 800);
+                            saveProgress(9999, true, true);
                         }
                     }
-                } catch (e) {
-                    // Ignore non-bunny / non-JSON messages
-                }
+                } catch (e) {}
             });
 
-            // 2. Video.js Support (Legacy/Fallback)
             if (videoEl) {
                 player = videojs(videoEl, { fluid: true });
-
                 player.ready(function() {
                     if (lastWatchedTime > 0 && !isCompleted) {
-                        // console.log('Video.js Player Ready. Resuming at:', lastWatchedTime);
                         player.currentTime(lastWatchedTime);
                     }
                 });
-
                 player.on('timeupdate', function() {
                     if (isCompleted) return;
                     const now = Math.floor(player.currentTime());
                     const duration = Math.floor(player.duration());
-
-                    // Auto-complete if >= 95% watched
-                    if (duration > 0 && now >= (duration * 0.95)) {
-                        // console.log('Auto-completing guide via Video.js (95% reached)');
-                        saveProgress(now, true);
+                    if (duration > 0 && now >= (duration * 0.90)) {
                         isCompleted = true;
-                        setTimeout(() => location.reload(), 1000);
+                        saveProgress(now, true, true);
                     } 
-                    else if (now > 0 && now % 10 === 0 && now !== lastSaved) {
+                    else if (now > 0 && now % 15 === 0 && now !== lastSaved) {
                         lastSaved = now;
-                        saveProgress(now, false);
+                        saveProgress(now, false, false);
                     }
                 });
-
                 player.on('ended', function() {
                     if (!isCompleted) {
-                        saveProgress(Math.floor(player.duration()), true);
-                        location.reload();
+                        isCompleted = true;
+                        saveProgress(Math.floor(player.duration()), true, true);
                     }
                 });
             }
@@ -332,19 +372,37 @@
                 markBtn.addEventListener('click', function() {
                     if (isCompleted) return;
                     const duration = player ? Math.floor(player.duration()) : 0;
-                    saveProgress(duration, true);
                     this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Syncing...';
-                    setTimeout(() => location.reload(), 800);
+                    saveProgress(duration, true, true);
                 });
             }
 
-            function saveProgress(seconds, completed) {
+            function saveProgress(seconds, completed, shouldReload = false) {
                 if (!videoId) return;
+
+                // Optimistically update UI
+                if (completed) {
+                    updateUIOnComplete();
+                }
+
                 fetch("{{ route('student.progress.update') }}", {
                     method: 'POST',
+                    keepalive: true,
                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' },
                     body: JSON.stringify({ seconds, completed, video_id: videoId })
-                }).catch(err => console.error('Sync failed:', err));
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'saved') {
+                        console.log('Roadmap progress saved');
+                        if (shouldReload) {
+                            updateCircularProgress();
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error('Sync failed:', err);
+                });
                 if (completed) isCompleted = true;
             }
         });

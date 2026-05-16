@@ -200,9 +200,9 @@
                                 $completedCount = $course->lessons->filter(fn($l) => optional($l->progress)->is_completed)->count();
                                 $percent = $totalLessons > 0 ? ($completedCount / $totalLessons) * 100 : 0;
                             @endphp
-                            <div class="h-full bg-primary transition-all duration-500" style="width: {{ $percent }}%"></div>
+                            <div id="course-progress-bar" class="h-full bg-primary transition-all duration-500" style="width: {{ $percent }}%"></div>
                         </div>
-                        <p class="mt-2 text-[10px] font-bold text-mutedText uppercase tracking-widest">{{ round($percent) }}% Complete</p>
+                        <p class="mt-2 text-[10px] font-bold text-mutedText uppercase tracking-widest"><span id="course-progress-percent">{{ round($percent) }}</span>% Complete</p>
                     </div>
 
                     {{-- Lessons List --}}
@@ -453,74 +453,115 @@
             setInterval(moveWatermark, 5000);
             moveWatermark();
 
-            // Progress Tracking
+            // --- UI Update Helpers ---
+            function updateUIOnComplete() {
+                // 1. Update Main Button
+                const markBtn = document.getElementById('mark-complete');
+                if (markBtn) {
+                    markBtn.innerHTML = '<i class="fas fa-check-double mr-2"></i> Completed';
+                    markBtn.classList.remove('bg-primary', 'text-white', 'hover:bg-secondary', 'shadow-md');
+                    markBtn.classList.add('bg-green-50', 'text-green-600', 'border', 'border-green-100');
+                    markBtn.disabled = true;
+                }
+
+                // 2. Update Sidebar Icon for Current Lesson
+                const activeLessonSidebar = document.querySelector('a.bg-primary\\/5') || document.querySelector('a.border-l-primary');
+                if (activeLessonSidebar) {
+                    const iconDiv = activeLessonSidebar.querySelector('.flex-shrink-0.w-8.h-8');
+                    if (iconDiv && !iconDiv.querySelector('.fa-check')) {
+                        iconDiv.innerHTML = '<i class="fas fa-check"></i>';
+                        iconDiv.classList.remove('bg-primary', 'text-white', 'bg-gray-100', 'text-mutedText');
+                        iconDiv.classList.add('bg-green-100', 'text-green-600');
+                    }
+                }
+
+                // 3. Update Mastery Bar
+                updateSidebarMastery();
+
+                // 4. Show Toast
+                showToast("Video progress saved!");
+            }
+
+            function updateSidebarMastery() {
+                const totalLessons = {{ $course->lessons->count() }};
+                // Re-count all lessons with checkmarks in the sidebar
+                const completedLessons = document.querySelectorAll('.fa-check').length;
+                const percent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+                
+                const progressBar = document.getElementById('course-progress-bar');
+                const percentSpan = document.getElementById('course-progress-percent');
+
+                if (progressBar) progressBar.style.width = percent + '%';
+                if (percentSpan) percentSpan.innerText = percent;
+            }
+
+            function showToast(message) {
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-2xl shadow-2xl z-[9999] flex items-center gap-3 animate-bounce';
+                toast.innerHTML = `<i class="fas fa-check-circle text-green-400"></i> <span class="text-xs font-bold uppercase tracking-wider">${message}</span>`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 4000);
+            }
+
+            // --- Progress Tracking Core ---
             let lastSaved = 0;
             const lessonId = "{{ $currentLesson ? $currentLesson->id : '' }}";
             let isAlreadyCompleted = "{{ ($progress && $progress->is_completed) ? 1 : 0 }}" == 1;
             let lastWatchedTime = {{ optional($progress)->last_watched_second ?? 0 }};
 
-            // Bunny Stream API Event Listener (Player.js Standard)
+            // Bunny Stream API Event Listener
             window.addEventListener('message', function(event) {
                 try {
+                    // Check if message is from Bunny
+                    if (typeof event.data !== 'string') return;
                     const data = JSON.parse(event.data);
                     
-                    if (data.context === 'player.js') {
-                        // 1. Player Ready - Handle Resume
-                        if (data.event === 'ready') {
-                            // console.log('Bunny Player Ready. Last watched:', lastWatchedTime);
-                            if (lastWatchedTime > 0 && !isAlreadyCompleted) {
-                                bunnyIframe.contentWindow.postMessage(JSON.stringify({
-                                    context: 'player.js',
-                                    method: 'setCurrentTime',
-                                    value: lastWatchedTime
-                                }), '*');
-                            }
-                        }
-
-                        // 2. Time Update - Track Progress & Auto-Complete
-                        if (data.event === 'timeupdate' && !isAlreadyCompleted) {
-                            const now = Math.floor(data.value.seconds || 0);
-                            const duration = Math.floor(data.value.duration || 0);
-                            
-                            // Auto-complete if >= 95% watched
-                            if (duration > 0 && now >= (duration * 0.95)) {
-                                // console.log('Auto-completing lesson (95% reached)');
-                                saveProgress(now, true);
-                                isAlreadyCompleted = true;
-                                setTimeout(() => location.reload(), 1000);
-                            } 
-                            // Regular progress save every 10 seconds
-                            else if (now > 0 && now % 10 === 0 && now !== lastSaved) {
-                                lastSaved = now;
-                                saveProgress(now, false);
-                            }
-                        }
-
-                        // 3. Ended - Final Completion
-                        if (data.event === 'ended' && !isAlreadyCompleted) {
-                            // console.log('Video ended.');
-                            saveProgress(9999, true);
-                            isAlreadyCompleted = true;
-                            setTimeout(() => location.reload(), 800);
-                        }
-
-                        // 4. Error Handling
-                        if (data.event === 'error') {
-                            console.error('Bunny Player Error:', data.value);
-                            if (window.drmFailed) {
-                                showBlackout('no-drm');
-                            }
+                    if (data.event === 'ready') {
+                        if (lastWatchedTime > 0 && !isAlreadyCompleted && bunnyIframe) {
+                            bunnyIframe.contentWindow.postMessage(JSON.stringify({
+                                context: 'player.js',
+                                method: 'setCurrentTime',
+                                value: lastWatchedTime
+                            }), '*');
                         }
                     }
+
+                    if (data.event === 'timeupdate' && !isAlreadyCompleted) {
+                        let now = 0;
+                        let duration = 0;
+
+                        if (typeof data.value === 'object') {
+                            now = Math.floor(data.value.seconds || 0);
+                            duration = Math.floor(data.value.duration || 0);
+                        } else {
+                            now = Math.floor(data.value || 0);
+                        }
+                        
+                        // Auto-complete if >= 90% watched
+                        if (duration > 0 && now >= (duration * 0.90)) {
+                            console.log('Video threshold reached (90%) - marking complete');
+                            isAlreadyCompleted = true;
+                            saveProgress(now, true, true);
+                        } 
+                        else if (now > 0 && now % 15 === 0 && now !== lastSaved) {
+                            lastSaved = now;
+                            saveProgress(now, false, false);
+                        }
+                    }
+
+                    if (data.event === 'ended' && !isAlreadyCompleted) {
+                        console.log('Video ended - marking complete');
+                        isAlreadyCompleted = true;
+                        saveProgress(9999, true, true);
+                    }
                 } catch (e) {
-                    // Ignore non-bunny / non-JSON messages
+                    // Not a JSON message or not for us
                 }
             });
 
             @if(!$currentLesson || (!$currentLesson->bunny_video_id && !$currentLesson->bunny_embed_url))
                 player.ready(function() {
                     if (lastWatchedTime > 0 && !isAlreadyCompleted) {
-                        // console.log('Video.js Player Ready. Resuming at:', lastWatchedTime);
                         player.currentTime(lastWatchedTime);
                     }
                 });
@@ -530,43 +571,44 @@
                     const now = Math.floor(player.currentTime());
                     const duration = Math.floor(player.duration());
 
-                    // Auto-complete if >= 95% watched
-                    if (duration > 0 && now >= (duration * 0.95)) {
-                        // console.log('Auto-completing lesson via Video.js (95% reached)');
-                        saveProgress(now, true);
+                    if (duration > 0 && now >= (duration * 0.90)) {
+                        console.log('Video threshold reached (90%) - marking complete');
                         isAlreadyCompleted = true;
-                        setTimeout(() => location.reload(), 1000);
+                        saveProgress(now, true, true);
                     } 
-                    else if (now > 0 && now % 10 === 0 && now !== lastSaved) {
+                    else if (now > 0 && now % 15 === 0 && now !== lastSaved) {
                         lastSaved = now;
-                        saveProgress(now, false);
+                        saveProgress(now, false, false);
                     }
                 });
 
                 player.on('ended', function() {
                     if (!isAlreadyCompleted) {
-                        saveProgress(Math.floor(player.duration()), true);
-                        setTimeout(() => location.reload(), 800);
+                        console.log('Video ended - marking complete');
+                        isAlreadyCompleted = true;
+                        saveProgress(Math.floor(player.duration() || 9999), true, true);
                     }
                 });
             @endif
 
             document.getElementById('mark-complete')?.addEventListener('click', function() {
-                // If it's a video.js player, get duration. If bunny or error, use 0/generic.
+                if (isAlreadyCompleted) return;
                 const duration = (typeof player !== 'undefined' && player) ? Math.floor(player.duration() || 0) : 0;
-                saveProgress(duration, true);
-                
-                // Show immediate feedback
                 this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Updating...';
-                this.classList.add('opacity-50');
-                
-                setTimeout(() => location.reload(), 1000);
+                saveProgress(duration, true, true);
             });
 
-            function saveProgress(seconds, completed) {
+            function saveProgress(seconds, completed, shouldReload = false) {
                 if (!lessonId) return;
+                
+                // Optimistically update UI if completed
+                if (completed) {
+                    updateUIOnComplete();
+                }
+
                 fetch("{{ route('student.progress.update') }}", {
                     method: "POST",
+                    keepalive: true,
                     headers: {
                         "Content-Type": "application/json",
                         "X-CSRF-TOKEN": "{{ csrf_token() }}"
@@ -576,10 +618,23 @@
                         seconds: seconds,
                         completed: completed
                     })
-                }).catch(err => console.error(err));
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'saved') {
+                        console.log('Progress synced successfully');
+                        // If it was a manual click or auto-end, we might want to go to next lesson eventually, 
+                        // but for now, let's just stay on the page as requested for "automatic" feedback.
+                        if (shouldReload) {
+                           // Instead of immediate reload, maybe just update sidebar again to be sure
+                           updateSidebarMastery();
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error('Progress sync failed:', err);
+                });
             }
-
-
         });
     </script>
 @endsection
