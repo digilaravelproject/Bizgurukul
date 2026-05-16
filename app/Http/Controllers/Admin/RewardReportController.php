@@ -23,12 +23,15 @@ class RewardReportController extends Controller
 
             // 1. Achievers List (With highest achieved milestone)
             $achievers = User::whereHas('userAchievements', function ($query) {
-                    $query->whereIn('user_achievements.status', ['unlocked', 'claimed']);
+                    $query->whereIn('user_achievements.status', ['unlocked', 'claimed'])
+                        ->has('achievement'); // Ensure achievement exists and not soft-deleted
                 })
                 ->with(['userAchievements' => function ($query) {
                     $query->whereIn('user_achievements.status', ['unlocked', 'claimed'])
-                        ->with('achievement') // Fix N+1: properly eager load achievement relation
+                        ->has('achievement') // Ensure achievement exists
+                        ->with('achievement')
                         ->join('achievements', 'user_achievements.achievement_id', '=', 'achievements.id')
+                        ->whereNull('achievements.deleted_at') // Explicitly handle soft-deleted in join
                         ->select('user_achievements.*')
                         ->orderBy('achievements.target_amount', 'desc');
                 }])
@@ -79,7 +82,7 @@ class RewardReportController extends Controller
                 ->get();
 
             // 4. Early Achievers Timeline (Historic sequence)
-            $timeline = UserAchievement::with(['user', 'achievement'])
+            $timeline = UserAchievement::has('achievement')->with(['user', 'achievement'])
                 ->whereIn('user_achievements.status', ['unlocked', 'claimed'])
                 ->whereNotNull('user_achievements.unlocked_at')
                 ->orderBy('user_achievements.unlocked_at', 'desc')
