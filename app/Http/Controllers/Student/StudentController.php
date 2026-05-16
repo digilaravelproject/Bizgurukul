@@ -75,30 +75,51 @@ class StudentController extends Controller
     public function updateProgress(Request $request)
     {
         try {
+            $nextUrl = null;
+            $user = Auth::user();
+
             // if lesson_id is provided we store in VideoProgress table as usual
             if ($request->has('lesson_id')) {
                 $request->validate([
                     'lesson_id' => 'required|exists:lessons,id',
-                    'seconds' => 'required|numeric'
+                    'seconds' => 'nullable|numeric'
                 ]);
 
+                $lesson = Lesson::findOrFail($request->lesson_id);
                 $progress = VideoProgress::firstOrNew([
-                    'user_id' => Auth::id(),
-                    'lesson_id' => $request->lesson_id
+                    'user_id' => $user->id,
+                    'lesson_id' => $lesson->id
                 ]);
 
-                $progress->last_watched_second = $request->seconds;
+                if ($request->has('seconds')) {
+                    $progress->last_watched_second = (int)$request->seconds;
+                }
 
-                // Ensure once is_completed is true, it is NEVER overwritten by false
-                if ($request->completed || $progress->is_completed) {
+                // Robust completion check (accepts 'completed', 'is_completed', true, 1)
+                $isCompleted = $request->boolean('completed') || 
+                               $request->boolean('is_completed') || 
+                               $request->input('completed') === true || 
+                               $request->input('completed') === 1;
+                
+                if ($isCompleted || $progress->is_completed) {
                     $progress->is_completed = true;
+                    
+                    // Find next lesson if just completed
+                    $nextLesson = Lesson::where('course_id', $lesson->course_id)
+                        ->where('order_column', '>', $lesson->order_column)
+                        ->orderBy('order_column', 'asc')
+                        ->first();
+                    
+                    if ($nextLesson) {
+                        $nextUrl = route('student.watch', [$lesson->course_id, $nextLesson->id]);
+                    }
                 }
 
                 $progress->save();
             } else {
                 // beginner guide or other standalone video progress - keep in session
                 $seconds = $request->input('seconds', 0);
-                $completed = $request->boolean('completed');
+                $completed = $request->boolean('completed') || $request->boolean('is_completed');
                 $videoId = $request->input('video_id');
                 if ($videoId) {
                     $progress = session('beginner_guide.progress', []);
@@ -111,7 +132,10 @@ class StudentController extends Controller
                 }
             }
 
-            return response()->json(['status' => 'saved']);
+            return response()->json([
+                'status' => 'saved',
+                'next_url' => $nextUrl
+            ]);
         } catch (Exception $e) {
             Log::error("Error updating video progress for user " . Auth::id() . ": " . $e->getMessage());
             return response()->json(['status' => 'error', 'message' => 'Failed to save progress.'], 500);
