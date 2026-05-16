@@ -385,9 +385,9 @@
             function triggerCompletion(seconds, shouldRedirect) {
                 if (isProcessing || completionTriggered) return;
                 
-                console.log('Triggering lesson completion...', { seconds, shouldRedirect });
+                console.log('Triggering lesson completion...', { seconds, shouldRedirect, lessonId });
                 isProcessing = true;
-                completionTriggered = true; // Stop heartbeats immediately
+                completionTriggered = true; // Stop regular heartbeats
                 
                 if (markBtn) {
                     markBtn.disabled = true;
@@ -395,8 +395,8 @@
                 }
 
                 saveProgress(seconds, true, (data) => {
+                    console.log('Server response for completion:', data);
                     if (data && data.status === 'saved') {
-                        console.log('Completion saved successfully on server');
                         isAlreadyCompleted = true;
                         updateSidebarAndProgress();
                         
@@ -421,7 +421,7 @@
                     } else {
                         console.error('Failed to save completion on server', data);
                         isProcessing = false;
-                        completionTriggered = false; // Allow retry
+                        completionTriggered = false; // Allow retry if failed
                         if (markBtn) {
                             markBtn.disabled = false;
                             markBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Mark as Complete';
@@ -455,9 +455,11 @@
                 const payload = {
                     lesson_id: lessonId,
                     seconds: Math.floor(seconds),
-                    is_completed: completed === true // Force boolean
+                    is_completed: completed === true
                 };
                 
+                console.log('Saving progress:', payload);
+
                 fetch("{{ route('student.progress.update') }}", {
                     method: "POST",
                     headers: {
@@ -465,7 +467,8 @@
                         "X-CSRF-TOKEN": "{{ csrf_token() }}",
                         "Accept": "application/json"
                     },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(payload),
+                    keepalive: true // Crucial for saving on navigation
                 })
                 .then(res => res.json())
                 .then(data => {
@@ -477,6 +480,13 @@
                 });
             }
 
+            // Save progress when user leaves the page
+            window.addEventListener('beforeunload', function() {
+                if (!isAlreadyCompleted && lastSavedSecond > 0) {
+                    saveProgress(lastSavedSecond, false);
+                }
+            });
+
             function updateSidebarAndProgress() {
                 const currentLink = document.querySelector(`.lesson-link[data-lesson-item-id="${lessonId}"]`);
                 if (currentLink) {
@@ -485,9 +495,12 @@
                         iconContainer.innerHTML = '<i class="fas fa-check"></i>';
                         iconContainer.className = 'icon-container flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold bg-green-100 text-green-600';
                     }
+                    // Also update any text color/active states
+                    const title = currentLink.querySelector('h4');
+                    if (title) title.classList.remove('text-primary');
                 }
 
-                // Recalculate progress percentage
+                // Recalculate course-wide progress percentage
                 const total = {{ $course->lessons->count() }};
                 const completed = document.querySelectorAll('.icon-container .fa-check').length;
                 const newPercent = total > 0 ? Math.round((completed / total) * 100) : 0;

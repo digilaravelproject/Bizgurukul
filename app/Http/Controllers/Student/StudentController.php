@@ -13,7 +13,7 @@ use Exception;
 
 class StudentController extends Controller
 {
-    // 1. User ke kharide hue courses dikhana (Grouped by Bundle)
+    // 1. Display courses purchased by the user (Grouped by Bundle)
     public function myCourses()
     {
         try {
@@ -47,21 +47,28 @@ class StudentController extends Controller
     public function watch(Course $course, ?Lesson $lesson = null)
     {
         try {
-            // Security check
-            if (!$course->isPurchasedBy(Auth::id())) {
-                return redirect()->route('student.courses.show', $course->id)->with('error', 'Please purchase this course.');
+            // Security check: Must have purchased the course (Admins bypass)
+            $user = Auth::user();
+            if (!$user->hasRole('Admin') && !$course->isPurchasedBy($user->id)) {
+                return redirect()->route('student.my-courses')->with('error', 'You have not purchased this course or it is not available in your plan.');
             }
 
-            $course->load(['lessons' => function($q) {
-                $q->with(['progress' => function($q2) {
-                    $q2->where('user_id', Auth::id());
-                }]);
+            // Load lessons with progress filtered by current user
+            $course->load(['lessons' => function($q) use ($user) {
+                $q->with(['progress' => function($q2) use ($user) {
+                    $q2->where('user_id', $user->id);
+                }])->orderBy('order_column', 'asc');
             }]);
 
             $currentLesson = $lesson ?? $course->lessons->first();
 
-            // Load progress for current lesson
-            $progress = $currentLesson ? $currentLesson->progress : null;
+            // Explicitly load progress for the current lesson for this user only
+            $progress = null;
+            if ($currentLesson) {
+                $progress = VideoProgress::where('user_id', $user->id)
+                    ->where('lesson_id', $currentLesson->id)
+                    ->first();
+            }
 
             return view('users.watch', compact('course', 'currentLesson', 'progress'));
 
@@ -86,26 +93,45 @@ class StudentController extends Controller
                 ]);
 
                 $lesson = Lesson::findOrFail($request->lesson_id);
-                // Use updateOrCreate for atomicity and reliability
-                $progress = VideoProgress::updateOrCreate(
-                    ['user_id' => $user->id, 'lesson_id' => $lesson->id],
-                    ['last_watched_second' => (int)$request->input('seconds', 0)]
-                );
 
-                // Robust completion check
+                // Security check: Must have purchased the course
+                if (!$user->hasRole('Admin') && !$lesson->course->isPurchasedBy($user->id)) {
+                    return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+                }
+
+                // Robust completion check from request
                 $isCompletedInput = $request->boolean('completed') || 
                                     $request->boolean('is_completed') || 
                                     $request->input('completed') === 'true' ||
                                     $request->input('is_completed') === 'true';
-                
-                Log::info("Progress Update for User {$user->id}, Lesson {$lesson->id}: Input Completed=" . ($isCompletedInput ? 'YES' : 'NO') . ", DB Already Completed=" . ($progress->is_completed ? 'YES' : 'NO'));
 
-                // If either the input says it's completed, or it was already completed in DB
+                // Explicitly find or create to avoid any updateOrCreate quirks
+                $progress = VideoProgress::where('user_id', $user->id)
+                    ->where('lesson_id', $lesson->id)
+                    ->first();
+                
+                if (!$progress) {
+                    $progress = new VideoProgress();
+                    $progress->user_id = $user->id;
+                    $progress->lesson_id = $lesson->id;
+                }
+
+                $progress->last_watched_second = (int)$request->input('seconds', 0);
+                
+                // If either already completed or requested to be completed
                 if ($isCompletedInput || $progress->is_completed) {
                     $progress->is_completed = true;
-                    $progress->save();
-                    Log::info("Lesson {$lesson->id} marked as COMPLETED for User {$user->id}");
                 }
+
+                $progress->save();
+
+                // Safety: Clean up any potential duplicates that might have been created previously
+                VideoProgress::where('user_id', $user->id)
+                    ->where('lesson_id', $lesson->id)
+                    ->where('id', '!=', $progress->id)
+                    ->delete();
+
+                Log::info("Progress Saved [User:{$user->id}, Lesson:{$lesson->id}]: Sec={$progress->last_watched_second}, Status=" . ($progress->is_completed ? 'COMPLETED' : 'PENDING'));
 
                 // If completed, find next lesson
                 if ($progress->is_completed) {
