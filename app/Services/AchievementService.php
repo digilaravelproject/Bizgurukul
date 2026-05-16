@@ -61,12 +61,6 @@ class AchievementService
                 );
 
                 $newlyUnlocked[] = $achievement;
-                
-                // The user said: "pehle jiski prioraty hogi woi wala use krna hain then woh achive hojye then next wala"
-                // If we want to force sequential achievement, we could break here.
-                // However, usually achieving one could immediately make you eligible for the next if targets overlap.
-                // But following the user's "next वाला" logic strictly:
-                // break; 
             } else {
                 // Ensure it exists as locked if it doesn't
                 UserAchievement::firstOrCreate(
@@ -78,10 +72,6 @@ class AchievementService
                         'status' => 'locked',
                     ]
                 );
-                
-                // If we follow sequential logic, we should probably stop here because the user
-                // should finish this priority before moving to the next.
-                break;
             }
         }
 

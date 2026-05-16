@@ -95,16 +95,22 @@ class StudentController extends Controller
                     $progress->last_watched_second = (int)$request->seconds;
                 }
 
-                // Robust completion check (accepts 'completed', 'is_completed', true, 1)
-                $isCompleted = $request->boolean('completed') || 
-                               $request->boolean('is_completed') || 
-                               $request->input('completed') === true || 
-                               $request->input('completed') === 1;
+                // Robust completion check
+                $isCompletedInput = $request->boolean('completed') || 
+                                    $request->boolean('is_completed') || 
+                                    $request->input('completed') === 'true' ||
+                                    $request->input('is_completed') === 'true';
                 
-                if ($isCompleted || $progress->is_completed) {
+                // If either the input says it's completed, or it was already completed in DB
+                if ($isCompletedInput || $progress->is_completed) {
                     $progress->is_completed = true;
-                    
-                    // Find next lesson if just completed
+                }
+
+                // Save early to ensure DB is updated
+                $progress->save();
+
+                // If completed (now or previously), find next lesson
+                if ($progress->is_completed) {
                     $nextLesson = Lesson::where('course_id', $lesson->course_id)
                         ->where('order_column', '>', $lesson->order_column)
                         ->orderBy('order_column', 'asc')
@@ -114,8 +120,6 @@ class StudentController extends Controller
                         $nextUrl = route('student.watch', [$lesson->course_id, $nextLesson->id]);
                     }
                 }
-
-                $progress->save();
             } else {
                 // beginner guide or other standalone video progress - keep in session
                 $seconds = $request->input('seconds', 0);

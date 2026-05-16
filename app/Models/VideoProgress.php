@@ -10,6 +10,11 @@ class VideoProgress extends Model
     protected $table = 'video_progress';
 
     protected $fillable = ['user_id', 'lesson_id', 'last_watched_second', 'is_completed'];
+    
+    protected $casts = [
+        'is_completed' => 'boolean',
+        'last_watched_second' => 'integer',
+    ];
 
     public function lesson()
     {
