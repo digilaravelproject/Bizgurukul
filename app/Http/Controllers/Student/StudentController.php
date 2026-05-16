@@ -86,14 +86,11 @@ class StudentController extends Controller
                 ]);
 
                 $lesson = Lesson::findOrFail($request->lesson_id);
-                $progress = VideoProgress::firstOrNew([
-                    'user_id' => $user->id,
-                    'lesson_id' => $lesson->id
-                ]);
-
-                if ($request->has('seconds')) {
-                    $progress->last_watched_second = (int)$request->seconds;
-                }
+                // Use updateOrCreate for atomicity and reliability
+                $progress = VideoProgress::updateOrCreate(
+                    ['user_id' => $user->id, 'lesson_id' => $lesson->id],
+                    ['last_watched_second' => (int)$request->input('seconds', 0)]
+                );
 
                 // Robust completion check
                 $isCompletedInput = $request->boolean('completed') || 
@@ -101,21 +98,21 @@ class StudentController extends Controller
                                     $request->input('completed') === 'true' ||
                                     $request->input('is_completed') === 'true';
                 
+                Log::info("Progress Update for User {$user->id}, Lesson {$lesson->id}: Input Completed=" . ($isCompletedInput ? 'YES' : 'NO') . ", DB Already Completed=" . ($progress->is_completed ? 'YES' : 'NO'));
+
                 // If either the input says it's completed, or it was already completed in DB
                 if ($isCompletedInput || $progress->is_completed) {
                     $progress->is_completed = true;
+                    $progress->save();
+                    Log::info("Lesson {$lesson->id} marked as COMPLETED for User {$user->id}");
                 }
 
-                // Save early to ensure DB is updated
-                $progress->save();
-
-                // If completed (now or previously), find next lesson
+                // If completed, find next lesson
                 if ($progress->is_completed) {
                     $nextLesson = Lesson::where('course_id', $lesson->course_id)
                         ->where('order_column', '>', $lesson->order_column)
                         ->orderBy('order_column', 'asc')
                         ->first();
-                    
                     if ($nextLesson) {
                         $nextUrl = route('student.watch', [$lesson->course_id, $nextLesson->id]);
                     }

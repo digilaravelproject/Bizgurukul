@@ -380,11 +380,14 @@
             }
 
             // --- 3. Core Logic ---
+            let completionTriggered = false; // New flag to stop all heartbeats
+
             function triggerCompletion(seconds, shouldRedirect) {
-                if (isProcessing) return;
+                if (isProcessing || completionTriggered) return;
                 
                 console.log('Triggering lesson completion...', { seconds, shouldRedirect });
                 isProcessing = true;
+                completionTriggered = true; // Stop heartbeats immediately
                 
                 if (markBtn) {
                     markBtn.disabled = true;
@@ -418,6 +421,7 @@
                     } else {
                         console.error('Failed to save completion on server', data);
                         isProcessing = false;
+                        completionTriggered = false; // Allow retry
                         if (markBtn) {
                             markBtn.disabled = false;
                             markBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Mark as Complete';
@@ -446,19 +450,14 @@
             }
 
             function saveProgress(seconds, completed, callback = null) {
-                if (!lessonId) {
-                    console.warn('Cannot save progress: No lessonId');
-                    return;
-                }
+                if (!lessonId) return;
 
                 const payload = {
                     lesson_id: lessonId,
                     seconds: Math.floor(seconds),
-                    is_completed: completed
+                    is_completed: completed === true // Force boolean
                 };
                 
-                console.log('Sending progress update to server:', payload);
-
                 fetch("{{ route('student.progress.update') }}", {
                     method: "POST",
                     headers: {
@@ -468,10 +467,7 @@
                     },
                     body: JSON.stringify(payload)
                 })
-                .then(res => {
-                    if (!res.ok) throw new Error('Server returned ' + res.status);
-                    return res.json();
-                })
+                .then(res => res.json())
                 .then(data => {
                     if (callback) callback(data);
                 })
