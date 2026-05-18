@@ -63,10 +63,10 @@ class RewardReportController extends Controller
                 ->addSelect([
                     'earliest_unlock' => UserAchievement::join('achievements', 'user_achievements.achievement_id', '=', 'achievements.id')
                         ->whereNull('achievements.deleted_at')
-                        ->select('unlocked_at')
+                        ->select('user_achievements.unlocked_at')
                         ->whereColumn('user_achievements.user_id', 'users.id')
-                        ->whereIn('status', ['unlocked', 'claimed'])
-                        ->orderBy('unlocked_at', 'asc')
+                        ->whereIn('user_achievements.status', ['unlocked', 'claimed'])
+                        ->orderBy('user_achievements.unlocked_at', 'asc')
                         ->limit(1),
                     'max_achievement_level' => UserAchievement::join('achievements', 'user_achievements.achievement_id', '=', 'achievements.id')
                         ->whereNull('achievements.deleted_at')
