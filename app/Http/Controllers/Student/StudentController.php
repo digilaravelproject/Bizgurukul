@@ -131,7 +131,7 @@ class StudentController extends Controller
                     ->where('id', '!=', $progress->id)
                     ->delete();
 
-                Log::info("Progress Saved [User:{$user->id}, Lesson:{$lesson->id}]: Sec={$progress->last_watched_second}, Status=" . ($progress->is_completed ? 'COMPLETED' : 'PENDING'));
+                // Log::info("Progress Saved [User:{$user->id}, Lesson:{$lesson->id}]: Sec={$progress->last_watched_second}, Status=" . ($progress->is_completed ? 'COMPLETED' : 'PENDING'));
 
                 // If completed, find next lesson
                 if ($progress->is_completed) {

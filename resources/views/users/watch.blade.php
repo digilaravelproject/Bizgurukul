@@ -17,9 +17,18 @@
             box-shadow: 0 10px 25px -5px rgba(255, 107, 53, 0.4) !important;
         }
 
-        .vjs-menu-button-popup .vjs-menu { width: 10em; }
-        .video-js .vjs-control-bar { background-color: rgba(15, 23, 42, 0.9); backdrop-filter: blur(8px); }
-        .vjs-icon-placeholder:before { color: white; }
+        .vjs-menu-button-popup .vjs-menu {
+            width: 10em;
+        }
+
+        .video-js .vjs-control-bar {
+            background-color: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(8px);
+        }
+
+        .vjs-icon-placeholder:before {
+            color: white;
+        }
 
         /* Watermark */
         .video-watermark {
@@ -30,12 +39,14 @@
             pointer-events: none;
             user-select: none;
             font-weight: bold;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
             transition: all 1s ease-in-out;
         }
 
         @media print {
-            body { display: none !important; }
+            body {
+                display: none !important;
+            }
         }
 
         .video-js {
@@ -52,7 +63,6 @@
             -ms-user-select: none;
             user-select: none;
         }
-
     </style>
 
     <div class="max-w-[1600px] mx-auto pb-12 no-select">
@@ -67,7 +77,8 @@
             {{-- LEFT: Player & Info --}}
             <div class="lg:col-span-8 space-y-8">
                 {{-- 1. Custom Player --}}
-                <div class="relative group rounded-2xl overflow-hidden shadow-2xl bg-black w-full aspect-video border border-gray-200/10">
+                <div
+                    class="relative group rounded-2xl overflow-hidden shadow-2xl bg-black w-full aspect-video border border-gray-200/10">
                     @if($currentLesson && ($currentLesson->bunny_video_id || $currentLesson->bunny_embed_url))
                         @php
                             $libraryId = config('services.bunny.library_id');
@@ -78,7 +89,7 @@
                             $expires = time() + 14400; // 4 hours from now
                             $token = hash('sha256', $securityKey . $videoId . $expires);
 
-                            if($currentLesson->bunny_embed_url && empty($currentLesson->bunny_video_id)) {
+                            if ($currentLesson->bunny_embed_url && empty($currentLesson->bunny_video_id)) {
                                 $bunnySrc = $currentLesson->bunny_embed_url;
                             } else {
                                 $bunnySrc = "https://iframe.mediadelivery.net/embed/{$libraryId}/{$videoId}?token={$token}&expires={$expires}";
@@ -89,8 +100,7 @@
                         @endphp
                         {{-- iframe fallback with 16:9 intrinsic ratio container --}}
                         <div style="position:relative;padding-top:56.25%;">
-                            <iframe id="bunny-player" src="{{ $bunnySrc }}"
-                                loading="lazy"
+                            <iframe id="bunny-player" src="{{ $bunnySrc }}" loading="lazy"
                                 style="border:0;position:absolute;top:0;height:100%;width:100%;"
                                 allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
                                 allowfullscreen="true">
@@ -99,10 +109,8 @@
 
                     @else
                         {{-- Legacy video.js player for old lessons --}}
-                        <video id="course-video" class="video-js vjs-big-play-button vjs-fluid h-full w-full"
-                            controls
-                            preload="auto"
-                            poster="{{ optional($currentLesson)->thumbnail_url ?? $course->thumbnail_url }}"
+                        <video id="course-video" class="video-js vjs-big-play-button vjs-fluid h-full w-full" controls
+                            preload="auto" poster="{{ optional($currentLesson)->thumbnail_url ?? $course->thumbnail_url }}"
                             oncontextmenu="return false;">
                             @if($currentLesson)
                                 @php
@@ -128,12 +136,15 @@
                     </div>
 
                     {{-- Blackout Overlay (Soft DRM) --}}
-                    <div id="video-blackout" class="absolute inset-0 bg-black z-[100] flex flex-col items-center justify-center text-white text-center p-6" style="display: none;">
-                         <div id="protection-message" class="space-y-4 max-w-md">
+                    <div id="video-blackout"
+                        class="absolute inset-0 bg-black z-[100] flex flex-col items-center justify-center text-white text-center p-6"
+                        style="display: none;">
+                        <div id="protection-message" class="space-y-4 max-w-md">
                             <i class="fas fa-user-shield text-4xl text-primary mb-2"></i>
                             <p class="font-bold text-lg">Protected Content</p>
-                            <p id="protection-text" class="text-xs opacity-60">Screen recording or sharing is strictly prohibited.</p>
-                            
+                            <p id="protection-text" class="text-xs opacity-60">Screen recording or sharing is strictly
+                                prohibited.</p>
+
                             <p class="text-[10px] uppercase tracking-widest text-primary font-bold mt-4">Focus to Resume</p>
                         </div>
                     </div>
@@ -144,7 +155,9 @@
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                         <div class="space-y-1">
                             <span class="text-[10px] font-bold text-primary uppercase tracking-widest">
-                                Lesson {{ $currentLesson ? $course->lessons->where('id', '<', $currentLesson->id)->count() + 1 : '0' }} of {{ $course->lessons->count() }}
+                                Lesson
+                                {{ $currentLesson ? $course->lessons->where('id', '<', $currentLesson->id)->count() + 1 : '0' }}
+                                of {{ $course->lessons->count() }}
                             </span>
                             <h1 class="text-2xl font-bold text-mainText leading-tight">
                                 {{ $currentLesson ? $currentLesson->title : 'No Lessons Found' }}
@@ -152,14 +165,14 @@
                         </div>
 
                         @if($currentLesson)
-                        <div class="flex items-center gap-3">
-                            <button id="mark-complete" 
-                                data-lesson-id="{{ $currentLesson->id }}"
-                                class="px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all {{ ($progress && $progress->is_completed) ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-primary text-white shadow-md hover:bg-secondary' }}">
-                                <i class="fas fa-{{ ($progress && $progress->is_completed) ? 'check-double' : 'check' }} mr-2"></i>
-                                {{ ($progress && $progress->is_completed) ? 'Completed' : 'Mark as Complete' }}
-                            </button>
-                        </div>
+                            <div class="flex items-center gap-3">
+                                <button id="mark-complete" data-lesson-id="{{ $currentLesson->id }}"
+                                    class="px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all {{ ($progress && $progress->is_completed) ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-primary text-white shadow-md hover:bg-secondary' }}">
+                                    <i
+                                        class="fas fa-{{ ($progress && $progress->is_completed) ? 'check-double' : 'check' }} mr-2"></i>
+                                    {{ ($progress && $progress->is_completed) ? 'Completed' : 'Mark as Complete' }}
+                                </button>
+                            </div>
                         @endif
                     </div>
 
@@ -171,7 +184,8 @@
 
             {{-- RIGHT: Playlist --}}
             <div class="lg:col-span-4">
-                <div class="bg-surface rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[calc(100vh-8rem)] sticky top-24 overflow-hidden">
+                <div
+                    class="bg-surface rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[calc(100vh-8rem)] sticky top-24 overflow-hidden">
                     {{-- Header --}}
                     <div class="p-6 border-b border-gray-50">
                         <h3 class="text-base font-bold text-mainText leading-tight">Course Content</h3>
@@ -181,9 +195,11 @@
                                 $completedCount = $course->lessons->filter(fn($l) => optional($l->progress)->is_completed)->count();
                                 $percent = $totalLessons > 0 ? ($completedCount / $totalLessons) * 100 : 0;
                             @endphp
-                            <div id="course-progress-bar" class="h-full bg-primary transition-all duration-500" style="width: {{ $percent }}%"></div>
+                            <div id="course-progress-bar" class="h-full bg-primary transition-all duration-500"
+                                style="width: {{ $percent }}%"></div>
                         </div>
-                        <p class="mt-2 text-[10px] font-bold text-mutedText uppercase tracking-widest"><span id="course-progress-percent">{{ round($percent) }}</span>% Complete</p>
+                        <p class="mt-2 text-[10px] font-bold text-mutedText uppercase tracking-widest"><span
+                                id="course-progress-percent">{{ round($percent) }}</span>% Complete</p>
                     </div>
 
                     {{-- Lessons List --}}
@@ -194,12 +210,12 @@
                                 $isCompleted = optional($lesson->progress)->is_completed;
                             @endphp
                             <a href="{{ route('student.watch', [$course->id, $lesson->id]) }}"
-                                data-lesson-item-id="{{ $lesson->id }}"
-                                class="lesson-link group flex items-center gap-4 p-5 border-b border-gray-50 transition-all hover:bg-gray-50/50
-                                {{ $isCurrent ? 'bg-primary/5 border-l-4 border-l-primary active-lesson' : '' }}">
+                                data-lesson-item-id="{{ $lesson->id }}" class="lesson-link group flex items-center gap-4 p-5 border-b border-gray-50 transition-all hover:bg-gray-50/50
+                                        {{ $isCurrent ? 'bg-primary/5 border-l-4 border-l-primary active-lesson' : '' }}">
 
-                                <div class="icon-container flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold
-                                    {{ $isCurrent ? 'bg-primary text-white' : ($isCompleted ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-mutedText') }}">
+                                <div
+                                    class="icon-container flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold
+                                            {{ $isCurrent ? 'bg-primary text-white' : ($isCompleted ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-mutedText') }}">
                                     @if($isCompleted)
                                         <i class="fas fa-check"></i>
                                     @else
@@ -208,16 +224,19 @@
                                 </div>
 
                                 <div class="flex-1 min-w-0">
-                                    <h4 class="text-xs font-bold leading-snug {{ $isCurrent ? 'text-primary' : 'text-mainText group-hover:text-primary' }} transition-colors truncate">
+                                    <h4
+                                        class="text-xs font-bold leading-snug {{ $isCurrent ? 'text-primary' : 'text-mainText group-hover:text-primary' }} transition-colors truncate">
                                         {{ $lesson->title }}
                                     </h4>
-                                    <span class="text-[9px] font-bold text-mutedText uppercase tracking-tighter">Video Lesson</span>
+                                    <span class="text-[9px] font-bold text-mutedText uppercase tracking-tighter">Video
+                                        Lesson</span>
                                 </div>
 
                                 @if($isCurrent)
                                     <div class="flex-shrink-0">
                                         <span class="flex h-2 w-2 relative">
-                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                            <span
+                                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                                             <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                                         </span>
                                     </div>
@@ -238,25 +257,25 @@
     @endphp
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // --- Elements & State ---
             const bunnyIframe = document.getElementById('bunny-player');
             const markBtn = document.getElementById('mark-complete');
             const blackout = document.getElementById('video-blackout');
             const progressBar = document.getElementById('course-progress-bar');
             const progressPercent = document.getElementById('course-progress-percent');
-            
+
             const lessonId = "{{ $currentLesson ? $currentLesson->id : '' }}";
             const nextLessonUrl = "{{ $nextUrl }}";
             let isAlreadyCompleted = {{ ($progress && $progress->is_completed) ? 'true' : 'false' }};
             let lastWatchedTime = {{ optional($progress)->last_watched_second ?? 0 }};
-            
+
             let bunnyDuration = 0;
             let lastSavedSecond = lastWatchedTime;
             let isProcessing = false;
             let autoRedirectTriggered = false;
 
-            console.log('Video Tracking Initialized:', { lessonId, isAlreadyCompleted, lastWatchedTime, nextLessonUrl });
+            // console.log('Video Tracking Initialized:', { lessonId, isAlreadyCompleted, lastWatchedTime, nextLessonUrl });
 
             // --- 1. Bunny Stream Integration ---
             if (bunnyIframe) {
@@ -270,7 +289,7 @@
                                 value: value
                             });
                             bunnyIframe.contentWindow.postMessage(message, '*');
-                        } catch(e) {
+                        } catch (e) {
                             console.error('Error sending message to Bunny:', e);
                         }
                     }
@@ -283,16 +302,16 @@
                     });
                 }
 
-                window.addEventListener('message', function(event) {
+                window.addEventListener('message', function (event) {
                     // Safety check for origin if needed, but Bunny uses multiple subdomains
                     // if (!event.origin.includes('mediadelivery.net')) return;
 
                     try {
                         let data = event.data;
                         if (typeof data === 'string') {
-                            try { data = JSON.parse(data); } catch(e) { return; }
+                            try { data = JSON.parse(data); } catch (e) { return; }
                         }
-                        
+
                         if (!data || (!data.event && !data.method)) return;
                         const eventName = data.event || data.method;
 
@@ -300,7 +319,7 @@
                         if (eventName === 'ready' || eventName === 'player:ready') {
                             console.log('Bunny Player Ready Event Received');
                             subscribe();
-                            
+
                             // Seek to last watched position if not completed and we have a valid time
                             if (lastWatchedTime > 2 && !isAlreadyCompleted) {
                                 console.log('Seeking to last watched position:', lastWatchedTime);
@@ -321,7 +340,7 @@
                             }
 
                             if (duration > 0) bunnyDuration = duration;
-                            
+
                             // Only proceed if we have valid numbers
                             if (isNaN(now) || now <= 0) return;
 
@@ -330,7 +349,7 @@
                                 if (now >= (bunnyDuration * 0.95)) {
                                     console.log('Auto-completion threshold (95%) reached at ' + now + 's of ' + bunnyDuration + 's');
                                     triggerCompletion(now, true);
-                                } else if (now >= lastSavedSecond + 20) { 
+                                } else if (now >= lastSavedSecond + 20) {
                                     // Save every 20 seconds to reduce server load but keep accuracy
                                     lastSavedSecond = Math.floor(now);
                                     saveProgress(lastSavedSecond, false);
@@ -358,22 +377,22 @@
                     if (isProcessing) return;
                     subscribe();
                 }, 3000);
-                
+
                 // Stop interval after 15 seconds to save resources
                 setTimeout(() => clearInterval(subscribeInterval), 15000);
             }
 
             // --- 2. Manual Completion Button ---
             if (markBtn) {
-                markBtn.addEventListener('click', function() {
+                markBtn.addEventListener('click', function () {
                     if (isProcessing) return;
-                    
+
                     if (isAlreadyCompleted) {
                         console.log('Already completed, jumping to next lesson');
                         handleNextLessonRedirect();
                         return;
                     }
-                    
+
                     console.log('Manual completion button clicked');
                     triggerCompletion(bunnyDuration || lastSavedSecond || 0, true);
                 });
@@ -384,11 +403,11 @@
 
             function triggerCompletion(seconds, shouldRedirect) {
                 if (isProcessing || completionTriggered) return;
-                
+
                 console.log('Triggering lesson completion...', { seconds, shouldRedirect, lessonId });
                 isProcessing = true;
                 completionTriggered = true; // Stop regular heartbeats
-                
+
                 if (markBtn) {
                     markBtn.disabled = true;
                     markBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Finishing...';
@@ -399,7 +418,7 @@
                     if (data && data.status === 'saved') {
                         isAlreadyCompleted = true;
                         updateSidebarAndProgress();
-                        
+
                         if (shouldRedirect) {
                             const redirectUrl = data.next_url || nextLessonUrl;
                             if (redirectUrl && !autoRedirectTriggered) {
@@ -445,7 +464,7 @@
                 if (markBtn) {
                     markBtn.innerHTML = '<i class="fas fa-check-double mr-2"></i> Completed';
                     markBtn.className = 'px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all bg-green-50 text-green-600 border border-green-100 cursor-default';
-                    markBtn.disabled = false; 
+                    markBtn.disabled = false;
                 }
             }
 
@@ -457,8 +476,8 @@
                     seconds: Math.floor(seconds),
                     is_completed: completed === true
                 };
-                
-                console.log('Saving progress:', payload);
+
+                // console.log('Saving progress:', payload);
 
                 fetch("{{ route('student.progress.update') }}", {
                     method: "POST",
@@ -470,18 +489,18 @@
                     body: JSON.stringify(payload),
                     keepalive: true // Crucial for saving on navigation
                 })
-                .then(res => res.json())
-                .then(data => {
-                    if (callback) callback(data);
-                })
-                .catch(err => {
-                    console.error('Fetch Save Error:', err);
-                    if (callback) callback(null);
-                });
+                    .then(res => res.json())
+                    .then(data => {
+                        if (callback) callback(data);
+                    })
+                    .catch(err => {
+                        console.error('Fetch Save Error:', err);
+                        if (callback) callback(null);
+                    });
             }
 
             // Save progress when user leaves the page
-            window.addEventListener('beforeunload', function() {
+            window.addEventListener('beforeunload', function () {
                 if (!isAlreadyCompleted && lastSavedSecond > 0) {
                     saveProgress(lastSavedSecond, false);
                 }
@@ -518,7 +537,7 @@
                 const icon = type === 'error' ? 'fa-exclamation-circle' : (type === 'info' ? 'fa-info-circle' : 'fa-check-circle text-green-400');
                 toast.innerHTML = `<i class="fas ${icon}"></i> <span class="text-xs font-bold uppercase tracking-wider">${msg}</span>`;
                 document.body.appendChild(toast);
-                
+
                 setTimeout(() => {
                     toast.classList.add('opacity-0', 'transition-opacity', 'duration-500');
                     setTimeout(() => toast.remove(), 500);
@@ -541,11 +560,11 @@
                 }, 500);
             });
 
-            window.addEventListener('focus', () => { 
-                if (blackout) blackout.style.display = 'none'; 
+            window.addEventListener('focus', () => {
+                if (blackout) blackout.style.display = 'none';
             });
 
-            document.addEventListener('visibilitychange', () => { 
+            document.addEventListener('visibilitychange', () => {
                 if (document.hidden) {
                     if (blackout) blackout.style.display = 'flex';
                     pauseVideo();

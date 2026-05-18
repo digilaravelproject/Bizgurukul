@@ -394,7 +394,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'saved') {
-                        console.log('Roadmap progress saved');
+                        // console.log('Roadmap progress saved');
                         if (shouldReload) {
                             updateCircularProgress();
                         }
