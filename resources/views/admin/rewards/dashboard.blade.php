@@ -68,9 +68,11 @@
                             <td class="px-6 py-4">
                                 <div class="flex -space-x-2">
                                     @foreach($user->userAchievements->take(3) as $ua)
-                                        <div class="w-7 h-7 rounded-full bg-indigo-100 border-2 border-white flex items-center justify-center text-[8px] font-bold text-indigo-600" title="{{ $ua->achievement->short_title }}">
-                                            {{ substr($ua->achievement->short_title, 0, 1) }}
-                                        </div>
+                                        @if($ua->achievement)
+                                            <div class="w-7 h-7 rounded-full bg-indigo-100 border-2 border-white flex items-center justify-center text-[8px] font-bold text-indigo-600" title="{{ $ua->achievement->short_title }}">
+                                                {{ substr($ua->achievement->short_title, 0, 1) }}
+                                            </div>
+                                        @endif
                                     @endforeach
                                     @if($user->userAchievements->count() > 3)
                                         <div class="w-7 h-7 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[8px] font-bold text-slate-400">
@@ -217,11 +219,11 @@
                                 <div class="flex justify-between items-start">
                                     <div>
                                         <p class="font-black text-slate-800 text-sm uppercase tracking-tight">{{ $item->user->name }}</p>
-                                        <p class="text-xs text-indigo-600 font-bold mt-0.5">Unlocked <span class="uppercase tracking-widest">{{ $item->achievement->short_title }}</span></p>
+                                        <p class="text-xs text-indigo-600 font-bold mt-0.5">Unlocked <span class="uppercase tracking-widest">{{ $item->achievement ? $item->achievement->short_title : 'Deleted Achievement' }}</span></p>
                                     </div>
                                     <span class="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">{{ $item->unlocked_at->diffForHumans() }}</span>
                                 </div>
-                                <p class="text-[10px] text-slate-400 font-medium mt-2 leading-relaxed">Achieved with reward target of <span class="font-bold">₹{{ number_format($item->achievement->target_amount) }}</span></p>
+                                <p class="text-[10px] text-slate-400 font-medium mt-2 leading-relaxed">Achieved with reward target of <span class="font-bold">₹{{ $item->achievement ? number_format($item->achievement->target_amount) : '0' }}</span></p>
                             </div>
                         </div>
                     @empty

@@ -23,12 +23,14 @@ class RewardReportController extends Controller
 
             // 1. Achievers List (With highest achieved milestone)
             $achievers = User::whereHas('userAchievements', function ($query) {
-                    $query->whereIn('user_achievements.status', ['unlocked', 'claimed']);
+                    $query->whereIn('user_achievements.status', ['unlocked', 'claimed'])
+                        ->whereHas('achievement');
                 })
                 ->with(['userAchievements' => function ($query) {
                     $query->whereIn('user_achievements.status', ['unlocked', 'claimed'])
                         ->with('achievement') // Fix N+1: properly eager load achievement relation
                         ->join('achievements', 'user_achievements.achievement_id', '=', 'achievements.id')
+                        ->whereNull('achievements.deleted_at')
                         ->select('user_achievements.*')
                         ->orderBy('achievements.target_amount', 'desc');
                 }])
@@ -59,12 +61,15 @@ class RewardReportController extends Controller
                 ->where('hide_from_leaderboard', false)
                 ->withSum('commissions', 'amount')
                 ->addSelect([
-                    'earliest_unlock' => UserAchievement::select('unlocked_at')
-                        ->whereColumn('user_id', 'users.id')
+                    'earliest_unlock' => UserAchievement::join('achievements', 'user_achievements.achievement_id', '=', 'achievements.id')
+                        ->whereNull('achievements.deleted_at')
+                        ->select('unlocked_at')
+                        ->whereColumn('user_achievements.user_id', 'users.id')
                         ->whereIn('status', ['unlocked', 'claimed'])
                         ->orderBy('unlocked_at', 'asc')
                         ->limit(1),
                     'max_achievement_level' => UserAchievement::join('achievements', 'user_achievements.achievement_id', '=', 'achievements.id')
+                        ->whereNull('achievements.deleted_at')
                         ->select('achievements.target_amount')
                         ->whereColumn('user_achievements.user_id', 'users.id')
                         ->whereIn('user_achievements.status', ['unlocked', 'claimed'])
@@ -79,7 +84,8 @@ class RewardReportController extends Controller
                 ->get();
 
             // 4. Early Achievers Timeline (Historic sequence)
-            $timeline = UserAchievement::with(['user', 'achievement'])
+            $timeline = UserAchievement::whereHas('achievement')
+                ->with(['user', 'achievement'])
                 ->whereIn('user_achievements.status', ['unlocked', 'claimed'])
                 ->whereNotNull('user_achievements.unlocked_at')
                 ->orderBy('user_achievements.unlocked_at', 'desc')
