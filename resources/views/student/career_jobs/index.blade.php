@@ -10,10 +10,26 @@
             <div>
                 <p class="text-primary font-black uppercase tracking-[0.3em] text-[10px] mb-2 px-1">Growth Opportunities</p>
                 <h1 class="text-4xl md:text-5xl font-black text-mainText tracking-tight">Explore <span class="text-white brand-gradient bg-clip-text text-transparent">Careers</span></h1>
-                <p class="text-mutedText text-sm font-medium mt-2 max-w-xl">Accelerate your professional journey with handpicked opportunities from our top-tier partner companies.</p>
+                <p class="text-mutedText text-sm font-medium mt-2 max-w-xl mb-4">Accelerate your professional journey with handpicked opportunities from our top-tier partner companies.</p>
+                
+                {{-- Resource Buttons --}}
+                <div class="flex flex-wrap gap-3 mt-4">
+                    @if($howToBuildResumeUrl = \App\Models\Setting::get('career_how_to_build_resume_url'))
+                        <a href="{{ $howToBuildResumeUrl }}" target="_blank" class="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 hover:bg-primary/20 text-primary px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest shadow-sm hover:scale-[1.02] active:scale-95 transition-all">
+                            <i class="fas fa-file-alt text-xs"></i>
+                            How to Build Your Resume
+                        </a>
+                    @endif
+                    @if($howToApplyUrl = \App\Models\Setting::get('career_how_to_apply_url'))
+                        <a href="{{ $howToApplyUrl }}" target="_blank" class="inline-flex items-center gap-2 bg-secondary/10 border border-secondary/20 hover:bg-secondary/20 text-secondary px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest shadow-sm hover:scale-[1.02] active:scale-95 transition-all">
+                            <i class="fas fa-play-circle text-xs"></i>
+                            How to Apply
+                        </a>
+                    @endif
+                </div>
             </div>
             
-            <div class="flex items-center gap-3 bg-surface/50 backdrop-blur-md px-4 py-2 rounded-2xl border border-primary/10 shadow-sm">
+            <div class="flex items-center gap-3 bg-surface/50 backdrop-blur-md px-4 py-2 rounded-2xl border border-primary/10 shadow-sm self-start md:self-end">
                 <span class="flex h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse"></span>
                 <span class="text-[10px] font-black text-mainText uppercase tracking-widest">Live Openings</span>
             </div>

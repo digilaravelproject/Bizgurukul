@@ -312,6 +312,7 @@ Route::middleware(['auth'])
 
         // Career Management
         Route::middleware(['permission:manage-courses'])->group(function () {
+            Route::post('career-jobs/update-settings', [\App\Http\Controllers\Admin\CareerJobController::class, 'updateSettings'])->name('career-jobs.update-settings');
             Route::resource('career-jobs', \App\Http\Controllers\Admin\CareerJobController::class);
             
             // Career Master Data

@@ -11,6 +11,42 @@
     </a>
 </div>
 
+{{-- Dynamic Resource Links Management Card --}}
+<div class="bg-customWhite p-6 rounded-2xl border border-primary/5 shadow-sm mb-8">
+    <h3 class="font-extrabold text-sm text-mainText uppercase tracking-widest mb-4 flex items-center gap-2">
+        <i class="fas fa-link text-primary text-base"></i>
+        Helpful Career Resources Links
+    </h3>
+    <form action="{{ route('admin.career-jobs.update-settings') }}" method="POST">
+        @csrf
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-end">
+            <div>
+                <label class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-2 px-1">How to Build Your Resume URL</label>
+                <div class="relative group">
+                    <i class="fas fa-file-alt absolute left-4 top-1/2 -translate-y-1/2 text-mutedText/40 text-xs transition-colors group-focus-within:text-primary"></i>
+                    <input type="url" name="career_how_to_build_resume_url" value="{{ \App\Models\Setting::get('career_how_to_build_resume_url', '') }}" 
+                        class="w-full bg-white border border-gray-200 rounded-xl py-2.5 pl-11 pr-4 text-xs font-bold text-mainText placeholder-mutedText/40 focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all outline-none"
+                        placeholder="https://youtube.com/... or any URL">
+                </div>
+            </div>
+            <div>
+                <label class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-2 px-1">How to Apply URL</label>
+                <div class="relative group">
+                    <i class="fas fa-play-circle absolute left-4 top-1/2 -translate-y-1/2 text-mutedText/40 text-xs transition-colors group-focus-within:text-primary"></i>
+                    <input type="url" name="career_how_to_apply_url" value="{{ \App\Models\Setting::get('career_how_to_apply_url', '') }}" 
+                        class="w-full bg-white border border-gray-200 rounded-xl py-2.5 pl-11 pr-4 text-xs font-bold text-mainText placeholder-mutedText/40 focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all outline-none"
+                        placeholder="https://youtube.com/... or any URL">
+                </div>
+            </div>
+            <div>
+                <button type="submit" class="w-full brand-gradient text-white py-3 px-6 rounded-xl font-bold text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-transform shadow-lg shadow-primary/20">
+                    Save Links
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
 <div class="bg-customWhite rounded-2xl border border-primary/5 shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">

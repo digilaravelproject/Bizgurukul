@@ -11,6 +11,7 @@ use App\Models\CareerJobSalary;
 use App\Models\CareerJobSkill;
 use App\Models\CareerJobTitle;
 use App\Services\CareerJobService;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 
 class CareerJobController extends Controller
@@ -23,6 +24,19 @@ class CareerJobController extends Controller
     {
         $jobs = $this->service->getAllJobs();
         return view('admin.career_jobs.index', compact('jobs'));
+    }
+
+    public function updateSettings(Request $request)
+    {
+        $request->validate([
+            'career_how_to_build_resume_url' => 'nullable|url|max:500',
+            'career_how_to_apply_url' => 'nullable|url|max:500',
+        ]);
+
+        Setting::set('career_how_to_build_resume_url', $request->input('career_how_to_build_resume_url'));
+        Setting::set('career_how_to_apply_url', $request->input('career_how_to_apply_url'));
+
+        return redirect()->route('admin.career-jobs.index')->with('success', 'Resource links updated successfully.');
     }
 
     public function create()
