@@ -362,7 +362,7 @@
                                                             drag & drop</p>
                                                         <p class="text-xs text-mutedText/70 mt-1">Supported: JPG, PNG, PDF (Max 3MB)</p>
                                                     </div>
-                                                    <input type="file" @change="handleKycFile" class="hidden" :required="!reapplyMode" />
+                                                    <input type="file" @change="handleKycFile" accept=".jpg,.jpeg,.png,.pdf" class="hidden" :required="!reapplyMode" />
                                                 </label>
                                             </div>
                                             <div x-show="kyc.file"
@@ -384,7 +384,7 @@
                                                             drag & drop</p>
                                                         <p class="text-xs text-mutedText/70 mt-1">Supported: JPG, PNG, PDF (Max 3MB)</p>
                                                     </div>
-                                                    <input type="file" @change="handleKycFileBack" class="hidden" :required="!reapplyMode" />
+                                                    <input type="file" @change="handleKycFileBack" accept=".jpg,.jpeg,.png,.pdf" class="hidden" :required="!reapplyMode" />
                                                 </label>
                                             </div>
                                             <div x-show="kyc.file_back"
@@ -509,7 +509,7 @@
                                                     <i class="fas fa-file-invoice text-mutedText"></i>
                                                     <p class="text-sm text-mutedText">Click to upload account proof</p>
                                                 </div>
-                                                <input type="file" @change="handleBankFile" class="hidden" required />
+                                                <input type="file" @change="handleBankFile" accept=".jpg,.jpeg,.png,.pdf" class="hidden" required />
                                             </label>
                                         </div>
                                         <div x-show="bank.file"
@@ -722,6 +722,13 @@
                         if (!this.kyc.file_back) return Swal.fire('Error', 'Please upload Aadhar Back Side document.', 'error');
                     }
 
+                    if (this.kyc.file && this.kyc.file.size > 3 * 1024 * 1024) {
+                        return Swal.fire('Error', 'Aadhar Front Side document size should be less than 3MB', 'error');
+                    }
+                    if (this.kyc.file_back && this.kyc.file_back.size > 3 * 1024 * 1024) {
+                        return Swal.fire('Error', 'Aadhar Back Side document size should be less than 3MB', 'error');
+                    }
+
                     this.isLoading = true;
                     let fd = new FormData();
                     fd.append('pan_name', this.kyc.pan_name);
@@ -747,6 +754,10 @@
                         return Swal.fire('Error', 'Account numbers do not match', 'error');
                     }
                     if (!this.bank.file) return Swal.fire('Error', 'Please upload account proof document.', 'error');
+
+                    if (this.bank.file && this.bank.file.size > 3 * 1024 * 1024) {
+                        return Swal.fire('Error', 'Bank proof document size should be less than 3MB', 'error');
+                    }
 
                     this.isLoading = true;
                     let fd = new FormData();

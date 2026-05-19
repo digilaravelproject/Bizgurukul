@@ -110,9 +110,10 @@ class ProfileController extends Controller
         try {
             $request->validate([
                 'pan_name' => 'required|string',
-                'document' => 'nullable|mimes:jpg,jpeg,png,pdf|max:2048',
-                'document_back' => 'nullable|mimes:jpg,jpeg,png,pdf|max:2048',
+                'document' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:3072',
+                'document_back' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:3072',
             ]);
+
 
             // Ensure both files are present if new submission
             if (!Auth::user()->kyc) {
@@ -141,7 +142,7 @@ class ProfileController extends Controller
                 'account_type' => 'required|in:Current,Saving',
                 'account_number' => 'required|confirmed',
                 'ifsc_code' => 'required|string',
-                'document' => 'required|mimes:jpg,jpeg,png,pdf|max:3072',
+                'document' => 'required|file|mimes:jpg,jpeg,png,pdf|max:3072',
             ]);
 
             $this->profileService->saveBankDetails(Auth::id(), $request->all());

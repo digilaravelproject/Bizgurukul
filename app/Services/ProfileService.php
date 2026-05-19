@@ -89,7 +89,7 @@ class ProfileService
             $user = User::findOrFail($userId);
 
             $path = $user->kyc->document_path ?? null;
-            if (isset($data['document']) && $data['document']->isValid()) {
+            if (isset($data['document']) && $data['document'] instanceof \Illuminate\Http\UploadedFile && $data['document']->isValid()) {
                 if ($user->kyc && $user->kyc->document_path) {
                     Storage::disk('public')->delete($user->kyc->document_path);
                 }
@@ -97,7 +97,7 @@ class ProfileService
             }
 
             $path_back = $user->kyc->document_back_path ?? null;
-            if (isset($data['document_back']) && $data['document_back']->isValid()) {
+            if (isset($data['document_back']) && $data['document_back'] instanceof \Illuminate\Http\UploadedFile && $data['document_back']->isValid()) {
                 if ($user->kyc && $user->kyc->document_back_path) {
                     Storage::disk('public')->delete($user->kyc->document_back_path);
                 }
@@ -129,7 +129,7 @@ class ProfileService
             $existingBank = $user->bank;
 
             $path = null;
-            if (isset($data['document']) && $data['document']->isValid()) {
+            if (isset($data['document']) && $data['document'] instanceof \Illuminate\Http\UploadedFile && $data['document']->isValid()) {
                 $path = $data['document']->store('bank_documents', 'public');
             }
 
