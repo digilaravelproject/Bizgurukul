@@ -22,8 +22,8 @@
         <div x-data="jobFilter()" x-init="fetchJobs()" class="relative z-10 flex flex-col lg:flex-row gap-8">
             <!-- Filters Sidebar -->
             <aside class="w-full lg:w-80 shrink-0">
-                <div class="bg-surface p-8 rounded-[2rem] border border-primary/10 premium-shadow sticky top-24">
-                    <div class="flex items-center justify-between mb-8">
+                <div class="bg-surface p-5 md:p-6 rounded-3xl border border-primary/10 premium-shadow sticky top-24">
+                    <div class="flex items-center justify-between mb-6">
                         <h3 class="font-black text-mainText text-sm uppercase tracking-widest flex items-center gap-3">
                             <i class="fas fa-sliders-h text-primary"></i>
                             Refine Search
@@ -33,24 +33,24 @@
                         </button>
                     </div>
 
-                    <div class="space-y-8">
+                    <div class="space-y-6">
                         <!-- Search -->
                         <div>
-                            <label class="text-[10px] font-black text-mutedText/50 uppercase tracking-[0.2em] block mb-3 px-1">Keywords</label>
+                            <label class="text-[10px] font-black text-mutedText/50 uppercase tracking-[0.2em] block mb-2.5 px-1">Keywords</label>
                             <div class="relative group">
                                 <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-mutedText/40 text-xs transition-colors group-focus-within:text-primary"></i>
                                 <input type="text" x-model.debounce.500ms="filters.search"
-                                    class="w-full bg-navy/5 border border-primary/10 rounded-2xl py-3.5 pl-11 pr-4 text-xs font-bold text-mainText placeholder-mutedText/40 focus:bg-white focus:border-primary/40 focus:ring-8 focus:ring-primary/5 transition-all outline-none"
+                                    class="w-full bg-navy/5 border border-primary/10 rounded-2xl py-2.5 pl-11 pr-4 text-xs font-bold text-mainText placeholder-mutedText/40 focus:bg-white focus:border-primary/40 focus:ring-8 focus:ring-primary/5 transition-all outline-none"
                                     placeholder="Company, title, roles...">
                             </div>
                         </div>
 
                         <!-- Location -->
                         <div>
-                            <label class="text-[10px] font-black text-mutedText/50 uppercase tracking-[0.2em] block mb-3 px-1">Location</label>
+                            <label class="text-[10px] font-black text-mutedText/50 uppercase tracking-[0.2em] block mb-2.5 px-1">Location</label>
                             <div class="relative">
                                 <select x-model="filters.location" @change="fetchJobs()" 
-                                    class="w-full bg-navy/5 border border-primary/10 rounded-2xl py-3.5 px-4 text-xs font-bold text-mainText focus:bg-white focus:border-primary/40 focus:ring-8 focus:ring-primary/5 transition-all outline-none appearance-none cursor-pointer">
+                                    class="w-full bg-navy/5 border border-primary/10 rounded-2xl py-2.5 px-4 text-xs font-bold text-mainText focus:bg-white focus:border-primary/40 focus:ring-8 focus:ring-primary/5 transition-all outline-none appearance-none cursor-pointer">
                                     <option value="">Global / All Locations</option>
                                     @foreach($locations as $loc)
                                         <option value="{{ $loc->id }}">{{ $loc->name }}</option>
@@ -62,10 +62,10 @@
 
                         <!-- Experience -->
                         <div>
-                            <label class="text-[10px] font-black text-mutedText/50 uppercase tracking-[0.2em] block mb-3 px-1">Experience Level</label>
+                            <label class="text-[10px] font-black text-mutedText/50 uppercase tracking-[0.2em] block mb-2.5 px-1">Experience Level</label>
                             <div class="relative">
                                 <select x-model="filters.experience" @change="fetchJobs()" 
-                                    class="w-full bg-navy/5 border border-primary/10 rounded-2xl py-3.5 px-4 text-xs font-bold text-mainText focus:bg-white focus:border-primary/40 focus:ring-8 focus:ring-primary/5 transition-all outline-none appearance-none cursor-pointer">
+                                    class="w-full bg-navy/5 border border-primary/10 rounded-2xl py-2.5 px-4 text-xs font-bold text-mainText focus:bg-white focus:border-primary/40 focus:ring-8 focus:ring-primary/5 transition-all outline-none appearance-none cursor-pointer">
                                     <option value="">Any Experience</option>
                                     @foreach($experiences as $exp)
                                         <option value="{{ $exp->id }}">{{ $exp->name }}</option>
@@ -77,7 +77,7 @@
 
                         <!-- Skills -->
                         <div>
-                            <label class="text-[10px] font-black text-mutedText/50 uppercase tracking-[0.2em] block mb-4 px-1">Top Skills</label>
+                            <label class="text-[10px] font-black text-mutedText/50 uppercase tracking-[0.2em] block mb-3 px-1">Top Skills</label>
                             <div class="max-h-64 overflow-y-auto custom-scrollbar space-y-3 pr-2">
                                 @foreach($skills as $skill)
                                     <label class="flex items-center group cursor-pointer">

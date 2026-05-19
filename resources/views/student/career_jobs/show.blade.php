@@ -17,27 +17,27 @@
         </nav>
 
         <div class="relative z-10 max-w-6xl mx-auto">
-            <div class="bg-surface rounded-[2.5rem] border border-primary/10 premium-shadow overflow-hidden">
+            <div class="bg-surface rounded-3xl border border-primary/10 premium-shadow overflow-hidden">
                 <!-- Header Section -->
-                <div class="p-8 lg:p-12 border-b border-primary/5 bg-gradient-to-br from-primary/[0.02] to-transparent flex flex-col md:flex-row gap-10 items-center md:items-start relative">
+                <div class="p-6 md:p-8 lg:p-10 border-b border-primary/5 bg-gradient-to-br from-primary/[0.02] to-transparent flex flex-col md:flex-row gap-8 items-center md:items-start relative">
                     {{-- Decorative Logo Watermark --}}
                     <div class="absolute top-1/2 right-12 -translate-y-1/2 opacity-[0.03] select-none pointer-events-none hidden lg:block">
-                        <i class="fas fa-briefcase text-[12rem] -rotate-12"></i>
+                        <i class="fas fa-briefcase text-[10rem] -rotate-12"></i>
                     </div>
 
                     <div class="shrink-0 relative">
                         @if($job->company_logo)
-                            <div class="w-40 h-40 rounded-3xl border border-primary/10 p-6 bg-white shadow-2xl flex items-center justify-center overflow-hidden">
+                            <div class="w-28 h-28 rounded-2xl border border-primary/10 p-4 bg-white shadow-2xl flex items-center justify-center overflow-hidden">
                                 <img src="{{ asset('storage/' . $job->company_logo) }}" alt="{{ $job->company_name }}" class="max-w-full max-h-full object-contain">
                             </div>
                         @else
-                            <div class="w-40 h-40 brand-gradient flex items-center justify-center rounded-3xl text-white font-black text-6xl shadow-2xl shadow-primary/20">
+                            <div class="w-28 h-28 brand-gradient flex items-center justify-center rounded-2xl text-white font-black text-4xl shadow-2xl shadow-primary/20">
                                 {{ substr($job->company_name, 0, 1) }}
                             </div>
                         @endif
                         
-                        <div class="absolute -bottom-3 -right-3 h-10 w-10 bg-white rounded-xl border border-primary/10 flex items-center justify-center shadow-lg">
-                            <i class="fas fa-check-circle text-primary"></i>
+                        <div class="absolute -bottom-2 -right-2 h-8 w-8 bg-white rounded-lg border border-primary/10 flex items-center justify-center shadow-lg">
+                            <i class="fas fa-check-circle text-primary text-xs"></i>
                         </div>
                     </div>
 
@@ -47,11 +47,11 @@
                                 <i class="fas fa-bolt mr-2 animate-pulse"></i>Active Hiring
                             </span>
                             <span class="bg-surface text-mutedText/60 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-primary/5">
-                                Posted {{ $job->posted_on->diffForHumans() }}
+                                Posted {{ $job->created_at->setTimezone('Asia/Kolkata')->diffForHumans() }}
                             </span>
                         </div>
 
-                        <h1 class="text-4xl lg:text-5xl font-black text-mainText tracking-tight mb-4 leading-[1.1]">{{ $job->title->name }}</h1>
+                        <h1 class="text-3xl lg:text-4xl font-black text-mainText tracking-tight mb-3 leading-[1.1]">{{ $job->title->name }}</h1>
                         
                         <div class="flex flex-wrap justify-center md:justify-start items-center gap-x-6 gap-y-3">
                             <p class="text-xl font-bold text-primary flex items-center gap-3">
@@ -89,8 +89,8 @@
                 </div>
 
                 <!-- Content Body -->
-                <div class="p-8 lg:p-12">
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-16">
+                <div class="p-6 md:p-8 lg:p-10">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
                         <!-- Main Content -->
                         <div class="lg:col-span-8">
                             <div class="flex items-center gap-4 mb-8">
@@ -107,17 +107,17 @@
                         <!-- Info Sidebar -->
                         <div class="lg:col-span-4 space-y-10">
                             {{-- Skills Section --}}
-                            <div class="bg-navy/5 p-10 rounded-[2.5rem] border border-primary/5 relative overflow-hidden">
+                            <div class="bg-navy/5 p-6 rounded-3xl border border-primary/5 relative overflow-hidden">
                                 <div class="absolute -top-10 -right-10 h-32 w-32 bg-primary/5 rounded-full blur-3xl"></div>
                                 
-                                <h3 class="text-[10px] font-black text-mainText uppercase tracking-[0.3em] mb-8 flex items-center gap-4">
+                                <h3 class="text-[10px] font-black text-mainText uppercase tracking-[0.3em] mb-6 flex items-center gap-4">
                                     <span class="h-1 w-6 bg-primary rounded-full"></span>
                                     Core Competencies
                                 </h3>
                                 
-                                <div class="flex flex-wrap gap-3">
+                                <div class="flex flex-wrap gap-2">
                                     @foreach($job->skills as $skill)
-                                        <span class="bg-white text-mainText border border-primary/10 px-5 py-3 rounded-2xl text-[11px] font-black shadow-sm flex items-center gap-3 hover:border-primary/50 hover:-translate-y-1 transition-all cursor-default group">
+                                        <span class="bg-white text-mainText border border-primary/10 px-4 py-2 rounded-xl text-[11px] font-black shadow-sm flex items-center gap-2 hover:border-primary/50 hover:-translate-y-1 transition-all cursor-default group">
                                             <i class="fas fa-check-circle text-primary opacity-40 group-hover:opacity-100 transition-opacity"></i>
                                             {{ $skill->name }}
                                         </span>
@@ -126,20 +126,20 @@
                             </div>
 
                             {{-- Apply Action Card --}}
-                            <div class="bg-surface p-10 rounded-[2.5rem] border border-primary/10 text-center relative overflow-hidden group premium-shadow">
-                                <div class="absolute inset-0 bg-primary opacity-0 group-hover:opacity-[0.02] transition-opacity"></div>
+                            <div class="bg-surface p-6 rounded-3xl border border-primary/10 text-center relative overflow-hidden group premium-shadow">
+                                <div class="absolute inset-0 bg-primary opacity-0 group-hover:opacity-[0.02] transition-opacity pointer-events-none"></div>
                                 
-                                <div class="h-20 w-20 brand-gradient rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-primary/30 rotate-3 group-hover:rotate-0 transition-transform">
-                                    <i class="fas fa-paper-plane text-white text-2xl"></i>
+                                <div class="h-16 w-16 brand-gradient rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary/30 rotate-3 group-hover:rotate-0 transition-transform">
+                                    <i class="fas fa-paper-plane text-white text-xl"></i>
                                 </div>
                                 
-                                <h3 class="font-black text-mainText text-2xl mb-3">Begin Application</h3>
-                                <p class="text-sm text-mutedText font-medium mb-10 leading-relaxed px-4">
+                                <h3 class="font-black text-mainText text-xl mb-2">Begin Application</h3>
+                                <p class="text-xs text-mutedText font-medium mb-6 leading-relaxed px-2">
                                     Taking the next step is easy. You'll be redirected to the secure portal at <b>{{ $job->company_name }}</b>.
                                 </p>
                                 
-                                <a href="{{ $job->apply_link }}" target="_blank"
-                                    class="block w-full brand-gradient text-white text-center font-black py-5 px-8 rounded-2xl hover:scale-[1.03] active:scale-95 transition-all shadow-2xl shadow-primary/30 text-xs uppercase tracking-widest">
+                                <a href="{{ str_starts_with($job->apply_link, 'http://') || str_starts_with($job->apply_link, 'https://') ? $job->apply_link : 'https://' . $job->apply_link }}" target="_blank"
+                                    class="block w-full brand-gradient text-white text-center font-black py-4 px-6 rounded-xl hover:scale-[1.03] active:scale-95 transition-all shadow-xl shadow-primary/20 text-xs uppercase tracking-widest relative z-10">
                                     Apply Now
                                 </a>
                                 
