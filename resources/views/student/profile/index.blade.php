@@ -231,14 +231,13 @@
                                         class="w-full rounded-xl bg-navy/30 border-primary/5 text-mutedText/60 cursor-not-allowed focus:ring-0 focus:border-primary/5">
                                 </div>
 
-                                {{-- DOB (Locked) --}}
+                                {{-- DOB (Enabled) --}}
                                 <div>
-                                    <label class="text-sm font-bold text-mutedText mb-1 flex items-center gap-2">
+                                    <label class="block text-sm font-bold text-mutedText mb-1">
                                         Date of Birth
-                                        <i class="fas fa-lock text-[10px] text-primary/50"></i>
                                     </label>
-                                    <input type="date" x-model="profile.dob"
-                                        class="w-full rounded-xl bg-navy/30 border-primary/5 text-mutedText/60 cursor-not-allowed focus:ring-0 focus:border-primary/5">
+                                    <input type="date" x-model="profile.dob" max="{{ now()->subYears(18)->format('Y-m-d') }}"
+                                        class="w-full rounded-xl bg-navy border-primary/10 text-mainText focus:ring-primary focus:border-primary">
                                 </div>
 
                                 {{-- Gender --}}
@@ -345,33 +344,54 @@
                             <form @submit.prevent="submitKyc">
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="block text-sm font-bold text-mutedText mb-1">Full Name (As per ID
-                                            Document)</label>
+                                        <label class="block text-sm font-bold text-mutedText mb-1">Full Name (As per Aadhar Card)</label>
                                         <input type="text" x-model="kyc.pan_name" required
                                             class="w-full rounded-xl bg-navy border-primary/10 text-mainText focus:ring-primary focus:border-primary">
                                     </div>
-                                    <div>
-                                        <label class="block text-sm font-bold text-mutedText mb-1">Upload ID Proof (PAN /
-                                            Aadhar)</label>
-                                        <div class="flex items-center justify-center w-full">
-                                            <label
-                                                class="flex flex-col items-center justify-center w-full h-32 border-2 border-primary/10 border-dashed rounded-xl cursor-pointer bg-navy/5 hover:bg-navy/10 transition-colors">
-                                                <div
-                                                    class="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
-                                                    <i class="fas fa-cloud-upload-alt text-2xl text-mutedText mb-2"></i>
-                                                    <p class="text-sm text-mutedText"><span
-                                                            class="font-semibold text-primary">Click to upload</span> or
-                                                        drag and drop</p>
-                                                    <p class="text-xs text-mutedText/70 mt-1">Supported: JPG, PNG, PDF (Max
-                                                        3MB)</p>
-                                                </div>
-                                                <input type="file" @change="handleKycFile" class="hidden" required />
-                                            </label>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-bold text-mutedText mb-1">Aadhar Front Side</label>
+                                            <div class="flex items-center justify-center w-full">
+                                                <label
+                                                    class="flex flex-col items-center justify-center w-full h-32 border-2 border-primary/10 border-dashed rounded-xl cursor-pointer bg-navy/5 hover:bg-navy/10 transition-colors">
+                                                    <div
+                                                        class="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                                                        <i class="fas fa-cloud-upload-alt text-2xl text-mutedText mb-2"></i>
+                                                        <p class="text-sm text-mutedText"><span
+                                                                class="font-semibold text-primary">Click to upload Front Side</span> or
+                                                            drag & drop</p>
+                                                        <p class="text-xs text-mutedText/70 mt-1">Supported: JPG, PNG, PDF (Max 3MB)</p>
+                                                    </div>
+                                                    <input type="file" @change="handleKycFile" class="hidden" :required="!reapplyMode" />
+                                                </label>
+                                            </div>
+                                            <div x-show="kyc.file"
+                                                class="mt-2 text-sm text-emerald-500 font-bold flex items-center">
+                                                <i class="fas fa-check-circle mr-1"></i>
+                                                <span x-text="kyc.file.name"></span>
+                                            </div>
                                         </div>
-                                        <div x-show="kyc.file"
-                                            class="mt-2 text-sm text-emerald-500 font-bold flex items-center">
-                                            <i class="fas fa-check-circle mr-1"></i>
-                                            <span x-text="kyc.file.name"></span>
+                                        <div>
+                                            <label class="block text-sm font-bold text-mutedText mb-1">Aadhar Back Side</label>
+                                            <div class="flex items-center justify-center w-full">
+                                                <label
+                                                    class="flex flex-col items-center justify-center w-full h-32 border-2 border-primary/10 border-dashed rounded-xl cursor-pointer bg-navy/5 hover:bg-navy/10 transition-colors">
+                                                    <div
+                                                        class="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                                                        <i class="fas fa-cloud-upload-alt text-2xl text-mutedText mb-2"></i>
+                                                        <p class="text-sm text-mutedText"><span
+                                                                class="font-semibold text-primary">Click to upload Back Side</span> or
+                                                            drag & drop</p>
+                                                        <p class="text-xs text-mutedText/70 mt-1">Supported: JPG, PNG, PDF (Max 3MB)</p>
+                                                    </div>
+                                                    <input type="file" @change="handleKycFileBack" class="hidden" :required="!reapplyMode" />
+                                                </label>
+                                            </div>
+                                            <div x-show="kyc.file_back"
+                                                class="mt-2 text-sm text-emerald-500 font-bold flex items-center">
+                                                <i class="fas fa-check-circle mr-1"></i>
+                                                <span x-text="kyc.file_back.name"></span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -630,7 +650,8 @@
                 // KYC Data
                 kyc: {
                     pan_name: '{{ $user->kyc?->pan_name ?? '' }}',
-                    file: null
+                    file: null,
+                    file_back: null
                 },
 
                 // Bank Data
@@ -658,35 +679,66 @@
                     this.kyc.file = e.target.files[0];
                 },
 
+                handleKycFileBack(e) {
+                    this.kyc.file_back = e.target.files[0];
+                },
+
                 handleBankFile(e) {
                     this.bank.file = e.target.files[0];
                 },
 
                 updateProfile() {
+                    if (this.profile.dob) {
+                        const dobDate = new Date(this.profile.dob);
+                        const today = new Date();
+                        let age = today.getFullYear() - dobDate.getFullYear();
+                        const m = today.getMonth() - dobDate.getMonth();
+                        if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) {
+                            age--;
+                        }
+                        if (age < 18) {
+                            return Swal.fire('Error', 'You must be at least 18 years old.', 'error');
+                        }
+                    }
+
                     this.isLoading = true;
                     axios.post("{{ route('student.profile.update') }}", this.profile)
                         .then(res => Swal.fire('Updated!', 'Your profile has been updated.', 'success'))
                         .catch(err => {
                             let msg = 'Failed to update';
-                            if (err.response?.data?.message) msg = Object.values(err.response.data.message).flat().join(
-                                ', ');
+                            if (err.response?.data?.message) {
+                                msg = typeof err.response.data.message === 'string'
+                                    ? err.response.data.message
+                                    : Object.values(err.response.data.message).flat().join(', ');
+                            }
                             Swal.fire('Error', msg, 'error');
                         })
                         .finally(() => this.isLoading = false);
                 },
 
                 submitKyc() {
-                    if (!this.kyc.file && !this.reapplyMode) return Swal.fire('Error', 'Upload Document', 'error');
+                    if (!this.reapplyMode) {
+                        if (!this.kyc.file) return Swal.fire('Error', 'Please upload Aadhar Front Side document.', 'error');
+                        if (!this.kyc.file_back) return Swal.fire('Error', 'Please upload Aadhar Back Side document.', 'error');
+                    }
 
                     this.isLoading = true;
                     let fd = new FormData();
                     fd.append('pan_name', this.kyc.pan_name);
                     if (this.kyc.file) fd.append('document', this.kyc.file);
+                    if (this.kyc.file_back) fd.append('document_back', this.kyc.file_back);
 
                     axios.post("{{ route('student.kyc.submit') }}", fd)
-                        .then(res => Swal.fire('Submitted', 'KYC sent for approval.', 'success').then(() => location
-                        .reload()))
-                        .catch(err => Swal.fire('Error', 'Failed to submit KYC', 'error'))
+                        .then(res => Swal.fire('Submitted', 'KYC sent for approval.', 'success').then(() => location.reload()))
+                        .catch(err => {
+                            let msg = 'Failed to submit KYC';
+                            if (err.response?.data?.message) {
+                                msg = typeof err.response.data.message === 'string'
+                                    ? err.response.data.message
+                                    : Object.values(err.response.data.message).flat().join(', ');
+                            }
+                            Swal.fire('Error', msg, 'error');
+                        })
                         .finally(() => this.isLoading = false);
                 },
 

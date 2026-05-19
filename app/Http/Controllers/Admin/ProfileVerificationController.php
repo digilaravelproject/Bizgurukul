@@ -24,7 +24,7 @@ class ProfileVerificationController extends Controller
         // 1. KYC Requests (Filtered by status)
         $kycUsers = User::whereHas('kyc', function($q) use ($kycStatus) {
             $q->where('status', $kycStatus);
-        })->with(['kyc', 'referrer'])->latest()->paginate(10, ['*'], 'kyc_page');
+        })->with(['kyc', 'referrer', 'bank'])->latest()->paginate(10, ['*'], 'kyc_page');
 
         // Counts for tabs
         $pendingKycCount = User::whereHas('kyc', function($q) { $q->where('status', 'pending'); })->count();
@@ -50,6 +50,7 @@ class ProfileVerificationController extends Controller
                 'account_number' => $currentBank->account_number,
                 'holder_name' => $currentBank->account_holder_name,
                 'ifsc_code' => $currentBank->ifsc_code,
+                'account_type' => $currentBank->account_type,
             ] : null;
         }
 

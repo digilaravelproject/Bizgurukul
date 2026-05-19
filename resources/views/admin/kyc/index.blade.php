@@ -111,17 +111,40 @@
                         <h4 class="absolute top-6 left-6 text-primary text-[10px] font-black uppercase tracking-[2px]">
                             Document Preview</h4>
 
+                        {{-- Toggle Tab for Front / Back --}}
+                        <template x-if="data.doc_back_url">
+                            <div class="flex bg-white/10 rounded-xl p-1 mb-4 border border-white/10 z-10 mt-8">
+                                <button @click="previewSide = 'front'"
+                                    :class="previewSide === 'front' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-white/60 hover:text-white'"
+                                    class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all">
+                                    Front Side
+                                </button>
+                                <button @click="previewSide = 'back'"
+                                    :class="previewSide === 'back' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-white/60 hover:text-white'"
+                                    class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all">
+                                    Back Side
+                                </button>
+                            </div>
+                        </template>
+
                         <div
-                            class="w-full h-full max-h-[500px] flex items-center justify-center rounded-2xl overflow-hidden border border-white/5 shadow-2xl bg-navy/20">
-                            <template x-if="data.doc_type === 'pdf'">
+                            class="w-full h-full max-h-[500px] flex items-center justify-center rounded-2xl overflow-hidden border border-white/5 shadow-2xl bg-navy/20"
+                            :class="data.doc_back_url ? '' : 'mt-8'">
+                            <template x-if="previewSide === 'front' && data.doc_type === 'pdf'">
                                 <iframe :src="data.doc_url" class="w-full h-full border-0"></iframe>
                             </template>
-                            <template x-if="data.doc_type !== 'pdf'">
+                            <template x-if="previewSide === 'front' && data.doc_type !== 'pdf'">
                                 <img :src="data.doc_url" class="max-w-full max-h-full object-contain">
+                            </template>
+                            <template x-if="previewSide === 'back' && data.doc_back_type === 'pdf'">
+                                <iframe :src="data.doc_back_url" class="w-full h-full border-0"></iframe>
+                            </template>
+                            <template x-if="previewSide === 'back' && data.doc_back_type !== 'pdf'">
+                                <img :src="data.doc_back_url" class="max-w-full max-h-full object-contain">
                             </template>
                         </div>
 
-                        <a :href="data.doc_url" target="_blank"
+                        <a :href="previewSide === 'front' ? data.doc_url : data.doc_back_url" target="_blank"
                             class="mt-6 brand-gradient text-white px-6 py-3 rounded-full text-xs font-black flex items-center gap-2 transition-all shadow-xl shadow-primary/20 uppercase tracking-widest">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -155,10 +178,13 @@
                                         <p class="text-sm font-bold text-mainText" x-text="data.user_dob"></p>
                                     </div>
                                     <div>
-                                        <p class="text-[10px] text-mutedText uppercase font-bold mb-1">Account Type</p>
+                                        <p class="text-[10px] text-mutedText uppercase font-bold mb-1">Bank Name</p>
                                         <p class="text-xs font-black text-primary uppercase tracking-[1px]"
                                             x-text="data.bank_name || 'N/A'"></p>
-                                        <p class="text-[10px] font-black text-secondary uppercase mt-0.5"
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] text-mutedText uppercase font-bold mb-1">Bank Type (Account Type)</p>
+                                        <p class="text-xs font-black text-secondary uppercase mt-0.5"
                                             x-text="data.account_type || 'N/A'"></p>
                                     </div>
                                 </div>
@@ -311,11 +337,13 @@
                 showReject: false,
                 data: {},
                 rejectReason: '',
+                previewSide: 'front',
 
                 openModal(id) {
                     this.rejectReason = '';
                     this.showReject = false;
                     this.data = {};
+                    this.previewSide = 'front';
 
                     axios.get(`/admin/kyc-requests/${id}`).then(res => {
                         this.data = res.data.data;

@@ -19,6 +19,13 @@ class ProfileService
         // Fields that cannot be changed after registration
         // 'name', 'email', 'mobile' are locked.
 
+        if (isset($data['dob'])) {
+            $dob = \Carbon\Carbon::parse($data['dob']);
+            if ($dob->diffInYears(now(), false) < 18) {
+                throw new \Exception('You must be at least 18 years old.');
+            }
+        }
+
         $updateData = [
             'dob' => $data['dob'] ?? $user->dob,
             'gender' => $data['gender'] ?? $user->gender,
@@ -89,11 +96,20 @@ class ProfileService
                 $path = $data['document']->store('kyc_documents', 'public');
             }
 
+            $path_back = $user->kyc->document_back_path ?? null;
+            if (isset($data['document_back']) && $data['document_back']->isValid()) {
+                if ($user->kyc && $user->kyc->document_back_path) {
+                    Storage::disk('public')->delete($user->kyc->document_back_path);
+                }
+                $path_back = $data['document_back']->store('kyc_documents', 'public');
+            }
+
             KycDetail::updateOrCreate(
                 ['user_id' => $userId],
                 [
                     'pan_name' => $data['pan_name'],
                     'document_path' => $path,
+                    'document_back_path' => $path_back,
                     'document_type' => 'id_proof',
                     'status' => 'pending',
                     'admin_note' => null

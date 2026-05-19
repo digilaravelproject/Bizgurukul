@@ -47,6 +47,8 @@ class KycController extends Controller
                 'pan_name' => $user->kyc->pan_name, // Submitted Name
                 'doc_url' => asset('storage/' . $user->kyc->document_path),
                 'doc_type' => pathinfo($user->kyc->document_path, PATHINFO_EXTENSION) == 'pdf' ? 'pdf' : 'image',
+                'doc_back_url' => $user->kyc->document_back_path ? asset('storage/' . $user->kyc->document_back_path) : null,
+                'doc_back_type' => $user->kyc->document_back_path ? (pathinfo($user->kyc->document_back_path, PATHINFO_EXTENSION) == 'pdf' ? 'pdf' : 'image') : null,
                 'submitted_at' => $user->kyc->updated_at->format('d M, Y h:i A'),
                 'admin_note' => $user->kyc->admin_note
             ]

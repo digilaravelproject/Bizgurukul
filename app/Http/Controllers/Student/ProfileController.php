@@ -40,8 +40,10 @@ class ProfileController extends Controller
                 'email' => 'required|email|unique:users,email,' . $user->id,
                 'mobile' => 'required|numeric|digits:10',
                 'gender' => 'required|in:male,female,other',
-                'dob' => 'required|date',
+                'dob' => 'required|date|before_or_equal:' . now()->subYears(18)->format('Y-m-d'),
                 'state_id' => 'required'
+            ], [
+                'dob.before_or_equal' => 'You must be at least 18 years old.'
             ]);
 
             $this->profileService->updateProfile($user->id, $request->all());
@@ -109,11 +111,14 @@ class ProfileController extends Controller
             $request->validate([
                 'pan_name' => 'required|string',
                 'document' => 'nullable|mimes:jpg,jpeg,png,pdf|max:2048',
+                'document_back' => 'nullable|mimes:jpg,jpeg,png,pdf|max:2048',
             ]);
 
-            // Ensure file is present if new submission
-            if (!Auth::user()->kyc && !$request->hasFile('document')) {
-                return response()->json(['status' => false, 'message' => 'Document is required'], 422);
+            // Ensure both files are present if new submission
+            if (!Auth::user()->kyc) {
+                if (!$request->hasFile('document') || !$request->hasFile('document_back')) {
+                    return response()->json(['status' => false, 'message' => 'Both Aadhar Front and Back documents are required.'], 422);
+                }
             }
 
             $this->profileService->submitKyc(Auth::id(), $request->all());
