@@ -37,8 +37,10 @@ class KycController extends Controller
             'data' => [
                 'id' => $user->id,
                 'user_name' => $user->name, // Profile Name
-                'user_dob' => $user->dob ? $user->dob->format('d M, Y') : 'Not Provided', // Profile DOB
+                'user_dob' => $user->dob ? \Carbon\Carbon::parse($user->dob)->format('d M, Y') : 'Not Provided', // Profile DOB
                 'user_email' => $user->email,
+                'bank_name' => $user->bank->bank_name ?? 'N/A',
+                'account_type' => $user->bank->account_type ?? 'N/A',
 
                 // KYC Data
                 'kyc_status' => $user->kyc->status,

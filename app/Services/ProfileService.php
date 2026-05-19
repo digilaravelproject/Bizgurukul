@@ -17,9 +17,10 @@ class ProfileService
         $user = User::findOrFail($userId);
 
         // Fields that cannot be changed after registration
-        // 'name', 'email', 'mobile', 'dob' are locked.
+        // 'name', 'email', 'mobile' are locked.
 
         $updateData = [
+            'dob' => $data['dob'] ?? $user->dob,
             'gender' => $data['gender'] ?? $user->gender,
             'state_id' => $data['state_id'] ?? $user->state_id,
             'zip_code' => $data['zip_code'] ?? $user->zip_code,

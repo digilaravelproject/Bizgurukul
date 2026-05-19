@@ -237,7 +237,7 @@
                                         Date of Birth
                                         <i class="fas fa-lock text-[10px] text-primary/50"></i>
                                     </label>
-                                    <input type="date" x-model="profile.dob" readonly
+                                    <input type="date" x-model="profile.dob"
                                         class="w-full rounded-xl bg-navy/30 border-primary/5 text-mutedText/60 cursor-not-allowed focus:ring-0 focus:border-primary/5">
                                 </div>
 
