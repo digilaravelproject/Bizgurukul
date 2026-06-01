@@ -199,7 +199,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
                 @foreach($allMilestones as $milestone)
                     @php
                         $status = $userMilestones[$milestone->id] ?? 'locked';
@@ -213,72 +213,76 @@
                         $isUpcoming = $milestone->start_date && $milestone->start_date->isFuture();
                         $isExpired = $milestone->end_date && $milestone->end_date->isPast();
                     @endphp
-                    <div class="relative group p-4 rounded-3xl border transition-all duration-500 {{ $isLocked ? 'bg-primary/5 border-primary/5' : 'bg-surface border-primary/20 shadow-xl shadow-primary/5' }}">
-                        @if($isUpcoming)
-                            <div class="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
-                                <span class="px-4 py-2 bg-primary/90 text-white text-[10px] font-black uppercase tracking-[3px] rounded-full shadow-2xl rotate-12">Upcoming</span>
-                            </div>
-                        @endif
-
-                        <div class="flex flex-col sm:flex-row gap-4 sm:gap-6">
-                            <div class="relative shrink-0 flex justify-center sm:block">
-                                @if($milestone->reward_image)
-                                    <img src="{{ url('storage/' . $milestone->reward_image) }}" alt="{{ $milestone->title }}" class="h-24 w-24 sm:h-20 sm:w-20 rounded-2xl object-cover ring-2 ring-primary/10">
-                                @else
-                                    <div class="h-24 w-24 sm:h-20 sm:w-20 rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-4xl sm:text-3xl">
-                                        <i class="fas fa-gift"></i>
-                                    </div>
-                                @endif
-
-                                @if($isClaimed)
-                                    <div class="absolute -top-2 -right-2 h-7 w-7 rounded-full bg-success text-white flex items-center justify-center text-[12px] shadow-lg border-2 border-white">
-                                        <i class="fas fa-check"></i>
-                                    </div>
-                                @endif
-                            </div>
-
-                            <div class="flex-1 min-w-0 text-center sm:text-left">
-                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                    <div class="order-2 sm:order-1">
-                                        <h4 class="text-sm md:text-base font-black text-mainText truncate uppercase">{{ $milestone->short_title }}</h4>
-                                        <div class="flex items-center justify-center sm:justify-start gap-2 mt-0.5">
-                                            <i class="far fa-calendar-alt text-[9px] text-mutedText"></i>
-                                            <span class="text-[9px] font-bold text-mutedText uppercase tracking-wider">
-                                                {{ $milestone->start_date ? $milestone->start_date->format('M d') : 'Start' }} - {{ $milestone->end_date ? $milestone->end_date->format('M d, Y') : 'Life' }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <span class="shrink-0 text-sm font-black order-1 sm:order-2 {{ $isLocked ? 'text-mutedText' : 'text-primary' }}">₹@indianCurrency($milestone->target_amount)</span>
-                                </div>
-                                <p class="text-[10px] sm:text-xs text-mutedText font-medium line-clamp-2 mt-2 leading-relaxed">{{ $milestone->reward_description }}</p>
-
-                                <div class="mt-5">
-                                    @if($isUpcoming)
-                                        <div class="flex items-center gap-2 text-[9px] font-black text-primary/60 uppercase tracking-widest mt-2">
-                                            <i class="fas fa-clock"></i> Starts in {{ $milestone->start_date->diffForHumans() }}
-                                        </div>
-                                    @elseif($isLocked)
-                                        <div class="space-y-2">
-                                            <div class="flex justify-between text-[9px] font-black uppercase tracking-widest text-mutedText">
-                                                <span>Progress</span>
-                                                <span>₹@indianCurrency($progress) / ₹@indianCurrency($milestone->target_amount)</span>
-                                            </div>
-                                            <div class="w-full h-2 bg-navy rounded-full overflow-hidden p-[1px]">
-                                                <div class="h-full brand-gradient rounded-full shadow-[0_0_10px_rgba(var(--color-primary),0.5)] transition-all duration-1000" style="width: {{ $percent }}%"></div>
-                                            </div>
-                                        </div>
-                                    @elseif($isUnlocked)
-                                        <button onclick="claimReward({{ $milestone->id }})"
-                                                class="w-full py-2.5 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-secondary transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/20">
-                                            Claim Reward
-                                        </button>
+                    <div class="relative group p-5 rounded-3xl border transition-all duration-300 {{ $isUpcoming ? 'bg-primary/5 border-primary/10 border-dashed opacity-80' : ($isLocked ? 'bg-primary/5 border-primary/5' : 'bg-surface border-primary/20 shadow-xl shadow-primary/5') }} flex flex-col justify-between gap-4 min-h-[220px]">
+                        {{-- Card Body --}}
+                        <div class="space-y-3">
+                            {{-- Header: Image on left, Info on right --}}
+                            <div class="flex items-start gap-4">
+                                {{-- Compact & Elegant Reward Image/Icon --}}
+                                <div class="relative shrink-0">
+                                    @if($milestone->reward_image)
+                                        <img src="{{ url('storage/' . $milestone->reward_image) }}" alt="{{ $milestone->title }}" class="h-14 w-14 rounded-2xl object-cover ring-2 ring-primary/10 transition-transform group-hover:scale-105 duration-300">
                                     @else
-                                        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-success/10 text-success text-[10px] font-black uppercase tracking-widest mt-1">
-                                            <i class="fas fa-check-circle"></i> Milestone Achieved
+                                        <div class="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-xl transition-transform group-hover:scale-105 duration-300">
+                                            <i class="fas fa-gift"></i>
+                                        </div>
+                                    @endif
+
+                                    @if($isClaimed)
+                                        <div class="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-success text-white flex items-center justify-center text-[10px] shadow-lg border-2 border-white">
+                                            <i class="fas fa-check"></i>
                                         </div>
                                     @endif
                                 </div>
+
+                                {{-- Short Title, Date Range & Target Amount --}}
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <h4 class="text-sm font-black text-mainText uppercase tracking-wide truncate" title="{{ $milestone->short_title }}">{{ $milestone->short_title }}</h4>
+                                        <span class="shrink-0 text-xs md:text-sm font-black {{ $isLocked ? 'text-mutedText' : 'text-primary' }}">₹@indianCurrency($milestone->target_amount)</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 mt-1 text-[9px] font-bold text-mutedText uppercase tracking-wider">
+                                        <i class="far fa-calendar-alt text-[10px]"></i>
+                                        <span>
+                                            {{ $milestone->start_date ? $milestone->start_date->format('M d') : 'Start' }} - {{ $milestone->end_date ? $milestone->end_date->format('M d, Y') : 'Life' }}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
+
+                            {{-- Description --}}
+                            <p class="text-[11px] text-mutedText/80 font-medium leading-relaxed line-clamp-2">{{ $milestone->reward_description }}</p>
+                        </div>
+
+                        {{-- Footer: Progress or Action Buttons --}}
+                        <div class="pt-3 border-t border-primary/5">
+                            @if($isUpcoming)
+                                <div class="flex items-center justify-between gap-2 bg-primary/5 px-3 py-2 rounded-xl border border-primary/10">
+                                    <div class="flex items-center gap-2 text-[9px] font-black text-primary uppercase tracking-widest">
+                                        <i class="fas fa-clock animate-pulse"></i> Starts in {{ $milestone->start_date->diffForHumans() }}
+                                    </div>
+                                    <span class="px-2 py-0.5 bg-primary/10 text-primary text-[8px] font-black uppercase tracking-widest rounded-md border border-primary/20 shrink-0">Upcoming</span>
+                                </div>
+                            @elseif($isLocked)
+                                <div class="space-y-1.5">
+                                    <div class="flex justify-between text-[9px] font-black uppercase tracking-widest text-mutedText">
+                                        <span>Progress</span>
+                                        <span>₹@indianCurrency($progress) / ₹@indianCurrency($milestone->target_amount)</span>
+                                    </div>
+                                    <div class="w-full h-2 bg-navy rounded-full overflow-hidden p-[1px] border border-primary/5">
+                                        <div class="h-full brand-gradient rounded-full shadow-[0_0_10px_rgba(var(--color-primary),0.3)] transition-all duration-1000" style="width: {{ $percent }}%"></div>
+                                    </div>
+                                </div>
+                            @elseif($isUnlocked)
+                                <button onclick="claimReward({{ $milestone->id }})"
+                                        class="w-full py-2 bg-primary hover:bg-secondary text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-[1.01] active:scale-95 transition-all shadow-md shadow-primary/15">
+                                    Claim Reward
+                                </button>
+                            @else
+                                <div class="w-full py-2 bg-success/5 border border-success/15 rounded-xl flex items-center justify-center gap-2 text-success text-[10px] font-black uppercase tracking-widest">
+                                    <i class="fas fa-check-circle"></i> Milestone Achieved
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @endforeach

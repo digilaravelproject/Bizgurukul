@@ -12,12 +12,22 @@ abstract class CareerJobMasterBaseController extends Controller
     protected abstract function getRouteName(): string;
     protected abstract function getTitle(): string;
 
-    public function index()
+    public function index(Request $request)
     {
-        $items = $this->getModel()::orderBy('name')->get();
+        $perPage = (int) $request->query('per_page', 20);
+        $search = $request->query('search');
+
+        $query = $this->getModel()::orderBy('id', 'asc');
+
+        if ($search) {
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        $items = $query->paginate($perPage)->withQueryString();
         $title = $this->getTitle();
         $routeName = $this->getRouteName();
-        return view('admin.career_master.index', compact('items', 'title', 'routeName'));
+        
+        return view('admin.career_master.index', compact('items', 'title', 'routeName', 'search', 'perPage'));
     }
 
     public function store(Request $request)
