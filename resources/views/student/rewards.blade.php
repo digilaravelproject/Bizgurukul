@@ -213,14 +213,14 @@
                         $isUpcoming = $milestone->start_date && $milestone->start_date->isFuture();
                         $isExpired = $milestone->end_date && $milestone->end_date->isPast();
                     @endphp
-                    <div class="relative group p-4 rounded-3xl border transition-all duration-500 {{ $isLocked ? 'bg-primary/5 border-primary/5' : 'bg-surface border-primary/20 shadow-xl shadow-primary/5' }} {{ $isUpcoming ? 'opacity-50 grayscale' : '' }}">
+                    <div class="relative group p-4 rounded-3xl border transition-all duration-500 {{ $isLocked ? 'bg-primary/5 border-primary/5' : 'bg-surface border-primary/20 shadow-xl shadow-primary/5' }}">
                         @if($isUpcoming)
                             <div class="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
                                 <span class="px-4 py-2 bg-primary/90 text-white text-[10px] font-black uppercase tracking-[3px] rounded-full shadow-2xl rotate-12">Upcoming</span>
                             </div>
                         @endif
 
-                        <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 {{ $isUpcoming ? 'blur-[2px]' : '' }}">
+                        <div class="flex flex-col sm:flex-row gap-4 sm:gap-6">
                             <div class="relative shrink-0 flex justify-center sm:block">
                                 @if($milestone->reward_image)
                                     <img src="{{ url('storage/' . $milestone->reward_image) }}" alt="{{ $milestone->title }}" class="h-24 w-24 sm:h-20 sm:w-20 rounded-2xl object-cover ring-2 ring-primary/10">

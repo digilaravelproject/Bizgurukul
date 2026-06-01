@@ -33,6 +33,7 @@
                         <thead class="bg-primary/5 text-[11px] uppercase font-black text-primary tracking-[2px] border-b border-primary/10">
                             <tr>
                                 <th class="px-8 py-7">User Entity</th>
+                                <th class="px-8 py-7 text-center">KYC Status</th>
                                 <th class="px-8 py-7">Settlement Pipeline</th>
                                 <th class="px-8 py-7">Ingestion Date</th>
                                 <th class="px-8 py-7 text-right">Verification</th>
@@ -51,6 +52,20 @@
                                                 <p class="text-[11px] font-bold text-mutedText/70 tracking-tight">{{ $bank->user->email }}</p>
                                             </div>
                                         </div>
+                                    </td>
+                                    <td class="px-8 py-6 text-center">
+                                        @php
+                                            $kycStatus = $bank->user->kyc_status ?? 'not_submitted';
+                                            $kycClass = [
+                                                'verified' => 'bg-green-50 text-green-600 border-green-200',
+                                                'pending' => 'bg-amber-50 text-amber-600 border-amber-200',
+                                                'rejected' => 'bg-red-50 text-red-600 border-red-200',
+                                                'not_submitted' => 'bg-navy text-mutedText border-primary/5'
+                                            ][$kycStatus] ?? 'bg-navy text-mutedText border-primary/5';
+                                        @endphp
+                                        <span class="px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter border shadow-sm {{ $kycClass }}">
+                                            {{ str_replace('not_submitted', 'NONE', $kycStatus) }}
+                                        </span>
                                     </td>
                                     <td class="px-8 py-6">
                                         <div class="flex flex-col">
@@ -76,7 +91,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-8 py-20 text-center">
+                                    <td colspan="5" class="px-8 py-20 text-center">
                                         <div class="flex flex-col items-center gap-3">
                                             <div class="w-16 h-16 bg-navy/20 rounded-full flex items-center justify-center text-mutedText/30 mb-2">
                                                 <i class="fas fa-university text-2xl"></i>
@@ -100,6 +115,7 @@
                         <thead class="bg-secondary/5 text-[11px] uppercase font-black text-secondary tracking-[2px] border-b border-secondary/10">
                             <tr>
                                 <th class="px-8 py-7">User Entity</th>
+                                <th class="px-8 py-7 text-center">KYC Status</th>
                                 <th class="px-8 py-7">Previous Config</th>
                                 <th class="px-8 py-7">Requested Sync</th>
                                 <th class="px-8 py-7 text-right">Action</th>
@@ -118,6 +134,20 @@
                                                 <p class="text-[11px] font-bold text-mutedText/70 tracking-tight">{{ $req->user->email }}</p>
                                             </div>
                                         </div>
+                                    </td>
+                                    <td class="px-8 py-6 text-center">
+                                        @php
+                                            $kycStatus = $req->user->kyc_status ?? 'not_submitted';
+                                            $kycClass = [
+                                                'verified' => 'bg-green-50 text-green-600 border-green-200',
+                                                'pending' => 'bg-amber-50 text-amber-600 border-amber-200',
+                                                'rejected' => 'bg-red-50 text-red-600 border-red-200',
+                                                'not_submitted' => 'bg-navy text-mutedText border-primary/5'
+                                            ][$kycStatus] ?? 'bg-navy text-mutedText border-primary/5';
+                                        @endphp
+                                        <span class="px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter border shadow-sm {{ $kycClass }}">
+                                            {{ str_replace('not_submitted', 'NONE', $kycStatus) }}
+                                        </span>
                                     </td>
                                     <td class="px-8 py-6">
                                         <div class="p-4 bg-navy/5 rounded-2xl border border-navy/10 grayscale opacity-60">
@@ -142,7 +172,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-8 py-20 text-center">
+                                    <td colspan="5" class="px-8 py-20 text-center">
                                         <div class="flex flex-col items-center gap-3">
                                             <div class="w-16 h-16 bg-navy/20 rounded-full flex items-center justify-center text-mutedText/30 mb-2">
                                                 <i class="fas fa-sync text-2xl"></i>
@@ -211,6 +241,22 @@
                         <div class="p-12 border-b border-navy/5 bg-navy/5">
                             <h3 class="text-4xl font-black text-mainText leading-none mb-3" x-text="reviewType === 'initial' ? 'Infrastructure Setup' : 'Infrastructure Sync'"></h3>
                             <p class="text-sm font-semibold text-mutedText" x-text="reviewType === 'initial' ? 'Validating first-time bank integration details.' : 'Supervising settlement detail migration.'"></p>
+                        </div>
+                        <div class="px-12 py-6 border-b border-navy/5 bg-navy/5 flex justify-between items-center">
+                            <div>
+                                <label class="text-[9px] font-black text-mutedText uppercase tracking-[3px] block mb-1">User Context</label>
+                                <p class="text-lg font-black text-mainText uppercase leading-none" x-text="reviewType === 'initial' ? initialData.user?.name : updateData.user?.name"></p>
+                                <p class="text-[11px] font-semibold text-mutedText mt-1" x-text="reviewType === 'initial' ? initialData.user?.email : updateData.user?.email"></p>
+                            </div>
+                            <div class="text-right">
+                                <label class="text-[9px] font-black text-mutedText uppercase tracking-[3px] block mb-2">KYC Status</label>
+                                <span :class="{
+                                    'bg-green-50 text-green-600 border-green-200': (reviewType === 'initial' ? initialData.user?.kyc_status : updateData.user?.kyc_status) === 'verified',
+                                    'bg-amber-50 text-amber-600 border-amber-200': (reviewType === 'initial' ? initialData.user?.kyc_status : updateData.user?.kyc_status) === 'pending',
+                                    'bg-red-50 text-red-600 border-red-200': (reviewType === 'initial' ? initialData.user?.kyc_status : updateData.user?.kyc_status) === 'rejected',
+                                    'bg-navy text-mutedText border-primary/5': !(reviewType === 'initial' ? initialData.user?.kyc_status : updateData.user?.kyc_status) || (reviewType === 'initial' ? initialData.user?.kyc_status : updateData.user?.kyc_status) === 'not_submitted'
+                                }" class="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border shadow-sm" x-text="(reviewType === 'initial' ? initialData.user?.kyc_status : updateData.user?.kyc_status) === 'not_submitted' ? 'NONE' : ((reviewType === 'initial' ? initialData.user?.kyc_status : updateData.user?.kyc_status) || 'NONE').toUpperCase()"></span>
+                            </div>
                         </div>
 
                         <div class="p-12 flex-1 overflow-y-auto space-y-12">

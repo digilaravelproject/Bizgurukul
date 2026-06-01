@@ -165,6 +165,7 @@
                             <thead class="bg-primary/5 text-[11px] uppercase font-black text-primary tracking-[2px]">
                                 <tr>
                                     <th class="px-8 py-7">User Context</th>
+                                    <th class="px-8 py-7 text-center">KYC Status</th>
                                     <th class="px-8 py-7">Settlement Pipeline</th>
                                     <th class="px-8 py-7">Evidence</th>
                                     <th class="px-8 py-7 text-right">Verification</th>
@@ -179,6 +180,20 @@
                                             </p>
                                             <p class="text-[10px] font-black text-mutedText/60 uppercase tracking-tighter">
                                                 Sponsor: {{ $bank->user->referrer->name ?? 'N/A' }}</p>
+                                        </td>
+                                        <td class="px-8 py-6 text-center">
+                                            @php
+                                                $kycStatus = $bank->user->kyc_status ?? 'not_submitted';
+                                                $kycClass = [
+                                                    'verified' => 'bg-green-50 text-green-600 border-green-200',
+                                                    'pending' => 'bg-amber-50 text-amber-600 border-amber-200',
+                                                    'rejected' => 'bg-red-50 text-red-600 border-red-200',
+                                                    'not_submitted' => 'bg-navy text-mutedText border-primary/5'
+                                                ][$kycStatus] ?? 'bg-navy text-mutedText border-primary/5';
+                                            @endphp
+                                            <span class="px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter border shadow-sm {{ $kycClass }}">
+                                                {{ str_replace('not_submitted', 'NONE', $kycStatus) }}
+                                            </span>
                                         </td>
                                         <td class="px-8 py-6">
                                             <div class="flex flex-col">
@@ -204,7 +219,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4"
+                                        <td colspan="5"
                                             class="px-8 py-20 text-center text-mutedText font-black uppercase tracking-widest text-[10px]">
                                             No pending settlement setups.</td>
                                     </tr>
@@ -227,6 +242,7 @@
                             <thead class="bg-secondary/5 text-[11px] uppercase font-black text-secondary tracking-[2px]">
                                 <tr>
                                     <th class="px-8 py-7">User Context</th>
+                                    <th class="px-8 py-7 text-center">KYC Status</th>
                                     <th class="px-8 py-7">Legacy → Incoming State</th>
                                     <th class="px-8 py-7 text-right">Migration Flow</th>
                                 </tr>
@@ -240,6 +256,20 @@
                                             </p>
                                             <p class="text-[10px] font-black text-mutedText/60 uppercase tracking-tighter">
                                                 Sponsor: {{ $req->user->referrer->name ?? 'N/A' }}</p>
+                                        </td>
+                                        <td class="px-8 py-6 text-center">
+                                            @php
+                                                $kycStatus = $req->user->kyc_status ?? 'not_submitted';
+                                                $kycClass = [
+                                                    'verified' => 'bg-green-50 text-green-600 border-green-200',
+                                                    'pending' => 'bg-amber-50 text-amber-600 border-amber-200',
+                                                    'rejected' => 'bg-red-50 text-red-600 border-red-200',
+                                                    'not_submitted' => 'bg-navy text-mutedText border-primary/5'
+                                                ][$kycStatus] ?? 'bg-navy text-mutedText border-primary/5';
+                                            @endphp
+                                            <span class="px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter border shadow-sm {{ $kycClass }}">
+                                                {{ str_replace('not_submitted', 'NONE', $kycStatus) }}
+                                            </span>
                                         </td>
                                         <td class="px-8 py-6">
                                             <div class="flex items-center gap-6">
@@ -274,7 +304,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="3"
+                                        <td colspan="4"
                                             class="px-8 py-20 text-center text-mutedText font-black uppercase tracking-widest text-[10px]">
                                             No infrastructure sync requested.</td>
                                     </tr>
@@ -521,13 +551,21 @@
                         <h3 class="text-3xl font-black text-mainText uppercase leading-none mb-8 tracking-tighter">
                             Settlement Setup</h3>
                         <div class="space-y-8 flex-1">
-                            <div class="bg-navy/5 p-8 rounded-[32px] border border-primary/10">
-                                <label
-                                    class="text-[9px] font-black text-mutedText uppercase tracking-[3px] block mb-4">Linked
-                                    Identity</label>
-                                <p class="text-xl font-black text-mainText" x-text="activeInitialBankReq.user?.name"></p>
-                                <p class="text-xs font-bold text-mutedText mt-1" x-text="activeInitialBankReq.user?.email">
-                                </p>
+                            <div class="bg-navy/5 p-8 rounded-[32px] border border-primary/10 flex justify-between items-center">
+                                <div>
+                                    <label class="text-[9px] font-black text-mutedText uppercase tracking-[3px] block mb-4">Linked Identity</label>
+                                    <p class="text-xl font-black text-mainText" x-text="activeInitialBankReq.user?.name"></p>
+                                    <p class="text-xs font-bold text-mutedText mt-1" x-text="activeInitialBankReq.user?.email"></p>
+                                </div>
+                                <div class="text-right">
+                                    <label class="text-[9px] font-black text-mutedText uppercase tracking-[3px] block mb-4">KYC Status</label>
+                                    <span :class="{
+                                        'bg-green-50 text-green-600 border-green-200': activeInitialBankReq.user?.kyc_status === 'verified',
+                                        'bg-amber-50 text-amber-600 border-amber-200': activeInitialBankReq.user?.kyc_status === 'pending',
+                                        'bg-red-50 text-red-600 border-red-200': activeInitialBankReq.user?.kyc_status === 'rejected',
+                                        'bg-navy text-mutedText border-primary/5': !activeInitialBankReq.user?.kyc_status || activeInitialBankReq.user?.kyc_status === 'not_submitted'
+                                    }" class="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border shadow-sm" x-text="activeInitialBankReq.user?.kyc_status === 'not_submitted' ? 'NONE' : (activeInitialBankReq.user?.kyc_status || 'NONE').toUpperCase()"></span>
+                                </div>
                             </div>
                             <div class="space-y-6">
                                 <div class="grid grid-cols-2 gap-6">
@@ -613,6 +651,22 @@
                             class="text-3xl font-black text-mainText uppercase leading-none mb-10 tracking-widest flex items-center gap-4">
                             <i class="fas fa-sync text-secondary"></i> Infrastructure Sync
                         </h3>
+                        <div class="bg-navy/5 p-6 rounded-[28px] border border-secondary/10 flex justify-between items-center mb-8">
+                            <div>
+                                <label class="text-[9px] font-black text-mutedText uppercase tracking-[3px] block mb-1">User Entity</label>
+                                <p class="text-lg font-black text-mainText" x-text="activeBankReq.user?.name"></p>
+                                <p class="text-xs font-bold text-mutedText mt-0.5" x-text="activeBankReq.user?.email"></p>
+                            </div>
+                            <div class="text-right">
+                                <label class="text-[9px] font-black text-mutedText uppercase tracking-[3px] block mb-2">KYC Status</label>
+                                <span :class="{
+                                    'bg-green-50 text-green-600 border-green-200': activeBankReq.user?.kyc_status === 'verified',
+                                    'bg-amber-50 text-amber-600 border-amber-200': activeBankReq.user?.kyc_status === 'pending',
+                                    'bg-red-50 text-red-600 border-red-200': activeBankReq.user?.kyc_status === 'rejected',
+                                    'bg-navy text-mutedText border-primary/5': !activeBankReq.user?.kyc_status || activeBankReq.user?.kyc_status === 'not_submitted'
+                                }" class="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border shadow-sm" x-text="activeBankReq.user?.kyc_status === 'not_submitted' ? 'NONE' : (activeBankReq.user?.kyc_status || 'NONE').toUpperCase()"></span>
+                            </div>
+                        </div>
                         <div class="space-y-10 flex-1">
                             <div class="grid grid-cols-2 gap-6 relative">
                                 <div

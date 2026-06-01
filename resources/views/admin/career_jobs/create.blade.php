@@ -30,6 +30,28 @@
             min-height: 45px;
         }
 
+        .select2-container--default .select2-selection--single {
+            background-color: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 8px 12px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #1e293b;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding-left: 0;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 46px;
+            right: 12px;
+        }
+
         .select2-container--default.select2-container--focus .select2-selection--multiple {
             border-color: #3b82f6;
             ring: 2px;
@@ -85,10 +107,8 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-2">Job
-                                Title</label>
-                            <select name="career_job_title_id" required
-                                class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all outline-none appearance-none cursor-pointer">
+                            <label class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-2">Job Title</label>
+                            <select name="career_job_title_id" required class="select2-tags w-full">
                                 <option value="">Select Title</option>
                                 @foreach($titles as $title)
                                     <option value="{{ $title->id }}" {{ old('career_job_title_id') == $title->id ? 'selected' : '' }}>{{ $title->name }}</option>
@@ -96,10 +116,8 @@
                             </select>
                         </div>
                         <div>
-                            <label
-                                class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-2">Location</label>
-                            <select name="career_job_location_id" required
-                                class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all outline-none appearance-none cursor-pointer">
+                            <label class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-2">Location</label>
+                            <select name="career_job_location_id" required class="select2-tags w-full">
                                 <option value="">Select Location</option>
                                 @foreach($locations as $loc)
                                     <option value="{{ $loc->id }}" {{ old('career_job_location_id') == $loc->id ? 'selected' : '' }}>{{ $loc->name }}</option>
@@ -139,10 +157,8 @@
                     </div>
 
                     <div>
-                        <label class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-2">Experience
-                            Level</label>
-                        <select name="career_job_experience_id" required
-                            class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all outline-none appearance-none cursor-pointer">
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-2">Experience Level</label>
+                        <select name="career_job_experience_id" required class="select2-tags w-full">
                             <option value="">Select Experience</option>
                             @foreach($experiences as $exp)
                                 <option value="{{ $exp->id }}" {{ old('career_job_experience_id') == $exp->id ? 'selected' : '' }}>{{ $exp->name }}</option>
@@ -150,14 +166,11 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-2">Salary
-                            Range</label>
-                        <select name="career_job_salary_id"
-                            class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all outline-none appearance-none cursor-pointer">
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-2">Salary Range</label>
+                        <select name="career_job_salary_id" class="select2-tags w-full">
                             <option value="">Undisclosed / Select Range</option>
                             @foreach($salaries as $sal)
-                                <option value="{{ $sal->id }}" {{ old('career_job_salary_id') == $sal->id ? 'selected' : '' }}>
-                                    {{ $sal->name }}</option>
+                                <option value="{{ $sal->id }}" {{ old('career_job_salary_id') == $sal->id ? 'selected' : '' }}>{{ $sal->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -188,7 +201,13 @@
         <script>
             $(document).ready(function () {
                 $('.select2').select2({
-                    placeholder: "Select Required Skills"
+                    placeholder: "Select Required Skills",
+                    tags: true
+                });
+
+                $('.select2-tags').select2({
+                    tags: true,
+                    placeholder: "Select or type to create new..."
                 });
 
                 var quill = new Quill('#editor', {

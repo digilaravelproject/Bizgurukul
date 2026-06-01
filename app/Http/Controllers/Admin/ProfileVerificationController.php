@@ -32,13 +32,13 @@ class ProfileVerificationController extends Controller
 
         // 2. Pending Bank Initial Setup
         $pendingBankInitial = \App\Models\BankDetail::where('status', 'pending')
-            ->with(['user.referrer'])
+            ->with(['user.referrer', 'user.kyc'])
             ->latest()
             ->get();
 
         // 3. Pending Bank Update Requests
         $pendingBankUpdates = \App\Models\BankUpdateRequest::where('status', 'pending')
-            ->with(['user.referrer'])
+            ->with(['user.referrer', 'user.kyc'])
             ->latest()
             ->get();
 
