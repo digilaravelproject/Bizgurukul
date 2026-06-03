@@ -86,7 +86,32 @@ class CouponService
             $package = $this->packageRepo->find($packageId);
 
             if (!$package) {
-                throw new Exception("Package ID {$packageId} not found (possibly deleted).");
+                // Try to find a previously issued coupon for the same package ID to copy its details
+                $previousCoupon = Coupon::where('package_id', $packageId)->first();
+                if ($previousCoupon) {
+                    $package = (object) [
+                        'id' => $packageId,
+                        'type' => $previousCoupon->type,
+                        'discount_value' => $previousCoupon->value,
+                        'selected_courses' => $previousCoupon->selected_courses,
+                        'selected_bundles' => $previousCoupon->selected_bundles,
+                        'couponable_type' => $previousCoupon->couponable_type,
+                        'couponable_id' => $previousCoupon->couponable_id,
+                        'is_active' => true,
+                    ];
+                } else {
+                    // Fallback to a flat coupon matching the paid amount if no previous coupon exists
+                    $package = (object) [
+                        'id' => $packageId,
+                        'type' => 'flat',
+                        'discount_value' => $payment->amount,
+                        'selected_courses' => null,
+                        'selected_bundles' => null,
+                        'couponable_type' => null,
+                        'couponable_id' => null,
+                        'is_active' => true,
+                    ];
+                }
             }
 
             // Allow inactive packages if the user has already successfully paid for them
@@ -122,7 +147,9 @@ class CouponService
             // $payment->coupon_id = $coupon->id; $payment->save(); (if generic payment supports it)
 
             // Update Package Usage Link (Optional tracking)
-            $package->increment('used_count'); // Tracks how many times package was sold
+            if ($package instanceof \Illuminate\Database\Eloquent\Model) {
+                $package->increment('used_count'); // Tracks how many times package was sold
+            }
 
             return $coupon;
         });
