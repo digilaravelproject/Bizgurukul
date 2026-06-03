@@ -85,7 +85,8 @@ class CouponService
         return DB::transaction(function () use ($user, $packageId, $payment) {
             $package = $this->packageRepo->find($packageId);
 
-            if (!$package || !$package->is_active) {
+            // Allow inactive packages if the user has already successfully paid for them
+            if (!$package || (!$package->is_active && $payment->status !== 'success')) {
                 throw new Exception('Package is not available.');
             }
 
