@@ -61,7 +61,20 @@ class CouponService
             throw new Exception('Invalid payment type for coupon issuance.');
         }
 
-        return $this->purchasePackage($payment->user, $payment->paymentable_id, $payment);
+        // If coupon already issued for this payment, return it immediately to prevent duplicate creation
+        if ($payment->coupon_id) {
+            $existingCoupon = Coupon::find($payment->coupon_id);
+            if ($existingCoupon) {
+                return $existingCoupon;
+            }
+        }
+
+        $coupon = $this->purchasePackage($payment->user, $payment->paymentable_id, $payment);
+
+        // Link coupon back to payment
+        $payment->update(['coupon_id' => $coupon->id]);
+
+        return $coupon;
     }
 
     /**

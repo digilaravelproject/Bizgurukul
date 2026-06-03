@@ -436,6 +436,9 @@ class RegistrationFlowController extends Controller
                 if ($user) {
                     event(new Registered($user));
                 }
+            } catch (\App\Exceptions\LeadAlreadyProcessedException $e) {
+                $user = $e->getUser();
+                Log::info('RegistrationFlow: Lead already processed by parallel process. Resuming session for user: ' . $user->id);
             } catch (\Exception $e) {
                 // If it failed, check if it was because the lead was already processed (e.g., by a webhook)
                 $orderId = $request->razorpay_order_id ?? $request->cashfree_order_id;

@@ -57,6 +57,16 @@ class RegistrationService
                 $lead = Lead::where('id', '=', $data['lead_id'], 'and')->lockForUpdate()->first();
 
                 if (!$lead) {
+                    $orderId = $data['gateway_order_id'] ?? $data['cashfree_order_id'] ?? $data['razorpay_order_id'] ?? null;
+                    if ($orderId) {
+                        $payment = Payment::where('gateway_order_id', '=', $orderId, 'and')
+                            ->orWhere('razorpay_order_id', '=', $orderId)
+                            ->first();
+                        if ($payment && $payment->user) {
+                            throw new \App\Exceptions\LeadAlreadyProcessedException($payment->user);
+                        }
+                    }
+
                     $txnId = $data['gateway_payment_id'] ?? $data['gateway_order_id'] ?? 'N/A';
                     throw new Exception("Registration record (Lead) not found. Your payment might have been successful, but we couldn't complete the registration automatically. Please contact support with Transaction ID: {$txnId}");
                 }
@@ -105,6 +115,8 @@ class RegistrationService
 
                 return $user;
             });
+        } catch (\App\Exceptions\LeadAlreadyProcessedException $e) {
+            throw $e;
         } catch (Exception $e) {
             Log::error('Registration Verification Failed', [
                 'error' => $e->getMessage(),

@@ -82,6 +82,16 @@ class CashfreeWebhookController extends Controller
             $existingPayment = Payment::query()->where('gateway_order_id', $orderId)->first();
 
             if ($existingPayment && $existingPayment->status === 'success') {
+                // If it's a CouponPackage and coupon is not issued yet, try to issue it
+                if ($existingPayment->paymentable_type === \App\Models\CouponPackage::class && !$existingPayment->coupon_id) {
+                    try {
+                        $couponService = app(\App\Services\CouponService::class);
+                        $couponService->issueCouponForPayment($existingPayment);
+                        Log::info('Cashfree Webhook: Coupon issued for existing success payment ' . $existingPayment->id);
+                    } catch (\Exception $e) {
+                        Log::error('Cashfree Webhook: Failed to issue coupon for existing success payment ' . $existingPayment->id . ': ' . $e->getMessage());
+                    }
+                }
                 Log::info('Cashfree Webhook: Order already processed - ' . $orderId);
                 return response()->json(['status' => 'success', 'message' => 'Already processed'], 200);
             }
@@ -94,6 +104,17 @@ class CashfreeWebhookController extends Controller
                     'status' => 'success',
                 ])->save();
                 Log::info('Cashfree Webhook: Updated existing payment for order ' . $orderId);
+
+                // Run post-payment action if it's a CouponPackage
+                if ($existingPayment->paymentable_type === \App\Models\CouponPackage::class) {
+                    try {
+                        $couponService = app(\App\Services\CouponService::class);
+                        $couponService->issueCouponForPayment($existingPayment);
+                        Log::info('Cashfree Webhook: Coupon issued for payment ' . $existingPayment->id);
+                    } catch (\Exception $e) {
+                        Log::error('Cashfree Webhook: Failed to issue coupon for payment ' . $existingPayment->id . ': ' . $e->getMessage());
+                    }
+                }
             }
 
             // Handle Registration Payments (lead-based)
@@ -137,6 +158,9 @@ class CashfreeWebhookController extends Controller
                     event(new Registered($user));
 
                     Log::info('Cashfree Webhook: Successfully processed lead ' . $leadId);
+                    return response()->json(['status' => 'success'], 200);
+                } catch (\App\Exceptions\LeadAlreadyProcessedException $e) {
+                    Log::info('Cashfree Webhook: Lead concurrently processed ' . $orderId);
                     return response()->json(['status' => 'success'], 200);
                 } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
                     Log::info('Cashfree Webhook: Lead concurrently processed ' . $orderId);
