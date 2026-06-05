@@ -9,7 +9,9 @@ class CareerJobRepository
 {
     public function all(): Collection
     {
-        return CareerJob::with(['title', 'location', 'experience', 'salary', 'skills'])->get();
+        return CareerJob::with(['title', 'location', 'experience', 'salary', 'skills'])
+            ->withCount(['views', 'applies'])
+            ->get();
     }
 
     public function findById(int $id): ?CareerJob

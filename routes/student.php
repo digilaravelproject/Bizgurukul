@@ -109,6 +109,7 @@ Route::middleware(['auth', 'role:Student'])->prefix('student')->name('student.')
         Route::get('/career', [\App\Http\Controllers\Student\CareerJobController::class, 'index'])->name('career_jobs.index');
         Route::get('/career/fetch', [\App\Http\Controllers\Student\CareerJobController::class, 'fetch'])->name('career_jobs.fetch');
         Route::get('/career/{id}', [\App\Http\Controllers\Student\CareerJobController::class, 'show'])->name('career_jobs.show');
+        Route::get('/career/{id}/apply', [\App\Http\Controllers\Student\CareerJobController::class, 'apply'])->name('career_jobs.apply');
 
         // Survey Response
         Route::post('/survey/submit', [\App\Http\Controllers\Student\SurveyResponseController::class, 'store'])->name('survey.submit');

@@ -138,7 +138,7 @@
                                     Taking the next step is easy. You'll be redirected to the secure portal at <b>{{ $job->company_name }}</b>.
                                 </p>
                                 
-                                <a href="{{ str_starts_with($job->apply_link, 'http://') || str_starts_with($job->apply_link, 'https://') ? $job->apply_link : 'https://' . $job->apply_link }}" target="_blank"
+                                <a href="{{ route('student.career_jobs.apply', $job->id) }}" target="_blank"
                                     class="block w-full brand-gradient text-white text-center font-black py-4 px-6 rounded-xl hover:scale-[1.03] active:scale-95 transition-all shadow-xl shadow-primary/20 text-xs uppercase tracking-widest relative z-10">
                                     Apply Now
                                 </a>

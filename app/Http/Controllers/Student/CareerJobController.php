@@ -40,6 +40,38 @@ class CareerJobController extends Controller
             abort(404);
         }
 
+        if (auth()->check()) {
+            \App\Models\CareerJobClick::firstOrCreate([
+                'career_job_id' => $job->id,
+                'user_id' => auth()->id(),
+                'action_type' => 'view',
+            ]);
+        }
+
         return view('student.career_jobs.show', compact('job'));
+    }
+
+    public function apply(int $id)
+    {
+        $job = $this->service->getJobById($id);
+        
+        if (!$job || !$job->is_active) {
+            abort(404);
+        }
+
+        if (auth()->check()) {
+            \App\Models\CareerJobClick::firstOrCreate([
+                'career_job_id' => $job->id,
+                'user_id' => auth()->id(),
+                'action_type' => 'apply',
+            ]);
+        }
+
+        $url = $job->apply_link;
+        if (!str_starts_with($url, 'http://') && !str_starts_with($url, 'https://')) {
+            $url = 'https://' . $url;
+        }
+
+        return redirect()->away($url);
     }
 }

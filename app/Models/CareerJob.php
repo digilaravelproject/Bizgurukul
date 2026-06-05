@@ -54,6 +54,21 @@ class CareerJob extends Model
         return $this->belongsToMany(CareerJobSkill::class, 'career_job_career_job_skill');
     }
 
+    public function clicks(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(CareerJobClick::class, 'career_job_id');
+    }
+
+    public function views(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(CareerJobClick::class, 'career_job_id')->where('action_type', 'view');
+    }
+
+    public function applies(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(CareerJobClick::class, 'career_job_id')->where('action_type', 'apply');
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);

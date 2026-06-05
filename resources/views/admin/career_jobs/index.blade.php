@@ -118,4 +118,70 @@
         </table>
     </div>
 </div>
+
+<div class="bg-customWhite rounded-2xl border border-primary/5 shadow-sm overflow-hidden mt-8">
+    <div class="p-6 border-b border-gray-100 bg-gray-50/50">
+        <h3 class="font-extrabold text-sm text-mainText uppercase tracking-widest flex items-center gap-2">
+            <i class="fas fa-chart-bar text-primary"></i>
+            Apply Count & Views Analytics
+        </h3>
+        <p class="text-[10px] text-mutedText mt-1 uppercase font-bold">Unique student views and application clicks per job (Duplicates excluded)</p>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50/50 border-b border-gray-100">
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-mutedText">Company</th>
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-mutedText">Job Role</th>
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-mutedText text-center">Unique Views</th>
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-mutedText text-center">Unique Applies (Clicks)</th>
+                    <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-mutedText text-center">Apply Conversion Rate</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                @forelse($jobs as $job)
+                <tr class="hover:bg-gray-50/30 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-white border border-gray-100 p-1 flex items-center justify-center shadow-sm">
+                                @if($job->company_logo)
+                                    <img src="{{ asset('storage/' . $job->company_logo) }}" class="w-full h-full object-contain rounded-md">
+                                @else
+                                    <span class="text-primary font-black text-xs uppercase">{{ substr($job->company_name, 0, 1) }}</span>
+                                @endif
+                            </div>
+                            <span class="font-bold text-xs text-mainText">{{ $job->company_name }}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="font-bold text-xs text-mainText">{{ $job->title->name }}</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="px-2.5 py-1 rounded-md bg-blue-50 text-blue-600 text-[11px] font-black border border-blue-100">{{ $job->views_count ?? 0 }}</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="px-2.5 py-1 rounded-md bg-green-50 text-green-600 text-[11px] font-black border border-green-100">{{ $job->applies_count ?? 0 }}</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        @php
+                            $views = $job->views_count ?? 0;
+                            $applies = $job->applies_count ?? 0;
+                            $rate = $views > 0 ? round(($applies / $views) * 100, 1) : 0;
+                        @endphp
+                        <span class="px-2.5 py-1 rounded-md bg-purple-50 text-purple-600 text-[11px] font-black border border-purple-100">
+                            {{ $rate }}%
+                        </span>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="5" class="px-6 py-8 text-center text-xs text-mutedText uppercase font-bold">
+                        No job stats available
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
 @endsection
