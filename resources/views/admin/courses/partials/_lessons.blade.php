@@ -185,6 +185,7 @@ function deleteLesson(id) {
                 placeholder.insertAdjacentHTML('afterend', '<div id="lessons-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>');
                 grid = document.getElementById('lessons-grid-container');
                 placeholder.remove();
+                initSortable();
             }
         }
 
@@ -260,4 +261,59 @@ function deleteLesson(id) {
         const placeholder = document.getElementById(placeholderId);
         if (placeholder) placeholder.remove();
     }
+
+    // Initialize Sortable on load
+    document.addEventListener('DOMContentLoaded', function() {
+        initSortable();
+    });
+
+    function initSortable() {
+        const el = document.getElementById('lessons-grid-container');
+        if (el) {
+            Sortable.create(el, {
+                animation: 150,
+                handle: '.drag-handle',
+                ghostClass: 'bg-primary/10',
+                onEnd: function(evt) {
+                    const items = el.querySelectorAll('[id^="lesson-card-"]');
+                    const order = Array.from(items).map((item, index) => {
+                        return {
+                            id: item.id.replace('lesson-card-', ''),
+                            order: index
+                        };
+                    });
+
+                    fetch('{{ route('admin.courses.lessons.reorder') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ order: order })
+                    })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            if (typeof toastr !== 'undefined') {
+                                toastr.success(res.message || 'Order updated successfully!');
+                            }
+                        } else {
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error(res.message || 'Failed to update order');
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error('Error reordering lessons');
+                        }
+                    });
+                }
+            });
+        }
+    }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>

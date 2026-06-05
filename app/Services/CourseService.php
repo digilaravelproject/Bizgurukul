@@ -161,7 +161,28 @@ class CourseService
                 $updateData['thumbnail'] = $this->mediaService->compressAndConvertToWebP($data['thumbnail'], 'lessons/thumbnails');
             }
 
+            if ($lesson->type === 'video') {
+                $updateData['bunny_video_id'] = $data['bunny_video_id'] ?? null;
+                $updateData['bunny_embed_url'] = $data['bunny_embed_url'] ?? null;
+            } elseif ($lesson->type === 'document') {
+                if (isset($data['document_file']) && $data['document_file'] instanceof UploadedFile) {
+                    if ($lesson->getRawOriginal('document_path')) {
+                        Storage::disk($this->disk)->delete($lesson->getRawOriginal('document_path'));
+                    }
+                    $updateData['document_path'] = $data['document_file']->store('lessons/docs', $this->disk);
+                }
+            }
+
             return $this->repo->updateLesson($lesson, $updateData);
+        });
+    }
+
+    public function reorderLessons(array $order)
+    {
+        DB::transaction(function () use ($order) {
+            foreach ($order as $item) {
+                $this->repo->updateLessonOrder($item['id'], $item['order']);
+            }
         });
     }
 

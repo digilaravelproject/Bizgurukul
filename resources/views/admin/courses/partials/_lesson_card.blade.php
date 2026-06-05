@@ -48,6 +48,11 @@
             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
         </button>
 
+        {{-- Drag Handle --}}
+        <div class="drag-handle absolute top-3 left-12 z-30 p-1.5 rounded-lg bg-white/90 backdrop-blur text-slate-700 shadow hover:bg-primary hover:text-white cursor-move transition-all" title="Drag to reorder">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </div>
+
         {{-- PREVIEW OVERLAY BUTTON --}}
         @if($lesson->type == 'video' && ($lesson->is_bunny || $lesson->video_path))
             <button
@@ -107,7 +112,7 @@
     </div>
 
     {{-- INLINE EDIT MODAL --}}
-    <div x-show="editing" x-cloak class="absolute inset-0 z-30 bg-surface/95 backdrop-blur-sm flex flex-col p-5 rounded-[1.5rem]" x-transition.opacity>
+    <div x-show="editing" x-cloak class="absolute inset-0 z-30 bg-surface/95 backdrop-blur-sm flex flex-col p-5 rounded-[1.5rem] overflow-y-auto" x-transition.opacity>
         <div class="flex justify-between items-center mb-4">
             <h5 class="text-sm font-black text-mainText">Edit Lesson</h5>
             <button @click="editing = false" class="text-mutedText hover:text-secondary transition-colors">
@@ -116,7 +121,7 @@
         </div>
 
         <form action="{{ route('admin.courses.lesson.update', $lesson->id) }}" method="POST" enctype="multipart/form-data"
-              class="flex flex-col gap-3 flex-1"
+              class="flex flex-col gap-3 flex-1 pb-4"
               x-ref="editForm{{ $lesson->id }}"
               @submit.prevent="
                 const form = $refs['editForm{{ $lesson->id }}'];
@@ -149,7 +154,32 @@
                 <p class="text-[9px] text-mutedText mt-1">Max 5MB. Leave empty to keep existing thumbnail.</p>
             </div>
 
-            <button type="submit" class="mt-auto w-full brand-gradient py-2.5 rounded-xl font-black text-[11px] uppercase text-white shadow-md hover:-translate-y-0.5 transition-all">
+            @if($lesson->type === 'video')
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-1">Bunny Embed URL / Iframe Tag</label>
+                    <input type="text" name="bunny_embed_url" value="{{ $lesson->bunny_embed_url }}"
+                        class="w-full h-10 rounded-xl bg-white px-3 text-sm font-bold text-mainText border border-gray-200 focus:border-primary focus:ring-0 outline-none transition-all" placeholder="Paste link or <iframe...> tag">
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-1">Bunny Video ID (Alternative)</label>
+                    <input type="text" name="bunny_video_id" value="{{ $lesson->bunny_video_id }}"
+                        class="w-full h-10 rounded-xl bg-white px-3 text-sm font-bold text-mainText border border-gray-200 focus:border-primary focus:ring-0 outline-none transition-all" placeholder="e.g. 5f3e...">
+                </div>
+            @elseif($lesson->type === 'document')
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-1">Replace Document (PDF/DOCX)</label>
+                    @if($lesson->document_path)
+                        <div class="mb-2 text-[10px] text-primary font-bold">
+                            Current file: <a href="{{ $lesson->lesson_file_url }}" target="_blank" class="hover:underline">Download Document</a>
+                        </div>
+                    @endif
+                    <input type="file" name="document_file" accept=".pdf,.doc,.docx"
+                        class="w-full text-[10px] text-mutedText file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-primary/10 file:text-primary hover:file:bg-primary hover:file:text-white cursor-pointer transition-all">
+                </div>
+            @endif
+
+            <button type="submit" class="mt-4 w-full brand-gradient py-2.5 rounded-xl font-black text-[11px] uppercase text-white shadow-md hover:-translate-y-0.5 transition-all">
                 Save Changes
             </button>
         </form>

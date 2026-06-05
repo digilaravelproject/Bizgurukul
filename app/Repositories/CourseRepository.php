@@ -80,6 +80,11 @@ class CourseRepository
         return Lesson::where('course_id', $courseId)->max('order_column') + 1;
     }
 
+    public function updateLessonOrder($id, $order): bool
+    {
+        return Lesson::where('id', $id)->update(['order_column' => $order]);
+    }
+
     // --- Resources ---
     public function createResource(array $data): CourseResource
     {

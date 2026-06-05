@@ -201,12 +201,15 @@ class CourseController extends Controller
         }
     }
 
-    // Update lesson title and thumbnail inline from card
+    // Update lesson title, thumbnail, and media/files inline from card
     public function updateLesson(Request $request, $id)
     {
         $request->validate([
-            'title'     => 'required|string|max:255',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'title'           => 'required|string|max:255',
+            'thumbnail'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'bunny_video_id'  => 'nullable|string',
+            'bunny_embed_url' => 'nullable|string',
+            'document_file'   => 'nullable|file|mimes:pdf,docx,zip|max:20480',
         ]);
 
         try {
@@ -223,6 +226,30 @@ class CourseController extends Controller
                 return response()->json(['message' => $e->getMessage()], 500);
             }
             return back()->with('error', $e->getMessage());
+        }
+    }
+
+    // Reorder lessons order_column via drag and drop
+    public function reorderLessons(Request $request)
+    {
+        $request->validate([
+            'order' => 'required|array',
+            'order.*.id' => 'required|integer|exists:lessons,id',
+            'order.*.order' => 'required|integer',
+        ]);
+
+        try {
+            $this->courseService->reorderLessons($request->input('order'));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Lessons reordered successfully!'
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to reorder lessons: ' . $e->getMessage()
+            ], 500);
         }
     }
 
