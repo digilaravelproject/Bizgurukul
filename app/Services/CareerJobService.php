@@ -19,6 +19,11 @@ class CareerJobService
         return $this->repository->all();
     }
 
+    public function getPaginatedJobs(int $perPage = 10, string $pageName = 'jobs_page')
+    {
+        return $this->repository->getPaginatedJobs($perPage, $pageName);
+    }
+
     public function getActiveJobs(array $filters = [])
     {
         return $this->repository->getActiveJobs($filters);

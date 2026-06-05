@@ -22,8 +22,9 @@ class CareerJobController extends Controller
 
     public function index()
     {
-        $jobs = $this->service->getAllJobs();
-        return view('admin.career_jobs.index', compact('jobs'));
+        $jobs = $this->service->getPaginatedJobs(10, 'jobs_page');
+        $analyticsJobs = $this->service->getPaginatedJobs(10, 'stats_page');
+        return view('admin.career_jobs.index', compact('jobs', 'analyticsJobs'));
     }
 
     public function updateSettings(Request $request)

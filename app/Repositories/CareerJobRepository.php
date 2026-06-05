@@ -14,6 +14,14 @@ class CareerJobRepository
             ->get();
     }
 
+    public function getPaginatedJobs(int $perPage = 10, string $pageName = 'jobs_page')
+    {
+        return CareerJob::with(['title', 'location', 'experience', 'salary', 'skills'])
+            ->withCount(['views', 'applies'])
+            ->latest('posted_on')
+            ->paginate($perPage, ['*'], $pageName);
+    }
+
     public function findById(int $id): ?CareerJob
     {
         return CareerJob::with(['title', 'location', 'experience', 'salary', 'skills'])->find($id);
