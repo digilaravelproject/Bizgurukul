@@ -140,6 +140,8 @@ class ManualOnboardingController extends Controller
                     throw new \Exception("Registration sequence completed but no payment record was found.");
                 }
 
+                $paymentCreatedAt = Carbon::parse($validated['payment_date'])->setTimeFrom(now());
+
                 // 4. Update payment details for 100% parity
                 $payment->update([
                     'amount'             => $validated['amount'],
@@ -147,8 +149,28 @@ class ManualOnboardingController extends Controller
                     'status'             => 'success',
                     'gateway_payment_id' => $validated['gateway_payment_id'],
                     'utr_number'         => $validated['utr_number'] ?: $validated['gateway_payment_id'],
-                    'created_at'         => Carbon::parse($validated['payment_date']),
                 ]);
+
+                $payment->created_at = $paymentCreatedAt;
+                $payment->save();
+
+                // Explicitly sync the user's created_at to the same timestamp
+                if ($user) {
+                    $user->created_at = $paymentCreatedAt;
+                    $user->save();
+                }
+
+                // Explicitly sync any commission's created_at to the same timestamp
+                $commission = \App\Models\AffiliateCommission::where('referred_user_id', $user->id)
+                    ->where('reference_id', $validated['bundle_id'])
+                    ->where('reference_type', \App\Models\Bundle::class)
+                    ->first();
+                if ($commission) {
+                    $commission->created_at = $paymentCreatedAt;
+                    $holdingHours = (int) \App\Models\Setting::get('commission_holding_hours', 24);
+                    $commission->available_at = $paymentCreatedAt->copy()->addHours($holdingHours);
+                    $commission->save();
+                }
 
                 Log::info("Manual Onboarding Success: User ID {$user->id} by Admin ID " . Auth::id());
 

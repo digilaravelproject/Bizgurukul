@@ -91,6 +91,7 @@ class RazorpayWebhookController extends Controller
                             'razorpay_payment_id' => $paymentId,
                             'gateway_payment_id'  => $paymentId,
                             'status'              => 'success',
+                            'created_at'          => now(), // Sync payment time to current success/activation time
                         ]);
 
                         if ($existingPayment->paymentable_type === \App\Models\CouponPackage::class) {

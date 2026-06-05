@@ -284,6 +284,7 @@ class RegistrationService
             'amount' => $pricing['totalAmount'],
             'coupon_id' => $coupon ? $coupon->id : null,
             'status' => 'success',
+            'created_at' => now(), // Sync payment time to current success/activation time
             'payment_gateway' => $gatewayName,
             'gateway_order_id' => $orderId,
             'gateway_payment_id' => $data['razorpay_payment_id'] ?? $data['cashfree_payment_id'] ?? $data['gateway_payment_id'] ?? null,

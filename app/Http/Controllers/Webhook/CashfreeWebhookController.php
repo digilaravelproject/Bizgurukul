@@ -102,6 +102,7 @@ class CashfreeWebhookController extends Controller
                 $existingPayment->fill([
                     'gateway_payment_id' => $cfPaymentId,
                     'status' => 'success',
+                    'created_at' => now(), // Sync payment time to current success/activation time
                 ])->save();
                 Log::info('Cashfree Webhook: Updated existing payment for order ' . $orderId);
 

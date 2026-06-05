@@ -35,7 +35,7 @@
         @endif
 
         {{-- Type Badge --}}
-        <div class="absolute top-3 right-3 z-10">
+        <div class="absolute top-3 right-12 z-10">
             @if($lesson->is_bunny)
                 <span class="px-2 py-1 rounded-lg bg-orange-500/80 backdrop-blur text-[10px] font-bold text-white uppercase border border-orange-400/20 shadow-sm">🐰 Bunny</span>
             @else
@@ -44,12 +44,12 @@
         </div>
 
         {{-- Edit Button — always visible, above play overlay --}}
-        <button @click.stop="editing = true" class="absolute top-3 left-3 z-30 p-1.5 rounded-lg bg-white/90 backdrop-blur text-slate-700 shadow hover:bg-primary hover:text-white transition-all" title="Edit lesson">
+        <button @click.stop="editing = true" class="absolute top-3 right-3 z-30 p-1.5 rounded-lg bg-white/90 backdrop-blur text-slate-700 shadow hover:bg-primary hover:text-white transition-all" title="Edit lesson">
             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
         </button>
 
         {{-- Drag Handle --}}
-        <div class="drag-handle absolute top-3 left-12 z-30 p-1.5 rounded-lg bg-white/90 backdrop-blur text-slate-700 shadow hover:bg-primary hover:text-white cursor-move transition-all" title="Drag to reorder">
+        <div class="drag-handle absolute top-3 left-3 z-30 p-1.5 rounded-lg bg-white/90 backdrop-blur text-slate-700 shadow hover:bg-primary hover:text-white cursor-move transition-all" title="Drag to reorder">
             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
         </div>
 

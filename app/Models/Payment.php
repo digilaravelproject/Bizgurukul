@@ -30,6 +30,7 @@ class Payment extends Model
         'coupon_id',
         'amount',
         'status',
+        'created_at',
     ];
 
     protected $casts = [

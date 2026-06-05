@@ -321,7 +321,8 @@ class CheckoutController extends Controller
         $payment->update([
             'status' => 'success',
             'razorpay_payment_id' => $paymentId,
-            'gateway_payment_id' => $paymentId
+            'gateway_payment_id' => $paymentId,
+            'created_at' => now(), // Sync payment time to current success/activation time
         ]);
 
         // Process Commission
