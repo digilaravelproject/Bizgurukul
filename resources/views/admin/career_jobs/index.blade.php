@@ -137,8 +137,6 @@
     @endif
 </div>
 
-</div>
-
 {{-- VIEW JOB DETAIL & ANALYTICS MODAL --}}
 <div x-show="showModal" 
      x-cloak 
@@ -234,5 +232,6 @@
             </a>
         </div>
     </div>
+</div>
 </div>
 @endsection
