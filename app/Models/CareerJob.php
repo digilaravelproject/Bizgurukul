@@ -25,7 +25,7 @@ class CareerJob extends Model
     ];
 
     protected $casts = [
-        'posted_on' => 'date',
+        'posted_on' => 'date:d M, Y',
         'is_active' => 'boolean',
     ];
 
