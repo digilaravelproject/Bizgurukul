@@ -252,6 +252,9 @@ class RegistrationService
         $coupon = Coupon::where('code', '=', $couponCode, 'and')->active()->first();
         if ($coupon) {
             $coupon->increment('used_count', 1);
+            if ($coupon->used_count >= $coupon->usage_limit) {
+                $coupon->update(['status' => 'used']);
+            }
             return $coupon;
         }
         return null;

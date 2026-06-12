@@ -61,7 +61,17 @@
     @if($coupons->count() > 0)
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach($coupons as $coupon)
-                <div class="bg-surface rounded-[2.5rem] p-8 border border-primary/5 shadow-sm hover:shadow-2xl transition-all duration-300 group relative overflow-hidden">
+                @php
+                    $isUsed = $coupon->used_count >= $coupon->usage_limit;
+                    $isExpired = $coupon->expiry_date && $coupon->expiry_date->isPast();
+                    $displayStatus = 'active';
+                    if ($isUsed) {
+                        $displayStatus = 'used';
+                    } elseif ($isExpired) {
+                        $displayStatus = 'expired';
+                    }
+                @endphp
+                <div class="bg-surface rounded-[2.5rem] p-8 border border-primary/5 shadow-sm hover:shadow-2xl transition-all duration-300 group relative overflow-hidden {{ $isUsed ? 'opacity-60 bg-gray-50/50 grayscale-[20%]' : '' }}">
 
                     {{-- Decorative Background --}}
                     <div class="absolute -top-12 -right-12 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all"></div>
@@ -69,9 +79,9 @@
                     {{-- Status Badge --}}
                     <div class="absolute top-6 right-6">
                         <span class="px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest
-                            {{ $coupon->status === 'active' ? 'bg-green-500/10 text-green-600' :
-                               ($coupon->status === 'used' ? 'bg-blue-500/10 text-blue-600' : 'bg-red-500/10 text-red-600') }}">
-                            {{ ucfirst($coupon->status) }}
+                            {{ $displayStatus === 'active' ? 'bg-green-500/10 text-green-600' :
+                               ($displayStatus === 'used' ? 'bg-blue-500/10 text-blue-600' : 'bg-red-500/10 text-red-600') }}">
+                            {{ $displayStatus === 'used' ? 'Redeemed' : ucfirst($displayStatus) }}
                         </span>
                     </div>
 
@@ -111,7 +121,7 @@
                             </span>
                         </div>
 
-                        @if($coupon->status === 'active')
+                        @if($displayStatus === 'active' && $coupon->is_active)
                             <button @click="openTransferModal({{ $coupon->id }}, '{{ $coupon->code }}')"
                                     class="brand-gradient px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center gap-2">
                                 <i class="fas fa-paper-plane"></i> Transfer
