@@ -92,10 +92,14 @@ class CouponRepository
                 $query->active();
             } elseif ($status === 'expired') {
                 $query->where(function ($q) {
-                    $q->whereNotNull('expiry_date')->where('expiry_date', '<', now());
+                    $q->whereNotNull('expiry_date')
+                      ->where('expiry_date', '<', \Carbon\Carbon::today());
                 });
             } elseif ($status === 'used') {
-                $query->whereColumn('used_count', '>=', 'usage_limit');
+                $query->where(function ($q) {
+                    $q->where('status', 'used')
+                      ->orWhereColumn('used_count', '>=', 'usage_limit');
+                });
             }
         }
 

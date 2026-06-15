@@ -47,6 +47,7 @@ class Coupon extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true)
+                     ->where('status', 'active')
                      ->where(function ($q) {
                          $q->whereNull('expiry_date')
                            ->orWhere('expiry_date', '>=', Carbon::today());
