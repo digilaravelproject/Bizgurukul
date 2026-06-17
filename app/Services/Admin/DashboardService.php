@@ -207,14 +207,31 @@ class DashboardService
             $totalAmount = (float) $paymentQuery->sum('amount');
             if ($totalAmount <= 0) return 0.0;
 
-            // 2. Extract base price (remove 18% GST from inclusive price)
-            $basePrice = $totalAmount / 1.18;
+            // 2. Extract base price (using actual subtotal from database if available, falling back to GST-deducted amount)
+            $basePrice = (float) $paymentQuery->sum(\Illuminate\Support\Facades\DB::raw('COALESCE(subtotal, amount / 1.18)'));
 
             // 3. Gateway Fee (2% of total collected amount)
             $gatewayFee = $totalAmount * 0.02;
 
-            // 4. Commission (already effective in DB: differential for upgrades, full for new)
-            $commissionQuery = AffiliateCommission::query();
+            // 4. Commission (only count commissions corresponding to successful/captured payments)
+            $commissionQuery = AffiliateCommission::query()
+                ->whereExists(function ($query) {
+                    $query->select(\Illuminate\Support\Facades\DB::raw(1))
+                        ->from('payments')
+                        ->whereColumn('payments.user_id', 'affiliate_commissions.referred_user_id')
+                        ->whereIn('payments.status', ['success', 'captured'])
+                        ->where(function ($q) {
+                            $q->where(function ($q2) {
+                                $q2->whereColumn('payments.bundle_id', 'affiliate_commissions.reference_id')
+                                   ->where('affiliate_commissions.reference_type', \App\Models\Bundle::class);
+                            })
+                            ->orWhere(function ($q2) {
+                                $q2->whereColumn('payments.course_id', 'affiliate_commissions.reference_id')
+                                   ->where('affiliate_commissions.reference_type', \App\Models\Course::class);
+                            });
+                        });
+                });
+
             if ($startDate) {
                 $commissionQuery->where('created_at', '>=', $startDate);
             }
@@ -223,7 +240,7 @@ class DashboardService
             // Net Profit = Base Price − Commission − Gateway Fee
             $netProfit = $basePrice - $totalCommission - $gatewayFee;
 
-            return (float) round(max(0, $netProfit), 2);
+            return (float) round($netProfit, 2);
 
         } catch (\Exception $e) {
             Log::error('DashboardService@calculateProfit: ' . $e->getMessage(), ['period' => $period]);
