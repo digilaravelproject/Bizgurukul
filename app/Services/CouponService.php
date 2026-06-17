@@ -69,6 +69,21 @@ class CouponService
             }
         }
 
+        // Prevent duplicate generation: Check if an unlinked coupon already exists for this user and package
+        $existingUnlinkedCoupon = Coupon::where('user_id', $payment->user_id)
+            ->where('package_id', $payment->paymentable_id)
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                      ->from('payments')
+                      ->whereColumn('payments.coupon_id', 'coupons.id');
+            })
+            ->first();
+
+        if ($existingUnlinkedCoupon) {
+            $payment->update(['coupon_id' => $existingUnlinkedCoupon->id]);
+            return $existingUnlinkedCoupon;
+        }
+
         $coupon = $this->purchasePackage($payment->user, $payment->paymentable_id, $payment);
 
         // Link coupon back to payment

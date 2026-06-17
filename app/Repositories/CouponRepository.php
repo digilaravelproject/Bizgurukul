@@ -77,7 +77,7 @@ class CouponRepository
      */
     public function findByCode(string $code): ?Coupon
     {
-        return Coupon::where('code', $code)->active()->first();
+        return Coupon::where('code', $code)->first();
     }
     /**
      * Get Coupons by User
