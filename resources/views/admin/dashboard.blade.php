@@ -25,7 +25,7 @@
         </div>
 
         {{-- Key Metrics Grid --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
 
             @can('manage-transactions')
                 {{-- Revenue Card --}}
@@ -125,6 +125,31 @@
                         </div>
                         <p class="text-sm font-medium text-mutedText">Pending Payouts</p>
                         <h3 class="text-2xl font-bold text-mainText mt-1" x-text="formatCurrency(stats.pending_commission)">
+                        </h3>
+                    </div>
+                </div>
+
+                {{-- Hold Earnings --}}
+                <div
+                    class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+                    <div
+                        class="absolute -right-6 -top-6 w-24 h-24 bg-red-50 rounded-full group-hover:bg-red-100 transition-colors">
+                    </div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-2 bg-red-50 rounded-lg text-red-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <span class="text-xs font-bold px-2 py-1 rounded-full bg-red-100 text-red-700">
+                                Hold
+                            </span>
+                        </div>
+                        <p class="text-sm font-medium text-mutedText">Hold Earnings</p>
+                        <h3 class="text-2xl font-bold text-mainText mt-1" x-text="formatCurrency(stats.total_hold_commission)">
                         </h3>
                     </div>
                 </div>
@@ -289,6 +314,63 @@
                         <h3 class="text-2xl font-bold text-mainText mt-1" x-text="formatCurrency(stats.all_time_revenue)">
                         </h3>
                     </div>
+                </div>
+            </div>
+        @endcan
+
+        @can('manage-transactions')
+            {{-- Hold Earnings Details Section --}}
+            <div class="bg-surface p-6 rounded-2xl shadow-sm border border-primary/10 mt-6 mb-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-mainText">Hold Earnings Tracking</h3>
+                        <p class="text-sm text-mutedText">Monitor affiliate earnings currently under holding period.</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs font-bold px-3 py-1.5 rounded-full bg-red-50 text-red-600 border border-red-100">
+                            Total Hold: <span x-text="formatCurrency(stats.total_hold_commission)"></span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-primary/5 text-xs font-bold text-mutedText uppercase tracking-wider">
+                                <th class="pb-3 font-semibold">User</th>
+                                <th class="pb-3 font-semibold">Amount</th>
+                                <th class="pb-3 font-semibold">Created Date</th>
+                                <th class="pb-3 font-semibold">Release Date</th>
+                                <th class="pb-3 font-semibold">Remaining Hold Time</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-primary/5 text-sm">
+                            <template x-for="item in stats.hold_commissions_details" :key="item.id">
+                                <tr class="hover:bg-primary/5 transition-colors">
+                                    <td class="py-3.5">
+                                        <div class="font-bold text-mainText" x-text="item.user_name"></div>
+                                        <div class="text-xs text-mutedText" x-text="item.user_email"></div>
+                                    </td>
+                                    <td class="py-3.5 font-bold text-mainText" x-text="formatCurrency(item.amount)"></td>
+                                    <td class="py-3.5 text-mutedText" x-text="new Date(item.created_at).toLocaleString()"></td>
+                                    <td class="py-3.5 text-mutedText" x-text="new Date(item.available_at).toLocaleString()"></td>
+                                    <td class="py-3.5">
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-bold"
+                                            :class="item.remaining_seconds > 0 ? 'bg-orange-50 text-orange-600 border border-orange-100' : 'bg-green-50 text-green-600 border border-green-100'"
+                                            x-text="formatRemainingTime(item.remaining_seconds)">
+                                        </span>
+                                    </td>
+                                </tr>
+                            </template>
+                            <template x-if="!stats.hold_commissions_details || stats.hold_commissions_details.length === 0">
+                                <tr>
+                                    <td colspan="5" class="py-8 text-center text-mutedText font-medium">
+                                        No earnings currently on hold.
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         @endcan
@@ -464,6 +546,8 @@
                         total_courses: 0,
                         active_courses: 0,
                         pending_commission: 0,
+                        total_hold_commission: 0,
+                        hold_commissions_details: [],
                         today_revenue: 0,
                         seven_days_revenue: 0,
                         thirty_days_revenue: 0,
@@ -517,6 +601,19 @@
                             currency: 'INR',
                             maximumFractionDigits: 0
                         }).format(value || 0);
+                    },
+
+                    formatRemainingTime(seconds) {
+                        if (seconds <= 0) return 'Available Soon';
+                        const days = Math.floor(seconds / (3600*24));
+                        const hours = Math.floor((seconds % (3600*24)) / 3600);
+                        const minutes = Math.floor((seconds % 3600) / 60);
+                        
+                        let parts = [];
+                        if (days > 0) parts.push(`${days}d`);
+                        if (hours > 0) parts.push(`${hours}h`);
+                        if (minutes > 0 || parts.length === 0) parts.push(`${minutes}m`);
+                        return parts.join(' ');
                     },
 
                     renderChart(chartData) {

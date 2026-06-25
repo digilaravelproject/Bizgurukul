@@ -24,6 +24,33 @@ class DashboardService
                 $today = Carbon::today();
                 $successStatuses = ['success', 'captured'];
 
+                // Auto-sync hold commissions whose period has expired
+                AffiliateCommission::where('status', 'on_hold')
+                    ->where('available_at', '<=', now())
+                    ->update(['status' => 'available']);
+
+                // Calculate total hold commission and fetch hold details
+                $totalHoldCommission = (float) AffiliateCommission::where('status', 'on_hold')
+                    ->where('available_at', '>', now())
+                    ->sum('amount');
+
+                $holdCommissionsDetails = AffiliateCommission::with('affiliate')
+                    ->where('status', 'on_hold')
+                    ->where('available_at', '>', now())
+                    ->orderBy('available_at', 'asc')
+                    ->get()
+                    ->map(function ($commission) {
+                        return [
+                            'id' => $commission->id,
+                            'user_name' => $commission->affiliate->name ?? 'Unknown',
+                            'user_email' => $commission->affiliate->email ?? 'Unknown',
+                            'amount' => (float) $commission->amount,
+                            'created_at' => $commission->created_at->toIso8601String(),
+                            'available_at' => $commission->available_at->toIso8601String(),
+                            'remaining_seconds' => max(0, now()->diffInSeconds($commission->available_at, false)),
+                        ];
+                    })->toArray();
+
                 // 1. Revenue & Payment Metrics
                 $paymentStats = $this->getPaymentMetrics($successStatuses, $today);
 
@@ -51,6 +78,8 @@ class DashboardService
                         'recent_registrations' => $recentRegistrations,
                         'recent_transactions'  => $recentTransactions,
                         'bundle_stats'         => $bundleStats,
+                        'total_hold_commission' => $totalHoldCommission,
+                        'hold_commissions_details' => $holdCommissionsDetails,
                     ],
                     // Profit Cards
                     [
@@ -172,6 +201,7 @@ class DashboardService
             'revenue_growth' => 0, 'total_paid_commission' => 0, 'pending_commission' => 0, 'sales_today' => 0,
             'today_profit' => 0, 'seven_days_profit' => 0, 'thirty_days_profit' => 0, 'all_time_profit' => 0,
             'recent_registrations' => [], 'top_courses' => [], 'bundle_stats' => [], 'recent_transactions' => [],
+            'total_hold_commission' => 0, 'hold_commissions_details' => [],
         ];
     }
 
