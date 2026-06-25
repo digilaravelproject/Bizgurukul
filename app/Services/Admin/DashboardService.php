@@ -34,6 +34,9 @@ class DashboardService
                     ->where('available_at', '>', now())
                     ->sum('amount');
 
+                // Calculate total available commission
+                $totalAvailableCommission = (float) AffiliateCommission::where('status', 'available')->sum('amount');
+
                 $holdCommissionsDetails = AffiliateCommission::with('affiliate')
                     ->where('status', 'on_hold')
                     ->where('available_at', '>', now())
@@ -79,6 +82,7 @@ class DashboardService
                         'recent_transactions'  => $recentTransactions,
                         'bundle_stats'         => $bundleStats,
                         'total_hold_commission' => $totalHoldCommission,
+                        'total_available_commission' => $totalAvailableCommission,
                         'hold_commissions_details' => $holdCommissionsDetails,
                     ],
                     // Profit Cards
@@ -201,7 +205,7 @@ class DashboardService
             'revenue_growth' => 0, 'total_paid_commission' => 0, 'pending_commission' => 0, 'sales_today' => 0,
             'today_profit' => 0, 'seven_days_profit' => 0, 'thirty_days_profit' => 0, 'all_time_profit' => 0,
             'recent_registrations' => [], 'top_courses' => [], 'bundle_stats' => [], 'recent_transactions' => [],
-            'total_hold_commission' => 0, 'hold_commissions_details' => [],
+            'total_hold_commission' => 0, 'total_available_commission' => 0, 'hold_commissions_details' => [],
         ];
     }
 

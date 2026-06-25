@@ -341,7 +341,7 @@
                             </span>
                         </div>
                         <p class="text-sm font-medium text-mutedText">Available Payout</p>
-                        <h3 class="text-2xl font-bold text-mainText mt-1">₹0</h3>
+                        <h3 class="text-2xl font-bold text-mainText mt-1" x-text="formatCurrency(stats.total_available_commission)"></h3>
                     </div>
                 </div>
 
@@ -365,7 +365,7 @@
                             </span>
                         </div>
                         <p class="text-sm font-medium text-mutedText">Paid Payout</p>
-                        <h3 class="text-2xl font-bold text-mainText mt-1">₹0</h3>
+                        <h3 class="text-2xl font-bold text-mainText mt-1" x-text="formatCurrency(stats.total_paid_commission)"></h3>
                     </div>
                 </div>
             </div>
@@ -543,6 +543,7 @@
                         active_courses: 0,
                         pending_commission: 0,
                         total_hold_commission: 0,
+                        total_available_commission: 0,
                         hold_commissions_details: [],
                         today_revenue: 0,
                         seven_days_revenue: 0,
