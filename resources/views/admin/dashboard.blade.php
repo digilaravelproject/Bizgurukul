@@ -297,8 +297,8 @@
             {{-- Payout Metrics Grid --}}
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 mb-6">
                 {{-- Hold Earnings --}}
-                <div
-                    class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+                <div @click="openPayoutModal('hold')"
+                    class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300 cursor-pointer">
                     <div
                         class="absolute -right-6 -top-6 w-24 h-24 bg-red-50 rounded-full group-hover:bg-red-100 transition-colors">
                     </div>
@@ -322,8 +322,8 @@
                 </div>
 
                 {{-- Available Payout --}}
-                <div
-                    class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+                <div @click="openPayoutModal('available')"
+                    class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300 cursor-pointer">
                     <div
                         class="absolute -right-6 -top-6 w-24 h-24 bg-green-50 rounded-full group-hover:bg-green-100 transition-colors">
                     </div>
@@ -346,8 +346,8 @@
                 </div>
 
                 {{-- Paid Payout --}}
-                <div
-                    class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+                <div @click="openPayoutModal('paid')"
+                    class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300 cursor-pointer">
                     <div
                         class="absolute -right-6 -top-6 w-24 h-24 bg-blue-50 rounded-full group-hover:bg-blue-100 transition-colors">
                     </div>
@@ -523,6 +523,169 @@
             </div>
         </div>
 
+        {{-- Payout Details Modal --}}
+        <div x-show="showPayoutModal" 
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             style="display: none;">
+            
+            <div class="bg-surface rounded-2xl w-full max-w-4xl shadow-xl border border-primary/10 overflow-hidden flex flex-col max-h-[85vh]"
+                 @click.away="showPayoutModal = false">
+                
+                {{-- Modal Header --}}
+                <div class="p-6 border-b border-primary/5 flex justify-between items-center bg-navy/20">
+                    <div>
+                        <h3 class="text-lg font-bold text-mainText" x-text="modalTitle"></h3>
+                        <p class="text-xs text-mutedText mt-1">Detailed list of commissions for this category.</p>
+                    </div>
+                    <button @click="showPayoutModal = false" class="text-mutedText hover:text-mainText p-2 rounded-lg hover:bg-primary/5 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Modal Body --}}
+                <div class="p-6 overflow-y-auto flex-1">
+                    
+                    {{-- 1. Hold Table --}}
+                    <div x-show="modalType === 'hold'">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-primary/5 text-xs font-bold text-mutedText uppercase tracking-wider">
+                                        <th class="pb-3 font-semibold">User</th>
+                                        <th class="pb-3 font-semibold">Amount</th>
+                                        <th class="pb-3 font-semibold">Created Date</th>
+                                        <th class="pb-3 font-semibold">Release Date</th>
+                                        <th class="pb-3 font-semibold">Remaining Hold Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-primary/5 text-sm">
+                                    <template x-for="item in stats.hold_commissions_details" :key="item.id">
+                                        <tr class="hover:bg-primary/5 transition-colors">
+                                            <td class="py-3.5">
+                                                <div class="font-bold text-mainText" x-text="item.user_name"></div>
+                                                <div class="text-xs text-mutedText" x-text="item.user_email"></div>
+                                            </td>
+                                            <td class="py-3.5 font-bold text-mainText" x-text="formatCurrency(item.amount)"></td>
+                                            <td class="py-3.5 text-mutedText" x-text="new Date(item.created_at).toLocaleString()"></td>
+                                            <td class="py-3.5 text-mutedText" x-text="new Date(item.available_at).toLocaleString()"></td>
+                                            <td class="py-3.5">
+                                                <span class="px-2.5 py-1 rounded-full text-xs font-bold"
+                                                    :class="item.remaining_seconds > 0 ? 'bg-orange-50 text-orange-600 border border-orange-100' : 'bg-green-50 text-green-600 border border-green-100'"
+                                                    x-text="formatRemainingTime(item.remaining_seconds)">
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <template x-if="!stats.hold_commissions_details || stats.hold_commissions_details.length === 0">
+                                        <tr>
+                                            <td colspan="5" class="py-8 text-center text-mutedText font-medium">
+                                                No hold earnings found.
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {{-- 2. Available Table --}}
+                    <div x-show="modalType === 'available'">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-primary/5 text-xs font-bold text-mutedText uppercase tracking-wider">
+                                        <th class="pb-3 font-semibold">User</th>
+                                        <th class="pb-3 font-semibold">Amount</th>
+                                        <th class="pb-3 font-semibold">Created Date</th>
+                                        <th class="pb-3 font-semibold">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-primary/5 text-sm">
+                                    <template x-for="item in stats.available_commissions_details" :key="item.id">
+                                        <tr class="hover:bg-primary/5 transition-colors">
+                                            <td class="py-3.5">
+                                                <div class="font-bold text-mainText" x-text="item.user_name"></div>
+                                                <div class="text-xs text-mutedText" x-text="item.user_email"></div>
+                                            </td>
+                                            <td class="py-3.5 font-bold text-mainText" x-text="formatCurrency(item.amount)"></td>
+                                            <td class="py-3.5 text-mutedText" x-text="new Date(item.created_at).toLocaleString()"></td>
+                                            <td class="py-3.5">
+                                                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 text-green-600 border border-green-100">
+                                                    Available for Payout
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <template x-if="!stats.available_commissions_details || stats.available_commissions_details.length === 0">
+                                        <tr>
+                                            <td colspan="4" class="py-8 text-center text-mutedText font-medium">
+                                                No available earnings found.
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {{-- 3. Paid Table --}}
+                    <div x-show="modalType === 'paid'">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-primary/5 text-xs font-bold text-mutedText uppercase tracking-wider">
+                                        <th class="pb-3 font-semibold">User</th>
+                                        <th class="pb-3 font-semibold">Amount</th>
+                                        <th class="pb-3 font-semibold">Paid Date</th>
+                                        <th class="pb-3 font-semibold">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-primary/5 text-sm">
+                                    <template x-for="item in stats.paid_commissions_details" :key="item.id">
+                                        <tr class="hover:bg-primary/5 transition-colors">
+                                            <td class="py-3.5">
+                                                <div class="font-bold text-mainText" x-text="item.user_name"></div>
+                                                <div class="text-xs text-mutedText" x-text="item.user_email"></div>
+                                            </td>
+                                            <td class="py-3.5 font-bold text-mainText" x-text="formatCurrency(item.amount)"></td>
+                                            <td class="py-3.5 text-mutedText" x-text="item.processed_at ? new Date(item.processed_at).toLocaleString() : 'N/A'"></td>
+                                            <td class="py-3.5">
+                                                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100">
+                                                    Paid Successfully
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <template x-if="!stats.paid_commissions_details || stats.paid_commissions_details.length === 0">
+                                        <tr>
+                                            <td colspan="4" class="py-8 text-center text-mutedText font-medium">
+                                                No paid earnings found.
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+                {{-- Modal Footer --}}
+                <div class="p-6 border-t border-primary/5 flex justify-end bg-navy/20">
+                    <button @click="showPayoutModal = false" class="px-4 py-2 bg-primary text-white font-bold rounded-xl hover:bg-secondary transition-all text-sm shadow-lg shadow-primary/20">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
 
     </div>
 
@@ -534,6 +697,9 @@
                     loading: false,
                     period: 'month',
                     lastUpdated: new Date().toLocaleTimeString(),
+                    showPayoutModal: false,
+                    modalTitle: '',
+                    modalType: '',
                     stats: {
                         total_revenue: 0,
                         revenue_growth: 0,
@@ -545,6 +711,8 @@
                         total_hold_commission: 0,
                         total_available_commission: 0,
                         hold_commissions_details: [],
+                        available_commissions_details: [],
+                        paid_commissions_details: [],
                         today_revenue: 0,
                         seven_days_revenue: 0,
                         thirty_days_revenue: 0,
@@ -589,6 +757,18 @@
                             console.error('Dashboard fetch error:', error);
                         } finally {
                             this.loading = false;
+                        }
+                    },
+
+                    openPayoutModal(type) {
+                        this.modalType = type;
+                        this.showPayoutModal = true;
+                        if (type === 'hold') {
+                            this.modalTitle = 'Hold Earnings Details';
+                        } else if (type === 'available') {
+                            this.modalTitle = 'Available Payout Details';
+                        } else if (type === 'paid') {
+                            this.modalTitle = 'Paid Payout Details';
                         }
                     },
 

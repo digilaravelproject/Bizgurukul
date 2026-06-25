@@ -54,6 +54,35 @@ class DashboardService
                         ];
                     })->toArray();
 
+                $availableCommissionsDetails = AffiliateCommission::with('affiliate')
+                    ->where('status', 'available')
+                    ->orderBy('created_at', 'desc')
+                    ->get()
+                    ->map(function ($commission) {
+                        return [
+                            'id' => $commission->id,
+                            'user_name' => $commission->affiliate->name ?? 'Unknown',
+                            'user_email' => $commission->affiliate->email ?? 'Unknown',
+                            'amount' => (float) $commission->amount,
+                            'created_at' => $commission->created_at->toIso8601String(),
+                        ];
+                    })->toArray();
+
+                $paidCommissionsDetails = AffiliateCommission::with('affiliate')
+                    ->where('status', 'paid')
+                    ->orderBy('processed_at', 'desc')
+                    ->take(100)
+                    ->get()
+                    ->map(function ($commission) {
+                        return [
+                            'id' => $commission->id,
+                            'user_name' => $commission->affiliate->name ?? 'Unknown',
+                            'user_email' => $commission->affiliate->email ?? 'Unknown',
+                            'amount' => (float) $commission->amount,
+                            'processed_at' => $commission->processed_at ? $commission->processed_at->toIso8601String() : null,
+                        ];
+                    })->toArray();
+
                 // 1. Revenue & Payment Metrics
                 $paymentStats = $this->getPaymentMetrics($successStatuses, $today);
 
@@ -84,6 +113,8 @@ class DashboardService
                         'total_hold_commission' => $totalHoldCommission,
                         'total_available_commission' => $totalAvailableCommission,
                         'hold_commissions_details' => $holdCommissionsDetails,
+                        'available_commissions_details' => $availableCommissionsDetails,
+                        'paid_commissions_details' => $paidCommissionsDetails,
                     ],
                     // Profit Cards
                     [
@@ -206,6 +237,8 @@ class DashboardService
             'today_profit' => 0, 'seven_days_profit' => 0, 'thirty_days_profit' => 0, 'all_time_profit' => 0,
             'recent_registrations' => [], 'top_courses' => [], 'bundle_stats' => [], 'recent_transactions' => [],
             'total_hold_commission' => 0, 'total_available_commission' => 0, 'hold_commissions_details' => [],
+            'available_commissions_details' => [],
+            'paid_commissions_details' => [],
         ];
     }
 
