@@ -128,79 +128,6 @@
                         </h3>
                     </div>
                 </div>
-
-                {{-- Hold Earnings --}}
-                <div
-                    class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300">
-                    <div
-                        class="absolute -right-6 -top-6 w-24 h-24 bg-red-50 rounded-full group-hover:bg-red-100 transition-colors">
-                    </div>
-                    <div class="relative z-10">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="p-2 bg-red-50 rounded-lg text-red-600">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
-                                    </path>
-                                </svg>
-                            </div>
-                            <span class="text-xs font-bold px-2 py-1 rounded-full bg-red-100 text-red-700">
-                                Hold
-                            </span>
-                        </div>
-                        <p class="text-sm font-medium text-mutedText">Hold Earnings</p>
-                        <h3 class="text-2xl font-bold text-mainText mt-1" x-text="formatCurrency(stats.total_hold_commission)">
-                        </h3>
-                    </div>
-                </div>
-
-                {{-- Available Payout --}}
-                <div
-                    class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300">
-                    <div
-                        class="absolute -right-6 -top-6 w-24 h-24 bg-green-50 rounded-full group-hover:bg-green-100 transition-colors">
-                    </div>
-                    <div class="relative z-10">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="p-2 bg-green-50 rounded-lg text-green-600">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z">
-                                    </path>
-                                </svg>
-                            </div>
-                            <span class="text-xs font-bold px-2 py-1 rounded-full bg-green-100 text-green-700">
-                                Available
-                            </span>
-                        </div>
-                        <p class="text-sm font-medium text-mutedText">Available Payout</p>
-                        <h3 class="text-2xl font-bold text-mainText mt-1">₹0</h3>
-                    </div>
-                </div>
-
-                {{-- Paid Payout --}}
-                <div
-                    class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300">
-                    <div
-                        class="absolute -right-6 -top-6 w-24 h-24 bg-blue-50 rounded-full group-hover:bg-blue-100 transition-colors">
-                    </div>
-                    <div class="relative z-10">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="p-2 bg-blue-50 rounded-lg text-blue-600">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
-                                    </path>
-                                </svg>
-                            </div>
-                            <span class="text-xs font-bold px-2 py-1 rounded-full bg-blue-100 text-blue-700">
-                                Paid
-                            </span>
-                        </div>
-                        <p class="text-sm font-medium text-mutedText">Paid Payout</p>
-                        <h3 class="text-2xl font-bold text-mainText mt-1">₹0</h3>
-                    </div>
-                </div>
             @endcan
         </div>
 
@@ -361,6 +288,84 @@
                         <p class="text-sm font-medium text-mutedText">All Time Revenue</p>
                         <h3 class="text-2xl font-bold text-mainText mt-1" x-text="formatCurrency(stats.all_time_revenue)">
                         </h3>
+                    </div>
+                </div>
+            </div>
+        @endcan
+
+        @can('manage-transactions')
+            {{-- Payout Metrics Grid --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 mb-6">
+                {{-- Hold Earnings --}}
+                <div
+                    class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+                    <div
+                        class="absolute -right-6 -top-6 w-24 h-24 bg-red-50 rounded-full group-hover:bg-red-100 transition-colors">
+                    </div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-2 bg-red-50 rounded-lg text-red-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <span class="text-xs font-bold px-2 py-1 rounded-full bg-red-100 text-red-700">
+                                Hold
+                            </span>
+                        </div>
+                        <p class="text-sm font-medium text-mutedText">Hold Earnings</p>
+                        <h3 class="text-2xl font-bold text-mainText mt-1" x-text="formatCurrency(stats.total_hold_commission)">
+                        </h3>
+                    </div>
+                </div>
+
+                {{-- Available Payout --}}
+                <div
+                    class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+                    <div
+                        class="absolute -right-6 -top-6 w-24 h-24 bg-green-50 rounded-full group-hover:bg-green-100 transition-colors">
+                    </div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-2 bg-green-50 rounded-lg text-green-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <span class="text-xs font-bold px-2 py-1 rounded-full bg-green-100 text-green-700">
+                                Available
+                            </span>
+                        </div>
+                        <p class="text-sm font-medium text-mutedText">Available Payout</p>
+                        <h3 class="text-2xl font-bold text-mainText mt-1">₹0</h3>
+                    </div>
+                </div>
+
+                {{-- Paid Payout --}}
+                <div
+                    class="bg-surface rounded-2xl p-6 shadow-sm border border-primary/5 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+                    <div
+                        class="absolute -right-6 -top-6 w-24 h-24 bg-blue-50 rounded-full group-hover:bg-blue-100 transition-colors">
+                    </div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-2 bg-blue-50 rounded-lg text-blue-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+                                    </path>
+                                </svg>
+                            </div>
+                            <span class="text-xs font-bold px-2 py-1 rounded-full bg-blue-100 text-blue-700">
+                                Paid
+                            </span>
+                        </div>
+                        <p class="text-sm font-medium text-mutedText">Paid Payout</p>
+                        <h3 class="text-2xl font-bold text-mainText mt-1">₹0</h3>
                     </div>
                 </div>
             </div>
