@@ -6,7 +6,7 @@
         {{-- 1. Logo Section (Fixed at Top) --}}
         <div class="p-6 flex justify-between items-center h-20 border-b border-navy flex-shrink-0">
             <div class="flex items-center space-x-3">
-                <a href="{{ route('admin.dashboard') }}" class="w-auto h-9 flex items-center justify-center group/logo">
+                <a href="{{ url('/') }}" class="w-auto h-9 flex items-center justify-center group/logo">
                     <img src="{{ Storage::url('site_images/logo1.png') }}" alt="Logo"
                         class="h-full w-auto object-contain group-hover/logo:scale-105 transition-transform" loading="lazy">
                 </a>

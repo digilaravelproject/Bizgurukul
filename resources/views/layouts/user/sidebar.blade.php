@@ -5,7 +5,7 @@
         {{-- Sidebar Logo (Fixed) --}}
         <div class="p-6 flex justify-between items-center h-20 border-b border-navy shrink-0">
             <div class="flex items-center space-x-3">
-                <a href="{{ route('student.dashboard') }}"
+                <a href="{{ url('/') }}"
                     class="w-auto h-9 flex items-center justify-center group/logo">
                     @if (Storage::exists('site_images/logo1.png'))
                         <img src="{{ Storage::url('site_images/logo1.png') }}" alt="Logo"

@@ -21,7 +21,7 @@
     </div>
 
     <div class="md:hidden flex-[2] flex justify-center items-center">
-        <a href="{{ route('student.dashboard') }}" class="h-12 w-auto py-1">
+        <a href="{{ url('/') }}" class="h-12 w-auto py-1">
             @if (Storage::exists('site_images/logo1.png'))
                 <img src="{{ Storage::url('site_images/logo1.png') }}" alt="Logo"
                     class="h-full w-auto object-contain" loading="lazy">

@@ -58,7 +58,7 @@
 
                     {{-- Mobile Logo --}}
                     <div class="md:hidden flex items-center">
-                        <a href="{{ route('admin.dashboard') }}" class="h-10 w-auto">
+                        <a href="{{ url('/') }}" class="h-10 w-auto">
                             <img src="{{ Storage::url('site_images/logo1.png') }}" alt="Logo"
                                 class="h-full w-auto object-contain">
                         </a>
