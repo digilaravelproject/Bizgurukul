@@ -113,10 +113,13 @@
             <div class="p-6 flex-1 space-y-6">
                 @forelse($progressTracker as $user)
                     @php
-                        $earned = $user->commissions_sum_amount ?: 0;
-                        $target = $user->next_milestone_target;
-                        $remaining = $target - $earned;
-                        $percent = $target > 0 ? min(100, ($earned / $target) * 100) : 0;
+                        $achievementInfo = $user->achievement_info ?? [];
+                        $earned = $achievementInfo['total_earned'] ?? 0;
+                        $nextAchievement = $achievementInfo['next_achievement'] ?? null;
+                        $target = $nextAchievement ? $nextAchievement->target_amount : ($user->next_milestone_target ?? 0);
+                        $remaining = $achievementInfo['remaining_to_next'] ?? max(0, $target - $earned);
+                        $percent = $achievementInfo['percentage'] ?? ($target > 0 ? min(100, ($earned / $target) * 100) : 0);
+                        $nextTitle = $nextAchievement ? $nextAchievement->short_title : ($user->next_milestone_title ?? 'N/A');
                     @endphp
                     <div class="space-y-2 group">
                         <div class="flex justify-between items-end">
@@ -126,7 +129,7 @@
                                 </div>
                                 <div>
                                     <p class="font-bold text-slate-800 text-sm">{{ $user->name }}</p>
-                                    <p class="text-[9px] text-indigo-500 font-black uppercase tracking-widest">Next Achievement: {{ $user->next_milestone_title }}</p>
+                                    <p class="text-[9px] text-indigo-500 font-black uppercase tracking-widest">Next Achievement: {{ $nextTitle }}</p>
                                 </div>
                             </div>
                             <div class="text-right">

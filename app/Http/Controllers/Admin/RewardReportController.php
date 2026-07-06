@@ -16,7 +16,7 @@ class RewardReportController extends Controller
     /**
      * Display a comprehensive reward tracking and leaderboard dashboard.
      */
-    public function index()
+    public function index(\App\Services\AchievementService $achievementService)
     {
         try {
             $now = now();
@@ -55,6 +55,11 @@ class RewardReportController extends Controller
                 ->having('next_milestone_target', '>', 0)
                 ->orderByRaw('next_milestone_target - commissions_sum_amount ASC')
                 ->paginate(10, ['*'], 'progress_page');
+
+            $progressTracker->getCollection()->transform(function ($user) use ($achievementService) {
+                $user->achievement_info = $achievementService->getDashboardData($user);
+                return $user;
+            });
 
             // 3. Top Performers (Leaderboard)
             $leaderboard = User::role('student')
