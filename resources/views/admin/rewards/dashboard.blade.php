@@ -97,7 +97,7 @@
             </div>
             @if($achievers->hasPages())
             <div class="p-4 bg-slate-50 border-t border-slate-100">
-                {{ $achievers->appends(['achievers_page' => $achievers->currentPage()])->links() }}
+                {{ $achievers->appends(request()->except('achievers_page'))->links() }}
             </div>
             @endif
         </div>
@@ -147,7 +147,7 @@
             </div>
             @if($progressTracker->hasPages())
             <div class="p-4 bg-slate-50 border-t border-slate-100">
-                {{ $progressTracker->appends(['progress_page' => $progressTracker->currentPage()])->links() }}
+                {{ $progressTracker->appends(request()->except('progress_page'))->links() }}
             </div>
             @endif
         </div>
@@ -236,7 +236,7 @@
             </div>
             @if($timeline->hasPages())
             <div class="p-4 bg-slate-50 border-t border-slate-100">
-                {{ $timeline->appends(['timeline_page' => $timeline->currentPage()])->links() }}
+                {{ $timeline->appends(request()->except('timeline_page'))->links() }}
             </div>
             @endif
         </div>

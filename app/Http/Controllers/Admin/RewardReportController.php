@@ -49,6 +49,21 @@ class RewardReportController extends Controller
                           AND (achievements.end_date IS NULL OR affiliate_commissions.created_at <= achievements.end_date)
                     )')
                     ->active()
+                    ->where(function ($q) use ($now) {
+                        $q->whereNull('start_date')
+                          ->orWhere('start_date', '<=', $now);
+                    })
+                    ->where(function ($q) use ($now) {
+                        $q->whereNull('end_date')
+                          ->orWhere('end_date', '>=', $now);
+                    })
+                    ->whereNotExists(function ($q) {
+                        $q->select(DB::raw(1))
+                          ->from('user_achievements')
+                          ->whereColumn('user_achievements.achievement_id', 'achievements.id')
+                          ->whereRaw('user_achievements.user_id = users.id')
+                          ->whereIn('user_achievements.status', ['unlocked', 'claimed']);
+                    })
                     ->orderBy('target_amount', 'asc')
                     ->limit(1)
                 ])
@@ -61,6 +76,21 @@ class RewardReportController extends Controller
                           AND (achievements.end_date IS NULL OR affiliate_commissions.created_at <= achievements.end_date)
                     )')
                     ->active()
+                    ->where(function ($q) use ($now) {
+                        $q->whereNull('start_date')
+                          ->orWhere('start_date', '<=', $now);
+                    })
+                    ->where(function ($q) use ($now) {
+                        $q->whereNull('end_date')
+                          ->orWhere('end_date', '>=', $now);
+                    })
+                    ->whereNotExists(function ($q) {
+                        $q->select(DB::raw(1))
+                          ->from('user_achievements')
+                          ->whereColumn('user_achievements.achievement_id', 'achievements.id')
+                          ->whereRaw('user_achievements.user_id = users.id')
+                          ->whereIn('user_achievements.status', ['unlocked', 'claimed']);
+                    })
                     ->orderBy('target_amount', 'asc')
                     ->limit(1)
                 ])
