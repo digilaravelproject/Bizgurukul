@@ -41,13 +41,25 @@ class RewardReportController extends Controller
             $progressTracker = User::role('student')
                 ->withSum('commissions', 'amount')
                 ->addSelect(['next_milestone_target' => Achievement::select('target_amount')
-                    ->whereRaw('target_amount > (SELECT COALESCE(SUM(amount), 0) FROM affiliate_commissions WHERE affiliate_id = users.id)')
+                    ->whereRaw('target_amount > (
+                        SELECT COALESCE(SUM(amount), 0) 
+                        FROM affiliate_commissions 
+                        WHERE affiliate_id = users.id
+                          AND (achievements.start_date IS NULL OR affiliate_commissions.created_at >= achievements.start_date)
+                          AND (achievements.end_date IS NULL OR affiliate_commissions.created_at <= achievements.end_date)
+                    )')
                     ->active()
                     ->orderBy('target_amount', 'asc')
                     ->limit(1)
                 ])
                 ->addSelect(['next_milestone_title' => Achievement::select('short_title')
-                    ->whereRaw('target_amount > (SELECT COALESCE(SUM(amount), 0) FROM affiliate_commissions WHERE affiliate_id = users.id)')
+                    ->whereRaw('target_amount > (
+                        SELECT COALESCE(SUM(amount), 0) 
+                        FROM affiliate_commissions 
+                        WHERE affiliate_id = users.id
+                          AND (achievements.start_date IS NULL OR affiliate_commissions.created_at >= achievements.start_date)
+                          AND (achievements.end_date IS NULL OR affiliate_commissions.created_at <= achievements.end_date)
+                    )')
                     ->active()
                     ->orderBy('target_amount', 'asc')
                     ->limit(1)
