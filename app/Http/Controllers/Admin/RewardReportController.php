@@ -38,70 +38,36 @@ class RewardReportController extends Controller
                 ->paginate(10, ['*'], 'achievers_page');
 
             // 2. Progress Tracker (Users nearing their next milestones)
-            $progressTracker = User::role('student')
+            $allStudents = User::role('student')
                 ->withSum('commissions', 'amount')
-                ->addSelect(['next_milestone_target' => Achievement::select('target_amount')
-                    ->whereRaw('target_amount > (
-                        SELECT COALESCE(SUM(amount), 0) 
-                        FROM affiliate_commissions 
-                        WHERE affiliate_id = users.id
-                          AND (achievements.start_date IS NULL OR affiliate_commissions.created_at >= achievements.start_date)
-                          AND (achievements.end_date IS NULL OR affiliate_commissions.created_at <= achievements.end_date)
-                    )')
-                    ->active()
-                    ->where(function ($q) use ($now) {
-                        $q->whereNull('start_date')
-                          ->orWhere('start_date', '<=', $now);
-                    })
-                    ->where(function ($q) use ($now) {
-                        $q->whereNull('end_date')
-                          ->orWhere('end_date', '>=', $now);
-                    })
-                    ->whereNotExists(function ($q) {
-                        $q->select(DB::raw(1))
-                          ->from('user_achievements')
-                          ->whereColumn('user_achievements.achievement_id', 'achievements.id')
-                          ->whereRaw('user_achievements.user_id = users.id')
-                          ->whereIn('user_achievements.status', ['unlocked', 'claimed']);
-                    })
-                    ->orderBy('target_amount', 'asc')
-                    ->limit(1)
-                ])
-                ->addSelect(['next_milestone_title' => Achievement::select('short_title')
-                    ->whereRaw('target_amount > (
-                        SELECT COALESCE(SUM(amount), 0) 
-                        FROM affiliate_commissions 
-                        WHERE affiliate_id = users.id
-                          AND (achievements.start_date IS NULL OR affiliate_commissions.created_at >= achievements.start_date)
-                          AND (achievements.end_date IS NULL OR affiliate_commissions.created_at <= achievements.end_date)
-                    )')
-                    ->active()
-                    ->where(function ($q) use ($now) {
-                        $q->whereNull('start_date')
-                          ->orWhere('start_date', '<=', $now);
-                    })
-                    ->where(function ($q) use ($now) {
-                        $q->whereNull('end_date')
-                          ->orWhere('end_date', '>=', $now);
-                    })
-                    ->whereNotExists(function ($q) {
-                        $q->select(DB::raw(1))
-                          ->from('user_achievements')
-                          ->whereColumn('user_achievements.achievement_id', 'achievements.id')
-                          ->whereRaw('user_achievements.user_id = users.id')
-                          ->whereIn('user_achievements.status', ['unlocked', 'claimed']);
-                    })
-                    ->orderBy('target_amount', 'asc')
-                    ->limit(1)
-                ])
-                ->having('next_milestone_target', '>', 0)
-                ->orderByRaw('next_milestone_target - commissions_sum_amount ASC')
-                ->paginate(10, ['*'], 'progress_page');
+                ->get()
+                ->map(function ($user) use ($achievementService) {
+                    $user->achievement_info = $achievementService->getDashboardData($user);
+                    return $user;
+                })
+                ->filter(function ($user) {
+                    return !is_null($user->achievement_info['next_achievement']);
+                })
+                ->sortBy(function ($user) {
+                    return $user->achievement_info['remaining_to_next'];
+                });
 
-            $progressTracker->getCollection()->transform(function ($user) use ($achievementService) {
-                $user->achievement_info = $achievementService->getDashboardData($user);
-                return $user;
-            });
+            // Paginate the collection manually in PHP
+            $currentPage = request()->get('progress_page', 1);
+            $perPage = 10;
+            $currentItems = $allStudents->slice(($currentPage - 1) * $perPage, $perPage)->values();
+            
+            $progressTracker = new \Illuminate\Pagination\LengthAwarePaginator(
+                $currentItems,
+                $allStudents->count(),
+                $perPage,
+                $currentPage,
+                [
+                    'path' => request()->url(),
+                    'query' => request()->query(),
+                    'pageName' => 'progress_page',
+                ]
+            );
 
             // 3. Top Performers (Leaderboard)
             $leaderboard = User::role('student')
