@@ -49,18 +49,18 @@
         </div>
  
         {{-- Table Container with Responsive Scroll --}}
-        <div class="overflow-auto min-h-[400px] max-h-[calc(100vh-300px)] custom-scrollbar w-full translate-z-0">
-            <table class="w-full text-left border-collapse min-w-[1000px]">
-                <thead class="sticky top-0 z-10 bg-navy/95 backdrop-blur-md text-[10px] uppercase text-primary font-black tracking-[0.2em] shadow-sm">
+        <div class="overflow-x-auto min-h-[400px] max-h-[calc(100vh-280px)] custom-scrollbar w-full translate-z-0">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead class="sticky top-0 z-10 bg-navy/95 backdrop-blur-md text-[10px] uppercase text-primary font-black tracking-wider shadow-sm">
                     <tr>
-                        <th class="px-6 py-5 border-b border-primary/5 whitespace-nowrap">Date & Time</th>
-                        <th class="px-6 py-5 border-b border-primary/5 whitespace-nowrap">Invoice & ID</th>
-                        <th class="px-6 py-5 border-b border-primary/5 whitespace-nowrap">User</th>
-                        <th class="px-6 py-5 border-b border-primary/5 whitespace-nowrap">Sponsor</th>
-                        <th class="px-6 py-5 border-b border-primary/5 whitespace-nowrap">Product</th>
-                        <th class="px-6 py-5 border-b border-primary/5 text-right whitespace-nowrap">Amount</th>
-                        <th class="px-6 py-5 border-b border-primary/5 text-center whitespace-nowrap">Status</th>
-                        <th class="px-6 py-5 border-b border-primary/5 text-center whitespace-nowrap">Action</th>
+                        <th class="px-3.5 py-3.5 border-b border-primary/5 whitespace-nowrap">Date & Time</th>
+                        <th class="px-3.5 py-3.5 border-b border-primary/5 whitespace-nowrap">Invoice & ID</th>
+                        <th class="px-3.5 py-3.5 border-b border-primary/5 whitespace-nowrap">User</th>
+                        <th class="px-3.5 py-3.5 border-b border-primary/5 whitespace-nowrap">Sponsor</th>
+                        <th class="px-3.5 py-3.5 border-b border-primary/5 whitespace-nowrap">Product</th>
+                        <th class="px-3.5 py-3.5 border-b border-primary/5 text-right whitespace-nowrap">Amount</th>
+                        <th class="px-3.5 py-3.5 border-b border-primary/5 text-center whitespace-nowrap">Status</th>
+                        <th class="px-3.5 py-3.5 border-b border-primary/5 text-center whitespace-nowrap">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-primary/5" id="ordersTable">
