@@ -41,7 +41,12 @@ class BackfillInvoiceSequence extends Command
 
         $currentMax = Payment::whereIn('status', ['success', 'captured'])
             ->whereNotNull('invoice_sequence')
-            ->max('invoice_sequence') ?? 0;
+            ->max('invoice_sequence');
+
+        if (is_null($currentMax)) {
+            // Start offset at 114 so first successful payment gets sequence 115
+            $currentMax = 114;
+        }
 
         $count = 0;
         DB::transaction(function () use ($successfulPayments, &$currentMax, &$count) {
