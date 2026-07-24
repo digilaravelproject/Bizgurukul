@@ -43,14 +43,14 @@
         </div>
 
         <div class="overflow-x-auto hide-scrollbar">
-            <table class="w-full text-left min-w-[800px] md:min-w-full">
+            <table class="w-full text-left border-collapse text-xs">
                 <thead>
-                    <tr class="bg-primary/5 text-[10px] font-black text-mutedText uppercase tracking-[0.2em] border-b border-primary/10">
-                        <th class="px-6 py-5">Lead Profile</th>
-                        <th class="px-6 py-5">Contact Details</th>
-                        <th class="px-6 py-5">Sponsor</th>
-                        <th class="px-6 py-5">Product Preference</th>
-                        <th class="px-6 py-5 text-right">Status</th>
+                    <tr class="bg-primary/5 text-[10px] font-black text-mutedText uppercase tracking-wider border-b border-primary/10">
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Lead Profile</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Contact Details</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Sponsor</th>
+                        <th class="px-3.5 py-3.5 whitespace-nowrap">Product Preference</th>
+                        <th class="px-3.5 py-3.5 text-right whitespace-nowrap">Status</th>
                     </tr>
                 </thead>
                 <tbody id="leads-tbody" class="divide-y divide-primary/5">
