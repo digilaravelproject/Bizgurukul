@@ -52,7 +52,9 @@ class LeadController extends Controller
             return response()->json([
                 'table' => view('admin.leads.partials.leads_table', compact('leads'))->render(),
                 'pagination' => view('components.admin.table.pagination', ['records' => $leads])->render()
-            ]);
+            ])->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
+              ->header('Pragma', 'no-cache')
+              ->header('Expires', '0');
         }
 
         return view('admin.leads.index', compact('leads'));

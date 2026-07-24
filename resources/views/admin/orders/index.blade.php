@@ -144,7 +144,10 @@
                     if (data.status) {
                         document.getElementById('ordersTable').innerHTML = data.table;
                         document.getElementById('paginationLinks').innerHTML = data.pagination;
-                        window.history.pushState({}, '', "?" + params.toString());
+                        
+                        const pushParams = new URLSearchParams(params);
+                        pushParams.delete('_t');
+                        window.history.pushState({}, '', "?" + pushParams.toString());
                     }
                 } catch (error) {
                     console.error('Fetch error:', error);
