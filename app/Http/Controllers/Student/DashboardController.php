@@ -116,6 +116,13 @@ class DashboardController extends Controller
                 $milestoneProgress[$milestone->id] = $user->getEarningsInRange($milestone->start_date, $milestone->end_date);
             }
 
+            // Fetch active time-sensitive offers & compute student progress
+            $activeOffers = \App\Models\Offer::activePhase()->get();
+            $offerProgress = [];
+            foreach ($activeOffers as $offer) {
+                $offerProgress[$offer->id] = $user->getEarningsInRange($offer->start_date, $offer->end_date);
+            }
+
             return view('student.rewards', [
                 'user'              => $user,
                 'achievementData'   => $achievementData,
@@ -123,6 +130,8 @@ class DashboardController extends Controller
                 'userMilestones'    => $userAchievements,
                 'milestoneProgress' => $milestoneProgress,
                 'earningsStats'     => $this->affiliateService->getEarningsStats($user),
+                'activeOffers'      => $activeOffers,
+                'offerProgress'     => $offerProgress,
             ]);
 
         } catch (Exception $e) {

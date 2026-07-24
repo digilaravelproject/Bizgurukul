@@ -36,7 +36,72 @@
             <span class="text-[9px] md:text-[10px] font-black text-mutedText uppercase tracking-widest block">Total Earnings</span>
             <span class="text-lg md:text-xl font-black text-primary">₹@indianCurrency($earningsStats['all_time'])</span>
         </div>
-    </div>
+    {{-- ACTIVE SPECIAL OFFERS & CHALLENGES --}}
+    @if(isset($activeOffers) && $activeOffers->count() > 0)
+        <div class="space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <h2 class="text-base md:text-lg font-black text-mainText uppercase tracking-tight">Active Special Offers & Challenges</h2>
+                </div>
+                <span class="text-xs font-bold text-mutedText uppercase tracking-wider">{{ $activeOffers->count() }} Active</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                @foreach($activeOffers as $offer)
+                    @php
+                        $earned = $offerProgress[$offer->id] ?? 0;
+                        $target = $offer->target_amount > 0 ? $offer->target_amount : 1;
+                        $pct = $offer->target_amount > 0 ? min(100, max(0, ($earned / $target) * 100)) : 100;
+                    @endphp
+                    <div class="bg-surface rounded-3xl p-6 border border-primary/15 shadow-lg relative overflow-hidden flex flex-col justify-between space-y-4 group hover:border-primary/40 transition-all">
+                        {{-- Top Badge & Expiry --}}
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex items-center gap-3">
+                                @if($offer->image)
+                                    <img src="{{ $offer->image_url }}" alt="{{ $offer->title }}" class="w-12 h-12 rounded-2xl object-cover border border-primary/20 shadow-sm shrink-0">
+                                @else
+                                    <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black shadow-sm shrink-0">
+                                        <i class="fas fa-gift text-xl"></i>
+                                    </div>
+                                @endif
+                                <div>
+                                    <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-200">Time-Sensitive Offer</span>
+                                    <h3 class="text-base font-black text-mainText leading-tight mt-1 group-hover:text-primary transition-colors">{{ $offer->title }}</h3>
+                                </div>
+                            </div>
+                            <span class="text-sm font-black text-primary bg-primary/10 px-3 py-1.5 rounded-xl border border-primary/20 shrink-0">
+                                ₹@indianCurrency($offer->reward_value)
+                            </span>
+                        </div>
+
+                        @if($offer->description)
+                            <p class="text-xs text-mutedText font-medium leading-relaxed line-clamp-2">{{ $offer->description }}</p>
+                        @endif
+
+                        {{-- Progress Bar (if target amount > 0) --}}
+                        @if($offer->target_amount > 0)
+                            <div class="space-y-1.5 pt-2">
+                                <div class="flex justify-between text-xs font-bold">
+                                    <span class="text-mutedText">Progress</span>
+                                    <span class="text-mainText">₹@indianCurrency($earned) / ₹@indianCurrency($offer->target_amount) ({{ number_format($pct, 1) }}%)</span>
+                                </div>
+                                <div class="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden p-0.5 border border-gray-200">
+                                    <div class="h-full bg-gradient-to-r from-primary to-amber-500 rounded-full transition-all duration-700" style="width: {{ $pct }}%"></div>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- Expiration Counter Banner --}}
+                        <div class="pt-3 border-t border-primary/5 flex items-center justify-between text-[11px] font-bold text-mutedText">
+                            <span><i class="fas fa-clock text-amber-500 mr-1"></i> Expires: {{ $offer->end_date ? $offer->end_date->format('d M Y, h:i A') : 'No Expiry' }}</span>
+                            <span class="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-[10px] uppercase font-black">Active Phase</span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
 
     {{-- ACHIEVEMENTS & SPEEDOMETER --}}
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
