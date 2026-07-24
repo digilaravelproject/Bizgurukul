@@ -95,6 +95,9 @@ Route::middleware(['auth'])
             Route::post('achievements/{achievement}/toggle-status', [\App\Http\Controllers\Admin\AchievementController::class, 'toggleStatus'])->name('achievements.toggle-status');
             Route::get('achievements/{achievement}/qualified', [\App\Http\Controllers\Admin\AchievementController::class, 'qualifiedUsers'])->name('achievements.qualified');
             Route::get('reward-dashboard', [\App\Http\Controllers\Admin\RewardReportController::class, 'index'])->name('rewards.dashboard');
+            
+            // Offers Management (Time-Sensitive Offers)
+            Route::resource('offers', \App\Http\Controllers\Admin\OfferController::class)->except(['show']);
         });
 
         // Transactions (managed by manage-transactions)
