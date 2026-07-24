@@ -136,11 +136,23 @@
                                 </td>
 
                                 <td class="py-4 px-6">
-                                    <div class="w-36">
-                                        <div class="flex justify-between items-center text-[11px] font-bold mb-1">
-                                            <span class="text-mutedText">{{ $view->seconds }}s watched</span>
-                                            <span class="{{ $view->completed ? 'text-emerald-600' : 'text-primary' }}">{{ $view->progress_percentage }}%</span>
-                                        </div>
+                                     <div class="w-36">
+                                         @php
+                                             $sec = (int) $view->seconds;
+                                             if ($sec <= 0 && $view->completed) {
+                                                 $timeStr = 'Full Watched';
+                                             } elseif ($sec >= 60) {
+                                                 $m = floor($sec / 60);
+                                                 $s = $sec % 60;
+                                                 $timeStr = $m . 'm ' . ($s > 0 ? $s . 's' : '') . ' watched';
+                                             } else {
+                                                 $timeStr = $sec . 's watched';
+                                             }
+                                         @endphp
+                                         <div class="flex justify-between items-center text-[11px] font-bold mb-1">
+                                             <span class="text-mutedText">{{ $timeStr }}</span>
+                                             <span class="{{ $view->completed ? 'text-emerald-600' : 'text-primary' }}">{{ $view->progress_percentage }}%</span>
+                                         </div>
                                         <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
                                             <div class="h-2 rounded-full {{ $view->completed ? 'bg-emerald-500' : 'bg-primary' }}" style="width: {{ $view->progress_percentage }}%"></div>
                                         </div>

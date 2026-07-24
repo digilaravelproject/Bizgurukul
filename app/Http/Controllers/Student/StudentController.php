@@ -166,9 +166,19 @@ class StudentController extends Controller
                     ]);
 
                     $isDbCompleted = $dbRecord->completed || $isFinalCompleted;
-                    $dbRecord->seconds = max($dbRecord->seconds, $seconds);
+                    
+                    // If completed, ensure seconds is not 0 or crazy fallback (e.g. 9999)
+                    $validSeconds = $seconds;
+                    if ($validSeconds >= 9000) {
+                        $validSeconds = max($dbRecord->seconds, 180);
+                    }
+                    if ($isDbCompleted && $validSeconds <= 0) {
+                        $validSeconds = max($dbRecord->seconds, 180);
+                    }
+
+                    $dbRecord->seconds = max($dbRecord->seconds, $validSeconds);
                     $dbRecord->completed = $isDbCompleted;
-                    $dbRecord->progress_percentage = $isDbCompleted ? 100 : ($seconds > 0 ? min(99, (int)round(($seconds / 300) * 100)) : 0);
+                    $dbRecord->progress_percentage = $isDbCompleted ? 100 : ($dbRecord->seconds > 0 ? min(99, (int)round(($dbRecord->seconds / 300) * 100)) : 0);
                     $dbRecord->ip_address = $request->ip();
                     $dbRecord->user_agent = $request->userAgent();
                     $dbRecord->last_viewed_at = now();
