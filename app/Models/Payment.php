@@ -76,6 +76,19 @@ class Payment extends Model
         return $this->belongsTo(Bundle::class);
     }
 
+    protected static function booted()
+    {
+        static::saving(function ($payment) {
+            if (in_array($payment->status, ['success', 'captured']) && is_null($payment->invoice_sequence)) {
+                $maxSeq = static::whereIn('status', ['success', 'captured'])
+                    ->lockForUpdate()
+                    ->max('invoice_sequence');
+
+                $payment->invoice_sequence = ($maxSeq ?? 0) + 1;
+            }
+        });
+    }
+
     /**
      * Get the formatted invoice number (e.g., Dec/25-26/115)
      */
@@ -97,8 +110,8 @@ class Payment extends Model
 
         $fyRange = substr($fyStart, -2) . '-' . substr($fyEnd, -2);
 
-        // Sequence starts from 115 (ID + 114)
-        $sequence = $this->id + 114;
+        // Use stored sequence if present, otherwise fallback to legacy ID calculation
+        $sequence = $this->invoice_sequence ?? ($this->id + 114);
 
         return "{$month}/{$fyRange}/{$sequence}";
     }
