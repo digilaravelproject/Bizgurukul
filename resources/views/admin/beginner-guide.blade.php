@@ -18,6 +18,9 @@
                         <div class="text-xl font-black text-mainText leading-none">{{ $videos->count() }}</div>
                     </div>
                 </div>
+                <a href="{{ route('admin.beginner-guide.analytics') }}" class="px-5 py-3 rounded-2xl bg-primary text-white font-bold text-xs hover:bg-primary/90 transition-all shadow-md flex items-center gap-2">
+                    <i class="fas fa-chart-line"></i> User Analytics & Tracking
+                </a>
             </div>
 
             {{-- Alerts --}}

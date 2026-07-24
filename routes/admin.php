@@ -163,6 +163,8 @@ Route::middleware(['auth'])
             // Beginner guide management
             Route::get('/beginner-guide', [\App\Http\Controllers\Admin\BeginnerGuideController::class, 'index'])
                 ->name('beginner-guide');
+            Route::get('/beginner-guide/analytics', [\App\Http\Controllers\Admin\BeginnerGuideController::class, 'analytics'])
+                ->name('beginner-guide.analytics');
             Route::get('/resources', [\App\Http\Controllers\Admin\BeginnerGuideController::class, 'resources'])
                 ->name('resources');
             Route::post('/beginner-guide/store', [\App\Http\Controllers\Admin\BeginnerGuideController::class, 'store'])

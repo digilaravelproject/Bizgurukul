@@ -131,4 +131,46 @@ class BeginnerGuideController extends Controller
 
         return view('admin.resources', compact('productKnowledge', 'beginnersGuide'));
     }
+
+    /**
+     * Display Admin analytics report for Beginner Guide user views & completion.
+     */
+    public function analytics(Request $request)
+    {
+        $query = \App\Models\BeginnerGuideView::with(['user', 'video.category_rel']);
+
+        // Filter by completion status
+        if ($request->filled('status')) {
+            if ($request->status === 'completed') {
+                $query->where('completed', true);
+            } elseif ($request->status === 'in_progress') {
+                $query->where('completed', false);
+            }
+        }
+
+        // Filter by video
+        if ($request->filled('video_id')) {
+            $query->where('video_id', $request->video_id);
+        }
+
+        // Search by user name or email
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('mobile', 'like', "%{$search}%");
+            });
+        }
+
+        $views = $query->orderBy('updated_at', 'desc')->paginate(20)->withQueryString();
+        $videos = BeginnerGuideVideo::orderBy('title')->get();
+
+        // Calculate summary stats
+        $totalViews = \App\Models\BeginnerGuideView::count();
+        $totalCompleted = \App\Models\BeginnerGuideView::where('completed', true)->count();
+        $uniqueUsers = \App\Models\BeginnerGuideView::distinct('user_id')->count('user_id');
+
+        return view('admin.beginner_guide.analytics', compact('views', 'videos', 'totalViews', 'totalCompleted', 'uniqueUsers'));
+    }
 }

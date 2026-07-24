@@ -115,8 +115,13 @@
             {{-- Tab Content: Beginners Guide --}}
             <div id="beginners-guide-tab" class="tab-content hidden transition-opacity duration-300">
                 <div class="flex items-center justify-between mb-6 pl-2 border-l-4 border-blue-500">
-                    <h2 class="text-xl font-bold text-mainText ml-3">Beginner's Guide Videos</h2>
-                    <span class="text-xs font-bold text-mutedText uppercase tracking-widest">{{ $beginnersGuide->count() }} Videos</span>
+                    <div>
+                        <h2 class="text-xl font-bold text-mainText ml-3">Beginner's Guide Videos</h2>
+                        <span class="text-xs font-bold text-mutedText uppercase tracking-widest ml-3">{{ $beginnersGuide->count() }} Videos</span>
+                    </div>
+                    <a href="{{ route('admin.beginner-guide.analytics') }}" class="px-4 py-2.5 rounded-xl bg-primary text-white font-bold text-xs hover:bg-primary/90 transition-all shadow-md flex items-center gap-2">
+                        <i class="fas fa-chart-line"></i> User Analytics & Tracking
+                    </a>
                 </div>
 
                 @if($beginnersGuide->count() > 0)

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\VideoProgress;
+use App\Models\BeginnerGuideView;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -144,18 +145,34 @@ class StudentController extends Controller
                     }
                 }
             } else {
-                // beginner guide or other standalone video progress - keep in session
-                $seconds = $request->input('seconds', 0);
+                // beginner guide or other standalone video progress - store in session & DB
+                $seconds = (int)$request->input('seconds', 0);
                 $completed = $request->boolean('completed') || $request->boolean('is_completed');
                 $videoId = $request->input('video_id');
-                if ($videoId) {
+                if ($videoId && $user) {
                     $progress = session('beginner_guide.progress', []);
                     $oldCompleted = $progress[$videoId]['completed'] ?? false;
+                    $isFinalCompleted = ($completed || $oldCompleted);
                     $progress[$videoId] = [
-                        'seconds' => (int)$seconds, 
-                        'completed' => ($completed || $oldCompleted)
+                        'seconds' => $seconds, 
+                        'completed' => $isFinalCompleted
                     ];
                     session(['beginner_guide.progress' => $progress]);
+
+                    // Sync to DB for persistent tracking and Admin visibility
+                    $dbRecord = BeginnerGuideView::firstOrNew([
+                        'user_id' => $user->id,
+                        'video_id' => $videoId
+                    ]);
+
+                    $isDbCompleted = $dbRecord->completed || $isFinalCompleted;
+                    $dbRecord->seconds = max($dbRecord->seconds, $seconds);
+                    $dbRecord->completed = $isDbCompleted;
+                    $dbRecord->progress_percentage = $isDbCompleted ? 100 : ($seconds > 0 ? min(99, (int)round(($seconds / 300) * 100)) : 0);
+                    $dbRecord->ip_address = $request->ip();
+                    $dbRecord->user_agent = $request->userAgent();
+                    $dbRecord->last_viewed_at = now();
+                    $dbRecord->save();
                 }
             }
 
@@ -223,6 +240,19 @@ class StudentController extends Controller
         $allVideos = \App\Models\BeginnerGuideVideo::all();
         $progressData = session('beginner_guide.progress', []);
 
+        // Load persistent DB views for authenticated user
+        if ($user = Auth::user()) {
+            $dbViews = BeginnerGuideView::where('user_id', $user->id)->get();
+            foreach ($dbViews as $view) {
+                if (!isset($progressData[$view->video_id]) || $view->completed) {
+                    $progressData[$view->video_id] = [
+                        'seconds' => max($progressData[$view->video_id]['seconds'] ?? 0, $view->seconds),
+                        'completed' => ($progressData[$view->video_id]['completed'] ?? false) || $view->completed,
+                    ];
+                }
+            }
+        }
+
         $selectedId = $request->query('video');
         $selected = null;
         if ($selectedId) {
@@ -230,6 +260,21 @@ class StudentController extends Controller
         }
         if (empty($selected)) {
             $selected = $allVideos->sortBy('order_column')->first();
+        }
+
+        // Record immediate initial view entry in DB for logged in student
+        if ($user && $selected) {
+            BeginnerGuideView::firstOrCreate([
+                'user_id' => $user->id,
+                'video_id' => $selected->id
+            ], [
+                'seconds' => 0,
+                'completed' => false,
+                'progress_percentage' => 0,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'last_viewed_at' => now()
+            ]);
         }
 
         return view('users.beginner-guide', compact('categories', 'selected', 'progressData'));

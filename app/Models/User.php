@@ -22,6 +22,7 @@ use App\Models\UserAffiliateSetting;
 use App\Models\Setting;
 use App\Models\Achievement;
 use App\Models\UserAchievement;
+use App\Models\BeginnerGuideView;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
@@ -210,6 +211,11 @@ class User extends Authenticatable
     public function userAchievements(): HasMany
     {
         return $this->hasMany(UserAchievement::class);
+    }
+
+    public function beginnerGuideViews(): HasMany
+    {
+        return $this->hasMany(BeginnerGuideView::class);
     }
 
     public function achievements()

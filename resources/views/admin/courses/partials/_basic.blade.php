@@ -58,12 +58,41 @@
                     </div>
                 </div>
 
-                {{-- Description --}}
-                <div>
-                    <label class="block text-xs font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Description</label>
-                    <textarea name="description" rows="5"
-                        class="w-full rounded-2xl bg-white px-5 py-4 text-sm font-medium text-mainText border border-gray-300 focus:border-primary focus:ring-0 transition-all outline-none placeholder-mutedText/40 resize-none"
-                        placeholder="What will students learn in this course?">{{ old('description', $course->description ?? '') }}</textarea>
+                {{-- Description (Quill Rich Text Editor) --}}
+                <div class="space-y-2">
+                    <label class="block text-xs font-black uppercase tracking-widest text-mutedText ml-1">Course Description</label>
+
+                    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+                    <style>
+                        #course-description-editor .ql-editor { min-height: 180px; font-family: inherit; }
+                        #course-description-editor .ql-toolbar.ql-snow { border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; border-color: #e2e8f0; background: #f8fafc; }
+                        #course-description-editor .ql-container.ql-snow { border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem; border-color: #e2e8f0; }
+                    </style>
+
+                    <div id="course-description-editor" class="bg-white rounded-xl overflow-hidden shadow-inner"></div>
+                    <input type="hidden" name="description" id="course_description_input" value="{{ old('description', $course->description ?? '') }}">
+
+                    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            if (document.getElementById('course-description-editor')) {
+                                var courseQuill = new Quill('#course-description-editor', {
+                                    theme: 'snow',
+                                    placeholder: 'Write comprehensive course description, objectives, syllabus details...'
+                                });
+                                var initialDesc = {!! json_encode(old('description', $course->description ?? '')) !!};
+                                if (initialDesc) {
+                                    courseQuill.root.innerHTML = initialDesc;
+                                }
+                                var form = document.getElementById('course-description-editor').closest('form');
+                                if (form) {
+                                    form.addEventListener('submit', function() {
+                                        document.getElementById('course_description_input').value = courseQuill.root.innerHTML;
+                                    });
+                                }
+                            }
+                        });
+                    </script>
                 </div>
             </div>
 
