@@ -13,53 +13,41 @@ class BackfillInvoiceSequence extends Command
      *
      * @var string
      */
-    protected $signature = 'payments:backfill-invoice-sequence {--force : Force recalculation of July 2026 invoice numbers starting at 1555}';
+    protected $signature = 'payments:backfill-invoice-sequence';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Backfill sequential invoice numbers starting at 1555 from July 1, 2026';
+    protected $description = 'Set legacy (id + 114) for pre-July 2026 payments and continuous sequence from 1555 for July 1, 2026 onwards';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $this->info('Starting invoice sequence assignment...');
+        $this->info('Starting invoice sequence alignment...');
 
-        // 1. Assign legacy invoice sequence (id + 114) for successful payments before July 1, 2026
-        $legacyPayments = Payment::whereIn('status', ['success', 'captured'])
-            ->where('created_at', '<', '2026-07-01 00:00:00')
-            ->get();
-
+        // Step 1: Set legacy invoice_sequence (id + 114) for all payments created before July 1, 2026
+        // This ensures 30 June 2026 last bill number matches client historical record (1554)
+        $preJulyPayments = Payment::where('created_at', '<', '2026-07-01 00:00:00')->get();
         $legacyCount = 0;
-        foreach ($legacyPayments as $p) {
-            $seq = $p->id + 114;
-            if ($p->invoice_sequence !== $seq) {
-                DB::table('payments')->where('id', $p->id)->update(['invoice_sequence' => $seq]);
+        foreach ($preJulyPayments as $p) {
+            $legacySeq = $p->id + 114;
+            if ($p->invoice_sequence !== $legacySeq) {
+                DB::table('payments')->where('id', $p->id)->update(['invoice_sequence' => $legacySeq]);
                 $legacyCount++;
             }
         }
-        $this->info("Updated {$legacyCount} legacy payments prior to July 1, 2026.");
+        $this->info("Aligned {$legacyCount} pre-July 2026 historical payments to legacy formula (id + 114).");
 
-        // 2. Assign sequential numbers starting at 1555 for payments on or after July 1, 2026
-        $julyPaymentsQuery = Payment::whereIn('status', ['success', 'captured'])
-            ->where('created_at', '>=', '2026-07-01 00:00:00');
+        // Step 2: Set continuous sequential numbering starting at 1555 for successful July 1, 2026+ payments
+        $julyPayments = Payment::whereIn('status', ['success', 'captured'])
+            ->where('created_at', '>=', '2026-07-01 00:00:00')
+            ->orderBy('id', 'asc')
+            ->get();
 
-        if (!$this->option('force')) {
-            $julyPaymentsQuery->whereNull('invoice_sequence');
-        }
-
-        $julyPayments = $julyPaymentsQuery->orderBy('id', 'asc')->get();
-
-        if ($julyPayments->isEmpty()) {
-            $this->info('No July 2026 payments require sequence assignment.');
-            return 0;
-        }
-
-        // Start July sequence at 1555 (since June 30 last bill was 1554)
         $seq = 1555;
         $julyCount = 0;
 
@@ -73,7 +61,7 @@ class BackfillInvoiceSequence extends Command
             }
         });
 
-        $this->info("Successfully assigned sequential invoice numbers for {$julyCount} July 2026 payments starting at 1555!");
+        $this->info("Aligned {$julyCount} July 2026 payments starting at sequence 1555!");
         $this->info("Next new payment sequence will be {$seq}.");
 
         return 0;
