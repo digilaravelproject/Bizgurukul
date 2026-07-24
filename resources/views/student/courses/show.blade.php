@@ -13,9 +13,9 @@
                 <h1 class="text-4xl font-bold text-mainText leading-none">
                     {{ $course->title }}
                 </h1>
-                <p class="text-mutedText text-sm font-medium leading-relaxed max-w-2xl">
-                    {{ $course->description }}
-                </p>
+                <div class="text-mutedText text-sm font-medium leading-relaxed max-w-2xl prose prose-sm">
+                    {!! $course->description !!}
+                </div>
             </div>
 
             <div
