@@ -84,7 +84,7 @@ class Payment extends Model
                     ->lockForUpdate()
                     ->max('invoice_sequence');
 
-                $payment->invoice_sequence = ($maxSeq ?? 114) + 1;
+                $payment->invoice_sequence = ($maxSeq ?? 1554) + 1;
             }
         });
     }
