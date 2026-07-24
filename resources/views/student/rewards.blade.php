@@ -36,6 +36,8 @@
             <span class="text-[9px] md:text-[10px] font-black text-mutedText uppercase tracking-widest block">Total Earnings</span>
             <span class="text-lg md:text-xl font-black text-primary">₹@indianCurrency($earningsStats['all_time'])</span>
         </div>
+    </div>
+
     {{-- ACTIVE SPECIAL OFFERS & CHALLENGES --}}
     @if(isset($activeOffers) && $activeOffers->count() > 0)
         <div class="space-y-4">

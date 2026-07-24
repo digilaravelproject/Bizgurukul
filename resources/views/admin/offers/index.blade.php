@@ -32,8 +32,8 @@
 
     {{-- Filter Bar --}}
     <div class="mb-4">
-        <x-admin.table.filter placeholder="Search offers...">
-            <select x-model="status" @change="updateTable(1)" class="appearance-none bg-surface border border-primary/10 rounded-xl pl-4 pr-8 py-2 text-[10px] font-black uppercase text-mutedText focus:border-primary outline-none focus:ring-4 focus:ring-primary/5 transition-all shadow-sm">
+        <x-admin.table.filter placeholder="Search offers..." :show-date-filter="false" :show-export="false">
+            <select x-model="status" @change="updateTable(1)" class="appearance-none bg-surface border border-primary/10 rounded-xl pl-4 pr-8 py-2.5 text-xs font-bold text-mainText focus:border-primary outline-none focus:ring-4 focus:ring-primary/5 transition-all shadow-sm">
                 <option value="">All Statuses</option>
                 <option value="active">Active Phase (Excluded)</option>
                 <option value="expired">Expired Phase (Included)</option>
