@@ -58,18 +58,49 @@
                     </div>
                 </div>
 
-                {{-- Description (Quill Rich Text Editor) --}}
+                {{-- Course Description (Quill Rich Text Editor matching Bundle UI) --}}
                 <div class="space-y-2">
                     <label class="block text-xs font-black uppercase tracking-widest text-mutedText ml-1">Course Description</label>
 
                     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
                     <style>
-                        #course-description-editor .ql-editor { min-height: 180px; font-family: inherit; }
-                        #course-description-editor .ql-toolbar.ql-snow { border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; border-color: #e2e8f0; background: #f8fafc; }
-                        #course-description-editor .ql-container.ql-snow { border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem; border-color: #e2e8f0; }
+                        /* Quill Customization matching Bundle UI */
+                        #course-description-editor-container .ql-toolbar.ql-snow {
+                            border-top-left-radius: 0.75rem;
+                            border-top-right-radius: 0.75rem;
+                            border-color: #e5e7eb;
+                            background-color: #f9fafb;
+                            padding: 12px;
+                        }
+
+                        #course-description-editor-container .ql-container.ql-snow {
+                            border-bottom-left-radius: 0.75rem;
+                            border-bottom-right-radius: 0.75rem;
+                            border-color: #e5e7eb;
+                            min-height: 220px;
+                            font-size: 0.95rem;
+                            font-family: inherit;
+                            background-color: #ffffff;
+                        }
+
+                        #course-description-editor-container .ql-editor {
+                            min-height: 220px;
+                        }
+
+                        #course-description-editor-container .ql-toolbar button:hover .ql-stroke,
+                        #course-description-editor-container .ql-toolbar button.ql-active .ql-stroke {
+                            stroke: #4f46e5 !important;
+                        }
+
+                        #course-description-editor-container .ql-toolbar button:hover .ql-fill,
+                        #course-description-editor-container .ql-toolbar button.ql-active .ql-fill {
+                            fill: #4f46e5 !important;
+                        }
                     </style>
 
-                    <div id="course-description-editor" class="bg-white rounded-xl overflow-hidden shadow-inner"></div>
+                    <div id="course-description-editor-container" class="rounded-xl overflow-hidden shadow-sm">
+                        <div id="course-description-editor"></div>
+                    </div>
                     <input type="hidden" name="description" id="course_description_input" value="{{ old('description', $course->description ?? '') }}">
 
                     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
@@ -78,12 +109,28 @@
                             if (document.getElementById('course-description-editor')) {
                                 var courseQuill = new Quill('#course-description-editor', {
                                     theme: 'snow',
-                                    placeholder: 'Write comprehensive course description, objectives, syllabus details...'
+                                    placeholder: 'What will students learn in this course?',
+                                    modules: {
+                                        toolbar: [
+                                            ['bold', 'italic', 'underline'],
+                                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                            [{ 'header': [1, 2, 3, false] }],
+                                            ['link', 'image'],
+                                            [{ 'align': [] }],
+                                            ['clean']
+                                        ]
+                                    }
                                 });
+
                                 var initialDesc = {!! json_encode(old('description', $course->description ?? '')) !!};
                                 if (initialDesc) {
                                     courseQuill.root.innerHTML = initialDesc;
                                 }
+
+                                courseQuill.on('text-change', function() {
+                                    document.getElementById('course_description_input').value = courseQuill.root.innerHTML;
+                                });
+
                                 var form = document.getElementById('course-description-editor').closest('form');
                                 if (form) {
                                     form.addEventListener('submit', function() {
