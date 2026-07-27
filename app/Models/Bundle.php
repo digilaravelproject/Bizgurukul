@@ -130,8 +130,15 @@ class Bundle extends Model
                 if ($user->canUpgradeBundles()) {
                     $highestBundle = $user->highestPurchasedBundle();
                     if ($highestBundle) {
-                        $paidBasePrice = ($user->referrer) ? $highestBundle->affiliate_price : $highestBundle->final_price;
-                        $diff = $basePrice - $paidBasePrice;
+                        // Check if user has an actual successful payment record
+                        $lastPayment = $user->maxBundlePayment();
+                        if ($lastPayment && $lastPayment->total_amount > 0) {
+                            $paidAmount = (float) $lastPayment->total_amount;
+                        } else {
+                            $paidAmount = ($user->referrer) ? $highestBundle->affiliate_price : $highestBundle->final_price;
+                        }
+
+                        $diff = $basePrice - $paidAmount;
                         $price = max(0, $diff);
                     }
                 }
