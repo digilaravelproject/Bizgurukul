@@ -302,7 +302,7 @@ class CheckoutController extends Controller
      */
     private function processSuccessfulPayment(Payment $payment, string $paymentId): void
     {
-        $user = Auth::user();
+        $user = $payment->user ?? Auth::user();
         $product = $payment->bundle ?? $payment->course;
         if (!$product || !$user) return;
 
@@ -331,13 +331,16 @@ class CheckoutController extends Controller
             $commissionAmount = 0;
 
             if ($product instanceof \App\Models\Bundle) {
-                if ($isUpgrade && $previousBundle) {
-                    $newComm = $this->commissionService->calculateCommission($sponsor, $product, $product->affiliate_price);
-                    $oldComm = $this->commissionService->calculateCommission($sponsor, $previousBundle, $previousBundle->affiliate_price);
-                    $commissionAmount = max(0, $newComm - $oldComm);
-                } else {
-                    $commissionAmount = $this->commissionService->calculateCommission($sponsor, $product, $payment->amount);
-                }
+                // Calculate full commission for the purchased/upgraded bundle
+                $targetComm = $this->commissionService->calculateCommission($sponsor, $product, $product->affiliate_price);
+
+                // Get total commission already credited to sponsor for this user
+                $alreadyCredited = \App\Models\AffiliateCommission::where('affiliate_id', $sponsor->id)
+                    ->where('referred_user_id', $user->id)
+                    ->sum('amount');
+
+                // Payable commission is the differential (target minus already paid)
+                $commissionAmount = max(0, $targetComm - $alreadyCredited);
             } elseif ($product instanceof Course) {
                 $commissionAmount = $product->commission_value ?? 0;
             }
