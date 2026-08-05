@@ -250,7 +250,10 @@
                         <i class="fas fa-user-check text-xl animate-pulse"></i>
                     </div>
                     <div>
-                        <h4 class="font-black text-sm uppercase tracking-widest">Pending Verification</h4>
+                        <h4 class="font-black text-sm uppercase tracking-widest flex items-center gap-2">
+                            Pending Verification
+                            <span class="bg-white/20 px-2 py-0.5 rounded text-xs" x-text="totalPendingCount"></span>
+                        </h4>
                         <p class="text-[10px] font-bold opacity-90 mt-0.5">New KYC or Bank details submitted!</p>
                     </div>
                 </div>
@@ -290,6 +293,7 @@
 
             Alpine.data('verificationNotifier', () => ({
                 lastCount: {{ $pendingVerificationsCount ?? 0 }},
+                totalPendingCount: {{ $pendingVerificationsCount ?? 0 }},
                 showVerificationToast: false,
 
                 initVerificationNotifier() {
@@ -297,6 +301,7 @@
                         fetch('{{ route("admin.verifications.check_new") }}')
                             .then(res => res.json())
                             .then(data => {
+                                this.totalPendingCount = data.total_pending;
                                 if (data.total_pending > this.lastCount) {
                                     this.lastCount = data.total_pending;
                                     this.showVerificationToast = true;
