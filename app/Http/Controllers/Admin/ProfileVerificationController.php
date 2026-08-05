@@ -20,6 +20,7 @@ class ProfileVerificationController extends Controller
     public function index(Request $request)
     {
         $kycStatus = $request->get('kyc_status', 'pending');
+        $bankStatus = $request->get('bank_status', 'pending');
         $search = $request->get('search');
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
@@ -55,12 +56,13 @@ class ProfileVerificationController extends Controller
 
         $kycUsers = $kycQuery->latest()->paginate($perPage, ['*'], 'kyc_page');
 
-        // Counts for tabs
+        // Counts for KYC tabs
         $pendingKycCount = User::whereHas('kyc', function($q) { $q->where('status', 'pending'); })->count();
         $verifiedKycCount = User::whereHas('kyc', function($q) { $q->where('status', 'verified'); })->count();
 
-        // 2. Pending Bank Initial Setup (Filtered by search & date)
-        $bankInitialQuery = \App\Models\BankDetail::where('status', 'pending')
+        // 2. Bank Initial Setup (Filtered by bankStatus, search & date)
+        $bankInitialStatus = $bankStatus === 'verified' ? 'verified' : 'pending';
+        $bankInitialQuery = \App\Models\BankDetail::where('status', $bankInitialStatus)
             ->with(['user.referrer', 'user.kyc']);
 
         if ($search) {
@@ -86,8 +88,9 @@ class ProfileVerificationController extends Controller
 
         $pendingBankInitial = $bankInitialQuery->latest()->paginate($perPage, ['*'], 'bank_initial_page');
 
-        // 3. Pending Bank Update Requests (Filtered by search & date)
-        $bankUpdateQuery = \App\Models\BankUpdateRequest::where('status', 'pending')
+        // 3. Bank Update Requests (Filtered by bankStatus, search & date)
+        $bankUpdateStatus = $bankStatus === 'verified' ? 'approved' : 'pending';
+        $bankUpdateQuery = \App\Models\BankUpdateRequest::where('status', $bankUpdateStatus)
             ->with(['user.referrer', 'user.kyc']);
 
         if ($search) {
@@ -113,6 +116,12 @@ class ProfileVerificationController extends Controller
 
         $pendingBankUpdates = $bankUpdateQuery->latest()->paginate($perPage, ['*'], 'bank_update_page');
 
+        // Counts for Bank tabs
+        $pendingBankCount = \App\Models\BankDetail::where('status', 'pending')->count()
+                          + \App\Models\BankUpdateRequest::where('status', 'pending')->count();
+        $verifiedBankCount = \App\Models\BankDetail::where('status', 'verified')->count()
+                           + \App\Models\BankUpdateRequest::where('status', 'approved')->count();
+
         // Attach old data to update requests
         foreach ($pendingBankUpdates as $req) {
             $currentBank = \App\Models\BankDetail::where('user_id', $req->user_id)->first();
@@ -128,8 +137,11 @@ class ProfileVerificationController extends Controller
         return view('admin.verifications.index', compact(
             'kycUsers', 
             'kycStatus', 
+            'bankStatus',
             'pendingKycCount', 
             'verifiedKycCount',
+            'pendingBankCount',
+            'verifiedBankCount',
             'pendingBankInitial', 
             'pendingBankUpdates'
         ));

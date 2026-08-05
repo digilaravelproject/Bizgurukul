@@ -167,6 +167,18 @@
                 :show-date-filter="true"
                 :show-export="false"
             />
+
+            {{-- Bank Status Filter Buttons --}}
+            <div class="flex items-center gap-3 px-2">
+                <a href="{{ route('admin.verifications.index', ['bank_status' => 'pending', 'activeTab' => 'bank', 'search' => request('search'), 'per_page' => request('per_page', 20), 'start_date' => request('start_date'), 'end_date' => request('end_date')]) }}"
+                    class="px-6 py-2.5 rounded-[18px] text-[10px] font-black uppercase tracking-[1px] transition-all {{ ($bankStatus ?? 'pending') === 'pending' ? 'bg-secondary text-white shadow-lg shadow-secondary/20' : 'bg-secondary/5 text-mutedText hover:bg-secondary/10' }}">
+                    <i class="fas fa-clock mr-2 opacity-70"></i> Pending Requests ({{ $pendingBankCount }})
+                </a>
+                <a href="{{ route('admin.verifications.index', ['bank_status' => 'verified', 'activeTab' => 'bank', 'search' => request('search'), 'per_page' => request('per_page', 20), 'start_date' => request('start_date'), 'end_date' => request('end_date')]) }}"
+                    class="px-6 py-2.5 rounded-[18px] text-[10px] font-black uppercase tracking-[1px] transition-all {{ ($bankStatus ?? 'pending') === 'verified' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' }}">
+                    <i class="fas fa-check-circle mr-2 opacity-70"></i> Verified Archive ({{ $verifiedBankCount }})
+                </a>
+            </div>
             {{-- Initial Setup --}}
             <section class="space-y-4">
                 <h2 class="text-sm font-black uppercase tracking-[2px] text-primary px-2 flex items-center gap-3">
@@ -243,7 +255,7 @@
                     </div>
                     @if($pendingBankInitial->hasPages())
                         <div class="px-10 py-6 bg-navy/5 border-t border-navy/5">
-                            {{ $pendingBankInitial->appends(['activeTab' => 'bank', 'search' => request('search'), 'per_page' => request('per_page', 20), 'start_date' => request('start_date'), 'end_date' => request('end_date')])->links() }}
+                            {{ $pendingBankInitial->appends(['bank_status' => $bankStatus, 'activeTab' => 'bank', 'search' => request('search'), 'per_page' => request('per_page', 20), 'start_date' => request('start_date'), 'end_date' => request('end_date')])->links() }}
                         </div>
                     @endif
                 </div>
@@ -333,7 +345,7 @@
                     </div>
                     @if($pendingBankUpdates->hasPages())
                         <div class="px-10 py-6 bg-navy/5 border-t border-navy/5">
-                            {{ $pendingBankUpdates->appends(['activeTab' => 'bank', 'search' => request('search'), 'per_page' => request('per_page', 20), 'start_date' => request('start_date'), 'end_date' => request('end_date')])->links() }}
+                            {{ $pendingBankUpdates->appends(['bank_status' => $bankStatus, 'activeTab' => 'bank', 'search' => request('search'), 'per_page' => request('per_page', 20), 'start_date' => request('start_date'), 'end_date' => request('end_date')])->links() }}
                         </div>
                     @endif
                 </div>
