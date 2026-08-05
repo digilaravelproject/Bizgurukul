@@ -103,49 +103,50 @@
             </div>
         </div>
 
-        {{-- MODAL --}}
-        <div x-show="showModal" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto" x-cloak>
-            <div class="fixed inset-0 bg-mainText/40 backdrop-blur-sm transition-opacity" x-show="showModal"
-                x-transition.opacity></div>
-            <div class="flex min-h-full items-center justify-center p-4">
+        {{-- CREATE / EDIT MODAL --}}
+        <div x-show="showModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" @click="showModal = false"></div>
+            <div class="flex min-h-full items-center justify-center p-4 sm:p-6">
                 <div @click.away="showModal = false"
-                    class="relative w-full max-w-2xl rounded-[2.5rem] bg-white border border-primary/10 shadow-2xl overflow-hidden"
+                    class="relative w-full max-w-2xl rounded-[2.5rem] bg-white border-2 border-primary/20 shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col"
                     x-show="showModal" x-transition:enter="ease-out duration-300"
                     x-transition:enter-start="opacity-0 translate-y-8" x-transition:enter-end="opacity-100 translate-y-0">
 
-                    <div class="bg-navy px-8 py-6 border-b border-primary/5 flex justify-between items-center">
+                    <div class="brand-gradient h-2.5 flex-shrink-0"></div>
+
+                    <div class="px-8 py-6 border-b-2 border-primary/10 flex justify-between items-center bg-amber-500/5">
                         <div>
-                            <h3 class="text-xl font-black"
+                            <h3 class="text-xl font-black text-mainText"
                                 x-text="modalMode === 'create' ? 'Add New Question' : 'Edit Question'"></h3>
-                            <p class="text-xs text-mutedText font-medium">Define your survey question and criteria.</p>
+                            <p class="text-xs text-mutedText font-bold mt-0.5">Define your survey question and criteria.</p>
                         </div>
                         <button @click="showModal = false"
-                            class="text-mutedText hover:text-secondary bg-white rounded-2xl p-2 shadow-sm transition">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            class="text-mutedText hover:text-secondary bg-white border border-primary/20 hover:border-secondary rounded-2xl p-2.5 shadow-sm transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                     d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
                         </button>
                     </div>
 
-                    <form @submit.prevent="submitForm" class="p-8">
+                    <form @submit.prevent="submitForm" class="p-6 sm:p-8 overflow-y-auto flex-1 custom-scrollbar">
                         <div class="space-y-6">
                             <div>
                                 <label
                                     class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Question
                                     Text <span class="text-secondary">*</span></label>
                                 <textarea x-model="form.question" required rows="3"
-                                    class="w-full rounded-2xl bg-navy/50 px-5 py-4 text-sm font-bold text-mainText focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all outline-none border-0"
+                                    class="w-full rounded-2xl bg-amber-500/5 px-5 py-4 text-sm font-bold text-mainText border-2 border-primary/20 focus:border-primary focus:bg-white transition-all outline-none"
                                     placeholder="e.g., How satisfied are you with our platform?"></textarea>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-6">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div>
                                     <label
                                         class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Question
                                         Type</label>
                                     <select x-model="form.type"
-                                        class="w-full rounded-2xl bg-navy/50 px-5 py-4 text-sm font-bold text-mainText focus:bg-white focus:border-primary outline-none border-0 appearance-none">
+                                        class="w-full rounded-2xl bg-amber-500/5 px-5 py-4 text-sm font-bold text-mainText border-2 border-primary/20 focus:border-primary focus:bg-white outline-none">
                                         <option value="options">Multiple Choice (Options)</option>
                                         <option value="text">Free Text Input</option>
                                     </select>
@@ -153,32 +154,32 @@
                                 <div>
                                     <label
                                         class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Requirement</label>
-                                    <div class="flex items-center h-[52px]">
-                                        <label class="inline-flex items-center cursor-pointer group">
+                                    <div class="flex items-center h-[54px] bg-amber-500/5 border-2 border-primary/20 rounded-2xl px-5">
+                                        <label class="inline-flex items-center cursor-pointer group w-full">
                                             <input type="checkbox" x-model="form.is_required" class="hidden">
-                                            <div class="w-5 h-5 rounded-lg border-2 border-primary/20 flex items-center justify-center transition-all group-hover:border-primary/40 mr-3"
+                                            <div class="w-5 h-5 rounded-lg border-2 border-primary/30 flex items-center justify-center transition-all group-hover:border-primary mr-3 flex-shrink-0"
                                                 :class="form.is_required ? 'bg-primary border-primary' : 'bg-white'">
-                                                <svg x-show="form.is_required" class="w-3 h-3 text-white" fill="none"
+                                                <svg x-show="form.is_required" class="w-3.5 h-3.5 text-white" fill="none"
                                                     stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
                                                         d="M5 13l4 4L19 7"></path>
                                                 </svg>
                                             </div>
-                                            <span class="text-sm font-bold text-mainText">Mandatory Field</span>
+                                            <span class="text-xs font-bold text-mainText">Mandatory Field</span>
                                         </label>
                                     </div>
                                 </div>
                             </div>
 
                             <div x-show="form.type === 'options'" x-transition
-                                class="space-y-4 pt-4 border-t border-primary/5">
+                                class="space-y-4 pt-4 border-t-2 border-primary/10">
                                 <div class="flex justify-between items-center mb-2">
                                     <label
                                         class="block text-[10px] font-black uppercase tracking-widest text-mutedText ml-1">Answer
                                         Options</label>
                                     <button type="button" @click="addOption()"
-                                        class="text-primary hover:text-primary/70 text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        class="text-primary hover:text-secondary text-[10px] font-black uppercase tracking-widest flex items-center gap-1 bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-xl transition-all border border-primary/20">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                                 d="M12 4v16m8-8H4"></path>
                                         </svg>
@@ -187,13 +188,13 @@
                                 </div>
 
                                 <template x-for="(opt, index) in form.options" :key="index">
-                                    <div class="flex gap-3">
+                                    <div class="flex gap-3 items-center">
                                         <input type="text" x-model="opt.text" required
-                                            class="flex-1 rounded-2xl bg-navy/50 px-5 py-3.5 text-sm font-bold text-mainText focus:bg-white focus:border-primary outline-none border-0"
+                                            class="flex-1 rounded-2xl bg-amber-500/5 px-5 py-3.5 text-sm font-bold text-mainText border-2 border-primary/20 focus:border-primary focus:bg-white outline-none transition-all"
                                             placeholder="Enter option text...">
                                         <button type="button" @click="removeOption(index)"
-                                            class="p-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-2xl transition-all">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            class="p-3 text-secondary hover:text-white hover:bg-secondary rounded-2xl border-2 border-secondary/20 transition-all shadow-sm">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M6 18L18 6M6 6l12 12"></path>
                                             </svg>
@@ -202,19 +203,19 @@
                                 </template>
 
                                 <div x-show="form.options.length === 0"
-                                    class="text-center py-6 bg-navy/30 rounded-2xl border border-dashed border-primary/20">
-                                    <p class="text-xs font-bold text-mutedText/40">No options added yet. Click 'Add Option'
+                                    class="text-center py-6 bg-amber-500/5 rounded-2xl border-2 border-dashed border-primary/20">
+                                    <p class="text-xs font-bold text-mutedText">No options added yet. Click '+ Add Option'
                                         above.</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="mt-10 flex justify-end gap-3 pt-6 border-t border-primary/5">
+                        <div class="mt-8 flex justify-end gap-3 pt-6 border-t-2 border-primary/10">
                             <button type="button" @click="showModal = false"
-                                class="px-8 py-3.5 text-xs font-black uppercase tracking-widest text-mutedText hover:text-secondary transition-all">Cancel</button>
+                                class="px-6 py-3.5 text-xs font-black uppercase tracking-widest text-mutedText hover:text-secondary transition-all">Cancel</button>
                             <button type="submit" :disabled="isSubmitting"
-                                class="brand-gradient px-10 py-3.5 text-xs font-black uppercase tracking-widest text-white rounded-2xl shadow-lg shadow-primary/20 disabled:opacity-50 transition-all flex items-center">
-                                <svg x-show="isSubmitting" class="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
+                                class="brand-gradient px-8 py-3.5 text-xs font-black uppercase tracking-widest text-white rounded-2xl shadow-lg shadow-primary/20 disabled:opacity-50 transition-all flex items-center gap-2">
+                                <svg x-show="isSubmitting" class="animate-spin -ml-1 h-4 w-4 text-white"
                                     viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
                                         stroke-width="4"></circle>
