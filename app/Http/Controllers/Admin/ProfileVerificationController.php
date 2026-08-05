@@ -23,6 +23,7 @@ class ProfileVerificationController extends Controller
         $search = $request->get('search');
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
+        $perPage = (int) $request->get('per_page', 20);
 
         // 1. KYC Requests (Filtered by status, search, and date)
         $kycQuery = User::whereHas('kyc', function($q) use ($kycStatus) {
@@ -52,7 +53,7 @@ class ProfileVerificationController extends Controller
             });
         }
 
-        $kycUsers = $kycQuery->latest()->paginate(10, ['*'], 'kyc_page');
+        $kycUsers = $kycQuery->latest()->paginate($perPage, ['*'], 'kyc_page');
 
         // Counts for tabs
         $pendingKycCount = User::whereHas('kyc', function($q) { $q->where('status', 'pending'); })->count();

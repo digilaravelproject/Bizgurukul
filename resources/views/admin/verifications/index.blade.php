@@ -42,11 +42,11 @@
 
             {{-- KYC Status Filter --}}
             <div class="flex items-center gap-3 px-2">
-                <a href="{{ route('admin.verifications.index', ['kyc_status' => 'pending', 'activeTab' => 'kyc', 'search' => request('search'), 'start_date' => request('start_date'), 'end_date' => request('end_date')]) }}"
+                <a href="{{ route('admin.verifications.index', ['kyc_status' => 'pending', 'activeTab' => 'kyc', 'search' => request('search'), 'per_page' => request('per_page', 20), 'start_date' => request('start_date'), 'end_date' => request('end_date')]) }}"
                     class="px-6 py-2.5 rounded-[18px] text-[10px] font-black uppercase tracking-[1px] transition-all {{ $kycStatus === 'pending' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-primary/5 text-mutedText hover:bg-primary/10' }}">
                     <i class="fas fa-clock mr-2 opacity-70"></i> Pending Requests ({{ $pendingKycCount }})
                 </a>
-                <a href="{{ route('admin.verifications.index', ['kyc_status' => 'verified', 'activeTab' => 'kyc', 'search' => request('search'), 'start_date' => request('start_date'), 'end_date' => request('end_date')]) }}"
+                <a href="{{ route('admin.verifications.index', ['kyc_status' => 'verified', 'activeTab' => 'kyc', 'search' => request('search'), 'per_page' => request('per_page', 20), 'start_date' => request('start_date'), 'end_date' => request('end_date')]) }}"
                     class="px-6 py-2.5 rounded-[18px] text-[10px] font-black uppercase tracking-[1px] transition-all {{ $kycStatus === 'verified' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' }}">
                     <i class="fas fa-check-circle mr-2 opacity-70"></i> Verified Archive ({{ $verifiedKycCount }})
                 </a>
@@ -151,7 +151,7 @@
                 </div>
                 @if($kycUsers->hasPages())
                     <div class="px-10 py-6 bg-navy/5 border-t border-navy/5">
-                        {{ $kycUsers->appends(['kyc_status' => $kycStatus, 'activeTab' => 'kyc', 'search' => request('search'), 'start_date' => request('start_date'), 'end_date' => request('end_date')])->links() }}
+                        {{ $kycUsers->appends(['kyc_status' => $kycStatus, 'activeTab' => 'kyc', 'search' => request('search'), 'per_page' => request('per_page', 20), 'start_date' => request('start_date'), 'end_date' => request('end_date')])->links() }}
                     </div>
                 @endif
             </div>
@@ -775,6 +775,7 @@
                 updateTable() {
                     let currentUrl = new URL(window.location.href);
                     currentUrl.searchParams.set('activeTab', this.activeTab);
+                    if (this.perPage) currentUrl.searchParams.set('per_page', this.perPage);
                     if (this.search) currentUrl.searchParams.set('search', this.search);
                     else currentUrl.searchParams.delete('search');
 
@@ -792,6 +793,7 @@
                     currentUrl.searchParams.delete('search');
                     currentUrl.searchParams.delete('start_date');
                     currentUrl.searchParams.delete('end_date');
+                    currentUrl.searchParams.delete('per_page');
                     currentUrl.searchParams.set('activeTab', this.activeTab);
                     window.location.href = currentUrl.toString();
                 },
