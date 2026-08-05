@@ -33,13 +33,20 @@
         <div x-show="activeTab === 'kyc'" x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0 translate-y-4" class="space-y-6">
 
+            {{-- Filter Bar --}}
+            <x-admin.table.filter
+                placeholder="Search name, email, mobile, PAN name..."
+                :show-date-filter="true"
+                :show-export="false"
+            />
+
             {{-- KYC Status Filter --}}
             <div class="flex items-center gap-3 px-2">
-                <a href="{{ route('admin.verifications.index', ['kyc_status' => 'pending', 'activeTab' => 'kyc']) }}"
+                <a href="{{ route('admin.verifications.index', ['kyc_status' => 'pending', 'activeTab' => 'kyc', 'search' => request('search'), 'start_date' => request('start_date'), 'end_date' => request('end_date')]) }}"
                     class="px-6 py-2.5 rounded-[18px] text-[10px] font-black uppercase tracking-[1px] transition-all {{ $kycStatus === 'pending' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-primary/5 text-mutedText hover:bg-primary/10' }}">
                     <i class="fas fa-clock mr-2 opacity-70"></i> Pending Requests ({{ $pendingKycCount }})
                 </a>
-                <a href="{{ route('admin.verifications.index', ['kyc_status' => 'verified', 'activeTab' => 'kyc']) }}"
+                <a href="{{ route('admin.verifications.index', ['kyc_status' => 'verified', 'activeTab' => 'kyc', 'search' => request('search'), 'start_date' => request('start_date'), 'end_date' => request('end_date')]) }}"
                     class="px-6 py-2.5 rounded-[18px] text-[10px] font-black uppercase tracking-[1px] transition-all {{ $kycStatus === 'verified' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' }}">
                     <i class="fas fa-check-circle mr-2 opacity-70"></i> Verified Archive ({{ $verifiedKycCount }})
                 </a>
@@ -127,14 +134,14 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-8 py-20 text-center">
+                                    <td colspan="6" class="px-8 py-20 text-center">
                                         <div class="flex flex-col items-center gap-3">
                                             <div
                                                 class="w-16 h-16 bg-navy/20 rounded-full flex items-center justify-center text-mutedText/30 mb-2">
                                                 <i class="fas fa-id-card text-2xl"></i>
                                             </div>
                                             <p class="text-mutedText font-black uppercase tracking-widest text-xs">No records
-                                                found matching critera.</p>
+                                                found matching criteria.</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -144,7 +151,7 @@
                 </div>
                 @if($kycUsers->hasPages())
                     <div class="px-10 py-6 bg-navy/5 border-t border-navy/5">
-                        {{ $kycUsers->appends(['kyc_status' => $kycStatus, 'activeTab' => 'kyc'])->links() }}
+                        {{ $kycUsers->appends(['kyc_status' => $kycStatus, 'activeTab' => 'kyc', 'search' => request('search'), 'start_date' => request('start_date'), 'end_date' => request('end_date')])->links() }}
                     </div>
                 @endif
             </div>
@@ -153,6 +160,13 @@
         {{-- 2. BANK TAB --}}
         <div x-show="activeTab === 'bank'" x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0 translate-y-4" class="space-y-10">
+
+            {{-- Filter Bar --}}
+            <x-admin.table.filter
+                placeholder="Search user, email, bank name, account..."
+                :show-date-filter="true"
+                :show-export="false"
+            />
             {{-- Initial Setup --}}
             <section class="space-y-4">
                 <h2 class="text-sm font-black uppercase tracking-[2px] text-primary px-2 flex items-center gap-3">
@@ -737,8 +751,13 @@
 
     <script>
         function verificationManager() {
+            let urlParams = new URLSearchParams(window.location.search);
             return {
-                activeTab: new URLSearchParams(window.location.search).get('activeTab') || 'kyc',
+                activeTab: urlParams.get('activeTab') || 'kyc',
+                search: urlParams.get('search') || '',
+                startDate: urlParams.get('start_date') || '',
+                endDate: urlParams.get('end_date') || '',
+                perPage: urlParams.get('per_page') || 20,
                 kycModalOpen: false,
                 bankUpdateModalOpen: false,
                 bankInitialModalOpen: false,
@@ -752,6 +771,30 @@
                 activeBankReq: {},
                 activeInitialBankReq: {},
                 activeBankDoc: '',
+
+                updateTable() {
+                    let currentUrl = new URL(window.location.href);
+                    currentUrl.searchParams.set('activeTab', this.activeTab);
+                    if (this.search) currentUrl.searchParams.set('search', this.search);
+                    else currentUrl.searchParams.delete('search');
+
+                    if (this.startDate) currentUrl.searchParams.set('start_date', this.startDate);
+                    else currentUrl.searchParams.delete('start_date');
+
+                    if (this.endDate) currentUrl.searchParams.set('end_date', this.endDate);
+                    else currentUrl.searchParams.delete('end_date');
+
+                    window.location.href = currentUrl.toString();
+                },
+
+                resetFilters() {
+                    let currentUrl = new URL(window.location.href);
+                    currentUrl.searchParams.delete('search');
+                    currentUrl.searchParams.delete('start_date');
+                    currentUrl.searchParams.delete('end_date');
+                    currentUrl.searchParams.set('activeTab', this.activeTab);
+                    window.location.href = currentUrl.toString();
+                },
 
                 openKycModal(id, name, email, mobile, dob, id_name, url, ext, r_name, r_email, r_mobile, status, acc_type, b_name, acc_num, ifsc, holder, back_url, back_ext) {
                     this.kycData = { 

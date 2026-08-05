@@ -20,27 +20,97 @@ class ProfileVerificationController extends Controller
     public function index(Request $request)
     {
         $kycStatus = $request->get('kyc_status', 'pending');
+        $search = $request->get('search');
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
 
-        // 1. KYC Requests (Filtered by status)
-        $kycUsers = User::whereHas('kyc', function($q) use ($kycStatus) {
+        // 1. KYC Requests (Filtered by status, search, and date)
+        $kycQuery = User::whereHas('kyc', function($q) use ($kycStatus) {
             $q->where('status', $kycStatus);
-        })->with(['kyc', 'referrer', 'bank'])->latest()->paginate(10, ['*'], 'kyc_page');
+        })->with(['kyc', 'referrer', 'bank']);
+
+        if ($search) {
+            $kycQuery->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('mobile', 'like', "%{$search}%")
+                  ->orWhereHas('kyc', function($kq) use ($search) {
+                      $kq->where('pan_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($startDate) {
+            $kycQuery->whereHas('kyc', function($q) use ($startDate) {
+                $q->whereDate('created_at', '>=', $startDate);
+            });
+        }
+
+        if ($endDate) {
+            $kycQuery->whereHas('kyc', function($q) use ($endDate) {
+                $q->whereDate('created_at', '<=', $endDate);
+            });
+        }
+
+        $kycUsers = $kycQuery->latest()->paginate(10, ['*'], 'kyc_page');
 
         // Counts for tabs
         $pendingKycCount = User::whereHas('kyc', function($q) { $q->where('status', 'pending'); })->count();
         $verifiedKycCount = User::whereHas('kyc', function($q) { $q->where('status', 'verified'); })->count();
 
-        // 2. Pending Bank Initial Setup
-        $pendingBankInitial = \App\Models\BankDetail::where('status', 'pending')
-            ->with(['user.referrer', 'user.kyc'])
-            ->latest()
-            ->get();
+        // 2. Pending Bank Initial Setup (Filtered by search & date)
+        $bankInitialQuery = \App\Models\BankDetail::where('status', 'pending')
+            ->with(['user.referrer', 'user.kyc']);
 
-        // 3. Pending Bank Update Requests
-        $pendingBankUpdates = \App\Models\BankUpdateRequest::where('status', 'pending')
-            ->with(['user.referrer', 'user.kyc'])
-            ->latest()
-            ->get();
+        if ($search) {
+            $bankInitialQuery->where(function($bq) use ($search) {
+                $bq->where('bank_name', 'like', "%{$search}%")
+                  ->orWhere('account_number', 'like', "%{$search}%")
+                  ->orWhere('account_holder_name', 'like', "%{$search}%")
+                  ->orWhereHas('user', function($uq) use ($search) {
+                      $uq->where('name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%")
+                         ->orWhere('mobile', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($startDate) {
+            $bankInitialQuery->whereDate('created_at', '>=', $startDate);
+        }
+
+        if ($endDate) {
+            $bankInitialQuery->whereDate('created_at', '<=', $endDate);
+        }
+
+        $pendingBankInitial = $bankInitialQuery->latest()->get();
+
+        // 3. Pending Bank Update Requests (Filtered by search & date)
+        $bankUpdateQuery = \App\Models\BankUpdateRequest::where('status', 'pending')
+            ->with(['user.referrer', 'user.kyc']);
+
+        if ($search) {
+            $bankUpdateQuery->where(function($buq) use ($search) {
+                $buq->where('bank_name', 'like', "%{$search}%")
+                   ->orWhere('account_number', 'like', "%{$search}%")
+                   ->orWhere('account_holder_name', 'like', "%{$search}%")
+                   ->orWhereHas('user', function($uq) use ($search) {
+                       $uq->where('name', 'like', "%{$search}%")
+                          ->orWhere('email', 'like', "%{$search}%")
+                          ->orWhere('mobile', 'like', "%{$search}%");
+                   });
+            });
+        }
+
+        if ($startDate) {
+            $bankUpdateQuery->whereDate('created_at', '>=', $startDate);
+        }
+
+        if ($endDate) {
+            $bankUpdateQuery->whereDate('created_at', '<=', $endDate);
+        }
+
+        $pendingBankUpdates = $bankUpdateQuery->latest()->get();
 
         // Attach old data to update requests
         foreach ($pendingBankUpdates as $req) {
