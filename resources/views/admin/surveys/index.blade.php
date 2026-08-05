@@ -353,7 +353,7 @@
                         text: "This question and all user responses will be deleted!",
                         icon: 'warning',
                         showCancelButton: true,
-                        confirmButtonColor: '#secondary',
+                        confirmButtonColor: '#dc2626',
                         confirmButtonText: 'Yes, delete it!'
                     });
 
