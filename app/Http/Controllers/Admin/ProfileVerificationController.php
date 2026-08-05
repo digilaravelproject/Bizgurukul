@@ -84,7 +84,7 @@ class ProfileVerificationController extends Controller
             $bankInitialQuery->whereDate('created_at', '<=', $endDate);
         }
 
-        $pendingBankInitial = $bankInitialQuery->latest()->get();
+        $pendingBankInitial = $bankInitialQuery->latest()->paginate($perPage, ['*'], 'bank_initial_page');
 
         // 3. Pending Bank Update Requests (Filtered by search & date)
         $bankUpdateQuery = \App\Models\BankUpdateRequest::where('status', 'pending')
@@ -111,7 +111,7 @@ class ProfileVerificationController extends Controller
             $bankUpdateQuery->whereDate('created_at', '<=', $endDate);
         }
 
-        $pendingBankUpdates = $bankUpdateQuery->latest()->get();
+        $pendingBankUpdates = $bankUpdateQuery->latest()->paginate($perPage, ['*'], 'bank_update_page');
 
         // Attach old data to update requests
         foreach ($pendingBankUpdates as $req) {

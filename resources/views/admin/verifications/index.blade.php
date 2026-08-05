@@ -241,6 +241,11 @@
                             </tbody>
                         </table>
                     </div>
+                    @if($pendingBankInitial->hasPages())
+                        <div class="px-10 py-6 bg-navy/5 border-t border-navy/5">
+                            {{ $pendingBankInitial->appends(['activeTab' => 'bank', 'search' => request('search'), 'per_page' => request('per_page', 20), 'start_date' => request('start_date'), 'end_date' => request('end_date')])->links() }}
+                        </div>
+                    @endif
                 </div>
             </section>
 
@@ -326,6 +331,11 @@
                             </tbody>
                         </table>
                     </div>
+                    @if($pendingBankUpdates->hasPages())
+                        <div class="px-10 py-6 bg-navy/5 border-t border-navy/5">
+                            {{ $pendingBankUpdates->appends(['activeTab' => 'bank', 'search' => request('search'), 'per_page' => request('per_page', 20), 'start_date' => request('start_date'), 'end_date' => request('end_date')])->links() }}
+                        </div>
+                    @endif
                 </div>
             </section>
         </div>
