@@ -14,13 +14,13 @@
 
             {{-- Tab Switcher --}}
             <div class="flex bg-white/60 backdrop-blur-md p-1 rounded-[24px] border border-primary/10 shadow-sm">
-                <button @click="activeTab = 'kyc'"
+                <button @click="switchTab('kyc')"
                     :class="activeTab === 'kyc' ? 'brand-gradient text-white shadow-lg shadow-primary/20' : 'text-mutedText hover:bg-primary/5 hover:text-primary'"
                     class="px-8 py-3 rounded-[20px] text-[11px] font-black uppercase tracking-[1px] transition-all duration-300">
                     KYC Management <span
                         class="ml-2 px-2 py-0.5 bg-black/10 rounded-lg text-[9px]">{{ $pendingKycCount + $verifiedKycCount }}</span>
                 </button>
-                <button @click="activeTab = 'bank'"
+                <button @click="switchTab('bank')"
                     :class="activeTab === 'bank' ? 'bg-secondary text-white shadow-lg shadow-secondary/20' : 'text-mutedText hover:bg-secondary/5 hover:text-secondary'"
                     class="px-8 py-3 rounded-[20px] text-[11px] font-black uppercase tracking-[1px] transition-all duration-300">
                     Payout Sync <span
@@ -771,6 +771,13 @@
                 activeBankReq: {},
                 activeInitialBankReq: {},
                 activeBankDoc: '',
+
+                switchTab(tab) {
+                    this.activeTab = tab;
+                    let currentUrl = new URL(window.location.href);
+                    currentUrl.searchParams.set('activeTab', tab);
+                    window.history.replaceState({}, '', currentUrl.toString());
+                },
 
                 updateTable() {
                     let currentUrl = new URL(window.location.href);
