@@ -140,24 +140,29 @@
                                     placeholder="e.g., How satisfied are you with our platform?"></textarea>
                             </div>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
                                 <div>
                                     <label
                                         class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Question
                                         Type</label>
-                                    <select x-model="form.type"
-                                        class="w-full rounded-2xl bg-amber-500/5 px-5 py-4 text-sm font-bold text-mainText border-2 border-primary/20 focus:border-primary focus:bg-white outline-none">
-                                        <option value="options">Multiple Choice (Options)</option>
-                                        <option value="text">Free Text Input</option>
-                                    </select>
+                                    <div class="relative">
+                                        <select x-model="form.type"
+                                            class="w-full rounded-2xl bg-amber-500/5 px-5 h-14 text-sm font-bold text-mainText border-2 border-primary/20 focus:border-primary focus:bg-white outline-none appearance-none cursor-pointer pr-10">
+                                            <option value="options">Multiple Choice (Options)</option>
+                                            <option value="text">Free Text Input</option>
+                                        </select>
+                                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-mutedText">
+                                            <i class="fas fa-chevron-down text-xs"></i>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div>
                                     <label
                                         class="block text-[10px] font-black uppercase tracking-widest text-mutedText mb-2 ml-1">Requirement</label>
-                                    <div class="flex items-center h-[54px] bg-amber-500/5 border-2 border-primary/20 rounded-2xl px-5">
+                                    <div class="flex items-center h-14 bg-amber-500/5 border-2 border-primary/20 rounded-2xl px-5 hover:border-primary/50 transition-all">
                                         <label class="inline-flex items-center cursor-pointer group w-full">
                                             <input type="checkbox" x-model="form.is_required" class="hidden">
-                                            <div class="w-5 h-5 rounded-lg border-2 border-primary/30 flex items-center justify-center transition-all group-hover:border-primary mr-3 flex-shrink-0"
+                                            <div class="w-5 h-5 rounded-lg border-2 border-primary/40 flex items-center justify-center transition-all group-hover:border-primary mr-3 flex-shrink-0"
                                                 :class="form.is_required ? 'bg-primary border-primary' : 'bg-white'">
                                                 <svg x-show="form.is_required" class="w-3.5 h-3.5 text-white" fill="none"
                                                     stroke="currentColor" viewBox="0 0 24 24">
@@ -165,7 +170,7 @@
                                                         d="M5 13l4 4L19 7"></path>
                                                 </svg>
                                             </div>
-                                            <span class="text-xs font-bold text-mainText">Mandatory Field</span>
+                                            <span class="text-sm font-bold text-mainText">Mandatory Field</span>
                                         </label>
                                     </div>
                                 </div>
