@@ -542,31 +542,31 @@
 
         {{-- Survey Popup --}}
         @if(count($surveyQuestions) > 0)
-        <div x-data="surveyHandler(@js($surveyQuestions))" x-show="showSurvey" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div class="fixed inset-0 bg-navy/60 backdrop-blur-md" @click="false"></div>
+        <div x-data="surveyHandler(@js($surveyQuestions))" x-show="showSurvey" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+            <div class="fixed inset-0 bg-black/70 backdrop-blur-md" @click="false"></div>
             
-            <div class="relative w-full max-w-xl bg-white rounded-[2.5rem] shadow-2xl border border-primary/10 overflow-hidden transform transition-all"
+            <div class="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl border-2 border-primary/20 overflow-hidden transform transition-all my-auto max-h-[90vh] flex flex-col"
                 x-show="showSurvey" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
                 
-                <div class="brand-gradient h-2 shadow-inner"></div>
+                <div class="brand-gradient h-2.5 flex-shrink-0"></div>
                 
-                <div class="p-8 md:p-12">
-                    <div class="text-center mb-10">
-                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-primary/10 text-primary mb-6">
+                <div class="p-6 sm:p-10 overflow-y-auto flex-1 custom-scrollbar">
+                    <div class="text-center mb-8">
+                        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 text-primary mb-4 border border-primary/20">
                             <i class="fas fa-comment-dots text-2xl"></i>
                         </div>
-                        <h2 class="text-2xl md:text-3xl font-black tracking-tight text-mainText">Help Us Improve!</h2>
-                        <p class="text-sm font-medium text-mutedText mt-2">Take a moment to share your feedback with us.</p>
+                        <h2 class="text-2xl sm:text-3xl font-black tracking-tight text-mainText">Help Us Improve!</h2>
+                        <p class="text-xs sm:text-sm font-medium text-mutedText mt-1.5">Take a moment to share your feedback with us.</p>
                     </div>
 
-                    <form @submit.prevent="submitSurvey" class="space-y-8" x-init="questions.forEach(q => responses[q.id] = responses[q.id] || '')">
+                    <form @submit.prevent="submitSurvey" class="space-y-6" x-init="questions.forEach(q => responses[q.id] = responses[q.id] || '')">
                         <template x-for="(q, index) in questions" :key="'q-' + q.id">
                             <div x-show="currentStep === index" x-transition:enter="duration-300" class="survey-question">
-                                <div class="flex items-start gap-4 mb-8">
-                                    <span class="flex-shrink-0 w-10 h-10 rounded-2xl bg-navy flex items-center justify-center text-xs font-black text-primary border border-primary/20 shadow-sm" x-text="index + 1"></span>
+                                <div class="flex items-start gap-3.5 mb-6">
+                                    <span class="flex-shrink-0 w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-xs font-black text-primary border border-primary/30 shadow-sm" x-text="index + 1"></span>
                                     <div class="flex-1 pt-1">
-                                        <h3 class="text-lg md:text-xl font-black text-mainText leading-tight" x-text="q.question"></h3>
-                                        <p class="text-[10px] font-bold text-primary uppercase tracking-widest mt-2" x-show="q.is_required">* Required</p>
+                                        <h3 class="text-base sm:text-lg font-black text-mainText leading-snug" x-text="q.question"></h3>
+                                        <p class="text-[10px] font-bold text-secondary uppercase tracking-widest mt-1" x-show="q.is_required">* Required</p>
                                     </div>
                                 </div>
 
@@ -574,17 +574,17 @@
                                 <template x-if="q.type === 'options' && q.options">
                                     <div class="grid grid-cols-1 gap-3">
                                         <template x-for="opt in q.options" :key="'opt-' + opt.id">
-                                            <label class="group relative flex items-center p-5 rounded-2xl border-2 border-navy hover:border-primary/50 transition-all cursor-pointer bg-surface/50"
-                                                :class="responses[q.id] == opt.id ? 'border-primary bg-primary/5 shadow-lg shadow-primary/5' : ''">
+                                            <label class="group relative flex items-center p-4 sm:p-4.5 rounded-2xl border-2 border-primary/20 hover:border-primary transition-all cursor-pointer bg-amber-500/5 hover:bg-primary/5"
+                                                :class="responses[q.id] == opt.id ? 'border-primary bg-primary/10 shadow-md shadow-primary/10' : ''">
                                                 <input type="radio" :name="'q_' + q.id" :value="opt.id" 
                                                     @change="responses[q.id] = opt.id"
                                                     :checked="responses[q.id] == opt.id" class="hidden">
-                                                <div class="w-6 h-6 rounded-full border-2 border-primary/20 flex items-center justify-center group-hover:border-primary/40 mr-4 transition-all"
+                                                <div class="w-5 h-5 rounded-full border-2 border-primary/40 flex items-center justify-center group-hover:border-primary mr-3.5 flex-shrink-0 transition-all"
                                                     :class="responses[q.id] == opt.id ? 'border-primary' : ''">
                                                     <div class="w-2.5 h-2.5 rounded-full bg-primary scale-0 transition-transform duration-300" 
                                                         :class="responses[q.id] == opt.id ? 'scale-100' : ''"></div>
                                                 </div>
-                                                <span class="text-sm font-bold text-mainText group-hover:text-primary transition-colors" x-text="opt.option_text"></span>
+                                                <span class="text-xs sm:text-sm font-bold text-mainText group-hover:text-primary transition-colors" x-text="opt.option_text"></span>
                                             </label>
                                         </template>
                                     </div>
@@ -592,38 +592,38 @@
 
                                 {{-- Text Type --}}
                                 <template x-if="q.type === 'text'">
-                                    <div class="bg-navy rounded-2xl p-6 border border-primary/5 shadow-inner">
+                                    <div class="bg-amber-500/5 rounded-2xl p-4 border-2 border-primary/20 focus-within:border-primary focus-within:bg-primary/5 transition-all">
                                         <textarea :name="'q_' + q.id" rows="4"
                                             x-model="responses[q.id]"
-                                            class="w-full bg-transparent border-0 focus:ring-0 text-sm font-bold text-mainText placeholder-mutedText/40 resize-none"
+                                            class="w-full bg-transparent border-0 focus:ring-0 text-xs sm:text-sm font-bold text-mainText placeholder-mutedText/50 resize-none outline-none"
                                             placeholder="Enter your response here..."></textarea>
                                     </div>
                                 </template>
                             </div>
                         </template>
 
-                        <div class="flex items-center justify-between gap-4 pt-6 border-t border-primary/5">
+                        <div class="flex items-center justify-between gap-3 pt-6 border-t-2 border-primary/10 mt-6">
                             <div class="flex gap-1.5">
                                 <template x-for="(q, index) in questions" :key="'dot-' + q.id">
-                                    <div class="h-1.5 rounded-full transition-all duration-500"
-                                        :class="currentStep === index ? 'w-6 bg-primary shadow-lg shadow-primary/20' : 'w-1.5 bg-primary/20'"></div>
+                                    <div class="h-2 rounded-full transition-all duration-500"
+                                        :class="currentStep === index ? 'w-6 bg-primary shadow-md shadow-primary/20' : 'w-2 bg-primary/20'"></div>
                                 </template>
                             </div>
 
-                            <div class="flex flex-row-reverse items-center gap-3">
+                            <div class="flex flex-row-reverse items-center gap-2.5">
                                 <button type="button" x-show="currentStep < questions.length - 1" @click="nextStep()"
-                                    class="brand-gradient px-6 md:px-8 py-3 rounded-xl text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/25 hover:-translate-y-0.5 transition-all">
+                                    class="brand-gradient px-6 sm:px-8 py-3 rounded-xl text-white text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/25 hover:-translate-y-0.5 transition-all">
                                     Next Step
                                 </button>
                                 
                                 <button type="submit" x-show="currentStep === questions.length - 1" :disabled="isSubmitting"
-                                    class="brand-gradient px-8 md:px-10 py-3 rounded-xl text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/25 hover:-translate-y-0.5 disabled:opacity-50 transition-all flex items-center gap-2">
+                                    class="brand-gradient px-7 sm:px-9 py-3 rounded-xl text-white text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/25 hover:-translate-y-0.5 disabled:opacity-50 transition-all flex items-center gap-2">
                                     <i x-show="isSubmitting" class="fas fa-circle-notch fa-spin"></i>
                                     <span x-text="isSubmitting ? 'Submitting...' : 'Finish Survey'"></span>
                                 </button>
 
                                 <button type="button" x-show="currentStep > 0" @click="prevStep()"
-                                    class="px-5 py-3 rounded-xl bg-navy text-mutedText text-[10px] font-black uppercase tracking-widest hover:text-primary transition-all">Back</button>
+                                    class="px-4 sm:px-5 py-3 rounded-xl bg-primary/10 text-mainText border border-primary/20 text-[10px] sm:text-xs font-black uppercase tracking-widest hover:bg-primary/20 transition-all">Back</button>
                             </div>
                         </div>
                     </form>
