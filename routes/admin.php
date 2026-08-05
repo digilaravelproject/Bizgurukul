@@ -235,7 +235,9 @@ Route::middleware(['auth'])
             // Contact Inquiries
             Route::prefix('contact-inquiries')->name('contact-inquiries.')->group(function () {
                 Route::get('/', [\App\Http\Controllers\Admin\ContactInquiryController::class, 'index'])->name('index');
+                Route::post('/bulk-mark-read', [\App\Http\Controllers\Admin\ContactInquiryController::class, 'bulkMarkRead'])->name('bulk-mark-read');
                 Route::get('/{id}', [\App\Http\Controllers\Admin\ContactInquiryController::class, 'show'])->name('show');
+                Route::post('/{id}/mark-read', [\App\Http\Controllers\Admin\ContactInquiryController::class, 'markRead'])->name('mark-read');
                 Route::post('/{id}/reply', [\App\Http\Controllers\Admin\ContactInquiryController::class, 'markReplied'])->name('mark-replied');
                 Route::post('/{id}/send-reply', [\App\Http\Controllers\Admin\ContactInquiryController::class, 'sendReply'])->name('send-reply');
                 Route::delete('/{id}', [\App\Http\Controllers\Admin\ContactInquiryController::class, 'destroy'])->name('destroy');

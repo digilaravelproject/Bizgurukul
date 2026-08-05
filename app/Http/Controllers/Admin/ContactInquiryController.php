@@ -61,6 +61,40 @@ class ContactInquiryController extends Controller
         return back()->with('success', 'Inquiry marked as replied.');
     }
 
+    public function markRead(Request $request, $id)
+    {
+        $inquiry = ContactInquiry::findOrFail($id);
+        $inquiry->update(['is_replied' => true]);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Inquiry marked as read successfully.',
+            ]);
+        }
+
+        return back()->with('success', 'Inquiry marked as read successfully.');
+    }
+
+    public function bulkMarkRead(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:contact_inquiries,id',
+        ]);
+
+        ContactInquiry::whereIn('id', $request->ids)->update(['is_replied' => true]);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Selected inquiries marked as read successfully.',
+            ]);
+        }
+
+        return back()->with('success', 'Selected inquiries marked as read successfully.');
+    }
+
     public function sendReply(Request $request, $id)
     {
         $request->validate([
