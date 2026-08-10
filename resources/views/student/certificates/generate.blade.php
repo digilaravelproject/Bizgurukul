@@ -103,30 +103,32 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start; /* Fixed top-down layout */
-            padding-top: 55mm; /* Starting position of content */
+            padding-top: 66mm; /* Adjusted down to prevent overlapping CERTIFICATE header */
         }
 
         /* Fixed sections to prevent any movement */
         .cert-intro {
-            height: 10mm;
+            height: 8mm;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin-bottom: 2mm;
         }
 
         .name-container {
             width: 75%; 
-            height: 38mm; 
+            height: 25mm; 
             display: flex;
-            align-items: center;
+            align-items: flex-end; /* Align closer to the baseline line */
             justify-content: center;
-            margin: 2mm 0;
+            margin: 0 auto;
+            padding-bottom: 2mm; /* Give slight spacing above line */
             overflow: visible; /* Allow measurement */
         }
 
         .student-name {
             font-family: 'Cinzel', serif;
-            font-size: 48pt; 
+            font-size: 32pt; 
             font-weight: 700;
             color: #0f172a;
             letter-spacing: 0.02em;
@@ -141,17 +143,17 @@
 
         .course-container {
             width: 85%;
-            height: 25mm; /* Fixed space for course title */
+            height: 20mm; /* Fixed space for course title */
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-top: 5mm;
+            margin-top: 6mm;
             overflow: hidden;
         }
 
         .cert-body {
             font-family: 'Playfair Display', serif;
-            font-size: 16pt;
+            font-size: 15pt;
             color: #475569;
             margin: 0;
             font-style: italic;
@@ -159,7 +161,7 @@
 
         .course-title {
             font-family: 'Montserrat', sans-serif;
-            font-size: 24pt;
+            font-size: 22pt;
             font-weight: 700;
             color: #d97706;
             line-height: 1.2;
@@ -172,38 +174,38 @@
         .footer-details {
             display: flex;
             justify-content: space-between;
-            width: 75%; /* More compact footer */
-            margin-top: 15mm;
+            width: 78%; /* Matched to background layout guidelines */
             position: absolute;
-            bottom: 25mm;
+            bottom: 20mm;
             left: 50%;
             transform: translateX(-50%); /* Perfectly centered */
         }
 
         .footer-item {
             text-align: center;
+            width: 60mm;
         }
 
         .footer-value {
             font-family: 'Montserrat', sans-serif;
             font-weight: 700;
-            font-size: 12pt;
+            font-size: 11pt;
             color: #1e293b;
             padding-bottom: 2mm;
-            margin-bottom: 2mm;
-            display: inline-block;
+            margin-bottom: 0;
+            display: block;
         }
 
         .footer-label {
             font-family: 'Montserrat', sans-serif;
-            font-size: 9pt;
+            font-size: 8.5pt;
             color: #64748b;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.08em;
             font-weight: 600;
             border-top: 1px solid #cbd5e1;
             padding-top: 2mm;
-            width: 60mm;
+            width: 100%;
         }
 
         /* PRINT SPECIFIC RESET - CRITICAL FOR 0 MARGIN PDF */
@@ -314,8 +316,8 @@
         // Function to dynamically adjust certificate font sizes
         function adjustCertificateText() {
             const configs = [
-                { id: 'studentName', baseSize: 48, minSize: 12 },
-                { id: 'courseTitle', baseSize: 24, minSize: 12 }
+                { id: 'studentName', baseSize: 32, minSize: 12 },
+                { id: 'courseTitle', baseSize: 22, minSize: 12 }
             ];
 
             configs.forEach(config => {
