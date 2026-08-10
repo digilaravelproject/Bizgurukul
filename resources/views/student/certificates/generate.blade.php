@@ -117,7 +117,7 @@
 
         .name-container {
             width: 75%; 
-            height: 25mm; 
+            height: 30mm; 
             display: flex;
             align-items: flex-end; /* Align closer to the baseline line */
             justify-content: center;
@@ -147,7 +147,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-top: 6mm;
+            margin-top: 5mm;
             overflow: hidden;
         }
 
@@ -287,7 +287,7 @@
                 <div class="student-name" id="studentName">{{ strtoupper($user->name) }}</div>
             </div>
 
-            <div class="cert-body" style="font-size: 14pt; max-width: 80%; line-height: 1.6; height: 15mm; display: flex; align-items: center; justify-content: center; margin: 2mm 0;">
+            <div class="cert-body" style="font-size: 14pt; max-width: 80%; line-height: 1.6; height: 15mm; display: flex; align-items: center; justify-content: center; margin: 7mm 0 2mm;">
                 has successfully completed the comprehensive learning track and demonstrated exceptional dedication in
             </div>
 
