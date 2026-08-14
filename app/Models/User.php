@@ -245,6 +245,42 @@ class User extends Authenticatable
         return (float) $query->sum('amount');
     }
 
+    /**
+     * Get the total target amount of claimed achievements in a given date range.
+     */
+    public function getClaimedRewardsSumInRange($startDate = null, $endDate = null): float
+    {
+        $query = $this->achievements()
+            ->wherePivot('status', 'claimed');
+
+        if ($startDate) {
+            $query->where(function ($q) use ($startDate) {
+                $q->whereNull('achievements.start_date')
+                  ->orWhere('achievements.start_date', '>=', $startDate);
+            });
+        }
+
+        if ($endDate) {
+            $query->where(function ($q) use ($endDate) {
+                $q->whereNull('achievements.end_date')
+                  ->orWhere('achievements.end_date', '<=', $endDate);
+            });
+        }
+
+        return (float) $query->sum('achievements.target_amount');
+    }
+
+    /**
+     * Get available net earnings for claiming new achievements (Earned - Claimed).
+     */
+    public function getAvailableEarningsForRewards($startDate = null, $endDate = null): float
+    {
+        $earned = $this->getEarningsInRange($startDate, $endDate);
+        $claimed = $this->getClaimedRewardsSumInRange($startDate, $endDate);
+
+        return max(0, $earned - $claimed);
+    }
+
     public function getNextAchievementAttribute(): ?Achievement
     {
         $totalEarned = $this->total_earnings;

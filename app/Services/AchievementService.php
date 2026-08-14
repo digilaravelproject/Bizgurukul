@@ -12,7 +12,7 @@ class AchievementService
 {
     /**
      * Check and unlock new achievements for a user.
-     * This should be called whenever a user earns commission.
+     * This should be called whenever a user earns commission or claims a reward.
      */
     public function checkAndUnlockAchievements(User $user): array
     {
@@ -35,20 +35,22 @@ class AchievementService
         $newlyUnlocked = [];
 
         foreach ($activeAchievements as $achievement) {
-            // Check if already unlocked or claimed
+            // Check if already claimed
             $userAchievement = UserAchievement::where('user_id', $user->id)
                 ->where('achievement_id', $achievement->id)
                 ->first();
 
-            if ($userAchievement && ($userAchievement->status === 'unlocked' || $userAchievement->status === 'claimed')) {
-                continue; // Already processed
+            if ($userAchievement && $userAchievement->status === 'claimed') {
+                continue; // Already claimed/consumed
             }
 
-            // Calculate earnings in the specific range of this achievement
-            $earningsInRange = $user->getEarningsInRange($achievement->start_date, $achievement->end_date);
+            // Calculate usable available earnings in the specific range (Total Earned - Claimed Rewards)
+            $availableInRange = $user->getAvailableEarningsForRewards($achievement->start_date, $achievement->end_date);
 
-            if ($earningsInRange >= $achievement->target_amount) {
-                // Unlock it
+            if ($availableInRange >= $achievement->target_amount) {
+                // Unlock it if not already unlocked
+                $isNewlyUnlocked = !$userAchievement || $userAchievement->status !== 'unlocked';
+
                 $userAchievement = UserAchievement::updateOrCreate(
                     [
                         'user_id' => $user->id,
@@ -56,14 +58,16 @@ class AchievementService
                     ],
                     [
                         'status' => 'unlocked',
-                        'unlocked_at' => now(),
+                        'unlocked_at' => $userAchievement && $userAchievement->unlocked_at ? $userAchievement->unlocked_at : now(),
                     ]
                 );
 
-                $newlyUnlocked[] = $achievement;
+                if ($isNewlyUnlocked) {
+                    $newlyUnlocked[] = $achievement;
+                }
             } else {
-                // Ensure it exists as locked if it doesn't
-                UserAchievement::firstOrCreate(
+                // If previously unlocked but balance consumed by another claim, re-lock it
+                UserAchievement::updateOrCreate(
                     [
                         'user_id' => $user->id,
                         'achievement_id' => $achievement->id,
@@ -123,19 +127,18 @@ class AchievementService
             ->first();
         }
 
-        // Current earnings for the next achievement's period
+        // Available earnings for the next achievement's period after claimed deductions
         $currentEarningsInRange = $nextAchievement 
-            ? $user->getEarningsInRange($nextAchievement->start_date, $nextAchievement->end_date)
+            ? $user->getAvailableEarningsForRewards($nextAchievement->start_date, $nextAchievement->end_date)
             : 0;
 
-        // Current milestone (the one just achieved)
+        // Current milestone (the highest achieved/claimed one)
         $currentMilestone = $user->achievements()
             ->wherePivotIn('status', ['unlocked', 'claimed'])
             ->orderBy('priority', 'desc')
             ->orderBy('target_amount', 'desc')
             ->first();
 
-        $startAmount = 0; // In the new logic, each milestone starts from 0 in its period
         $targetAmount = $nextAchievement ? $nextAchievement->target_amount : 1000;
 
         $progressInRange = $currentEarningsInRange;
@@ -147,7 +150,8 @@ class AchievementService
         $overallPercentage = min(100, ($user->total_earnings / $maxTarget) * 100);
 
         return [
-            'total_earned' => $currentEarningsInRange, // Using range-specific earnings for the display
+            'total_earned' => $currentEarningsInRange,
+            'total_commission' => $user->total_earnings,
             'next_achievement' => $nextAchievement,
             'current_milestone' => $currentMilestone,
             'percentage' => $percentage,
@@ -170,10 +174,16 @@ class AchievementService
             ->first();
 
         if ($userAchievement) {
-            return $userAchievement->update([
+            $updated = $userAchievement->update([
                 'status' => 'claimed',
                 'claimed_at' => now(),
             ]);
+
+            if ($updated) {
+                // Re-evaluate and sync remaining achievements since available balance has been consumed
+                $this->checkAndUnlockAchievements($user);
+                return true;
+            }
         }
 
         return false;

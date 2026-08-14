@@ -108,12 +108,15 @@ class DashboardController extends Controller
                 ->orderBy('target_amount', 'asc')
                 ->get();
 
-            $userAchievements = $user->achievements->pluck('pivot.status', 'id')->toArray();
+            // Re-evaluate unlock status whenever rewards page is loaded
+            $this->achievementService->checkAndUnlockAchievements($user);
+
+            $userAchievements = $user->fresh()->achievements->pluck('pivot.status', 'id')->toArray();
             
-            // Calculate progress for each milestone based on its specific dates
+            // Calculate available progress for each milestone based on its specific dates and claimed deductions
             $milestoneProgress = [];
             foreach ($allAchievements as $milestone) {
-                $milestoneProgress[$milestone->id] = $user->getEarningsInRange($milestone->start_date, $milestone->end_date);
+                $milestoneProgress[$milestone->id] = $user->getAvailableEarningsForRewards($milestone->start_date, $milestone->end_date);
             }
 
             // Fetch active time-sensitive offers & compute student progress
