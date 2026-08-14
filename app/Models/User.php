@@ -253,17 +253,25 @@ class User extends Authenticatable
         $query = $this->achievements()
             ->wherePivot('status', 'claimed');
 
-        if ($startDate) {
-            $query->where(function ($q) use ($startDate) {
-                $q->whereNull('achievements.start_date')
-                  ->orWhere('achievements.start_date', '>=', $startDate);
-            });
-        }
+        // If the current milestone has a period, deduct any rewards claimed within that period
+        if ($startDate || $endDate) {
+            $query->where(function ($q) use ($startDate, $endDate) {
+                // Match either by when it was claimed OR if achievement dates overlap
+                if ($startDate) {
+                    $q->where(function ($sub) use ($startDate) {
+                        $sub->where('user_achievements.claimed_at', '>=', $startDate)
+                            ->orWhereNull('achievements.end_date')
+                            ->orWhere('achievements.end_date', '>=', $startDate);
+                    });
+                }
 
-        if ($endDate) {
-            $query->where(function ($q) use ($endDate) {
-                $q->whereNull('achievements.end_date')
-                  ->orWhere('achievements.end_date', '<=', $endDate);
+                if ($endDate) {
+                    $q->where(function ($sub) use ($endDate) {
+                        $sub->where('user_achievements.claimed_at', '<=', $endDate)
+                            ->orWhereNull('achievements.start_date')
+                            ->orWhere('achievements.start_date', '<=', $endDate);
+                    });
+                }
             });
         }
 
