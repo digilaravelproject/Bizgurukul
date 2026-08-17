@@ -395,6 +395,26 @@ class User extends Authenticatable
             ->sum('total_amount');
     }
 
+    /**
+     * Get the user's first/initial bundle purchase payment record.
+     */
+    public function firstBundlePayment()
+    {
+        if ($this->relationLoaded('payments')) {
+            return $this->payments
+                ->where('status', 'success')
+                ->whereNotNull('bundle_id')
+                ->sortBy('created_at')
+                ->first();
+        }
+
+        return Payment::where('user_id', $this->id)
+            ->where('status', 'success')
+            ->whereNotNull('bundle_id')
+            ->oldest('created_at')
+            ->first();
+    }
+
     public function maxBundlePayment()
     {
         $highestBundle = $this->highestPurchasedBundle();
@@ -423,23 +443,25 @@ class User extends Authenticatable
     }
 
     /**
-     * Calculate remaining upgrade time dynamically based on CURRENT admin window.
-     * Formula: Remaining = Admin_Window_Hours - Elapsed_Hours
+     * Calculate remaining upgrade time dynamically based on FIRST initial bundle purchase.
+     * Formula: Remaining = Admin_Window_Hours - Elapsed_Hours_Since_First_Purchase
+     * Timer NEVER resets on subsequent upgrades.
      */
     public function upgradeTimeLeftSeconds(): ?int
     {
         $highestBundle = $this->highestPurchasedBundle();
         if (!$highestBundle) return null;
 
-        $payment = $this->maxBundlePayment();
-        $referenceTime = $payment ? $payment->created_at : $this->created_at;
+        // Use the initial first bundle purchase time as the immutable baseline
+        $firstPayment = $this->firstBundlePayment();
+        $referenceTime = $firstPayment ? $firstPayment->created_at : $this->created_at;
         if (!$referenceTime) return null;
 
         // Fetch current global window (defaults to 24 if not set)
         $windowHours = (int) Setting::get('upgrade_window_hours', 24);
         if ($windowHours <= 0) return 0;
 
-        // Calculate elapsed time from purchase to now
+        // Calculate elapsed time from initial purchase to now
         $elapsedSeconds = $referenceTime->diffInSeconds(now(), true);
         $windowSeconds = $windowHours * 3600;
 
