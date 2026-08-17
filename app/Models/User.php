@@ -380,6 +380,21 @@ class User extends Authenticatable
         return null;
     }
 
+    public function totalBundlePaymentsPaid(): float
+    {
+        if ($this->relationLoaded('payments')) {
+            return (float) $this->payments
+                ->where('status', 'success')
+                ->whereNotNull('bundle_id')
+                ->sum('total_amount');
+        }
+
+        return (float) Payment::where('user_id', $this->id)
+            ->where('status', 'success')
+            ->whereNotNull('bundle_id')
+            ->sum('total_amount');
+    }
+
     public function maxBundlePayment()
     {
         $highestBundle = $this->highestPurchasedBundle();
@@ -413,15 +428,19 @@ class User extends Authenticatable
      */
     public function upgradeTimeLeftSeconds(): ?int
     {
+        $highestBundle = $this->highestPurchasedBundle();
+        if (!$highestBundle) return null;
+
         $payment = $this->maxBundlePayment();
-        if (!$payment) return null;
+        $referenceTime = $payment ? $payment->created_at : $this->created_at;
+        if (!$referenceTime) return null;
 
         // Fetch current global window (defaults to 24 if not set)
         $windowHours = (int) Setting::get('upgrade_window_hours', 24);
         if ($windowHours <= 0) return 0;
 
         // Calculate elapsed time from purchase to now
-        $elapsedSeconds = $payment->created_at->diffInSeconds(now(), true);
+        $elapsedSeconds = $referenceTime->diffInSeconds(now(), true);
         $windowSeconds = $windowHours * 3600;
 
         $remainingSeconds = $windowSeconds - $elapsedSeconds;

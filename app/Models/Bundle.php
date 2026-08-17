@@ -114,13 +114,13 @@ class Bundle extends Model
     }
 
     /**
-     * Calculate the effective price for a user, handling time-bound upgrades.
+     * Calculate the effective price for a user, handling time-bound upgrades with full tier equity.
      */
     public function getEffectivePriceForUser($user)
     {
         /** @var \App\Models\User $user */
         // Base price depends on whether user was referred
-        $basePrice = ($user && $user->referrer) ? $this->affiliate_price : $this->final_price;
+        $basePrice = ($user && $user->referrer) ? (float) $this->affiliate_price : (float) $this->final_price;
         $price = $basePrice;
 
         if ($user) {
@@ -130,15 +130,20 @@ class Bundle extends Model
                 if ($user->canUpgradeBundles()) {
                     $highestBundle = $user->highestPurchasedBundle();
                     if ($highestBundle) {
-                        // Check if user has an actual successful payment record
-                        $lastPayment = $user->maxBundlePayment();
-                        if ($lastPayment && $lastPayment->total_amount > 0) {
-                            $paidAmount = (float) $lastPayment->total_amount;
-                        } else {
-                            $paidAmount = ($user->referrer) ? $highestBundle->affiliate_price : $highestBundle->final_price;
-                        }
+                        // 1. Current Tier Full Catalog Value
+                        $currentTierValue = ($user->referrer)
+                            ? (float) $highestBundle->affiliate_price
+                            : (float) $highestBundle->final_price;
 
-                        $diff = $basePrice - $paidAmount;
+                        // 2. Cumulative Lifetime Amount Paid by User across all bundles
+                        $totalPaidSoFar = method_exists($user, 'totalBundlePaymentsPaid')
+                            ? $user->totalBundlePaymentsPaid()
+                            : (float) Payment::where('user_id', $user->id)->whereNotNull('bundle_id')->where('status', 'success')->sum('total_amount');
+
+                        // 3. Deductible credit is the higher of tier value or cumulative amount paid (protects overpayments)
+                        $deductibleCredit = max($currentTierValue, $totalPaidSoFar);
+
+                        $diff = $basePrice - $deductibleCredit;
                         $price = max(0, $diff);
                     }
                 }
@@ -159,7 +164,15 @@ class Bundle extends Model
             if ($maxPref > 0 && $this->preference_index > $maxPref && $user->canUpgradeBundles()) {
                 $highestBundle = $user->highestPurchasedBundle();
                 if ($highestBundle) {
-                    return $highestBundle->final_price; // Current value as discount
+                    $currentTierValue = ($user->referrer)
+                        ? (float) $highestBundle->affiliate_price
+                        : (float) $highestBundle->final_price;
+
+                    $totalPaidSoFar = method_exists($user, 'totalBundlePaymentsPaid')
+                        ? $user->totalBundlePaymentsPaid()
+                        : (float) Payment::where('user_id', $user->id)->whereNotNull('bundle_id')->where('status', 'success')->sum('total_amount');
+
+                    return max($currentTierValue, $totalPaidSoFar);
                 }
             }
         }
