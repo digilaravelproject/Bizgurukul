@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Razorpay\Api\Api;
 use App\Models\Course;
+use App\Models\Bundle;
+use App\Models\Coupon;
+use App\Models\Tax;
 use App\Models\Payment;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -23,10 +26,30 @@ class CheckoutController extends Controller
         $this->commissionService = $commissionService;
     }
 
-    private function calculatePricing($basePrice)
+    private function calculatePricing($basePrice, ?string $couponCode = null, ?string $type = null, ?int $id = null)
     {
-        $baseAmountDue = max(0, $basePrice);
-        $taxes = \App\Models\Tax::where('is_active', true)->get();
+        $discountAmount = 0;
+        $coupon = null;
+
+        if ($couponCode) {
+            $coupon = Coupon::where('code', $couponCode)->active()->first();
+            if (!$coupon || $coupon->isExpired()) {
+                return ['error' => 'This coupon code is invalid or expired.'];
+            }
+            if ($coupon->isLimitReached()) {
+                return ['error' => 'This coupon code usage limit has been reached.'];
+            }
+            $cartCourses = ($type === 'course' && $id) ? [$id] : [];
+            $cartBundles = ($type === 'bundle' && $id) ? [$id] : [];
+            if (!$coupon->isValidForItems($cartCourses, $cartBundles)) {
+                return ['error' => 'This coupon is not valid for the selected item.'];
+            }
+
+            $discountAmount = $coupon->calculateDiscount($basePrice);
+        }
+
+        $baseAmountDue = max(0, $basePrice - $discountAmount);
+        $taxes = Tax::where('is_active', true)->get();
         $totalTaxAmount = 0;
         $totalExclusiveTaxAmount = 0;
         $inclusiveTaxRateAmount = 0;
@@ -54,12 +77,59 @@ class CheckoutController extends Controller
         $pureSubtotal = $baseAmountDue - $inclusiveTaxRateAmount;
 
         return [
-            'basePrice'      => $basePrice,
-            'taxableAmount'  => $pureSubtotal,
-            'taxAmount'      => $totalTaxAmount,
-            'taxes'          => $taxes,
-            'totalAmount'    => $baseAmountDue + $totalExclusiveTaxAmount
+            'coupon'                 => $coupon,
+            'couponCode'             => $coupon ? $coupon->code : null,
+            'discountAmount'         => $discountAmount,
+            'basePrice'              => $basePrice,
+            'taxableAmount'          => $pureSubtotal,
+            'taxAmount'              => $totalTaxAmount,
+            'taxes'                  => $taxes,
+            'totalAmount'            => $baseAmountDue + $totalExclusiveTaxAmount,
         ];
+    }
+
+    public function checkCoupon(Request $request, $type, $id)
+    {
+        try {
+            $request->validate([
+                'code' => 'required|string',
+            ]);
+
+            if (!in_array($type, ['course', 'bundle'])) {
+                return response()->json(['status' => 'invalid', 'message' => 'Invalid product type.']);
+            }
+
+            $user = Auth::user();
+            $basePrice = 0;
+
+            if ($type === 'course') {
+                $product = Course::findOrFail($id);
+                $basePrice = ($user && $user->referrer) ? (float)$product->affiliate_price : (float)$product->final_price;
+            } else {
+                $product = Bundle::findOrFail($id);
+                $basePrice = (float)$product->getEffectivePriceForUser($user);
+            }
+
+            $pricing = $this->calculatePricing($basePrice, trim($request->code), $type, (int)$id);
+
+            if (isset($pricing['error'])) {
+                return response()->json(['status' => 'invalid', 'message' => $pricing['error']]);
+            }
+
+            return response()->json([
+                'status'            => 'valid',
+                'message'           => 'Coupon Applied Successfully!',
+                'coupon_code'       => $pricing['couponCode'],
+                'discount'          => (float)$pricing['discountAmount'],
+                'base_price'        => (float)$pricing['basePrice'],
+                'taxable_amount'    => (float)$pricing['taxableAmount'],
+                'tax'               => (float)$pricing['taxAmount'],
+                'taxes'             => $pricing['taxes'],
+                'total'             => (float)$pricing['totalAmount'],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'invalid', 'message' => $e->getMessage() ?: 'Error applying coupon']);
+        }
     }
 
     public function checkout($type, $id)
@@ -76,16 +146,11 @@ class CheckoutController extends Controller
             $product = Course::findOrFail($id);
             $amount = ($user && $user->referrer) ? $product->affiliate_price : $product->final_price;
         } else {
-            $product = \App\Models\Bundle::findOrFail($id);
+            $product = Bundle::findOrFail($id);
             $amount = $product->getEffectivePriceForUser($user);
         }
 
-        $pricing = $this->calculatePricing($amount);
-
-        // If amount is 0, we can directly handle it
-        if ($amount == 0) {
-            // Can redirect or just render the checkout where price is 0
-        }
+        $pricing = $this->calculatePricing($amount, null, $type, (int)$id);
 
         return view('student.checkout.index', array_merge(
             compact('product', 'type', 'id', 'user'),
@@ -101,29 +166,38 @@ class CheckoutController extends Controller
             }
 
             $user = Auth::user();
-            $amount = 0;
+            $basePrice = 0;
             $productName = '';
 
             if ($type === 'course') {
                 $course = Course::findOrFail($id);
-                $amount = ($user && $user->referrer) ? $course->affiliate_price : $course->final_price;
+                $basePrice = ($user && $user->referrer) ? (float)$course->affiliate_price : (float)$course->final_price;
                 $productName = $course->title;
             } else {
-                $bundle = \App\Models\Bundle::findOrFail($id);
-                $amount = $bundle->getEffectivePriceForUser($user);
+                $bundle = Bundle::findOrFail($id);
+                $basePrice = (float)$bundle->getEffectivePriceForUser($user);
                 $productName = $bundle->title;
             }
 
-            // Razorpay expects amount in paise (1 INR = 100 Paise)
-            $orderData = [
-                'receipt'         => 'rcpt_' . time(),
-                'amount'          => intval(round($amount * 100)),
-                'currency'        => 'INR',
-                'payment_capture' => 1
-            ];
+            $couponCode = $request->filled('coupon_code') ? trim($request->input('coupon_code')) : null;
+            $pricing = $this->calculatePricing($basePrice, $couponCode, $type, (int)$id);
+
+            if (isset($pricing['error'])) {
+                return response()->json(['status' => 'error', 'message' => $pricing['error']], 422);
+            }
+
+            $coupon = $pricing['coupon'] ?? null;
+            $finalPayable = $pricing['totalAmount'];
 
             // If amount is 0 (maybe fully discounted/upgraded), handle 0 payment automatically
-            if ($orderData['amount'] == 0) {
+            if ($finalPayable <= 0) {
+                if ($coupon) {
+                    $coupon->increment('used_count', 1);
+                    if ($coupon->used_count >= $coupon->usage_limit) {
+                        $coupon->update(['status' => 'used']);
+                    }
+                }
+
                 // Directly create a successful payment with explicit zero tax fields
                 Payment::create([
                     'user_id' => $user->id,
@@ -131,8 +205,12 @@ class CheckoutController extends Controller
                     'bundle_id' => $type === 'bundle' ? $id : null,
                     'razorpay_order_id' => 'free_upg_' . time(),
                     'razorpay_payment_id' => 'free_upg_' . $user->id . '_' . time(),
+                    'gateway_order_id' => 'free_upg_' . time(),
+                    'gateway_payment_id' => 'free_upg_' . $user->id . '_' . time(),
                     'amount' => 0,
                     'subtotal' => 0,
+                    'discount_amount' => $pricing['discountAmount'],
+                    'coupon_id' => $coupon ? $coupon->id : null,
                     'tax_amount' => 0,
                     'tax_details' => [],
                     'total_amount' => 0,
@@ -155,14 +233,14 @@ class CheckoutController extends Controller
                     }
                 } catch (\Throwable $ignored) {}
 
-                return response()->json(['status' => 'success']);
+                return response()->json(['status' => 'success_free']);
             }
 
             $gateway = \App\Services\Gateways\PaymentGatewayFactory::make();
             $gatewayName = $gateway->getGatewayName();
 
             $orderResult = $gateway->createOrder([
-                'amount'     => $amount,
+                'amount'     => $finalPayable,
                 'receipt'    => 'rcpt_' . time(),
                 'currency'   => 'INR',
                 'customer'   => [
@@ -175,12 +253,10 @@ class CheckoutController extends Controller
                     'user_id' => $user->id,
                     'type'    => $type,
                     'item_id' => $id,
+                    'coupon_code' => $couponCode,
                 ],
                 'return_url' => url('/'),
             ]);
-
-            // Calculate tax breakdown using the same logic as checkout display
-            $pricing = $this->calculatePricing($amount);
 
             // Build tax_details array matching RegistrationService format
             $taxDetails = collect($pricing['taxes'])->map(function ($tax) {
@@ -203,6 +279,8 @@ class CheckoutController extends Controller
                 'payment_gateway' => $gatewayName,
                 'amount' => $pricing['totalAmount'],
                 'subtotal' => $pricing['taxableAmount'],
+                'discount_amount' => $pricing['discountAmount'],
+                'coupon_id' => $coupon ? $coupon->id : null,
                 'tax_amount' => $pricing['taxAmount'],
                 'tax_details' => $taxDetails,
                 'total_amount' => $pricing['totalAmount'],
@@ -324,6 +402,17 @@ class CheckoutController extends Controller
             'gateway_payment_id' => $paymentId,
             'created_at' => now(), // Sync payment time to current success/activation time
         ]);
+
+        // Process Coupon Usage if coupon was attached
+        if ($payment->coupon_id) {
+            $coupon = Coupon::find($payment->coupon_id);
+            if ($coupon) {
+                $coupon->increment('used_count', 1);
+                if ($coupon->used_count >= $coupon->usage_limit) {
+                    $coupon->update(['status' => 'used']);
+                }
+            }
+        }
 
         // Process Commission
         if ($user->referrer) {

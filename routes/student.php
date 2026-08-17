@@ -28,6 +28,7 @@ Route::middleware(['auth', 'role:Student|Admin'])->group(function () {
 
     // 2. Student Course Purchase Payment
     Route::get('/checkout/{type}/{id}', [CheckoutController::class, 'checkout'])->name('student.checkout');
+    Route::post('/checkout/{type}/{id}/check-coupon', [CheckoutController::class, 'checkCoupon'])->name('student.checkout.check-coupon');
     Route::post('/payment/create/{type}/{id}', [CheckoutController::class, 'createOrder'])->name('student.payment.create');
     Route::post('/student/payment/verify', [CheckoutController::class, 'verifyPayment'])->name('student.payment.verify');
 });
