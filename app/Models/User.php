@@ -8,13 +8,20 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 use App\Models\Bundle;
 use App\Models\Payment;
 use App\Models\AffiliateCommission;
 use App\Models\KycDetail;
 use App\Models\BankDetail;
+use App\Models\State;
+use App\Models\BankUpdateRequest;
 use App\Models\WalletTransaction;
 use App\Models\ReferralVisit;
 use App\Models\CommissionRule;
@@ -23,24 +30,14 @@ use App\Models\Setting;
 use App\Models\Achievement;
 use App\Models\UserAchievement;
 use App\Models\BeginnerGuideView;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
-
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, HasRoles, SoftDeletes, LogsActivity;
 
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logFillable()
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->dontLogIfAttributesChangedOnly(['password', 'remember_token']);
-    }
-
-
+    /* =========================================================================
+       1. MODEL CONFIGURATION & ATTRIBUTES
+       ========================================================================= */
 
     protected $fillable = [
         'name',
@@ -89,6 +86,10 @@ class User extends Authenticatable
         'survey_completed' => 'boolean',
     ];
 
+    /* =========================================================================
+       2. BOOT & EVENT HOOKS
+       ========================================================================= */
+
     protected static function boot()
     {
         parent::boot();
@@ -98,6 +99,15 @@ class User extends Authenticatable
                 $user->referral_code = self::generateUniqueReferralCode($user->name ?? 'USER');
             }
         });
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->dontLogIfAttributesChangedOnly(['password', 'remember_token']);
     }
 
     private static function generateUniqueReferralCode($name): string
@@ -115,10 +125,14 @@ class User extends Authenticatable
                 $numberPart .= mt_rand(0, 9);
             }
             $code = $namePart . $numberPart;
-
         } while (self::where('referral_code', $code)->exists());
+
         return $code;
     }
+
+    /* =========================================================================
+       3. ELOQUENT RELATIONSHIPS
+       ========================================================================= */
 
     public function referrer(): BelongsTo
     {
@@ -135,27 +149,17 @@ class User extends Authenticatable
         return $this->hasMany(AffiliateCommission::class, 'affiliate_id');
     }
 
-    public function getProfileImageUrlAttribute(): string
-    {
-        if ($this->profile_photo_url) {
-            return asset('storage/' . $this->profile_photo_url);
-        }
-
-        return $this->profile_picture
-            ? asset('storage/' . $this->profile_picture)
-            : 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=6366f1&color=fff&size=128&bold=true';
-    }
-    public function kyc()
+    public function kyc(): HasOne
     {
         return $this->hasOne(KycDetail::class);
     }
 
-    public function payments()
+    public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
     }
 
-    public function bank()
+    public function bank(): HasOne
     {
         return $this->hasOne(BankDetail::class);
     }
@@ -185,23 +189,12 @@ class User extends Authenticatable
         return $this->hasMany(CommissionRule::class, 'affiliate_id');
     }
 
-    public function getWalletBalanceAttribute(): float
-    {
-        // Ideally cache this or have a separate balance column updated via transactions
-        // For now, summing transactions is safest for accuracy until scale requires optimization
-        // But wait, the wallet_transactions table has balance_after.
-        // So we can just get the last transaction's balance_after.
-
-        $lastTransaction = $this->walletTransactions()->latest('id')->first();
-        return $lastTransaction ? $lastTransaction->balance_after : 0.00;
-    }
-
-    public function affiliateSettings()
+    public function affiliateSettings(): HasOne
     {
         return $this->hasOne(UserAffiliateSetting::class);
     }
 
-    public function bundles()
+    public function bundles(): BelongsToMany
     {
         return $this->belongsToMany(Bundle::class, 'payments', 'user_id', 'bundle_id')
             ->wherePivot('status', 'success')
@@ -218,17 +211,72 @@ class User extends Authenticatable
         return $this->hasMany(BeginnerGuideView::class);
     }
 
-    public function achievements()
+    public function achievements(): BelongsToMany
     {
         return $this->belongsToMany(Achievement::class, 'user_achievements')
             ->withPivot(['status', 'unlocked_at', 'claimed_at', 'admin_notes'])
             ->withTimestamps();
     }
 
+    /* =========================================================================
+       4. ACCESSORS & MUTATORS
+       ========================================================================= */
+
+    public function getNameAttribute($value): string
+    {
+        return ucwords(strtolower($value));
+    }
+
+    protected function setNameAttribute($value): void
+    {
+        $this->attributes['name'] = ucwords(strtolower($value));
+    }
+
+    public function getProfileImageUrlAttribute(): string
+    {
+        if ($this->profile_photo_url) {
+            return asset('storage/' . $this->profile_photo_url);
+        }
+
+        return $this->profile_picture
+            ? asset('storage/' . $this->profile_picture)
+            : 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=6366f1&color=fff&size=128&bold=true';
+    }
+
+    public function getWalletBalanceAttribute(): float
+    {
+        $lastTransaction = $this->walletTransactions()->latest('id')->first();
+        return $lastTransaction ? (float) $lastTransaction->balance_after : 0.00;
+    }
+
     public function getTotalEarningsAttribute(): float
     {
         return (float) $this->commissions()->sum('amount');
     }
+
+    public function getNextAchievementAttribute(): ?Achievement
+    {
+        $totalEarned = $this->total_earnings;
+
+        return Achievement::active()
+            ->where('target_amount', '>', $totalEarned)
+            ->orderBy('priority', 'asc')
+            ->orderBy('target_amount', 'asc')
+            ->first();
+    }
+
+    public function getLatestUnlockedAchievementAttribute(): ?Achievement
+    {
+        return $this->achievements()
+            ->wherePivot('status', 'unlocked')
+            ->orderBy('priority', 'desc')
+            ->orderBy('target_amount', 'desc')
+            ->first();
+    }
+
+    /* =========================================================================
+       5. ACHIEVEMENTS & FINANCIAL DOMAIN LOGIC
+       ========================================================================= */
 
     public function getEarningsInRange($startDate = null, $endDate = null): float
     {
@@ -250,13 +298,10 @@ class User extends Authenticatable
      */
     public function getClaimedRewardsSumInRange($startDate = null, $endDate = null): float
     {
-        $query = $this->achievements()
-            ->wherePivot('status', 'claimed');
+        $query = $this->achievements()->wherePivot('status', 'claimed');
 
-        // If the current milestone has a period, deduct any rewards claimed within that period
         if ($startDate || $endDate) {
             $query->where(function ($q) use ($startDate, $endDate) {
-                // Match either by when it was claimed OR if achievement dates overlap
                 if ($startDate) {
                     $q->where(function ($sub) use ($startDate) {
                         $sub->where('user_achievements.claimed_at', '>=', $startDate)
@@ -289,30 +334,14 @@ class User extends Authenticatable
         return max(0, $earned - $claimed);
     }
 
-    public function getNextAchievementAttribute(): ?Achievement
-    {
-        $totalEarned = $this->total_earnings;
-
-        return Achievement::active()
-            ->where('target_amount', '>', $totalEarned)
-            ->orderBy('priority', 'asc')
-            ->orderBy('target_amount', 'asc')
-            ->first();
-    }
-
-    public function getLatestUnlockedAchievementAttribute(): ?Achievement
-    {
-        return $this->achievements()
-            ->wherePivot('status', 'unlocked')
-            ->orderBy('priority', 'desc')
-            ->orderBy('target_amount', 'desc')
-            ->first();
-    }
+    /* =========================================================================
+       6. BUNDLE ACCESS, UNLOCKS & UPGRADE ENGINE
+       ========================================================================= */
 
     /**
      * Get IDs of bundles directly purchased by the user.
      */
-    public function purchasedBundleIds()
+    public function purchasedBundleIds(): array
     {
         return $this->bundles()->pluck('bundles.id')->toArray();
     }
@@ -331,10 +360,10 @@ class User extends Authenticatable
     /**
      * Get IDs of all bundles unlocked via purchase or preference logic.
      */
-    public function unlockedBundleIds()
+    public function unlockedBundleIds(): array
     {
         $maxPref = $this->maxBundlePreferenceIndex();
-        
+
         // Cache this per-instance to prevent repeated queries in the same request
         return once(fn() => Bundle::where('preference_index', '<=', $maxPref)
             ->where('is_published', true)
@@ -345,7 +374,7 @@ class User extends Authenticatable
     /**
      * Get IDs of all courses unlocked via bundles or direct purchase.
      */
-    public function unlockedCourseIds()
+    public function unlockedCourseIds(): array
     {
         // 1. Courses from unlocked bundles
         $unlockedBundles = Bundle::whereIn('id', $this->unlockedBundleIds())->with('courses')->get();
@@ -364,22 +393,27 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the highest purchased bundle block
+     * Get the highest purchased bundle object.
      */
-    public function highestPurchasedBundle()
+    public function highestPurchasedBundle(): ?Bundle
     {
         $maxPref = $this->maxBundlePreferenceIndex();
-        if ($maxPref <= 0)
+        if ($maxPref <= 0) {
             return null;
+        }
 
         foreach ($this->bundles as $bundle) {
             if ($bundle->preference_index == $maxPref) {
                 return $bundle;
             }
         }
-        return null;
+
+        return Bundle::where('preference_index', $maxPref)->first();
     }
 
+    /**
+     * Get total cumulative lifetime amount paid across all successful bundle purchases.
+     */
     public function totalBundlePaymentsPaid(): float
     {
         if ($this->relationLoaded('payments')) {
@@ -398,7 +432,7 @@ class User extends Authenticatable
     /**
      * Get the user's first/initial bundle purchase payment record.
      */
-    public function firstBundlePayment()
+    public function firstBundlePayment(): ?Payment
     {
         if ($this->relationLoaded('payments')) {
             return $this->payments
@@ -415,11 +449,15 @@ class User extends Authenticatable
             ->first();
     }
 
-    public function maxBundlePayment()
+    /**
+     * Get the latest payment for the user's highest bundle.
+     */
+    public function maxBundlePayment(): ?Payment
     {
         $highestBundle = $this->highestPurchasedBundle();
-        if (!$highestBundle)
+        if (!$highestBundle) {
             return null;
+        }
 
         if ($this->relationLoaded('payments')) {
             return $this->payments
@@ -436,7 +474,10 @@ class User extends Authenticatable
             ->first();
     }
 
-    public function canUpgradeBundles()
+    /**
+     * Check if user is currently eligible for time-bound bundle upgrades.
+     */
+    public function canUpgradeBundles(): bool
     {
         $timeLeft = $this->upgradeTimeLeftSeconds();
         return $timeLeft !== null && $timeLeft > 0;
@@ -450,16 +491,22 @@ class User extends Authenticatable
     public function upgradeTimeLeftSeconds(): ?int
     {
         $highestBundle = $this->highestPurchasedBundle();
-        if (!$highestBundle) return null;
+        if (!$highestBundle) {
+            return null;
+        }
 
         // Use the initial first bundle purchase time as the immutable baseline
         $firstPayment = $this->firstBundlePayment();
         $referenceTime = $firstPayment ? $firstPayment->created_at : $this->created_at;
-        if (!$referenceTime) return null;
+        if (!$referenceTime) {
+            return null;
+        }
 
         // Fetch current global window (defaults to 24 if not set)
         $windowHours = (int) Setting::get('upgrade_window_hours', 24);
-        if ($windowHours <= 0) return 0;
+        if ($windowHours <= 0) {
+            return 0;
+        }
 
         // Calculate elapsed time from initial purchase to now
         $elapsedSeconds = $referenceTime->diffInSeconds(now(), true);
@@ -470,15 +517,9 @@ class User extends Authenticatable
         return $remainingSeconds > 0 ? (int) $remainingSeconds : 0;
     }
 
-    // Name Attribute Accessor and Mutator
-    public function getNameAttribute($value): string
-    {
-        return ucwords(strtolower($value));
-    }
-    protected function setNameAttribute($value)
-    {
-        $this->attributes['name'] = ucwords(strtolower($value));
-    }
+    /* =========================================================================
+       7. AUTHENTICATION & SECURITY HELPERS
+       ========================================================================= */
 
     /**
      * Determine if the user has two factor authentication enabled.
