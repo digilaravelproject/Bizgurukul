@@ -82,17 +82,23 @@ class RazorpayWebhookController extends Controller
             $notes = collect($paymentEntity['notes'] ?? [])->merge($orderEntity['notes'] ?? [])->toArray();
             
             if (empty($notes['lead_id'])) {
-                // Check if this is a generic payment (e.g. CouponPackage)
+                // Check if this is a generic payment or student checkout (bundle/course upgrade)
                 if ($existingPayment) {
                     try {
                         \Illuminate\Support\Facades\DB::beginTransaction();
 
-                        $existingPayment->update([
-                            'razorpay_payment_id' => $paymentId,
-                            'gateway_payment_id'  => $paymentId,
-                            'status'              => 'success',
-                            'created_at'          => now(), // Sync payment time to current success/activation time
-                        ]);
+                        if ($existingPayment->bundle_id || $existingPayment->course_id) {
+                            $checkoutController = app(\App\Http\Controllers\Student\CheckoutController::class);
+                            $checkoutController->processSuccessfulPayment($existingPayment, (string) $paymentId);
+                            Log::info('Razorpay Webhook: Processed checkout payment and affiliate commission for order ' . $orderId);
+                        } else {
+                            $existingPayment->update([
+                                'razorpay_payment_id' => $paymentId,
+                                'gateway_payment_id'  => $paymentId,
+                                'status'              => 'success',
+                                'created_at'          => now(), // Sync payment time to current success/activation time
+                            ]);
+                        }
 
                         if ($existingPayment->paymentable_type === \App\Models\CouponPackage::class) {
                             $couponService = app(\App\Services\CouponService::class);
@@ -100,11 +106,11 @@ class RazorpayWebhookController extends Controller
                         }
 
                         \Illuminate\Support\Facades\DB::commit();
-                        Log::info('Razorpay Webhook: Successfully processed generic payment for order ' . $orderId);
+                        Log::info('Razorpay Webhook: Successfully processed payment for order ' . $orderId);
                         return response()->json(['status' => 'success'], 200);
                     } catch (\Exception $e) {
                         \Illuminate\Support\Facades\DB::rollBack();
-                        Log::error('Razorpay Webhook Generic Process Error: ' . $e->getMessage());
+                        Log::error('Razorpay Webhook Process Error: ' . $e->getMessage());
                         return response()->json(['status' => 'error', 'message' => 'Internal Server Error'], 500);
                     }
                 }

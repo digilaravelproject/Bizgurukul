@@ -96,15 +96,24 @@ class CashfreeWebhookController extends Controller
                 return response()->json(['status' => 'success', 'message' => 'Already processed'], 200);
             }
 
-            // If pending payment exists, update it to success but DON'T return yet —
-            // we must also complete registration if it hasn't been done
+            // If pending payment exists, update it to success and process fulfillment
             if ($existingPayment && $existingPayment->status !== 'success') {
-                $existingPayment->fill([
-                    'gateway_payment_id' => $cfPaymentId,
-                    'status' => 'success',
-                    'created_at' => now(), // Sync payment time to current success/activation time
-                ])->save();
-                Log::info('Cashfree Webhook: Updated existing payment for order ' . $orderId);
+                if ($existingPayment->bundle_id || $existingPayment->course_id) {
+                    try {
+                        $checkoutController = app(\App\Http\Controllers\Student\CheckoutController::class);
+                        $checkoutController->processSuccessfulPayment($existingPayment, (string) $cfPaymentId);
+                        Log::info('Cashfree Webhook: Processed checkout payment and affiliate commission for order ' . $orderId);
+                    } catch (\Exception $e) {
+                        Log::error('Cashfree Webhook: Failed to process checkout payment for order ' . $orderId . ': ' . $e->getMessage());
+                    }
+                } else {
+                    $existingPayment->fill([
+                        'gateway_payment_id' => $cfPaymentId,
+                        'status' => 'success',
+                        'created_at' => now(), // Sync payment time to current success/activation time
+                    ])->save();
+                    Log::info('Cashfree Webhook: Updated existing payment for order ' . $orderId);
+                }
 
                 // Run post-payment action if it's a CouponPackage
                 if ($existingPayment->paymentable_type === \App\Models\CouponPackage::class) {

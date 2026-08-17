@@ -29,10 +29,9 @@ class CommissionCalculatorService
              return $productPrice * ($sponsorSettings->custom_commission_percentage / 100);
         }
 
-        // 2. Identify Sponsor's Highest Preference Index
-        $sponsorBundles = $sponsor->bundles()->where('is_active', true)->get();
-        $sponsorHighestBundle = $sponsorBundles->sortByDesc('preference_index')->first();
-        $sponsorIndex = $sponsorHighestBundle ? $sponsorHighestBundle->preference_index : 0;
+        // 2. Identify Sponsor's Highest Purchased Bundle & Preference Index
+        $sponsorHighestBundle = $sponsor->highestPurchasedBundle();
+        $sponsorIndex = $sponsorHighestBundle ? (int) $sponsorHighestBundle->preference_index : 0;
 
         // 3. Identify Product Index
         $productIndex = $product->preference_index ?? 0;

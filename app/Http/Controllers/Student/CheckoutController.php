@@ -378,7 +378,7 @@ class CheckoutController extends Controller
     /**
      * Process successful payment: updates status, calculates commissions, and upgrades bundles.
      */
-    private function processSuccessfulPayment(Payment $payment, string $paymentId): void
+    public function processSuccessfulPayment(Payment $payment, string $paymentId): void
     {
         $user = $payment->user ?? Auth::user();
         $product = $payment->bundle ?? $payment->course;
