@@ -414,44 +414,47 @@
                 <div class="overflow-hidden pb-4">
                     <div class="flex transition-transform duration-500 ease-in-out" :style="'transform: translateX(-' + (activeSlide * 100) + '%)'">
 
+                        <!-- Slide 1: Digital Skills Graduate -->
                         <div class="w-full flex-shrink-0 px-4">
                             <div class="bg-navy rounded-3xl p-8 border border-primary/10 flex flex-col md:flex-row gap-6 items-center shadow-lg shadow-primary/5">
-                                <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop" alt="User" class="w-24 h-24 rounded-full shadow-md shrink-0 object-cover border-[3px] border-white" loading="lazy">
+                                <img src="{{ asset('storage/testimonials/student1.jpg') }}" alt="Rohit Sharma" class="w-24 h-24 rounded-full shadow-md shrink-0 object-cover border-[3px] border-white" loading="lazy">
                                 <div>
                                     <div class="flex gap-1 text-yellow-400 mb-2">
                                         @for($i=0; $i<5; $i++) <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118z"/></svg> @endfor
                                     </div>
-                                    <p class="text-base md:text-lg text-mainText font-medium italic mb-4 leading-relaxed">"Before the Pro Mastery bundle, my freelancing career was stagnant. The advanced UI lessons completely flipped my portfolio. Landed a high-paying remote US client the following month!"</p>
-                                    <h4 class="font-bold text-mainText text-base">Kiran L.</h4>
-                                    <p class="text-xs text-primary font-bold">Freelance Web Designer</p>
+                                    <p class="text-base md:text-lg text-mainText font-medium italic mb-4 leading-relaxed">"Skills Pehle ke Digital Skills bundle ne meri freelancing journey ko kickstart kiya. Practical projects aur client pitching techniques seekh kar maine college ke sath hi monthly ₹35,000+ ke high-value freelance projects close karna shuru kar diya!"</p>
+                                    <h4 class="font-bold text-mainText text-base">Rohit Sharma</h4>
+                                    <p class="text-xs text-primary font-bold">Freelance Video Editor & Designer • Jaipur</p>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- Slide 2: Creator Skills Graduate -->
                         <div class="w-full flex-shrink-0 px-4">
                             <div class="bg-navy rounded-3xl p-8 border border-primary/10 flex flex-col md:flex-row gap-6 items-center shadow-lg shadow-primary/5">
-                                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop" alt="User" class="w-24 h-24 rounded-full shadow-md shrink-0 object-cover border-[3px] border-white" loading="lazy">
+                                <img src="{{ asset('storage/testimonials/student2.jpg') }}" alt="Priya Verma" class="w-24 h-24 rounded-full shadow-md shrink-0 object-cover border-[3px] border-white" loading="lazy">
                                 <div>
                                     <div class="flex gap-1 text-yellow-400 mb-2">
                                         @for($i=0; $i<5; $i++) <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118z"/></svg> @endfor
                                     </div>
-                                    <p class="text-base md:text-lg text-mainText font-medium italic mb-4 leading-relaxed">"The marketing theories out there are mostly outdated. Rahul's classes literally dissect live campaigns that are running right now. Best ROI ever."</p>
-                                    <h4 class="font-bold text-mainText text-base">Vikram P.</h4>
-                                    <p class="text-xs text-primary font-bold">Marketing Agency Owner</p>
+                                    <p class="text-base md:text-lg text-mainText font-medium italic mb-4 leading-relaxed">"Creator Skills bundle ne mera content creation game 10x improve kar diya. Storytelling aur editing lessons itne practical the ki mera page 50k+ organic audience cross kar gaya aur ab regular brand sponsorships mil rahi hain!"</p>
+                                    <h4 class="font-bold text-mainText text-base">Priya Verma</h4>
+                                    <p class="text-xs text-primary font-bold">Content Creator & Reels Strategist • Indore</p>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- Slide 3: Scaling & Traffic Skills Graduate -->
                         <div class="w-full flex-shrink-0 px-4">
                             <div class="bg-navy rounded-3xl p-8 border border-primary/10 flex flex-col md:flex-row gap-6 items-center shadow-lg shadow-primary/5">
-                                <img src="https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=200&auto=format&fit=crop" alt="User" class="w-24 h-24 rounded-full shadow-md shrink-0 object-cover border-[3px] border-white" loading="lazy">
+                                <img src="{{ asset('storage/testimonials/student3.jpg') }}" alt="Aman Gupta" class="w-24 h-24 rounded-full shadow-md shrink-0 object-cover border-[3px] border-white" loading="lazy">
                                 <div>
                                     <div class="flex gap-1 text-yellow-400 mb-2">
                                         @for($i=0; $i<5; $i++) <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118z"/></svg> @endfor
                                     </div>
-                                    <p class="text-base md:text-lg text-mainText font-medium italic mb-4 leading-relaxed">"I transitioned from a mechanical engineer to a fullstack dev using the courses here. The community Q&A is what kept me going during the hard topics."</p>
-                                    <h4 class="font-bold text-mainText text-base">Nitin A.</h4>
-                                    <p class="text-xs text-primary font-bold">Junior Software Engineer</p>
+                                    <p class="text-base md:text-lg text-mainText font-medium italic mb-4 leading-relaxed">"Bahar ke courses sirf outdated theory sikhate hain, but Skills Pehle ke Scaling & Traffic Skills me live Meta Ads aur conversion funnels sikhaye gaye. Maine client campaigns me 4.2x ROAS generate kiya!"</p>
+                                    <h4 class="font-bold text-mainText text-base">Aman Gupta</h4>
+                                    <p class="text-xs text-primary font-bold">Performance Marketer & Growth Strategist • Delhi NCR</p>
                                 </div>
                             </div>
                         </div>
