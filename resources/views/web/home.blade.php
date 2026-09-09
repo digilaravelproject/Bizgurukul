@@ -422,7 +422,7 @@
                                     <div class="flex gap-1 text-yellow-400 mb-2">
                                         @for($i=0; $i<5; $i++) <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118z"/></svg> @endfor
                                     </div>
-                                    <p class="text-base md:text-lg text-mainText font-medium italic mb-4 leading-relaxed">"Skills Pehle ke Digital Skills bundle ne meri freelancing journey ko kickstart kiya. Practical projects aur client pitching techniques seekh kar maine college ke sath hi monthly ₹35,000+ ke high-value freelance projects close karna shuru kar diya!"</p>
+                                    <p class="text-base md:text-lg text-mainText font-medium italic mb-4 leading-relaxed">"The Digital Skills bundle on Skills Pehle completely transformed my freelance career. Learning practical workflow techniques and high-ticket client pitching helped me close consistent projects worth ₹35,000+ per month while still in college!"</p>
                                     <h4 class="font-bold text-mainText text-base">Rohit Sharma</h4>
                                     <p class="text-xs text-primary font-bold">Freelance Video Editor & Designer • Jaipur</p>
                                 </div>
@@ -437,7 +437,7 @@
                                     <div class="flex gap-1 text-yellow-400 mb-2">
                                         @for($i=0; $i<5; $i++) <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118z"/></svg> @endfor
                                     </div>
-                                    <p class="text-base md:text-lg text-mainText font-medium italic mb-4 leading-relaxed">"Creator Skills bundle ne mera content creation game 10x improve kar diya. Storytelling aur editing lessons itne practical the ki mera page 50k+ organic audience cross kar gaya aur ab regular brand sponsorships mil rahi hain!"</p>
+                                    <p class="text-base md:text-lg text-mainText font-medium italic mb-4 leading-relaxed">"The Creator Skills bundle took my content game to the next level. The lessons on storytelling and mobile video editing were so actionable that my Instagram crossed 50k+ organic followers, landing me regular paid brand sponsorships!"</p>
                                     <h4 class="font-bold text-mainText text-base">Priya Verma</h4>
                                     <p class="text-xs text-primary font-bold">Content Creator & Reels Strategist • Indore</p>
                                 </div>
@@ -452,7 +452,7 @@
                                     <div class="flex gap-1 text-yellow-400 mb-2">
                                         @for($i=0; $i<5; $i++) <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118z"/></svg> @endfor
                                     </div>
-                                    <p class="text-base md:text-lg text-mainText font-medium italic mb-4 leading-relaxed">"Bahar ke courses sirf outdated theory sikhate hain, but Skills Pehle ke Scaling & Traffic Skills me live Meta Ads aur conversion funnels sikhaye gaye. Maine client campaigns me 4.2x ROAS generate kiya!"</p>
+                                    <p class="text-base md:text-lg text-mainText font-medium italic mb-4 leading-relaxed">"Most digital marketing courses teach outdated theory, but Skills Pehle walks you through live Meta Ad campaigns and conversion funnels. Applying these scaling frameworks helped me deliver a 4.2x ROAS for my client campaigns!"</p>
                                     <h4 class="font-bold text-mainText text-base">Aman Gupta</h4>
                                     <p class="text-xs text-primary font-bold">Performance Marketer & Growth Strategist • Delhi NCR</p>
                                 </div>
