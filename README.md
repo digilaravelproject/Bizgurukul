@@ -1,7 +1,7 @@
 # 🚀 Skills Pehle — Modern LMS & Affiliate Ecosystem
 
 <p align="center">
-  <img src="public/site_images/logo1.png" alt="Skills Pehle Logo" width="220" onerror="this.style.display='none'"/>
+  <img src="public/images/logo.png" alt="Skills Pehle Logo" width="260">
 </p>
 
 <p align="center">
