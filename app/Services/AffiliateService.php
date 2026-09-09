@@ -125,9 +125,13 @@ class AffiliateService
         }
     }
 
-    public function getGraphData(User $user, $days = 30)
+    public function getGraphData(User $user, $days = 30, ?string $specificMonth = null)
     {
         try {
+            if ($specificMonth) {
+                return $this->getSpecificMonthData($user, $specificMonth);
+            }
+
             /** 
              * User request: 
              * - 7 days ('week') -> Mon to Now
@@ -160,6 +164,43 @@ class AffiliateService
             Log::error("AffiliateService Error [getGraphData]: " . $e->getMessage(), ['user_id' => $user->id]);
             return ['labels' => [], 'data' => []];
         }
+    }
+
+    /**
+     * Get daily breakdown for a specific month (e.g., '2026-05')
+     */
+    public function getSpecificMonthData(User $user, string $yearMonth)
+    {
+        try {
+            $parsed = Carbon::createFromFormat('Y-m', $yearMonth);
+            $start = $parsed->copy()->startOfMonth();
+            $end = $parsed->isCurrentMonth() ? Carbon::now() : $parsed->copy()->endOfMonth();
+            $result = $this->getDailyDataInRange($user, $start, $end);
+            $result['selected_month'] = $yearMonth;
+            $result['month_label'] = $parsed->format('M Y');
+            return $result;
+        } catch (Exception $e) {
+            Log::error("AffiliateService Error [getSpecificMonthData]: " . $e->getMessage());
+            return ['labels' => [], 'data' => []];
+        }
+    }
+
+    /**
+     * Get list of last 6 months for selection
+     */
+    public function getLastSixMonthsList()
+    {
+        $months = [];
+        $startDate = Carbon::now()->subMonths(5)->startOfMonth();
+        for ($i = 0; $i < 6; $i++) {
+            $d = $startDate->copy()->addMonths($i);
+            $months[] = [
+                'key' => $d->format('Y-m'),
+                'label' => $d->format('M Y'),
+                'short' => $d->format('M'),
+            ];
+        }
+        return $months;
     }
 
     /**
@@ -225,7 +266,11 @@ class AffiliateService
             $current->addMonth();
         }
 
-        return ['labels' => $labels, 'data' => $data];
+        return [
+            'labels' => $labels,
+            'data' => $data,
+            'months' => $this->getLastSixMonthsList()
+        ];
     }
 
     public function getCategoryPerformance(User $user)

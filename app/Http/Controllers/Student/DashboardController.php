@@ -181,6 +181,7 @@ class DashboardController extends Controller
             /** @var User $user */
             $user = Auth::user();
             $range = $request->query('range', '7');
+            $month = $request->query('month');
 
             // Map range to days
             $days = match($range) {
@@ -191,7 +192,7 @@ class DashboardController extends Controller
                 default   => 7
             };
 
-            $data = $this->affiliateService->getGraphData($user, (int)$days);
+            $data = $this->affiliateService->getGraphData($user, (int)$days, $month);
 
             return response()->json($data);
 

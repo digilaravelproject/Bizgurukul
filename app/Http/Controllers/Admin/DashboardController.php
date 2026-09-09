@@ -28,9 +28,10 @@ class DashboardController extends Controller
         }
 
         $period = $request->input('period', 'month');
+        $month = $request->input('month');
         return response()->json([
             'aggregate' => $this->dashboardService->getAggregateStats(),
-            'chart' => $this->dashboardService->getSalesChartData($period),
+            'chart' => $this->dashboardService->getSalesChartData($period, $month),
         ]);
     }
 

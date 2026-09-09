@@ -171,6 +171,27 @@
                         @endforeach
                     </div>
                 </div>
+
+                {{-- 6-Month Drilldown Month Selector --}}
+                <div x-show="range === '6month' && availableMonths.length > 0" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="mb-4 relative z-10 flex items-center gap-1.5 overflow-x-auto hide-scrollbar pb-1">
+                    <span class="text-[9px] font-black uppercase tracking-wider text-mutedText shrink-0 flex items-center gap-1 mr-1">
+                        <i class="fas fa-calendar-alt text-primary/70"></i> Select Month:
+                    </span>
+                    <button 
+                        @click="selectSpecificMonth(null)"
+                        :class="!selectedMonth ? 'bg-primary text-white shadow-sm' : 'bg-navy/30 text-mutedText hover:text-mainText hover:bg-navy/50'"
+                        class="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 shrink-0">
+                        All 6 Months
+                    </button>
+                    <template x-for="m in availableMonths" :key="m.key">
+                        <button 
+                            @click="selectSpecificMonth(m.key)"
+                            :class="selectedMonth === m.key ? 'bg-primary text-white shadow-sm' : 'bg-navy/30 text-mutedText hover:text-mainText hover:bg-navy/50'"
+                            class="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 shrink-0"
+                            x-text="m.label">
+                        </button>
+                    </template>
+                </div>
                 <div id="earningsChart" class="w-full h-[250px] md:h-[300px] relative z-10" :class="{ 'opacity-30 pointer-events-none transition-opacity duration-300': loadingChart }">
                     <template x-if="loadingChart">
                         <div class="absolute inset-0 flex items-center justify-center">
@@ -641,6 +662,8 @@
                 chartInstance: null,
                 resizeTimer: null,
                 range: 'week',
+                selectedMonth: null,
+                availableMonths: [],
                 loadingChart: false,
 
                 init() {
@@ -661,14 +684,19 @@
                 },
 
                 async changeRange(newRange) {
-                    if(this.range === newRange || this.loadingChart) return;
+                    if((this.range === newRange && !this.selectedMonth) || this.loadingChart) return;
                     this.range = newRange;
+                    this.selectedMonth = null;
                     this.loadingChart = true;
 
                     try {
                         const response = await fetch(`{{ route('student.dashboard.chart_data') }}?range=${newRange}`);
                         const data = await response.json();
                         
+                        if (data.months) {
+                            this.availableMonths = data.months;
+                        }
+
                         if (data.labels && data.data) {
                             this.chartInstance.updateOptions({
                                 xaxis: {
@@ -683,6 +711,37 @@
                         }
                     } catch (error) {
                         console.error('Failed to fetch chart data:', error);
+                    } finally {
+                        this.loadingChart = false;
+                    }
+                },
+
+                async selectSpecificMonth(monthKey) {
+                    if (this.loadingChart) return;
+                    this.selectedMonth = monthKey;
+                    this.loadingChart = true;
+
+                    try {
+                        const url = monthKey 
+                            ? `{{ route('student.dashboard.chart_data') }}?range=6month&month=${monthKey}`
+                            : `{{ route('student.dashboard.chart_data') }}?range=6month`;
+                        const response = await fetch(url);
+                        const data = await response.json();
+
+                        if (data.labels && data.data) {
+                            this.chartInstance.updateOptions({
+                                xaxis: {
+                                    categories: data.labels,
+                                    type: 'category'
+                                },
+                                series: [{
+                                    name: monthKey ? (data.month_label || 'Daily Earnings') : 'Monthly Earnings',
+                                    data: data.data
+                                }]
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Failed to fetch month chart data:', error);
                     } finally {
                         this.loadingChart = false;
                     }
@@ -705,6 +764,13 @@
                             zoom: { enabled: false },
                             selection: { enabled: false },
                             sparkline: { enabled: false },
+                            events: {
+                                dataPointSelection: (event, chartContext, config) => {
+                                    if (this.range === '6month' && !this.selectedMonth && this.availableMonths[config.dataPointIndex]) {
+                                        this.selectSpecificMonth(this.availableMonths[config.dataPointIndex].key);
+                                    }
+                                }
+                            }
                         },
                         states: {
                             active: { filter: { type: 'none' } }
