@@ -316,16 +316,44 @@ class DashboardService
     }
 
 
-    public function getSalesChartData(string $period = 'month')
+    public function getSalesChartData(string $period = 'month', ?string $month = null)
     {
-        // ... (Your existing chart code remains unchanged)
-        // Just ensure you cast results to float/int to avoid nulls
-
         $query = Payment::whereIn('status', ['success', 'captured']);
         $labels = [];
         $data = [];
+        $monthsList = [];
 
         try {
+            // Specific month breakdown (e.g., '2026-05')
+            if ($month) {
+                $parsed = Carbon::createFromFormat('Y-m', $month);
+                $start = $parsed->copy()->startOfMonth();
+                $end = $parsed->isCurrentMonth() ? Carbon::now() : $parsed->copy()->endOfMonth();
+                $daysInMonth = $parsed->daysInMonth;
+
+                $stats = $query->whereBetween('created_at', [$start, $end])
+                    ->selectRaw('DATE(created_at) as date, SUM(amount) as total')
+                    ->groupBy('date')
+                    ->pluck('total', 'date');
+
+                for ($i = 1; $i <= $daysInMonth; $i++) {
+                    $d = $start->copy()->day($i);
+                    if ($d->gt($end) && $parsed->isCurrentMonth()) {
+                        break;
+                    }
+                    $dateKey = $d->format('Y-m-d');
+                    $labels[] = $d->format('d M');
+                    $data[] = (float) ($stats[$dateKey] ?? 0);
+                }
+
+                return [
+                    'labels' => $labels,
+                    'data' => $data,
+                    'selected_month' => $month,
+                    'month_label' => $parsed->format('M Y')
+                ];
+            }
+
             switch ($period) {
                 case 'week':
                     $startDate = Carbon::now()->subDays(6)->startOfDay();
@@ -366,8 +394,13 @@ class DashboardService
                     for ($i = 0; $i < 6; $i++) {
                         $date = $startDate->copy()->addMonths($i);
                         $key = $date->format('Y-m');
-                        $labels[] = $date->format('M');
+                        $labels[] = $date->format('M Y');
                         $data[] = (float) ($stats[$key] ?? 0);
+                        $monthsList[] = [
+                            'key' => $key,
+                            'label' => $date->format('M Y'),
+                            'short' => $date->format('M')
+                        ];
                     }
                     break;
             }
@@ -376,6 +409,10 @@ class DashboardService
             return ['labels' => [], 'data' => []];
         }
 
-        return ['labels' => $labels, 'data' => $data];
+        $res = ['labels' => $labels, 'data' => $data];
+        if (!empty($monthsList)) {
+            $res['months'] = $monthsList;
+        }
+        return $res;
     }
 }

@@ -386,17 +386,39 @@
                                 <p class="text-sm text-mutedText">Financial performance over time.</p>
                             </div>
                             <div class="flex bg-navy p-1 rounded-xl">
-                                <button @click="period = 'week'; fetchStats()" :class="period === 'week' ? 'bg-primary text-white shadow-lg shadow-primary/30' :
+                                <button @click="period = 'week'; selectedMonth = null; fetchStats()" :class="period === 'week' ? 'bg-primary text-white shadow-lg shadow-primary/30' :
                                                 'text-mutedText hover:text-mainText'"
                                     class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all">Week</button>
-                                <button @click="period = 'month'; fetchStats()" :class="period === 'month' ? 'bg-primary text-white shadow-lg shadow-primary/30' :
+                                <button @click="period = 'month'; selectedMonth = null; fetchStats()" :class="period === 'month' ? 'bg-primary text-white shadow-lg shadow-primary/30' :
                                                 'text-mutedText hover:text-mainText'"
                                     class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all">Month</button>
-                                <button @click="period = '6months'; fetchStats()" :class="period === '6months' ? 'bg-primary text-white shadow-lg shadow-primary/30' :
+                                <button @click="period = '6months'; selectedMonth = null; fetchStats()" :class="period === '6months' ? 'bg-primary text-white shadow-lg shadow-primary/30' :
                                                 'text-mutedText hover:text-mainText'"
                                     class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all">6 Months</button>
                             </div>
                         </div>
+
+                        {{-- 6-Months Drilldown Month Selector --}}
+                        <div x-show="period === '6months' && availableMonths.length > 0" x-transition class="flex items-center gap-1.5 mb-4 overflow-x-auto hide-scrollbar pb-1">
+                            <span class="text-[10px] font-bold uppercase text-mutedText shrink-0 mr-1 flex items-center gap-1">
+                                <i class="fas fa-calendar-alt text-primary/70"></i> Select Month:
+                            </span>
+                            <button 
+                                @click="selectAdminMonth(null)" 
+                                :class="!selectedMonth ? 'bg-primary text-white shadow-sm' : 'bg-navy text-mutedText hover:text-mainText'"
+                                class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all shrink-0">
+                                All 6 Months
+                            </button>
+                            <template x-for="m in availableMonths" :key="m.key">
+                                <button 
+                                    @click="selectAdminMonth(m.key)" 
+                                    :class="selectedMonth === m.key ? 'bg-primary text-white shadow-sm' : 'bg-navy text-mutedText hover:text-mainText'"
+                                    class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all shrink-0"
+                                    x-text="m.label">
+                                </button>
+                            </template>
+                        </div>
+
                         <div class="relative h-80 w-full">
                             <canvas id="salesChart"></canvas>
                         </div>
@@ -696,6 +718,8 @@
                 Alpine.data('dashboard', () => ({
                     loading: false,
                     period: 'month',
+                    selectedMonth: null,
+                    availableMonths: [],
                     lastUpdated: new Date().toLocaleTimeString(),
                     showPayoutModal: false,
                     modalTitle: '',
@@ -737,13 +761,15 @@
                         }, 300000);
                     },
 
-                    async fetchStats() {
+                    async fetchStats(month = null) {
                         if (this.loading) return;
                         this.loading = true;
                         try {
-                            const response = await fetch(
-                                `{{ route('admin.dashboard.stats') }}?period=${this.period}&refresh=1`
-                            );
+                            let url = `{{ route('admin.dashboard.stats') }}?period=${this.period}&refresh=1`;
+                            if (month) {
+                                url += `&month=${month}`;
+                            }
+                            const response = await fetch(url);
                             if (!response.ok) throw new Error('Network error');
                             const data = await response.json();
                             this.stats = {
@@ -751,6 +777,9 @@
                                 ...data.aggregate
                             };
                             this.lastUpdated = new Date().toLocaleTimeString();
+                            if (data.chart && data.chart.months) {
+                                this.availableMonths = data.chart.months;
+                            }
                             this.renderChart(data.chart || {});
                             this.renderBundleChart();
                         } catch (error) {
@@ -758,6 +787,11 @@
                         } finally {
                             this.loading = false;
                         }
+                    },
+
+                    selectAdminMonth(monthKey) {
+                        this.selectedMonth = monthKey;
+                        this.fetchStats(monthKey);
                     },
 
                     openPayoutModal(type) {
@@ -808,7 +842,7 @@
                             data: {
                                 labels: chartData.labels || [],
                                 datasets: [{
-                                    label: 'Revenue',
+                                    label: chartData.month_label ? (chartData.month_label + ' Revenue') : 'Revenue',
                                     data: chartData.data || [],
                                     borderColor: '#F7941D',
                                     backgroundColor: gradient,
@@ -825,6 +859,14 @@
                             options: {
                                 responsive: true,
                                 maintainAspectRatio: false,
+                                onClick: (event, elements) => {
+                                    if (this.period === '6months' && !this.selectedMonth && elements.length > 0) {
+                                        const index = elements[0].index;
+                                        if (this.availableMonths && this.availableMonths[index]) {
+                                            this.selectAdminMonth(this.availableMonths[index].key);
+                                        }
+                                    }
+                                },
                                 interaction: {
                                     mode: 'index',
                                     intersect: false
