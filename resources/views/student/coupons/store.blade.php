@@ -104,9 +104,18 @@
 <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // Initialize Cashfree
-    const cashfreeMode = '{{ \App\Models\Setting::get("cashfree_environment", "sandbox") === "production" ? "production" : "sandbox" }}';
-    const cashfree = Cashfree({ mode: cashfreeMode });
+    // Lazily initialize Cashfree to prevent TDZ / undefined errors on slow networks
+    let cashfreeInstance = null;
+    function getCashfree() {
+        if (typeof window.Cashfree !== 'function') {
+            throw new Error('Cashfree SDK is still loading. Please wait a moment or refresh the page.');
+        }
+        if (!cashfreeInstance) {
+            const cashfreeMode = '{{ \App\Models\Setting::get("cashfree_environment", "sandbox") === "production" ? "production" : "sandbox" }}';
+            cashfreeInstance = window.Cashfree({ mode: cashfreeMode });
+        }
+        return cashfreeInstance;
+    }
 
     function purchasePackage(id, name, price) {
         Swal.fire({
@@ -151,6 +160,7 @@
 
                 if (order.gateway === 'cashfree') {
                     // --- CASHFREE CHECKOUT ---
+                    const cashfree = getCashfree();
                     let checkoutOptions = {
                         paymentSessionId: order.session_id,
                         redirectTarget: "_modal",

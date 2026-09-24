@@ -4,9 +4,18 @@
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
     <script>
-        // Initialize Cashfree
-        const cashfreeMode = '{{ \App\Models\Setting::get("cashfree_environment", "sandbox") === "production" ? "production" : "sandbox" }}';
-        const cashfree = Cashfree({ mode: cashfreeMode });
+        // Lazily initialize Cashfree to prevent TDZ / undefined errors on slow networks
+        let cashfreeInstance = null;
+        function getCashfree() {
+            if (typeof window.Cashfree !== 'function') {
+                throw new Error('Cashfree SDK is still loading. Please wait a moment or refresh the page.');
+            }
+            if (!cashfreeInstance) {
+                const cashfreeMode = '{{ \App\Models\Setting::get("cashfree_environment", "sandbox") === "production" ? "production" : "sandbox" }}';
+                cashfreeInstance = window.Cashfree({ mode: cashfreeMode });
+            }
+            return cashfreeInstance;
+        }
 
         function checkoutHandler() {
             return {
@@ -112,6 +121,7 @@
                         if (data.order_id) {
                             if (data.gateway === 'cashfree') {
                                 // --- CASHFREE CHECKOUT ---
+                                const cashfree = getCashfree();
                                 let checkoutOptions = {
                                     paymentSessionId: data.session_id,
                                     redirectTarget: "_modal",
