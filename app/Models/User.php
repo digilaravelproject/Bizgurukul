@@ -371,6 +371,23 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the user's current highest/upgraded bundle.
+     */
+    public function getCurrentBundleAttribute(): ?Bundle
+    {
+        if ($this->relationLoaded('bundles')) {
+            return $this->bundles
+                ->sortByDesc('preference_index')
+                ->first();
+        }
+
+        return $this->bundles()
+            ->orderByDesc('bundles.preference_index')
+            ->orderByDesc('payments.id')
+            ->first();
+    }
+
+    /**
      * Get the highest preference_index among purchased bundles.
      */
     public function maxBundlePreferenceIndex(): int

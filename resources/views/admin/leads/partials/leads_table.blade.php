@@ -58,10 +58,17 @@
 
     {{-- Status --}}
     <td class="px-3.5 py-3.5 whitespace-nowrap text-right">
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200/60 shadow-sm">
-            <i class="fas fa-hourglass-half text-[9px] animate-pulse"></i>
-            <span class="text-[10px] font-black uppercase tracking-wider">Pending</span>
-        </span>
+        @if(!empty($lead->is_converted))
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/60 shadow-sm">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-[10px] font-black uppercase tracking-wider">Converted</span>
+            </span>
+        @else
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200/60 shadow-sm">
+                <i class="fas fa-hourglass-half text-[9px] animate-pulse"></i>
+                <span class="text-[10px] font-black uppercase tracking-wider">Pending</span>
+            </span>
+        @endif
     </td>
 </tr>
 @empty

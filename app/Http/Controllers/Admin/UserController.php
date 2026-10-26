@@ -92,6 +92,7 @@ class UserController extends Controller
                 ] : null,
 
                 'sponsor_name' => $user->referrer ? $user->referrer->name : 'N/A',
+                'current_bundle' => $user->current_bundle?->title ?? 'None',
             ];
 
             if ($request->ajax() || $request->wantsJson()) {

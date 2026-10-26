@@ -23,7 +23,14 @@
                         @endif
                     </div>
                     <div class="text-[11px] font-bold text-mainText/70 mt-0.5">{{ $user->mobile ?: 'No Mobile' }}</div>
-                    <div class="mt-1 text-[9px] font-black text-primary/80 uppercase">REF: {{ $user->referral_code }}</div>
+                    <div class="mt-1 flex items-center gap-1.5 flex-wrap">
+                        <span class="text-[9px] font-black text-primary/80 uppercase">REF: {{ $user->referral_code }}</span>
+                        @if($user->current_bundle)
+                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[8px] font-black uppercase tracking-wider border border-primary/20" title="Active/Upgraded Bundle">
+                                <i class="fas fa-box-open text-[7px]"></i> {{ $user->current_bundle->title }}
+                            </span>
+                        @endif
+                    </div>
                 </div>
             </div>
         </td>

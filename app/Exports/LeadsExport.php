@@ -66,12 +66,27 @@ class LeadsExport implements FromQuery, WithHeadings, WithMapping
 
     public function map($lead): array
     {
-        // Resolve Product Preference
+        // Resolve Product Preference or Upgraded Bundle
         $productName = 'N/A';
-        $bundleId = $lead->product_preference['bundle_id'] ?? null;
-        if ($bundleId) {
-            $bundle = Bundle::find($bundleId);
-            $productName = $bundle ? $bundle->title : 'Unknown Bundle';
+        $user = User::where('email', $lead->email)
+            ->orWhere(function($q) use ($lead) {
+                if (!empty($lead->mobile)) {
+                    $q->where('mobile', $lead->mobile);
+                }
+            })
+            ->with(['bundles' => function($q) {
+                $q->orderByDesc('bundles.preference_index')->orderByDesc('payments.id');
+            }])
+            ->first();
+
+        if ($user && $user->current_bundle) {
+            $productName = $user->current_bundle->title;
+        } else {
+            $bundleId = $lead->product_preference['bundle_id'] ?? null;
+            if ($bundleId) {
+                $bundle = Bundle::find($bundleId);
+                $productName = $bundle ? $bundle->title : 'Unknown Bundle';
+            }
         }
 
         return [

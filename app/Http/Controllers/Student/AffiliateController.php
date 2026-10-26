@@ -62,15 +62,14 @@ class AffiliateController extends Controller
                 });
             }
 
-            $referrals = $referralQuery->latest()->paginate($perPage, ['*'], 'referral_page');
+            $referrals = $referralQuery->with(['bundles' => function($q) {
+                $q->orderByDesc('bundles.preference_index')->orderByDesc('payments.id');
+            }])->latest()->paginate($perPage, ['*'], 'referral_page');
 
-            // Attach purchased bundle info to each referral
+            // Attach current/upgraded bundle info to each referral
             $referrals->getCollection()->transform(function($referral) {
-                $firstPayment = \App\Models\Payment::where('user_id', $referral->id)
-                    ->where('status', 'success')
-                    ->with('bundle')
-                    ->first();
-                $referral->purchased_product = $firstPayment ? $firstPayment->bundle?->title : 'N/A';
+                $currentBundle = $referral->current_bundle;
+                $referral->purchased_product = $currentBundle ? $currentBundle->title : 'N/A';
                 return $referral;
             });
 

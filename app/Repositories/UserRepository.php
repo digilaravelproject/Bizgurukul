@@ -31,7 +31,7 @@ class UserRepository
                     ->whereColumn('affiliate_id', '=', 'users.id', 'and')
                     ->where('status', '=', 'paid')
             ])
-            ->with(['roles:id,name', 'state:id,name', 'referrer:id,name,referral_code'])
+            ->with(['roles:id,name', 'state:id,name', 'referrer:id,name,referral_code', 'bundles'])
             ->when($viewTrash === 'true', function ($q) {
                 return $q->onlyTrashed();
             })

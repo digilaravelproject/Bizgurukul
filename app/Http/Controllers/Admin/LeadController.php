@@ -34,15 +34,39 @@ class LeadController extends Controller
         $perPage = $request->input('per_page', 20);
         $leads = $query->latest()->paginate($perPage);
 
-        // Transform to include bundle info efficiently
-        $leads->getCollection()->transform(function($lead) {
-            // Product Info
-            $bundleId = $lead->product_preference['bundle_id'] ?? null;
-            if ($bundleId) {
-                $bundle = Bundle::find($bundleId);
-                $lead->product_name = $bundle ? $bundle->title : 'Unknown Bundle';
+        // Transform to include current/upgraded bundle info efficiently
+        $emails = $leads->pluck('email')->filter()->toArray();
+        $mobiles = $leads->pluck('mobile')->filter()->toArray();
+
+        $convertedUsers = User::where(function($q) use ($emails, $mobiles) {
+                if (!empty($emails)) {
+                    $q->whereIn('email', $emails);
+                }
+                if (!empty($mobiles)) {
+                    $q->orWhereIn('mobile', $mobiles);
+                }
+            })
+            ->with(['bundles' => function($q) {
+                $q->orderByDesc('bundles.preference_index')->orderByDesc('payments.id');
+            }])
+            ->get();
+
+        $userByEmail = $convertedUsers->keyBy('email');
+        $userByMobile = $convertedUsers->filter(fn($u) => !empty($u->mobile))->keyBy('mobile');
+
+        $allBundles = Bundle::all()->keyBy('id');
+
+        $leads->getCollection()->transform(function($lead) use ($userByEmail, $userByMobile, $allBundles) {
+            $user = $userByEmail->get($lead->email) ?? ($lead->mobile ? $userByMobile->get($lead->mobile) : null);
+
+            if ($user && $user->current_bundle) {
+                $lead->product_name = $user->current_bundle->title;
+                $lead->is_converted = true;
             } else {
-                $lead->product_name = 'N/A';
+                $bundleId = $lead->product_preference['bundle_id'] ?? null;
+                $bundle = $bundleId ? $allBundles->get($bundleId) : null;
+                $lead->product_name = $bundle ? $bundle->title : 'N/A';
+                $lead->is_converted = false;
             }
             
             return $lead;
