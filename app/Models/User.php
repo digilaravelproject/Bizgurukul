@@ -256,7 +256,7 @@ class User extends Authenticatable
 
     public function getNextAchievementAttribute(): ?Achievement
     {
-        $totalEarned = $this->total_earnings;
+        $totalEarned = $this->getAvailableEarningsForRewards();
 
         return Achievement::active()
             ->where('target_amount', '>', $totalEarned)
@@ -278,7 +278,7 @@ class User extends Authenticatable
        5. ACHIEVEMENTS & FINANCIAL DOMAIN LOGIC
        ========================================================================= */
 
-    public function getEarningsInRange($startDate = null, $endDate = null): float
+    public function getEarningsInRange($startDate = null, $endDate = null, bool $excludeOfferEarnings = false): float
     {
         $query = $this->commissions();
 
@@ -288,6 +288,29 @@ class User extends Authenticatable
 
         if ($endDate) {
             $query->where('created_at', '<=', $endDate);
+        }
+
+        if ($excludeOfferEarnings) {
+            $offers = \App\Models\Offer::where('is_active', true)
+                ->where(function ($q) {
+                    $q->whereNotNull('start_date')
+                      ->orWhereNotNull('end_date');
+                })
+                ->get(['start_date', 'end_date']);
+
+            foreach ($offers as $offer) {
+                if (!$offer->start_date && !$offer->end_date) {
+                    continue;
+                }
+                $query->whereNot(function ($sub) use ($offer) {
+                    if ($offer->start_date) {
+                        $sub->where('created_at', '>=', $offer->start_date);
+                    }
+                    if ($offer->end_date) {
+                        $sub->where('created_at', '<=', $offer->end_date);
+                    }
+                });
+            }
         }
 
         return (float) $query->sum('amount');
@@ -325,10 +348,11 @@ class User extends Authenticatable
 
     /**
      * Get available net earnings for claiming new achievements (Earned - Claimed).
+     * Strictly excludes commissions earned during offer periods so earnings belong only to offers.
      */
     public function getAvailableEarningsForRewards($startDate = null, $endDate = null): float
     {
-        $earned = $this->getEarningsInRange($startDate, $endDate);
+        $earned = $this->getEarningsInRange($startDate, $endDate, true);
         $claimed = $this->getClaimedRewardsSumInRange($startDate, $endDate);
 
         return max(0, $earned - $claimed);

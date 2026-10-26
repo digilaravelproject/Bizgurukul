@@ -9,9 +9,39 @@ use Illuminate\Support\Collection;
 class OfferRewardService
 {
     /**
+     * Get offers whose date windows are excluded from standard reward calculations.
+     */
+    public function getOffersExcludingRanges(): Collection
+    {
+        return Offer::where('is_active', true)
+            ->where(function ($q) {
+                $q->whereNotNull('start_date')
+                  ->orWhereNotNull('end_date');
+            })
+            ->get();
+    }
+
+    /**
+     * Get user earnings strictly within an offer's active time frame.
+     */
+    public function getOfferEarnings(User $user, Offer $offer): float
+    {
+        return $user->getEarningsInRange($offer->start_date, $offer->end_date, false);
+    }
+
+    /**
+     * Calculate total commission earnings excluded from standard rewards due to promotional offers.
+     */
+    public function getExcludedEarningsTotalForUser(User $user, $startDate = null, $endDate = null): float
+    {
+        $all = $user->getEarningsInRange($startDate, $endDate, false);
+        $rewardEligible = $user->getEarningsInRange($startDate, $endDate, true);
+
+        return max(0, $all - $rewardEligible);
+    }
+
+    /**
      * Compute total reward amount eligible for standard calculation inclusion.
-     * Excludes active phase offers (start_date <= now() <= end_date);
-     * Automatically includes expired phase offers (now() > end_date).
      */
     public function getEligibleOfferRewardsForUser(User $user): float
     {
@@ -19,9 +49,8 @@ class OfferRewardService
 
         $eligibleTotal = 0.0;
         foreach ($expiredOffers as $offer) {
-            // If target_amount is set, verify if user met target earnings
             if ($offer->target_amount > 0) {
-                $userEarnings = $user->getEarningsInRange($offer->start_date, $offer->end_date);
+                $userEarnings = $this->getOfferEarnings($user, $offer);
                 if ($userEarnings >= $offer->target_amount) {
                     $eligibleTotal += $offer->reward_value;
                 }
@@ -42,7 +71,7 @@ class OfferRewardService
     }
 
     /**
-     * Get expired phase offers automatically INCLUDED in calculations.
+     * Get expired phase offers.
      */
     public function getIncludedExpiredOffers(): Collection
     {

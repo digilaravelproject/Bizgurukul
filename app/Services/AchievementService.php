@@ -147,7 +147,7 @@ class AchievementService
 
         // Overall progress percentage
         $maxTarget = Achievement::active()->max('target_amount') ?: 1000000;
-        $overallPercentage = min(100, ($user->total_earnings / $maxTarget) * 100);
+        $overallPercentage = min(100, ($user->getAvailableEarningsForRewards() / $maxTarget) * 100);
 
         return [
             'total_earned' => $currentEarningsInRange,
