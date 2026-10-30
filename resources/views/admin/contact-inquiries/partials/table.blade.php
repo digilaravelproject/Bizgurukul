@@ -11,20 +11,20 @@
             <span class="font-bold text-mainText">{{ $inquiry->created_at->format('d M, Y') }}</span>
             <div class="text-[10px] text-mutedText mt-0.5">{{ $inquiry->created_at->diffForHumans() }}</div>
         </td>
-        <td class="px-6 py-5">
+        <td class="px-6 py-5 max-w-[320px]">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-navy/50 flex items-center justify-center text-primary font-black text-xs border border-primary/10">
-                    {{ substr($inquiry->name, 0, 2) }}
+                <div class="w-10 h-10 rounded-xl bg-navy/50 flex items-center justify-center text-primary font-black text-xs border border-primary/10 shrink-0">
+                    {{ mb_substr($inquiry->name, 0, 2, 'UTF-8') }}
                 </div>
-                <div>
-                    <div class="font-bold text-mainText text-sm">{{ $inquiry->name }}</div>
-                    <div class="text-xs text-mutedText">{{ $inquiry->email }}</div>
+                <div class="min-w-0 flex-1">
+                    <div class="font-bold text-mainText text-sm truncate" title="{{ $inquiry->name }}">{{ $inquiry->name }}</div>
+                    <div class="text-xs text-mutedText truncate" title="{{ $inquiry->email }}">{{ $inquiry->email }}</div>
                 </div>
             </div>
         </td>
-        <td class="px-6 py-5">
-            <div class="font-bold text-mainText capitalize">{{ str_replace('_', ' ', $inquiry->subject) }}</div>
-            <div class="text-xs text-mutedText truncate max-w-xs">{{ Str::limit($inquiry->message, 50) }}</div>
+        <td class="px-6 py-5 max-w-[260px]">
+            <div class="font-bold text-mainText capitalize truncate" title="{{ str_replace('_', ' ', $inquiry->subject) }}">{{ str_replace('_', ' ', $inquiry->subject) }}</div>
+            <div class="text-xs text-mutedText truncate" title="{{ $inquiry->message }}">{{ Str::limit($inquiry->message, 50) }}</div>
         </td>
         <td class="px-6 py-5">
             @if($inquiry->is_replied)
@@ -61,7 +61,7 @@
     </tr>
 @empty
     <tr>
-        <td colspan="5" class="px-8 py-20 text-center">
+        <td colspan="6" class="px-8 py-20 text-center">
             <div class="flex flex-col items-center">
                 <div class="w-16 h-16 bg-navy/30 rounded-full flex items-center justify-center text-primary/30 mb-4 border border-primary/10">
                     <i class="fas fa-inbox text-2xl"></i>

@@ -8,12 +8,28 @@
                 <h2 class="text-2xl font-black text-mainText tracking-tight">Contact Inquiries</h2>
                 <p class="text-sm text-mutedText mt-1 font-medium">View and manage messages sent from the contact form.</p>
             </div>
-            <div x-show="selectedIds.length > 0" x-transition class="flex items-center gap-3">
-                <button @click="bulkMarkRead()" 
+            <div class="flex items-center gap-3">
+                <div x-show="selectedIds.length > 0" x-transition class="flex items-center gap-2">
+                    <button @click="bulkMarkRead()" 
+                            :disabled="isLoading"
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-emerald-600/20 active:scale-95 flex items-center gap-2">
+                        <i class="fas fa-check-double text-xs"></i>
+                        <span>Mark Read (<span x-text="selectedIds.length"></span>)</span>
+                    </button>
+                    <button @click="bulkDelete()" 
+                            :disabled="isLoading"
+                            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-red-600/20 active:scale-95 flex items-center gap-2">
+                        <i class="fas fa-trash text-xs"></i>
+                        <span>Delete (<span x-text="selectedIds.length"></span>)</span>
+                    </button>
+                </div>
+
+                <button @click="purgeSpam()" 
                         :disabled="isLoading"
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-emerald-600/20 active:scale-95 flex items-center gap-2">
-                    <i class="fas fa-check-double text-xs"></i>
-                    <span>Mark Selected as Read (<span x-text="selectedIds.length"></span>)</span>
+                        title="Delete Russian bots & malicious link spam"
+                        class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-4 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-2">
+                    <i class="fas fa-shield-virus text-xs"></i>
+                    <span>Purge Spam</span>
                 </button>
             </div>
         </div>
@@ -192,6 +208,70 @@
                         }
                     } catch (error) {
                         console.error('Bulk mark read error:', error);
+                        this.showToast('Something went wrong.', 'error');
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+
+                async bulkDelete() {
+                    if (this.selectedIds.length === 0) return;
+                    if (!confirm(`Are you sure you want to delete ${this.selectedIds.length} selected inquiries?`)) return;
+
+                    this.isLoading = true;
+                    try {
+                        let response = await fetch("{{ route('admin.contact-inquiries.bulk-destroy') }}", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                                "X-Requested-With": "XMLHttpRequest",
+                                "Accept": "application/json"
+                            },
+                            body: JSON.stringify({ ids: this.selectedIds })
+                        });
+                        let result = await response.json();
+                        if (result.status) {
+                            this.showToast(result.message || 'Selected inquiries deleted.');
+                            this.selectedIds = [];
+                            this.selectAll = false;
+                            await this.fetchInquiries();
+                        } else {
+                            this.showToast(result.message || 'Failed to delete selected inquiries.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Bulk delete error:', error);
+                        this.showToast('Something went wrong.', 'error');
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+
+                async purgeSpam() {
+                    if (!confirm('This will delete all Russian script and malicious link spam inquiries. Continue?')) return;
+
+                    this.isLoading = true;
+                    try {
+                        let response = await fetch("{{ route('admin.contact-inquiries.purge-spam') }}", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                                "X-Requested-With": "XMLHttpRequest",
+                                "Accept": "application/json"
+                            }
+                        });
+                        let result = await response.json();
+                        if (result.status) {
+                            this.showToast(result.message || 'Spam inquiries purged.');
+                            this.selectedIds = [];
+                            this.selectAll = false;
+                            await this.fetchInquiries();
+                        } else {
+                            this.showToast(result.message || 'Failed to purge spam.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Purge spam error:', error);
                         this.showToast('Something went wrong.', 'error');
                     } finally {
                         this.isLoading = false;

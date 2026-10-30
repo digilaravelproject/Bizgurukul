@@ -95,6 +95,48 @@ class ContactInquiryController extends Controller
         return back()->with('success', 'Selected inquiries marked as read successfully.');
     }
 
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:contact_inquiries,id',
+        ]);
+
+        $count = count($request->ids);
+        ContactInquiry::whereIn('id', $request->ids)->delete();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => true,
+                'message' => "{$count} inquiries deleted successfully.",
+            ]);
+        }
+
+        return back()->with('success', "{$count} inquiries deleted successfully.");
+    }
+
+    public function purgeSpam(Request $request)
+    {
+        // Delete inquiries with Russian/Cyrillic scripts or spam links
+        $deleted = ContactInquiry::where('name', 'REGEXP', '[а-яА-Я]')
+            ->orWhere('message', 'REGEXP', '[а-яА-Я]')
+            ->orWhere('subject', 'REGEXP', '[а-яА-Я]')
+            ->orWhere('name', 'LIKE', '%http%')
+            ->orWhere('name', 'LIKE', '%.buzz%')
+            ->orWhere('name', 'LIKE', '%tinyurl%')
+            ->orWhere('message', 'LIKE', '%.buzz%')
+            ->delete();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => true,
+                'message' => "{$deleted} spam inquiries purged successfully.",
+            ]);
+        }
+
+        return back()->with('success', "{$deleted} spam inquiries purged successfully.");
+    }
+
     public function sendReply(Request $request, $id)
     {
         $request->validate([

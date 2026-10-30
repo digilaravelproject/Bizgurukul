@@ -105,6 +105,12 @@
                     <form action="{{ route('web.contact.submit') }}" method="POST" class="space-y-6">
                         @csrf
 
+                        {{-- Anti-Spam Honeypot & Timestamp --}}
+                        <div style="position: absolute; left: -9999px; top: -9999px; opacity: 0; pointer-events: none;" aria-hidden="true">
+                            <input type="text" name="_hp_website" tabindex="-1" autocomplete="off">
+                        </div>
+                        <input type="hidden" name="_form_time" value="{{ encrypt(time()) }}">
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label for="name" class="block text-sm font-bold text-mainText mb-2 ml-1">Full Name</label>
