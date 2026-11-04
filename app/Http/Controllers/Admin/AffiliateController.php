@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\AffiliateHistoryExport;
 use App\Http\Controllers\Controller;
 use App\Models\AffiliateCommission;
 use App\Models\Bundle;
@@ -14,6 +15,7 @@ use App\Services\CommissionRuleService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AffiliateController extends Controller
 {
@@ -147,6 +149,22 @@ class AffiliateController extends Controller
         }
 
         return view('admin.affiliate.history', compact('commissions'));
+    }
+
+    /**
+     * Export Referral / Commission History to Excel
+     */
+    public function exportHistory(Request $request)
+    {
+        $filters = [
+            'search'     => $request->input('search'),
+            'start_date' => $request->input('start_date'),
+            'end_date'   => $request->input('end_date'),
+        ];
+
+        $filename = 'referral_conversions_history_' . Carbon::now('Asia/Kolkata')->format('Y-m-d_h-i-s_A') . '.xlsx';
+
+        return Excel::download(new AffiliateHistoryExport($filters), $filename);
     }
 
     /**

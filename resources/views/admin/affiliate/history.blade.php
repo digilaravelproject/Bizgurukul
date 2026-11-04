@@ -67,6 +67,23 @@
                 // No special init needed, filters bind to search/perPage
             },
 
+            exportData() {
+                const params = new URLSearchParams({
+                    search: this.search || '',
+                    start_date: this.startDate || '',
+                    end_date: this.endDate || ''
+                });
+                window.location.href = `{{ route('admin.affiliate.history.export') }}?${params.toString()}`;
+            },
+
+            resetFilters() {
+                this.search = '';
+                this.perPage = 20;
+                this.startDate = '';
+                this.endDate = '';
+                this.fetchHistory("{{ route('admin.affiliate.history') }}");
+            },
+
             updateTable() {
                 this.fetchHistory("{{ route('admin.affiliate.history') }}");
             },

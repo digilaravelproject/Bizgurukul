@@ -284,6 +284,7 @@ Route::middleware(['auth'])
 
                 // History & Payments
                 Route::get('/history', [AffiliateController::class, 'history'])->name('history');
+                Route::get('/history/export', [AffiliateController::class, 'exportHistory'])->name('history.export');
                 Route::post('/commission/{id}/pay', [AffiliateController::class, 'markAsPaid'])->name('commission.pay');
 
                 // Settings

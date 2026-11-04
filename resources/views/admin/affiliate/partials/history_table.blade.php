@@ -3,8 +3,8 @@
 
         <td class="px-6 py-4 whitespace-nowrap">
             <div class="flex flex-col">
-                <span class="text-sm font-bold text-mainText">{{ $commission->created_at->format('d M Y') }}</span>
-                <span class="text-xs text-mutedText">{{ $commission->created_at->format('h:i A') }}</span>
+                <span class="text-sm font-bold text-mainText">{{ $commission->created_at ? $commission->created_at->timezone('Asia/Kolkata')->format('d M Y') : 'N/A' }}</span>
+                <span class="text-xs text-mutedText">{{ $commission->created_at ? $commission->created_at->timezone('Asia/Kolkata')->format('h:i A') : 'N/A' }}</span>
             </div>
         </td>
 
