@@ -302,6 +302,7 @@ Route::middleware(['auth'])
             // Payouts & Verifications
             Route::prefix('payouts')->name('payouts.')->group(function () {
                 Route::get('/', [PayoutController::class, 'index'])->name('index');
+                Route::get('/export', [PayoutController::class, 'export'])->name('export');
                 Route::post('/approve/{id}', [PayoutController::class, 'approve'])->name('approve');
                 Route::post('/reject/{id}', [PayoutController::class, 'reject'])->name('reject');
                 Route::get('/check-new', [PayoutController::class, 'checkNew'])->name('check_new');

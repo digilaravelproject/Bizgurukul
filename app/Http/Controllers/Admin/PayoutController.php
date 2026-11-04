@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\PayoutsExport;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Services\WalletService;
-use App\Repositories\WalletRepository;
-use Illuminate\Support\Facades\Mail;
 use App\Mail\WithdrawalApprovedMail;
+use App\Models\WithdrawalRequest;
+use App\Repositories\WalletRepository;
+use App\Services\WalletService;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PayoutController extends Controller
 {
@@ -23,13 +27,67 @@ class PayoutController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->input('per_page', 20);
-        $withdrawals = $this->walletRepo->getAllWithdrawalRequests($perPage);
+        if (!in_array($perPage, [10, 20, 50, 100, 200])) {
+            $perPage = 20;
+        }
+
+        $query = WithdrawalRequest::with(['user.bank', 'user.kyc', 'commissions']);
+
+        // Search
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('transaction_id', 'like', "%{$search}%")
+                    ->orWhere('reference_number', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($uq) use ($search) {
+                        $uq->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('mobile', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Status
+        if ($status = $request->input('status')) {
+            if ($status !== 'all') {
+                $query->where('status', $status);
+            }
+        }
+
+        // Date Range (IST)
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [
+                Carbon::parse($startDate, 'Asia/Kolkata')->startOfDay(),
+                Carbon::parse($endDate, 'Asia/Kolkata')->endOfDay()
+            ]);
+        } elseif ($startDate) {
+            $query->where('created_at', '>=', Carbon::parse($startDate, 'Asia/Kolkata')->startOfDay());
+        } elseif ($endDate) {
+            $query->where('created_at', '<=', Carbon::parse($endDate, 'Asia/Kolkata')->endOfDay());
+        }
+
+        $withdrawals = $query->latest()->paginate($perPage);
 
         if ($request->ajax()) {
             return view('admin.payouts.partials.payout_table', compact('withdrawals'))->render();
         }
 
         return view('admin.payouts.index', compact('withdrawals'));
+    }
+
+    public function export(Request $request)
+    {
+        $filters = [
+            'search'     => $request->input('search'),
+            'status'     => $request->input('status'),
+            'start_date' => $request->input('start_date'),
+            'end_date'   => $request->input('end_date'),
+        ];
+
+        $filename = 'disbursement_payouts_report_' . Carbon::now('Asia/Kolkata')->format('Y-m-d_h-i-s_A') . '.xlsx';
+
+        return Excel::download(new PayoutsExport($filters), $filename);
     }
 
     public function approve(Request $request, $id)

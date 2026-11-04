@@ -16,7 +16,7 @@
             <tr class="hover:bg-primary/5 transition-colors">
                 <td class="px-4 sm:px-6 py-5 whitespace-nowrap">
                     <span class="block font-black text-primary">#{{ str_pad($withdrawal->id, 5, '0', STR_PAD_LEFT) }}</span>
-                    <span class="block text-[10px] text-mutedText uppercase tracking-widest mt-1">{{ $withdrawal->created_at->format('d M y - h:i A') }}</span>
+                    <span class="block text-[10px] text-mutedText uppercase tracking-widest mt-1">{{ $withdrawal->created_at ? $withdrawal->created_at->timezone('Asia/Kolkata')->format('d M y - h:i A') : 'N/A' }}</span>
                 </td>
                 <td class="px-4 sm:px-6 py-5 whitespace-nowrap">
                     <div class="flex items-center gap-3">
